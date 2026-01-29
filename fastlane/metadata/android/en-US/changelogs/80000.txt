@@ -1,0 +1,5 @@
+8.0.0
+2026-01-29
+
+[NEW]
+* First version on Fdroid
