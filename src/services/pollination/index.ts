@@ -126,7 +126,7 @@ export const getPollinationAuthUrl = (redirectUrl: string): string => {
   const params = new URLSearchParams({
     redirect_url: redirectUrl,
     permissions: 'profile,balance',
-    models: 'gemini',
+    models: 'claude-fast',
     expiry: '30', // 30 jours
     budget: '50', // Budget en pollen
   });
@@ -201,7 +201,7 @@ Les suggestions doivent être :
 IMPORTANT: Réponds UNIQUEMENT avec le JSON, sans texte avant ou après.`;
 
 /**
- * Analyse une image de repas via Pollination/Gemini
+ * Analyse une image de repas via Pollination/Claude
  * @param imageUrl URL de l'image uploadée
  * @param additionalContext Informations complémentaires sur le repas (optionnel)
  * @returns Analyse du repas
@@ -233,7 +233,7 @@ export const analyzeMealImage = async (imageUrl: string, additionalContext?: str
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gemini',
+      model: 'claude-fast',
       messages: [
         {
           role: 'system',
