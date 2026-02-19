@@ -505,6 +505,14 @@
     "paused": "EN PAUSE",
     "ellipticalManualNote": "Appuie sur Play/Pause pour contrôler le chrono",
     "ellipticalAutoNote": "Calibration requise pour détecter automatiquement le pédalage",
+    "fossCameraWarning": {
+      "title": "Limitation du mode caméra",
+      "message": "La détection par caméra est actuellement limitée dans la version F-Droid en raison de restrictions techniques. Nous travaillons sur une solution. En attendant, la version standard fonctionne parfaitement !",
+      "downloadTitle": "Télécharger la version standard",
+      "downloadMessage": "La version standard inclut le support complet de la caméra avec détection de pose IA. La télécharger depuis GitHub Releases ?",
+      "openGitHub": "Ouvrir GitHub",
+      "downloadStandard": "Télécharger la version standard →"
+    },
     "elliptical": {
       "calibrationStart": "Calibration requise",
       "calibrationIntro": "Pose ton téléphone de façon à ce que la caméra voie ta tête. Ne t'inquiète pas, ce sera rapide !",

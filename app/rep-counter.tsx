@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import * as Linking from 'expo-linking';
 import { router, useFocusEffect } from 'expo-router';
 import { Accelerometer, AccelerometerMeasurement } from 'expo-sensors';
 import { useAudioPlayer } from 'expo-audio';
@@ -61,6 +62,7 @@ import {
 } from 'lucide-react-native';
 import { GlassCard, PoseCameraView, SessionRecoveryModal } from '../src/components/ui';
 import { useAppStore, useGamificationStore } from '../src/stores';
+import { BuildConfig } from '../src/config/buildConfig';
 import type { PlankDebugInfo, EllipticalState } from '../src/utils/poseDetection';
 import {
     startEllipticalStillFirstCalibration,
@@ -1604,6 +1606,55 @@ export default function RepCounterScreen() {
                                         </View>
                                     )}
 
+                                    {/* ⚠️ FOSS Build Warning - Camera mode limitations */}
+                                    {detectionMode === 'camera' && BuildConfig.isFoss && (
+                                        <Animated.View entering={FadeInDown.delay(100)}>
+                                            <GlassCard style={styles.fossWarningCard} variant="solid">
+                                                <View style={styles.fossWarningHeader}>
+                                                    <View style={styles.fossWarningIconWrapper}>
+                                                        <Camera size={20} color="#f59e0b" />
+                                                    </View>
+                                                    <Text style={styles.fossWarningTitle}>
+                                                        {t('repCounter.fossCameraWarning.title')}
+                                                    </Text>
+                                                </View>
+                                                <Text style={styles.fossWarningText}>
+                                                    {t('repCounter.fossCameraWarning.message')}
+                                                </Text>
+                                                <TouchableOpacity
+                                                    style={styles.fossWarningButton}
+                                                    onPress={() => {
+                                                        // Link to GitHub releases
+                                                        Alert.alert(
+                                                            t('repCounter.fossCameraWarning.downloadTitle'),
+                                                            t('repCounter.fossCameraWarning.downloadMessage'),
+                                                            [
+                                                                { text: t('common.cancel'), style: 'cancel' },
+                                                                {
+                                                                    text: t('repCounter.fossCameraWarning.openGitHub'),
+                                                                    onPress: async () => {
+                                                                        const url = 'https://github.com/LuckyTheCookie/FitTrack/releases/latest';
+                                                                        const supported = await Linking.canOpenURL(url);
+                                                                        if (supported) {
+                                                                            await Linking.openURL(url);
+                                                                        } else {
+                                                                            Alert.alert(t('common.error'), 'Cannot open URL');
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        );
+                                                    }}
+                                                >
+                                                    <Text style={styles.fossWarningButtonText}>
+                                                        {t('repCounter.fossCameraWarning.downloadStandard')}
+                                                    </Text>
+                                                    <ChevronRight size={16} color="#22d3ee" />
+                                                </TouchableOpacity>
+                                            </GlassCard>
+                                        </Animated.View>
+                                    )}
+
                                     <TouchableOpacity
                                         onPress={handleNext}
                                         activeOpacity={0.9}
@@ -2676,6 +2727,57 @@ const styles = StyleSheet.create({
     cameraRequiredText: {
         fontSize: FontSize.md,
         fontWeight: FontWeight.semibold,
+    },
+
+    // FOSS Warning Card (similar to social warning)
+    fossWarningCard: {
+        marginTop: Spacing.lg,
+        padding: Spacing.lg,
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(245, 158, 11, 0.3)',
+    },
+    fossWarningHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.sm,
+        marginBottom: Spacing.sm,
+    },
+    fossWarningIconWrapper: {
+        width: 32,
+        height: 32,
+        borderRadius: BorderRadius.md,
+        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    fossWarningTitle: {
+        fontSize: FontSize.md,
+        fontWeight: FontWeight.bold,
+        color: '#f59e0b',
+        flex: 1,
+    },
+    fossWarningText: {
+        fontSize: FontSize.sm,
+        color: Colors.muted,
+        lineHeight: 20,
+        marginBottom: Spacing.md,
+    },
+    fossWarningButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.md,
+        backgroundColor: 'rgba(34, 211, 238, 0.1)',
+        borderRadius: BorderRadius.md,
+        borderWidth: 1,
+        borderColor: 'rgba(34, 211, 238, 0.3)',
+    },
+    fossWarningButtonText: {
+        fontSize: FontSize.sm,
+        fontWeight: FontWeight.semibold,
+        color: '#22d3ee',
     },
 
     // Camera preview styles

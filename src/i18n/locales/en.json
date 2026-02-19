@@ -510,6 +510,14 @@
     "paused": "PAUSED",
     "ellipticalManualNote": "Press Play/Pause to control the timer",
     "ellipticalAutoNote": "Calibration required to automatically detect pedaling",
+    "fossCameraWarning": {
+      "title": "Camera Mode Limitation",
+      "message": "Camera detection is currently limited in the F-Droid version due to technical restrictions. We're working on a fix. In the meantime, the standard version works perfectly!",
+      "downloadTitle": "Download Standard Version",
+      "downloadMessage": "The standard version includes full camera support with AI pose detection. Download it from GitHub Releases?",
+      "openGitHub": "Open GitHub",
+      "downloadStandard": "Download Standard Version →"
+    },
     "elliptical": {
       "calibrationStart": "Calibration Required",
       "calibrationIntro": "Position your phone so the camera can see your head. Don't worry, this will be quick!",
