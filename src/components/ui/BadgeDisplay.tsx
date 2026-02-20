@@ -2,6 +2,7 @@
 // BADGE DISPLAY - Affichage d'un badge
 // ============================================================================
 
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { Badge } from '../../types';
 import { Colors, BorderRadius, FontSize, FontWeight, Spacing } from '../../constants';

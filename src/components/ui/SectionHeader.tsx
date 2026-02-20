@@ -2,6 +2,7 @@
 // SECTION HEADER - En-tête de section avec titre et action
 // ============================================================================
 
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors, FontSize, FontWeight, Spacing } from '../../constants';
 

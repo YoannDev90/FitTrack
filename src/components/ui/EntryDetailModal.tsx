@@ -2,6 +2,7 @@
 // ENTRY DETAIL MODAL - Popup détails avec edit/delete
 // ============================================================================
 
+import React from 'react';
 import { 
   View, 
   Text, 

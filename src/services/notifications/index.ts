@@ -6,27 +6,23 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import i18n from '../../i18n';
 import { BuildConfig } from '../../config';
-import { createLogger } from '../../utils/logger';
-
-const notificationsLogger = createLogger('Notifications');
 
 // Dynamic import helper for expo-notifications to avoid native module errors in FOSS builds
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic import pattern requires any to avoid triggering native module registration
-let _notificationsModule: any = null;
+let _notificationsModule: any | null = null;
 async function importNotifications() {
     if (_notificationsModule) return _notificationsModule;
     try {
         _notificationsModule = await import('expo-notifications');
         return _notificationsModule;
     } catch (error: any) {
-        notificationsLogger.warn('expo-notifications import failed:', error?.message || error);
+        console.warn('[notifications] expo-notifications import failed:', error?.message || error);
         _notificationsModule = null;
         return null;
     }
 }
 
 // Initialize notification handler if module available
-void (async () => {
+(async () => {
     const Notifications = await importNotifications();
     if (Notifications?.setNotificationHandler) {
         try {
@@ -39,7 +35,7 @@ void (async () => {
                 }),
             });
         } catch (error: any) {
-            notificationsLogger.warn('Failed to set notification handler:', error?.message || error);
+            console.warn('[notifications] Failed to set notification handler:', error?.message || error);
         }
     }
 })();
@@ -47,16 +43,6 @@ void (async () => {
 export type PushTokenResult = 
     | { success: true; token: string }
     | { success: false; reason: 'not_device' | 'permission_denied' | 'network_error' | 'unknown' | 'foss_build' };
-
-type ScheduledNotificationLite = {
-    identifier: string;
-    content: {
-        data?: {
-            type?: string;
-            index?: number;
-        };
-    };
-};
 
 /**
  * Enregistre le device pour les notifications push
@@ -66,20 +52,20 @@ type ScheduledNotificationLite = {
 export async function registerForPushNotifications(): Promise<PushTokenResult> {
     // En mode FOSS, les push notifications ne sont pas disponibles
     if (!BuildConfig.pushNotificationsEnabled) {
-        notificationsLogger.info('Push notifications disabled in FOSS build');
+        console.log('Push notifications disabled in FOSS build');
         return { success: false, reason: 'foss_build' };
     }
 
     // Try to import expo-notifications (may be unavailable on FOSS builds)
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.info('expo-notifications module not available');
+        console.log('expo-notifications module not available');
         return { success: false, reason: 'foss_build' };
     }
 
     // Vérifier si c'est un appareil physique
     if (!Device.isDevice) {
-        notificationsLogger.info('Push notifications require a physical device');
+        console.log('Push notifications require a physical device');
         return { success: false, reason: 'not_device' };
     }
 
@@ -93,7 +79,7 @@ export async function registerForPushNotifications(): Promise<PushTokenResult> {
     }
 
     if (finalStatus !== 'granted') {
-        notificationsLogger.info('Notification permissions denied');
+        console.log('Notification permissions denied');
         return { success: false, reason: 'permission_denied' };
     }
 
@@ -137,12 +123,12 @@ export async function registerForPushNotifications(): Promise<PushTokenResult> {
             });
 
             if (__DEV__) {
-                            notificationsLogger.debug('Expo Push Token:', token.data);
+              console.log('Expo Push Token:', token.data);
             }
             return { success: true, token: token.data };
         } catch (error: any) {
             lastError = error;
-                        notificationsLogger.warn(`Push token attempt ${attempt}/${maxRetries} failed:`, error.message);
+            console.warn(`Push token attempt ${attempt}/${maxRetries} failed:`, error.message);
             
             // FIS_AUTH_ERROR - wait and retry
             if (error.message?.includes('FIS_AUTH_ERROR') && attempt < maxRetries) {
@@ -156,7 +142,7 @@ export async function registerForPushNotifications(): Promise<PushTokenResult> {
         }
     }
 
-    notificationsLogger.error('Failed to get push token after retries:', lastError?.message);
+    console.error('Failed to get push token after retries:', lastError?.message);
     
     // FIS_AUTH_ERROR or network related errors
     if (lastError?.message?.includes('FIS_AUTH_ERROR') || 
@@ -178,7 +164,7 @@ export async function showEncouragementNotification(
 ): Promise<void> {
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.warn('Module not available - cannot show encouragement notification');
+        console.warn('[notifications] Module not available - cannot show encouragement notification');
         return;
     }
     await Notifications.scheduleNotificationAsync({
@@ -200,7 +186,7 @@ export async function showFriendRequestNotification(
 ): Promise<void> {
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.warn('Module not available - cannot show friend request notification');
+        console.warn('[notifications] Module not available - cannot show friend request notification');
         return;
     }
     await Notifications.scheduleNotificationAsync({
@@ -222,7 +208,7 @@ export async function showFriendAcceptedNotification(
 ): Promise<void> {
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.warn('Module not available - cannot show friend accepted notification');
+        console.warn('[notifications] Module not available - cannot show friend accepted notification');
         return;
     }
     await Notifications.scheduleNotificationAsync({
@@ -248,7 +234,7 @@ export async function scheduleStreakReminder(
 
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.warn('Module not available - skipping scheduleStreakReminder');
+        console.warn('[notifications] Module not available - skipping scheduleStreakReminder');
         return '';
     }
 
@@ -276,10 +262,11 @@ export async function cancelStreakReminder(): Promise<void> {
     const Notifications = await importNotifications();
     if (!Notifications) return;
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    const notificationsToCancel = (scheduled as ScheduledNotificationLite[])
-        .filter((notif) => notif.content.data?.type === 'streak_reminder')
-        .map((notif) => Notifications.cancelScheduledNotificationAsync(notif.identifier));
-    await Promise.all(notificationsToCancel);
+    for (const notif of scheduled) {
+        if (notif.content.data?.type === 'streak_reminder') {
+            await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+        }
+    }
 }
 
 /**
@@ -295,7 +282,7 @@ export async function scheduleMealReminder(
 
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.warn('Module not available - skipping scheduleMealReminder');
+        console.warn('[notifications] Module not available - skipping scheduleMealReminder');
         return '';
     }
 
@@ -323,10 +310,11 @@ export async function cancelMealReminder(index: number): Promise<void> {
     const Notifications = await importNotifications();
     if (!Notifications) return;
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    const notificationsToCancel = (scheduled as ScheduledNotificationLite[])
-        .filter((notif) => notif.content.data?.type === 'meal_reminder' && notif.content.data?.index === index)
-        .map((notif) => Notifications.cancelScheduledNotificationAsync(notif.identifier));
-    await Promise.all(notificationsToCancel);
+    for (const notif of scheduled) {
+        if (notif.content.data?.type === 'meal_reminder' && notif.content.data?.index === index) {
+            await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+        }
+    }
 }
 
 /**
@@ -336,10 +324,11 @@ export async function cancelAllMealReminders(): Promise<void> {
     const Notifications = await importNotifications();
     if (!Notifications) return;
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    const notificationsToCancel = (scheduled as ScheduledNotificationLite[])
-        .filter((notif) => notif.content.data?.type === 'meal_reminder')
-        .map((notif) => Notifications.cancelScheduledNotificationAsync(notif.identifier));
-    await Promise.all(notificationsToCancel);
+    for (const notif of scheduled) {
+        if (notif.content.data?.type === 'meal_reminder') {
+            await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+        }
+    }
 }
 
 /**
@@ -354,7 +343,7 @@ export async function scheduleWeightReminderDaily(
 
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.warn('Module not available - skipping scheduleWeightReminderDaily');
+        console.warn('[notifications] Module not available - skipping scheduleWeightReminderDaily');
         return '';
     }
 
@@ -388,7 +377,7 @@ export async function scheduleWeightReminderWeekly(
 
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.warn('Module not available - skipping scheduleWeightReminderWeekly');
+        console.warn('[notifications] Module not available - skipping scheduleWeightReminderWeekly');
         return '';
     }
 
@@ -423,7 +412,7 @@ export async function scheduleWeightReminderMonthly(
 
     const Notifications = await importNotifications();
     if (!Notifications) {
-        notificationsLogger.warn('Module not available - skipping scheduleWeightReminderMonthly');
+        console.warn('[notifications] Module not available - skipping scheduleWeightReminderMonthly');
         return '';
     }
 
@@ -452,10 +441,11 @@ export async function cancelWeightReminder(): Promise<void> {
     const Notifications = await importNotifications();
     if (!Notifications) return;
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    const notificationsToCancel = (scheduled as ScheduledNotificationLite[])
-        .filter((notif) => notif.content.data?.type === 'weight_reminder')
-        .map((notif) => Notifications.cancelScheduledNotificationAsync(notif.identifier));
-    await Promise.all(notificationsToCancel);
+    for (const notif of scheduled) {
+        if (notif.content.data?.type === 'weight_reminder') {
+            await Notifications.cancelScheduledNotificationAsync(notif.identifier);
+        }
+    }
 }
 
 /**
@@ -468,7 +458,7 @@ export function addNotificationReceivedListener(
         return _notificationsModule.addNotificationReceivedListener(handler);
     }
     // Try to import for future calls but return a no-op subscription for now
-    void importNotifications();
+    importNotifications();
     return { remove: () => {} };
 }
 
@@ -481,7 +471,7 @@ export function addNotificationResponseListener(
     if (_notificationsModule) {
         return _notificationsModule.addNotificationResponseReceivedListener(handler);
     }
-    void importNotifications();
+    importNotifications();
     return { remove: () => {} };
 }
 

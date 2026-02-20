@@ -2,6 +2,7 @@
 // SEGMENTED CONTROL - Onglets segmentés
 // ============================================================================
 
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors, BorderRadius, FontSize, FontWeight, Spacing } from '../../constants';
 

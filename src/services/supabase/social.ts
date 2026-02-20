@@ -274,15 +274,13 @@ export async function getFriendsLeaderboard(): Promise<LeaderboardEntry[]> {
 // ============================================================================
 
 export async function searchUsers(query: string) {
-    // Sanitize and validate input
-    const sanitizedQuery = query.trim().slice(0, 50);
-    if (!supabase || sanitizedQuery.length < 2) return [];
+    if (!supabase || query.length < 2) return [];
     const user = await getCurrentUser();
     if (!user) return [];
 
     const { data, error } = await (supabase as any)
         .rpc('search_users', { 
-            search_query: sanitizedQuery, 
+            search_query: query, 
             current_user_id: user.id 
         });
 

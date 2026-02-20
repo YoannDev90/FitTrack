@@ -2,6 +2,7 @@
 // BOUTONS - Variantes CTA, Ghost, Link
 // ============================================================================
 
+import React from 'react';
 import { 
   TouchableOpacity, 
   Text, 

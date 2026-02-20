@@ -2,7 +2,7 @@
 // BADGE WITH PROGRESS - Badge avec barre de progression
 // ============================================================================
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { Badge } from '../../types';

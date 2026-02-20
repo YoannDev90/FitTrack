@@ -20,35 +20,45 @@ export function useRepCounterSounds() {
         try {
             repSound.seekTo(0);
             repSound.play();
-        } catch (_) { /* Sound playback is best-effort */ }
+        } catch (error) {
+            // Ignore sound errors
+        }
     }, [repSound]);
 
     const playKeepGoingSound = useCallback(() => {
         try {
             keepGoingSound.seekTo(0);
             keepGoingSound.play();
-        } catch (_) { /* Sound playback is best-effort */ }
+        } catch (error) {
+            // Ignore sound errors
+        }
     }, [keepGoingSound]);
 
     const playSecondsSound = useCallback(() => {
         try {
             secondsSound.seekTo(0);
             secondsSound.play();
-        } catch (_) { /* Sound playback is best-effort */ }
+        } catch (error) {
+            // Ignore sound errors
+        }
     }, [secondsSound]);
 
     const playNewRecordSound = useCallback(() => {
         try {
             newRecordSound.seekTo(0);
             newRecordSound.play();
-        } catch (_) { /* Sound playback is best-effort */ }
+        } catch (error) {
+            // Ignore sound errors
+        }
     }, [newRecordSound]);
 
     const playFinishedSound = useCallback(() => {
         try {
             finishedSound.seekTo(0);
             finishedSound.play();
-        } catch (_) { /* Sound playback is best-effort */ }
+        } catch (error) {
+            // Ignore sound errors
+        }
     }, [finishedSound]);
 
     return {

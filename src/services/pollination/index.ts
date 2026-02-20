@@ -4,12 +4,10 @@
 
 import * as Linking from 'expo-linking';
 import * as SecureStore from 'expo-secure-store';
-import { createLogger } from '../../utils/logger';
 
 const POLLINATION_AUTH_URL = 'https://enter.pollinations.ai/authorize';
 const POLLINATION_API_URL = 'https://gen.pollinations.ai/v1/chat/completions';
 const STORAGE_KEY = 'pollination_api_key';
-const pollinationLogger = createLogger('Pollination');
 
 // ============================================================================
 // TYPES
@@ -38,7 +36,7 @@ export const savePollinationApiKey = async (apiKey: string): Promise<void> => {
   try {
     await SecureStore.setItemAsync(STORAGE_KEY, apiKey);
   } catch (error) {
-    pollinationLogger.error('Error saving API key:', error);
+    console.error('[Pollination] Error saving API key:', error);
     throw error;
   }
 };
@@ -48,7 +46,7 @@ export const getPollinationApiKey = async (): Promise<string | null> => {
     const key = await SecureStore.getItemAsync(STORAGE_KEY);
     return key || null;
   } catch (error) {
-    pollinationLogger.error('Error getting API key:', error);
+    console.error('[Pollination] Error getting API key:', error);
     return null;
   }
 };
@@ -57,7 +55,7 @@ export const removePollinationApiKey = async (): Promise<void> => {
   try {
     await SecureStore.deleteItemAsync(STORAGE_KEY);
   } catch (error) {
-    pollinationLogger.error('Error removing API key:', error);
+    console.error('[Pollination] Error removing API key:', error);
   }
 };
 
@@ -108,7 +106,7 @@ export const getPollinationAccountInfo = async (): Promise<PollinationAccountInf
     // Si l'endpoint balance n'existe pas, on retourne juste connected
     return { connected: true };
   } catch (error) {
-    pollinationLogger.error('Error getting account info:', error);
+    console.error('[Pollination] Error getting account info:', error);
     return { 
       connected: true, 
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -145,8 +143,8 @@ export const startPollinationAuth = async (): Promise<void> => {
   const authUrl = getPollinationAuthUrl(redirectUrl);
   
   if (__DEV__) {
-    pollinationLogger.debug('Starting auth with redirect:', redirectUrl);
-    pollinationLogger.debug('Auth URL:', authUrl);
+    console.log('[Pollination] Starting auth with redirect:', redirectUrl);
+    console.log('[Pollination] Auth URL:', authUrl);
   }
   
   await Linking.openURL(authUrl);
@@ -168,7 +166,7 @@ export const extractApiKeyFromUrl = (url: string): string | null => {
     
     return apiKey;
   } catch (error) {
-    pollinationLogger.error('Error extracting API key:', error);
+    console.error('[Pollination] Error extracting API key:', error);
     return null;
   }
 };
@@ -216,9 +214,9 @@ export const analyzeMealImage = async (imageUrl: string, additionalContext?: str
   }
   
   if (__DEV__) {
-    pollinationLogger.debug('Analyzing meal image:', imageUrl);
+    console.log('[Pollination] Analyzing meal image:', imageUrl);
     if (additionalContext) {
-      pollinationLogger.debug('Additional context:', additionalContext);
+      console.log('[Pollination] Additional context:', additionalContext);
     }
   }
   
@@ -262,7 +260,7 @@ export const analyzeMealImage = async (imageUrl: string, additionalContext?: str
   
   if (!response.ok) {
     const errorText = await response.text();
-    pollinationLogger.error('API error:', response.status, errorText);
+    console.error('[Pollination] API error:', response.status, errorText);
     throw new Error(`Pollination API error: ${response.status}`);
   }
   
@@ -274,7 +272,7 @@ export const analyzeMealImage = async (imageUrl: string, additionalContext?: str
   }
   
   if (__DEV__) {
-    pollinationLogger.debug('Raw response:', content);
+    console.log('[Pollination] Raw response:', content);
   }
   
   // Parse le JSON de la réponse
@@ -296,11 +294,15 @@ export const analyzeMealImage = async (imageUrl: string, additionalContext?: str
     let jsonContent = jsonMatch[0];
     
     // Réparer les JSON incomplètement fermés (fermer les structures ouvertes)
-    const braceCount = (jsonContent.match(/\{/g) || []).length - (jsonContent.match(/\}/g) || []).length;
-    if (braceCount > 0) jsonContent += '}'.repeat(braceCount);
+    let braceCount = (jsonContent.match(/\{/g) || []).length - (jsonContent.match(/\}/g) || []).length;
+    for (let i = 0; i < braceCount; i++) {
+      jsonContent += '}';
+    }
     
-    const bracketCount = (jsonContent.match(/\[/g) || []).length - (jsonContent.match(/\]/g) || []).length;
-    if (bracketCount > 0) jsonContent += ']'.repeat(bracketCount);
+    let bracketCount = (jsonContent.match(/\[/g) || []).length - (jsonContent.match(/\]/g) || []).length;
+    for (let i = 0; i < bracketCount; i++) {
+      jsonContent += ']';
+    }
     
     const analysis: MealAnalysis = JSON.parse(jsonContent);
     
@@ -320,7 +322,7 @@ export const analyzeMealImage = async (imageUrl: string, additionalContext?: str
     
     return analysis;
   } catch (parseError) {
-    pollinationLogger.error('Error parsing response:', parseError);
+    console.error('[Pollination] Error parsing response:', parseError);
     // Retourner une analyse par défaut en cas d'erreur de parsing
     return {
       score: 50,
