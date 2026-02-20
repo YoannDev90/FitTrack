@@ -2,7 +2,10 @@
 // OPENFOODFACTS API SERVICE - Récupération des infos produits via code-barres
 // ============================================================================
 
+import { createLogger } from '../../utils/logger';
+
 const OPENFOODFACTS_API_URL = 'https://world.openfoodfacts.org/api/v2/product';
+const openFoodFactsLogger = createLogger('OpenFoodFacts');
 
 // ============================================================================
 // TYPES
@@ -97,7 +100,7 @@ interface OpenFoodFactsApiResponse {
  */
 export async function getProductByBarcode(barcode: string): Promise<ProductInfo> {
   try {
-    console.log('[OpenFoodFacts] Searching for barcode:', barcode);
+    openFoodFactsLogger.debug('Searching for barcode:', barcode);
     
     const response = await fetch(
       `${OPENFOODFACTS_API_URL}/${barcode}.json?fields=code,product_name,product_name_fr,brands,quantity,image_url,image_front_url,image_front_small_url,nutriscore_grade,nutriscore_score,nova_group,ecoscore_grade,categories,ingredients_text,ingredients_text_fr,allergens_tags,nutriments,nutrient_levels,serving_size`,
@@ -109,14 +112,14 @@ export async function getProductByBarcode(barcode: string): Promise<ProductInfo>
     );
 
     if (!response.ok) {
-      console.error('[OpenFoodFacts] API error:', response.status);
+      openFoodFactsLogger.error('API error:', response.status);
       return createNotFoundProduct(barcode);
     }
 
     const data: OpenFoodFactsApiResponse = await response.json();
 
     if (data.status !== 1 || !data.product) {
-      console.log('[OpenFoodFacts] Product not found');
+      openFoodFactsLogger.info('Product not found');
       return createNotFoundProduct(barcode);
     }
 
@@ -164,10 +167,10 @@ export async function getProductByBarcode(barcode: string): Promise<ProductInfo>
       found: true,
     };
 
-    console.log('[OpenFoodFacts] Product found:', productInfo.name);
+    openFoodFactsLogger.debug('Product found:', productInfo.name);
     return productInfo;
   } catch (error) {
-    console.error('[OpenFoodFacts] Error fetching product:', error);
+    openFoodFactsLogger.error('Error fetching product:', error);
     return createNotFoundProduct(barcode);
   }
 }

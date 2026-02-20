@@ -253,7 +253,7 @@ export function AddEntryForm({
     }, [customTime]);
     
     // Date picker change handler
-    const onDateChange = useCallback((event: any, selectedDate?: Date) => {
+    const onDateChange = useCallback((_event: unknown, selectedDate?: Date) => {
         setShowDatePicker(Platform.OS === 'ios');
         if (selectedDate) {
             setCustomDate(format(selectedDate, 'yyyy-MM-dd'));
@@ -261,7 +261,7 @@ export function AddEntryForm({
     }, []);
     
     // Time picker change handler
-    const onTimeChange = useCallback((event: any, selectedTime?: Date) => {
+    const onTimeChange = useCallback((_event: unknown, selectedTime?: Date) => {
         setShowTimePicker(Platform.OS === 'ios');
         if (selectedTime) {
             setCustomTime(format(selectedTime, 'HH:mm'));

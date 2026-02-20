@@ -2,7 +2,6 @@
 // HEALTH CONNECT PROMPT MODAL - Custom modal for startup sync notification
 // ============================================================================
 
-import React from 'react';
 import {
   View,
   Text,

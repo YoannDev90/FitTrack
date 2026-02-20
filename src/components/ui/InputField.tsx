@@ -2,7 +2,6 @@
 // INPUT FIELD - Champ de saisie stylé
 // ============================================================================
 
-import React from 'react';
 import { 
   View, 
   Text, 

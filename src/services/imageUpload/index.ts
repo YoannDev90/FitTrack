@@ -5,9 +5,11 @@
 // ============================================================================
 
 import { File, Paths } from 'expo-file-system';
+import { createLogger } from '../../utils/logger';
 
 // tmpfiles.org - fichiers supprimés après 1 heure
 const TMPFILES_UPLOAD_URL = 'https://tmpfiles.org/api/v1/upload';
+const imageUploadLogger = createLogger('ImageUpload');
 
 // ============================================================================
 // TYPES
@@ -66,7 +68,7 @@ const getMimeType = (uri: string): string => {
 export const uploadImageToTmpFiles = async (imageUri: string): Promise<UploadResult> => {
   try {
     if (__DEV__) {
-      console.log('[ImageUpload] Starting upload to tmpfiles.org:', imageUri);
+      imageUploadLogger.debug('Starting upload to tmpfiles.org:', imageUri);
     }
     
     // Utiliser la nouvelle API File pour vérifier l'existence
@@ -89,7 +91,7 @@ export const uploadImageToTmpFiles = async (imageUri: string): Promise<UploadRes
     } as any);
     
     if (__DEV__) {
-      console.log('[ImageUpload] Uploading file:', fileName, 'MIME:', mimeType, 'Size:', file.size);
+      imageUploadLogger.debug('Uploading file:', fileName, 'MIME:', mimeType, 'Size:', file.size);
     }
     
     const response = await fetch(TMPFILES_UPLOAD_URL, {
@@ -102,13 +104,13 @@ export const uploadImageToTmpFiles = async (imageUri: string): Promise<UploadRes
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[ImageUpload] Upload failed:', response.status, errorText);
+      imageUploadLogger.error('Upload failed:', response.status, errorText);
       throw new Error(`Upload failed: ${response.status}`);
     }
     
     const result: TmpFilesResponse = await response.json();
     if (__DEV__) {
-      console.log('[ImageUpload] Upload response:', result);
+      imageUploadLogger.debug('Upload response:', result);
     }
     
     if (result.status !== 'success' || !result.data?.url) {
@@ -120,7 +122,7 @@ export const uploadImageToTmpFiles = async (imageUri: string): Promise<UploadRes
     const directUrl = result.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
     
     if (__DEV__) {
-      console.log('[ImageUpload] Upload successful:', directUrl);
+      imageUploadLogger.debug('Upload successful:', directUrl);
     }
     
     return {
@@ -128,7 +130,7 @@ export const uploadImageToTmpFiles = async (imageUri: string): Promise<UploadRes
       url: directUrl,
     };
   } catch (error) {
-    console.error('[ImageUpload] Upload error:', error);
+    imageUploadLogger.error('Upload error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Upload failed',
@@ -141,7 +143,7 @@ export const uploadImageToTmpFiles = async (imageUri: string): Promise<UploadRes
  */
 export const uploadBase64Image = async (base64Data: string, fileName: string = 'image.jpg'): Promise<UploadResult> => {
   try {
-    console.log('[ImageUpload] Uploading base64 image...');
+    imageUploadLogger.debug('Uploading base64 image...');
     
     // Créer un fichier temporaire avec la nouvelle API
     const tempFile = new File(Paths.cache, fileName);
@@ -166,7 +168,7 @@ export const uploadBase64Image = async (base64Data: string, fileName: string = '
     
     return result;
   } catch (error) {
-    console.error('[ImageUpload] Base64 upload error:', error);
+    imageUploadLogger.error('Base64 upload error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Upload failed',

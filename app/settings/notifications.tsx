@@ -146,11 +146,13 @@ export default function NotificationsScreen() {
     currentReminders.splice(index, 1);
     
     // Reschedule remaining reminders with new indices
-    for (let i = 0; i < currentReminders.length; i++) {
-      if (currentReminders[i].enabled) {
-        await NotificationService.scheduleMealReminder(i, currentReminders[i].hour, currentReminders[i].minute);
-      }
-    }
+    const remindersToReschedule = currentReminders
+      .map((reminder, reminderIndex) => ({ reminder, reminderIndex }))
+      .filter(({ reminder }) => reminder.enabled)
+      .map(({ reminder, reminderIndex }) =>
+        NotificationService.scheduleMealReminder(reminderIndex, reminder.hour, reminder.minute)
+      );
+    await Promise.all(remindersToReschedule);
     
     updateSettings({ mealReminders: currentReminders });
   }, [settings.mealReminders, updateSettings]);

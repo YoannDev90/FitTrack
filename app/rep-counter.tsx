@@ -587,9 +587,7 @@ export default function RepCounterScreen() {
         try {
             repSound.seekTo(0);
             repSound.play();
-        } catch (error) {
-            // Ignore sound errors
-        }
+        } catch (_) { /* Sound playback is best-effort */ }
     }, [repSound]);
 
     // Play keep going sound (every 10 reps/seconds)
@@ -597,9 +595,7 @@ export default function RepCounterScreen() {
         try {
             keepGoingSound.seekTo(0);
             keepGoingSound.play();
-        } catch (error) {
-            // Ignore sound errors
-        }
+        } catch (_) { /* Sound playback is best-effort */ }
     }, [keepGoingSound]);
 
     // Play seconds sound (for plank only)
@@ -607,9 +603,7 @@ export default function RepCounterScreen() {
         try {
             secondsSound.seekTo(0);
             secondsSound.play();
-        } catch (error) {
-            // Ignore sound errors
-        }
+        } catch (_) { /* Sound playback is best-effort */ }
     }, [secondsSound]);
 
     // Play new record sound
@@ -617,9 +611,7 @@ export default function RepCounterScreen() {
         try {
             newRecordSound.seekTo(0);
             newRecordSound.play();
-        } catch (error) {
-            // Ignore sound errors
-        }
+        } catch (_) { /* Sound playback is best-effort */ }
     }, [newRecordSound]);
 
     // Play finished sound
@@ -627,9 +619,7 @@ export default function RepCounterScreen() {
         try {
             finishedSound.seekTo(0);
             finishedSound.play();
-        } catch (error) {
-            // Ignore sound errors
-        }
+        } catch (_) { /* Sound playback is best-effort */ }
     }, [finishedSound]);
 
     // Charger le record personnel pour l'exercice sélectionné

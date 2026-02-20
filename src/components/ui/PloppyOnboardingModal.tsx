@@ -2,12 +2,11 @@
 // PLOPPY ONBOARDING MODAL - Introduction to Ploppy AI meal analysis
 // ============================================================================
 
-import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Sparkles, Shield, Clock, Check, X } from 'lucide-react-native';
+import { Sparkles, Shield, Clock, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppStore } from '../../stores';
 import { BuildConfig } from '../../config/buildConfig';
@@ -25,7 +24,7 @@ export function PloppyOnboardingModal({ visible, onAccept, onDecline }: PloppyOn
   const { updateSettings } = useAppStore();
   
   const handleAccept = async () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     updateSettings({ ploppyOnboardingShown: true });
     
     // If FOSS, don't start auth
@@ -38,14 +37,14 @@ export function PloppyOnboardingModal({ visible, onAccept, onDecline }: PloppyOn
     try {
       await startPollinationAuth();
       updateSettings({ ploppyEnabled: true });
-    } catch (error) {
+    } catch (_) {
       // User can retry later
     }
     onAccept();
   };
   
   const handleDecline = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     updateSettings({ ploppyOnboardingShown: true, ploppyEnabled: false });
     onDecline();
   };

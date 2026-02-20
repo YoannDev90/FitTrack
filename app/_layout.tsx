@@ -1,5 +1,5 @@
 import { Stack, usePathname, useRouter, useRootNavigationState, useSegments, useNavigation, useNavigationContainerRef } from 'expo-router';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSettings, useSocialStore } from '../src/stores';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

@@ -153,7 +153,7 @@ export async function requestHealthConnectPermissions(): Promise<boolean> {
     try {
         const hc = await getHealthConnectModule();
         if (!hc) return false;
-        try { await hc.initialize(); } catch (e) { }
+        try { await hc.initialize(); } catch (_) { /* Initialize is best-effort */ }
 
         const granted = await hc.requestPermission([
             { accessType: 'read', recordType: 'ExerciseSession' },

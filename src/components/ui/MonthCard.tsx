@@ -2,7 +2,6 @@
 // MONTH CARD - Carte de progression mensuelle
 // ============================================================================
 
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { GlassCard } from './GlassCard';

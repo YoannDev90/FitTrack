@@ -173,7 +173,7 @@ function FriendRequestItem({
     onAccept,
     onReject,
 }: {
-    request: any;
+    request: { requester: { display_name?: string | null; username?: string | null } };
     onAccept: () => void;
     onReject: () => void;
 }) {
@@ -390,24 +390,24 @@ export default function SocialScreen() {
             }
         };
         
-        initialize();
+        void initialize();
     }, []);
 
     // Setup realtime when authenticated
     useEffect(() => {
         if (isAuthenticated && socialEnabled) {
-            setupRealtimeSubscriptions();
+            void setupRealtimeSubscriptions();
         }
     }, [isAuthenticated, socialEnabled]);
 
     // Initial fetch + auto sync
     useEffect(() => {
         if (isAuthenticated && socialEnabled) {
-            fetchGlobalLeaderboard();
-            fetchFriendsLeaderboard();
-            fetchFriends();
-            fetchPendingRequests();
-            fetchEncouragements();
+            void fetchGlobalLeaderboard();
+            void fetchFriendsLeaderboard();
+            void fetchFriends();
+            void fetchPendingRequests();
+            void fetchEncouragements();
         }
     }, [isAuthenticated, socialEnabled]);
 
@@ -435,14 +435,14 @@ export default function SocialScreen() {
                 });
                 setLastSyncTime(new Date());
                 // Refresh leaderboards after sync
-                fetchGlobalLeaderboard();
-                fetchFriendsLeaderboard();
+                void fetchGlobalLeaderboard();
+                void fetchFriendsLeaderboard();
             } catch {
                 // Silent fail for auto sync
             }
         };
         
-        performSync();
+        void performSync();
     }, [entries.length, xp, level]);
 
     // Calculate local stats for sync

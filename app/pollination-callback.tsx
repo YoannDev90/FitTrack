@@ -66,7 +66,7 @@ export default function PollinationCallbackScreen() {
             }
         };
 
-        processCallback();
+        void processCallback();
     }, [params.token, updateSettings]);
 
     return (

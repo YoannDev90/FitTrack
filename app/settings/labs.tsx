@@ -85,7 +85,7 @@ export default function LabsScreen() {
     };
 
     // Get initial URL if app was opened via deep link
-    ExpoLinking.getInitialURL().then((url) => {
+    void ExpoLinking.getInitialURL().then((url) => {
       if (url) handleDeepLink({ url });
     });
 

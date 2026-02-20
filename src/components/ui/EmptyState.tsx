@@ -2,7 +2,6 @@
 // EMPTY STATE - État vide
 // ============================================================================
 
-import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors, FontSize, Spacing } from '../../constants';
 
