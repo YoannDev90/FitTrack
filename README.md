@@ -15,7 +15,7 @@
 ---
 
 ## Screenshots 
-| ![Screenshot 1](fastlane/metadata/fr-FR/images/phoneScreenshots/1.jpg) | ![Screenshot 2](fastlane/metadata/fr-FR/images/phoneScreenshots/2.jpg) | ![Screenshot 3](fastlane/metadata/fr-FR/images/phoneScreenshots/3.jpg) | ![Screenshot 4](fastlane/metadata/fr-FR/images/phoneScreenshots/4.jpg) | ![Screenshot 5](fastlane/metadata/fr-FR/images/phoneScreenshots/5.jpg) |
+| ![Screenshot 1](fastlane/metadata/android/fr-FR/images/phoneScreenshots/1.jpg) | ![Screenshot 2](fastlane/metadata/android/fr-FR/images/phoneScreenshots/2.jpg) | ![Screenshot 3](fastlane/metadata/android/fr-FR/images/phoneScreenshots/3.jpg) | ![Screenshot 4](fastlane/metadata/android/fr-FR/images/phoneScreenshots/4.jpg) | ![Screenshot 5](fastlane/metadata/android/fr-FR/images/phoneScreenshots/5.jpg) |
 |---|---|---|---|---|
 
 ---
