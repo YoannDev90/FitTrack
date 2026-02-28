@@ -87,7 +87,7 @@ export const getPollinationAccountInfo = async (): Promise<PollinationAccountInf
   
   try {
     // Essayer de récupérer la balance via l'API
-    const response = await fetch('https://gen.pollinations.ai/v1/balance', {
+    const response = await fetch('https://gen.pollinations.ai/account/balance', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
