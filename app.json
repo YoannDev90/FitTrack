@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "scheme": "spix",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -28,7 +27,6 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.spix.app",
-      "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.health.READ_EXERCISE",
