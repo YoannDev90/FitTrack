@@ -20,7 +20,7 @@
     "@lodev09/react-native-true-sheet": "^3.9.9",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.6.0",
-    "@react-navigation/bottom-tabs": "^7.10.1",
+    "@react-navigation/bottom-tabs": "^7.15.3",
     "@supabase/supabase-js": "^2.98.0",
     "date-fns": "^4.1.0",
     "expo": "^55.0.4",
