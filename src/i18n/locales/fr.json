@@ -858,6 +858,12 @@
     "durationErrorPositive": "Durée invalide - entre un nombre de minutes positif",
     "durationError": "Durée invalide",
     "durationErrorNumber": "Durée invalide - entre un nombre de minutes",
+    "measureTextError": "Impossible de sauvegarder du texte, veuillez saisir un poids (ou masse grasse) valide",
+    "weightError": "Poids invalide – entre un nombre",
+    "bodyFatError": "Pourcentage de masse grasse invalide – entre un nombre",
+    "waistError": "Tour de taille invalide – entre un nombre",
+    "armError": "Tour de bras invalide – entre un nombre",
+    "hipsError": "Tour de hanches invalide – entre un nombre",
     "error": {
       "noExercise": "Ajoute au moins un exercice"
     },

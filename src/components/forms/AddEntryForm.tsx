@@ -504,11 +504,51 @@ export function AddEntryForm({
                     break;
 
                 case 'measure':
+                    // nettoyer les champs en remplaçant virgule par point
                     const wClean = weight.trim().replace(',', '.');
                     const bfClean = bodyFatPercent.trim().replace(',', '.');
                     const waistClean = waist.trim().replace(',', '.');
                     const armClean = arm.trim().replace(',', '.');
                     const hipsClean = hips.trim().replace(',', '.');
+
+                    // vérifier qu'on a bien des nombres valides pour poids / masse grasse
+                    if (wClean && isNaN(parseFloat(wClean))) {
+                        Alert.alert(
+                            t('common.error'),
+                            t('addEntry.weightError')
+                        );
+                        return;
+                    }
+                    if (bfClean && isNaN(parseFloat(bfClean))) {
+                        Alert.alert(
+                            t('common.error'),
+                            t('addEntry.bodyFatError')
+                        );
+                        return;
+                    }
+
+                    // validate waist/arm/hips when filled
+                    if (waistClean && isNaN(parseFloat(waistClean))) {
+                        Alert.alert(
+                            t('common.error'),
+                            t('addEntry.waistError')
+                        );
+                        return;
+                    }
+                    if (armClean && isNaN(parseFloat(armClean))) {
+                        Alert.alert(
+                            t('common.error'),
+                            t('addEntry.armError')
+                        );
+                        return;
+                    }
+                    if (hipsClean && isNaN(parseFloat(hipsClean))) {
+                        Alert.alert(
+                            t('common.error'),
+                            t('addEntry.hipsError')
+                        );
+                        return;
+                    }
 
                     const hasAnyMeasure = wClean || bfClean || waistClean || armClean || hipsClean;
                     if (!hasAnyMeasure) {

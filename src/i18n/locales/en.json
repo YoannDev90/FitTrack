@@ -863,6 +863,12 @@
     "durationErrorPositive": "Invalid duration - enter a positive number of minutes",
     "durationError": "Invalid duration",
     "durationErrorNumber": "Invalid duration - enter a number of minutes",
+    "measureTextError": "Cannot save text, please enter a valid weight (or body fat percentage)",
+    "weightError": "Invalid weight – please enter a number",
+    "bodyFatError": "Invalid body fat percentage – please enter a number",
+    "waistError": "Invalid waist measurement – please enter a number",
+    "armError": "Invalid arm measurement – please enter a number",
+    "hipsError": "Invalid hips measurement – please enter a number",
     "error": {
       "noExercise": "Add at least one exercise"
     },
