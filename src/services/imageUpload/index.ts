@@ -115,9 +115,11 @@ export const uploadImageToTmpFiles = async (imageUri: string): Promise<UploadRes
       throw new Error('Invalid response from tmpfiles.org');
     }
     
-    // tmpfiles.org retourne une URL de la forme https://tmpfiles.org/1234567/image.jpg
-    // On doit la convertir en https://tmpfiles.org/dl/1234567/image.jpg pour avoir un lien direct
-    const directUrl = result.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+    // tmpfiles.org retourne parfois une URL http://tmpfiles.org/1234567/image.jpg
+    // Assurer le passage à HTTPS et convertir en lien direct
+    let directUrl = result.data.url.replace(/^http:/, 'https:');
+    // La route /dl/ donne un lien direct téléchargeable
+    directUrl = directUrl.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
     
     if (__DEV__) {
       console.log('[ImageUpload] Upload successful:', directUrl);
