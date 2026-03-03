@@ -232,19 +232,19 @@ const EntryCard = React.memo(({ entry, onDelete, onPress, index }: { entry: Entr
               {measureEntry.waist && (
                 <View style={styles.measureItem}>
                   <Text style={styles.measureValue}>{measureEntry.waist}</Text>
-                  <Text style={styles.measureLabel}>taille</Text>
+                  <Text style={styles.measureLabel}>cm - taille</Text>
                 </View>
               )}
               {measureEntry.arm && (
                 <View style={styles.measureItem}>
                   <Text style={styles.measureValue}>{measureEntry.arm}</Text>
-                  <Text style={styles.measureLabel}>bras</Text>
+                  <Text style={styles.measureLabel}>cm - bras</Text>
                 </View>
               )}
               {measureEntry.hips && (
                 <View style={styles.measureItem}>
                   <Text style={styles.measureValue}>{measureEntry.hips}</Text>
-                  <Text style={styles.measureLabel}>hanches</Text>
+                  <Text style={styles.measureLabel}>cm - hanches</Text>
                 </View>
               )}
             </View>
