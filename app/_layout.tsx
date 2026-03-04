@@ -96,7 +96,7 @@ function CustomNavBar() {
     const { socialEnabled } = useSocialStore();
 
     // Cacher la barre de navigation sur certains écrans
-    if (pathname === '/rep-counter' || pathname === '/health-connect' || pathname === '/onboarding' || pathname === '/enhanced-meal') {
+    if (pathname === '/repCounter/rep-counter' || pathname === '/health-connect' || pathname === '/onboarding' || pathname === '/enhanced-meal') {
         return null;
     }
 
@@ -189,7 +189,7 @@ export default function Layout() {
                     <Stack.Screen name="tools" />
                     <Stack.Screen name="settings" />
                     <Stack.Screen name="onboarding" />
-                    <Stack.Screen name="rep-counter" />
+                    <Stack.Screen name="repCounter/rep-counter" />
                     <Stack.Screen name="health-connect" />
                     <Stack.Screen name="auth" />
                     <Stack.Screen name="profile" />

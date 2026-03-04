@@ -60,10 +60,10 @@ import {
     Video,
     Volume2,
 } from 'lucide-react-native';
-import { GlassCard, PoseCameraView, SessionRecoveryModal } from '../src/components/ui';
-import { useAppStore, useGamificationStore } from '../src/stores';
-import { BuildConfig } from '../src/config/buildConfig';
-import type { PlankDebugInfo, EllipticalState } from '../src/utils/poseDetection';
+import { GlassCard, PoseCameraView, SessionRecoveryModal } from '../../src/components/ui';
+import { useAppStore, useGamificationStore } from '../../src/stores';
+import { BuildConfig } from '../../src/config/buildConfig';
+import type { PlankDebugInfo, EllipticalState } from '../../src/utils/poseDetection';
 import {
     startEllipticalStillFirstCalibration,
     completeEllipticalStillPhase,
@@ -74,7 +74,7 @@ import {
     addEllipticalHeadSample,
     hasEllipticalMovementStarted,
     resetEllipticalSamples,
-} from '../src/utils/poseDetection';
+} from '../../src/utils/poseDetection';
 import {
     startSessionTracking,
     updateSessionData,
@@ -82,9 +82,9 @@ import {
     getUnfinishedSession,
     getRoundedSessionData,
     type ActiveSession,
-} from '../src/services/sessionRecovery';
+} from '../../src/services/sessionRecovery';
 import { useTranslation } from 'react-i18next';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../src/constants';
+import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -428,11 +428,11 @@ export default function RepCounterScreen() {
     const { t } = useTranslation();
 
     // Sound effects avec expo-audio
-    const repSound = useAudioPlayer(require('../assets/rep.mp3'));
-    const keepGoingSound = useAudioPlayer(require('../assets/keepgoing.mp3'));
-    const secondsSound = useAudioPlayer(require('../assets/seconds.mp3'));
-    const newRecordSound = useAudioPlayer(require('../assets/new-record.mp3'));
-    const finishedSound = useAudioPlayer(require('../assets/finished.mp3'));
+    const repSound = useAudioPlayer(require('../../assets/rep.mp3'));
+    const keepGoingSound = useAudioPlayer(require('../../assets/keepgoing.mp3'));
+    const secondsSound = useAudioPlayer(require('../../assets/seconds.mp3'));
+    const newRecordSound = useAudioPlayer(require('../../assets/new-record.mp3'));
+    const finishedSound = useAudioPlayer(require('../../assets/finished.mp3'));
 
     // Pour la détection de mouvement améliorée
     const lastRepTime = useRef(0);

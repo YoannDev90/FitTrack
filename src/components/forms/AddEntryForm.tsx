@@ -232,7 +232,7 @@ export function AddEntryForm({
 
     const handleRealTimeTracking = useCallback(() => {
         onDismiss?.();
-        router.push('/rep-counter');
+        router.push('/repCounter/rep-counter');
     }, [onDismiss]);
 
     // ── Submit ───────────────────────────────────────────────────────────────
