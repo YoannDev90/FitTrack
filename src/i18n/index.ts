@@ -26,10 +26,16 @@ const getInitialLanguage = (): LanguageCode => {
     if (typeof saved === 'string' && (saved === 'fr' || saved === 'en')) {
         return saved;
     }
-    
-    // Detect from device locale
-    const deviceLocale = Localization.getLocales()[0]?.languageCode ?? 'fr';
-    return deviceLocale === 'en' ? 'en' : 'fr'; // Default to French
+
+    // No saved preference yet – we're on first launch.  Detect from device locale
+    // and then persist the decision so the app doesn't flip languages unexpectedly
+    // on every start.
+    const deviceLocale = Localization.getLocales()[0]?.languageCode ?? 'en';
+    const detected: LanguageCode = deviceLocale.startsWith('en') ? 'en' : 'fr';
+
+    // Persist the detected language so future launches use it unless changed
+    storageHelpers.setString('language', detected);
+    return detected;
 };
 
 // Initialize i18next
