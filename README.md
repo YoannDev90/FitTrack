@@ -10,6 +10,10 @@
 [![Privacy](https://img.shields.io/badge/Privacy-100%25-green.svg?style=for-the-badge&logo=shield&logoColor=white)]()
 [![Health Connect](https://img.shields.io/badge/Health_Connect-Android-3DDC84.svg?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/health-and-fitness/guides/health-connect)
 
+🇫🇷 Ce README est en français.  
+🇬🇧 See the [English README](README_EN.md)
+
+
 **Spix** est une application de suivi fitness moderne conçue avec une philosophie simple : **vos données vous appartiennent**. Elle combine un design *Glassmorphism* sombre ultra-soigné, une gamification motivante et des fonctionnalités avancées (Health Connect, AI Rep Counter) tout en fonctionnant parfaitement **hors ligne**.
 
 ---
