@@ -236,6 +236,11 @@ export interface UserSettings {
   hideProgressRing?: boolean;
   // Labs: OpenFoodFacts barcode scanner enabled
   openFoodFactsEnabled?: boolean;
+
+  // Personal information (optional, may be shared with analysis services)
+  gender?: 'male' | 'female' | 'other';
+  heightCm?: number; // Height in centimeters
+  bodyWeightKg?: number; // Personal body weight (separate from measure entries)
 }
 
 // ============================================================================

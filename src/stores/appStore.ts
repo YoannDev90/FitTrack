@@ -118,6 +118,9 @@ const defaultSettings: UserSettings = {
     debugPlank: false,
     developerMode: false,
     skipSensorSelection: false,
+    gender: undefined,
+    heightCm: undefined,
+    bodyWeightKg: undefined,
 };
 
 // Configuration par défaut des sports

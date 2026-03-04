@@ -201,6 +201,19 @@ export default function SettingsMainScreen() {
           }}
         />
 
+        {/* PROFILE / PERSONAL INFO */}
+        <SectionTitle title={t('settings.personalInfo')} delay={150} />
+        <GlassCard style={styles.categoryCard}>
+          <CategoryButton
+            icon={<Users size={22} color="#22d3ee" />}
+            iconColor="#22d3ee"
+            title={t('settings.personalInfo')}
+            subtitle={t('settings.personalInfoDesc')}
+            onPress={() => router.push('/settings/personal')}
+            delay={160}
+          />
+        </GlassCard>
+
         {/* CATÉGORIES PRINCIPALES */}
         <SectionTitle title={t('settings.preferences')} delay={150} />
         <GlassCard style={styles.categoryCard}>
