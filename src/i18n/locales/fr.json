@@ -27,6 +27,8 @@
     "retry": "Réessayer",
     "days": "jours",
     "day": "jour",
+    "daysShort": "j",
+    "times": "fois",
     "hours": "heures",
     "hour": "heure",
     "minutes": "minutes",
@@ -47,6 +49,48 @@
     "thursday": "Jeudi",
     "friday": "Vendredi",
     "saturday": "Samedi"
+  },
+  "streak": {
+    "start": "C'est\nle moment\nde commencer",
+    "keep": "Continue\ncomme ça !",
+    "momentum": "Tu es\nsur ta\nlancée",
+    "exceptional": "Performance\nexceptionnelle",
+    "record": "Record",
+    "ofRecord": "du record",
+    "startToday": "Démarre aujourd'hui !"
+  },
+  "stats": {
+    "activity": "ACTIVITÉ",
+    "totalSessions": "séances au total",
+    "kmRun": "km courus",
+    "minCardio": "min cardio",
+    "weeklyGoal": "obj. /semaine"
+  },
+  "calendar": {
+    "mon": "L",
+    "tue": "M",
+    "wed": "M",
+    "thu": "J",
+    "fri": "V",
+    "sat": "S",
+    "sun": "D",
+    "activeDays": "jours actifs"
+  },
+  "chart": {
+    "noData": "Pas encore de données"
+  },
+  "weight": {
+    "first": "Premier",
+    "current": "Actuel",
+    "change": "Évolution",
+    "measures": "Mesures"
+  },
+  "badge": {
+    "unlocked": "Débloqué",
+    "locked": "Verrouillé",
+    "noDesc": "Complète des objectifs pour débloquer ce badge.",
+    "unlockedOn": "Débloqué le",
+    "close": "Compris"
   },
   "tabs": {
     "home": "Accueil",
@@ -93,7 +137,9 @@
       "description": "Objectif hebdo atteint 4 semaines de suite"
     },
     "unlocked": "Débloqué !",
-    "locked": "Verrouillé"
+    "locked": "Verrouillé",
+    "sectionUnlocked": "Débloqués",
+    "sectionInProgress": "En cours"
   },
   "home": {
     "title": "Aujourd'hui",
@@ -183,7 +229,10 @@
     "skip": "Passer"
   },
   "progress": {
+    "eyebrow": "TABLEAU DE BORD",
     "title": "Progression",
+    "currentStreak": "Série actuelle",
+    "exerciseOfMonth": "Exercice du mois",
     "monthlyProgress": "Progression mensuelle",
     "monthlyCount": "{{count}} séances",
     "streak": {

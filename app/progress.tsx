@@ -1,257 +1,589 @@
 // ============================================================================
-// PROGRESS SCREEN - Streak, Stats, Graphiques (Redesign complet)
+// PROGRESS SCREEN — Luxury Editorial · v4
+// Fixed: arc segmentation, bar chart, badge modal, calendar checkmarks
+// i18n fully configured · All dynamic logic preserved
 // ============================================================================
 
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import React, { useMemo, useState, useRef } from 'react';
+import {
+    View, Text, StyleSheet, ScrollView, Dimensions,
+    TouchableOpacity, Modal, Pressable, Animated as RNAnimated,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import Svg, { Rect, Text as SvgText, Path, Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Animated, {
+    FadeInDown, FadeIn, FadeInLeft, FadeInRight,
+    useSharedValue, useAnimatedStyle, withSpring,
+} from 'react-native-reanimated';
+import Svg, {
+    Rect, Text as SvgText, Path, Circle, Defs,
+    LinearGradient as SvgLinearGradient, Stop, Line,
+    ClipPath, G,
+} from 'react-native-svg';
 import {
-    Flame,
-    Trophy,
-    Target,
-    TrendingUp,
-    Calendar,
-    Dumbbell,
-    Footprints,
-    Scale,
-    Zap,
-    Award,
-    CheckCircle2,
+    Flame, Trophy, Target, TrendingUp, Calendar,
+    Dumbbell, Footprints, Scale, Zap, Award,
+    Lock, X, CheckCircle,
 } from 'lucide-react-native';
-import {
-    GlassCard,
-    SectionHeader,
-    BadgeWithProgress,
-    EmptyState,
-} from '../src/components/ui';
 import { useAppStore } from '../src/stores';
 import { getBadgesWithState } from '../src/utils/badges';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../src/constants';
-import type { MeasureEntry, HomeWorkoutEntry } from '../src/types';
 import { useTranslation } from 'react-i18next';
 import { getMonthName } from '../src/utils/date';
+import type { MeasureEntry, HomeWorkoutEntry } from '../src/types';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SW } = Dimensions.get('window');
+const PAD = 18;
 
-// Composant pour une stat card
-function StatCard({
-    icon,
-    value,
-    label,
-    color,
-    delay = 0
-}: {
-    icon: React.ReactNode;
-    value: string | number;
-    label: string;
-    color: string;
-    delay?: number;
-}) {
-    return (
-        <Animated.View entering={FadeInDown.delay(delay).springify()} style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: `${color}22` }]}>
-                {icon}
-            </View>
-            <Text style={styles.statValue}>{value}</Text>
-            <Text style={styles.statLabel}>{label}</Text>
-        </Animated.View>
-    );
-}
+// ─── Design Tokens ────────────────────────────────────────────────────────────
+const C = {
+    bg:          '#070709',
+    surface:     '#0e0f14',
+    surfaceUp:   '#13151e',
+    surfaceHigh: '#1a1d28',
+    border:      'rgba(255,255,255,0.07)',
+    borderUp:    'rgba(255,255,255,0.12)',
+    text:        '#f0ece4',
+    textSub:     'rgba(240,236,228,0.55)',
+    textMuted:   'rgba(240,236,228,0.28)',
+    // Primary accent — warm coral-ember
+    ember:       '#ff5533',
+    emberMid:    '#ff7a55',
+    emberGlow:   'rgba(255,85,51,0.15)',
+    emberBorder: 'rgba(255,85,51,0.25)',
+    // Secondary
+    gold:        '#e8b84b',
+    goldSoft:    'rgba(232,184,75,0.10)',
+    goldBorder:  'rgba(232,184,75,0.22)',
+    amber:       '#f5a623',
+    // Semantic
+    blue:        '#5599ff',
+    blueSoft:    'rgba(85,153,255,0.10)',
+    blueBorder:  'rgba(85,153,255,0.22)',
+    teal:        '#2dd4bf',
+    tealSoft:    'rgba(45,212,191,0.10)',
+    tealBorder:  'rgba(45,212,191,0.22)',
+    green:       '#34d370',
+    greenSoft:   'rgba(52,211,112,0.10)',
+    greenBorder: 'rgba(52,211,112,0.22)',
+    violet:      '#a78bfa',
+    error:       '#f87171',
+};
 
-// Composant pour le streak hero
-function StreakHero({ current, best }: { current: number; best: number }) {
+const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
+const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
+const T = {
+    nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20,
+    xxl: 26, xxxl: 34, display: 48,
+};
+const W: Record<string, any> = {
+    light: '300', reg: '400', med: '500',
+    semi: '600', bold: '700', xbold: '800', black: '900',
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const EyebrowLabel = ({ text, color = C.textMuted }: { text: string; color?: string }) => (
+    <Text style={{
+        fontSize: T.nano, fontWeight: W.black, color,
+        letterSpacing: 2.8, textTransform: 'uppercase',
+    }}>
+        {text}
+    </Text>
+);
+
+// Thin separator line
+const Sep = () => <View style={{ height: 1, backgroundColor: C.border, marginVertical: S.xl }} />;
+
+// ─── STREAK COVER ─────────────────────────────────────────────────────────────
+// Fixed: continuous arc instead of segmented (no visible gap artifacts)
+function StreakCover({ current, best }: { current: number; best: number }) {
     const { t } = useTranslation();
-    const streakProgress = best > 0 ? (current / best) * 100 : 0;
+    const pct = best > 0 ? Math.min(current / best, 1) : 0;
+
+    // Arc geometry — single continuous path, much cleaner
+    const SIZE = 160;
+    const cx = SIZE / 2, cy = SIZE / 2;
+    const R_outer = 70, R_inner = 58;
+    const GAP_DEG = 40; // degrees cut at bottom
+    const START_ANGLE = (90 + GAP_DEG / 2) * (Math.PI / 180); // start from bottom-left
+    const END_ANGLE   = (90 - GAP_DEG / 2 + 360) * (Math.PI / 180); // end at bottom-right
+    const FULL_SWEEP  = (360 - GAP_DEG) * (Math.PI / 180);
+
+    const polarToXY = (angle: number, r: number) => ({
+        x: cx + r * Math.cos(angle - Math.PI / 2),
+        y: cy + r * Math.sin(angle - Math.PI / 2),
+    });
+
+    const arcPath = (start: number, end: number, rOut: number, rIn: number) => {
+        const s1 = polarToXY(start, rOut);
+        const e1 = polarToXY(end, rOut);
+        const s2 = polarToXY(end, rIn);
+        const e2 = polarToXY(start, rIn);
+        const large = end - start > Math.PI ? 1 : 0;
+        return [
+            `M ${s1.x} ${s1.y}`,
+            `A ${rOut} ${rOut} 0 ${large} 1 ${e1.x} ${e1.y}`,
+            `L ${s2.x} ${s2.y}`,
+            `A ${rIn} ${rIn} 0 ${large} 0 ${e2.x} ${e2.y}`,
+            'Z',
+        ].join(' ');
+    };
+
+    const trackPath = arcPath(
+        START_ANGLE * (Math.PI / 180),
+        END_ANGLE   * (Math.PI / 180),
+        R_outer, R_inner
+    );
+
+    // Fill arc — sweep from start to pct
+    const fillEnd = START_ANGLE * (Math.PI / 180) + FULL_SWEEP * pct;
+    const fillPath = pct > 0.01
+        ? arcPath(START_ANGLE * (Math.PI / 180), fillEnd, R_outer, R_inner)
+        : null;
 
     return (
-        <Animated.View entering={FadeInDown.delay(100).springify()}>
+        <Animated.View entering={FadeInDown.delay(60).springify()} style={sc.outer}>
             <LinearGradient
-                colors={['rgba(31, 106, 102, 0.6)', 'rgba(31, 106, 102, 0.25)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.streakHero}
+                colors={['#160c06', '#0c0a09', '#070709']}
+                style={sc.bg}
             >
-                <View style={styles.streakContent}>
-                    <View style={styles.streakMain}>
-                        <View style={styles.streakIconWrapper}>
-                            <Flame size={40} color="#fbbf24" fill="#fbbf24" />
-                        </View>
-                        <View style={styles.streakInfo}>
-                            <Text style={styles.streakLabel}>{t('progress.streak.current')}</Text>
-                            <Text style={styles.streakValue}>
-                                {current} <Text style={styles.streakUnit}>{current > 1 ? t('common.days') : t('common.day')}</Text>
+                {/* Grain texture overlay */}
+                <View style={sc.grain} pointerEvents="none" />
+
+                <View style={sc.content}>
+                    {/* Arc ring */}
+                    <View style={sc.ringWrap}>
+                        <Svg width={SIZE} height={SIZE}>
+                            <Defs>
+                                <SvgLinearGradient id="arcFill" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <Stop offset="0%" stopColor={C.amber} />
+                                    <Stop offset="60%" stopColor={C.ember} />
+                                    <Stop offset="100%" stopColor="#cc2200" />
+                                </SvgLinearGradient>
+                            </Defs>
+                            {/* Track */}
+                            <Path d={trackPath} fill="rgba(255,255,255,0.05)" />
+                            {/* Fill */}
+                            {fillPath && <Path d={fillPath} fill="url(#arcFill)" />}
+                        </Svg>
+
+                        {/* Center content */}
+                        <View style={sc.ringCenter}>
+                            <Flame size={18} color={C.amber} fill={C.amber} />
+                            <Text style={sc.bigNum}>{current}</Text>
+                            <Text style={sc.bigUnit}>
+                                {current === 1
+                                    ? t('common.day', 'jour')
+                                    : t('common.days', 'jours')}
                             </Text>
                         </View>
                     </View>
 
-                    <View style={styles.streakBest}>
-                        <Trophy size={16} color={Colors.warning} />
-                        <Text style={styles.streakBestText}>{t('progress.streak.record')}: {best}</Text>
-                    </View>
-                </View>
+                    {/* Info col */}
+                    <View style={sc.infoCol}>
+                        <EyebrowLabel text={t('progress.currentStreak', 'Série actuelle')} color={C.amber} />
 
-                {/* Progress bar */}
-                <View style={styles.streakProgressContainer}>
-                    <View style={styles.streakProgressBg}>
-                        <View style={[styles.streakProgressFill, { width: `${Math.min(streakProgress, 100)}%` }]} />
+                        <Text style={sc.motivText}>
+                            {current === 0
+                                ? t('streak.start', "C'est\nle moment\nde commencer")
+                                : current < 7
+                                ? t('streak.keep', 'Continue\ncomme ça !')
+                                : current < 30
+                                ? t('streak.momentum', 'Tu es\nsur ta\nlancée')
+                                : t('streak.exceptional', 'Performance\nexceptionnelle')}
+                        </Text>
+
+                        {best > 0 && (
+                            <View style={sc.recordBadge}>
+                                <Trophy size={10} color={C.gold} strokeWidth={2.5} />
+                                <Text style={sc.recordText}>
+                                    {t('streak.record', 'Record')} : {best}{' '}
+                                    {t('common.daysShort', 'j')}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Thin progress bar */}
+                        <View style={sc.pctWrap}>
+                            <View style={sc.pctTrack}>
+                                <LinearGradient
+                                    colors={[C.amber, C.ember]}
+                                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                                    style={[sc.pctFill, { width: `${pct * 100}%` as any }]}
+                                />
+                            </View>
+                            <Text style={sc.pctLabel}>
+                                {best > 0
+                                    ? `${Math.round(pct * 100)}% ${t('streak.ofRecord', 'du record')}`
+                                    : t('streak.startToday', "Démarre aujourd'hui !")}
+                            </Text>
+                        </View>
                     </View>
-                    <Text style={styles.streakProgressText}>
-                        {current > 0 ? t('progress.streak.percentOfRecord', { percent: Math.round(streakProgress) }) : t('progress.streak.startToday')}
-                    </Text>
                 </View>
             </LinearGradient>
         </Animated.View>
     );
 }
 
-// Composant pour le calendrier
-function MonthCalendar({
-    daysInMonth,
-    startDayOfWeek,
-    activeDays,
-    monthName
-}: {
-    daysInMonth: number;
-    startDayOfWeek: number;
-    activeDays: Set<number>;
-    monthName: string;
+const sc = StyleSheet.create({
+    outer: {
+        borderRadius: R.xxxl, overflow: 'hidden', marginBottom: S.sm,
+        borderWidth: 1, borderColor: 'rgba(255,130,60,0.20)',
+        shadowColor: C.ember, shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.18, shadowRadius: 28, elevation: 10,
+    },
+    bg:    { padding: S.xl },
+    grain: {
+        ...StyleSheet.absoluteFillObject,
+        opacity: 0.04,
+        backgroundColor: '#fff',
+    },
+    content:    { flexDirection: 'row', alignItems: 'center', gap: S.lg },
+    ringWrap:   { width: 160, height: 160, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+    ringCenter: { position: 'absolute', alignItems: 'center', gap: 2 },
+    bigNum: {
+        fontSize: 46, fontWeight: W.black, color: C.text,
+        lineHeight: 50, letterSpacing: -2, includeFontPadding: false,
+    },
+    bigUnit:    { fontSize: T.xs, color: C.textMuted, fontWeight: W.semi, letterSpacing: 0.5 },
+    infoCol:    { flex: 1, gap: S.lg },
+    motivText: {
+        fontSize: T.xl, fontWeight: W.black, color: C.text,
+        letterSpacing: -0.6, lineHeight: 27,
+    },
+    recordBadge: {
+        flexDirection: 'row', alignItems: 'center', gap: S.xs,
+        backgroundColor: C.goldSoft, borderWidth: 1, borderColor: C.goldBorder,
+        borderRadius: R.full, paddingHorizontal: S.md, paddingVertical: 5,
+        alignSelf: 'flex-start',
+    },
+    recordText: { fontSize: T.xs, fontWeight: W.bold, color: C.gold },
+    pctWrap:    { gap: S.xs },
+    pctTrack:   { height: 2, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: R.full, overflow: 'hidden' },
+    pctFill:    { height: '100%', borderRadius: R.full },
+    pctLabel:   { fontSize: T.micro, color: C.textMuted, fontWeight: W.med },
+});
+
+// ─── STATS SECTION ────────────────────────────────────────────────────────────
+function StatsSection({ workouts, distance, duration, goal }: {
+    workouts: number; distance: number; duration: number; goal: number;
 }) {
     const { t } = useTranslation();
-    const today = new Date().getDate();
-    const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    const big = {
+        val: workouts.toString(), unit: t('stats.totalSessions', 'séances au total'),
+        label: t('stats.activity', 'ACTIVITÉ'), color: C.ember,
+        icon: <Dumbbell size={16} color={C.ember} strokeWidth={2} />,
+        bg: C.emberGlow, border: C.emberBorder,
+    };
+    const small = [
+        {
+            val: `${distance.toFixed(1)}`, unit: t('stats.kmRun', 'km courus'),
+            color: C.blue, icon: <Footprints size={14} color={C.blue} strokeWidth={2} />,
+            bg: C.blueSoft, border: C.blueBorder,
+        },
+        {
+            val: `${duration}`, unit: t('stats.minCardio', 'min cardio'),
+            color: C.teal, icon: <Zap size={14} color={C.teal} strokeWidth={2} />,
+            bg: C.tealSoft, border: C.tealBorder,
+        },
+        {
+            val: `${goal}`, unit: t('stats.weeklyGoal', 'obj. /semaine'),
+            color: C.gold, icon: <Target size={14} color={C.gold} strokeWidth={2} />,
+            bg: C.goldSoft, border: C.goldBorder,
+        },
+    ];
 
     return (
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
-            <GlassCard style={styles.calendarCard}>
-                <View style={styles.calendarHeader}>
-                    <Calendar size={18} color={Colors.cta} />
-                    <Text style={styles.calendarTitle}>{monthName}</Text>
-                    <View style={styles.calendarBadge}>
-                        <Text style={styles.calendarBadgeText}>{t('progress.activeDays', { count: activeDays.size })}</Text>
-                    </View>
-                </View>
+        <Animated.View entering={FadeInDown.delay(130).springify()} style={sts.row}>
+            {/* Big card */}
+            <View style={[sts.bigCard, { borderColor: big.border }]}>
+                <LinearGradient colors={[big.bg, 'transparent']} style={StyleSheet.absoluteFill} />
+                <View style={[sts.bigIcon, { backgroundColor: big.bg }]}>{big.icon}</View>
+                <EyebrowLabel text={big.label} color={big.color} />
+                <Text style={[sts.bigVal, { color: big.color }]}>{big.val}</Text>
+                <Text style={sts.bigUnit}>{big.unit}</Text>
+            </View>
 
-                {/* Week days header */}
-                <View style={styles.weekDaysRow}>
-                    {weekDays.map((day, i) => (
-                        <Text key={i} style={styles.weekDayLabel}>{day}</Text>
-                    ))}
-                </View>
-
-                {/* Calendar grid */}
-                <View style={styles.calendarGrid}>
-                    {Array.from({ length: 42 }).map((_, index) => {
-                        const dayIndex = index - startDayOfWeek;
-                        if (dayIndex < 0 || dayIndex >= daysInMonth) {
-                            return <View key={`empty-${index}`} style={styles.calendarDayEmpty} />;
-                        }
-                        const day = dayIndex + 1;
-                        const isActive = activeDays.has(day);
-                        const isToday = day === today;
-
-                        return (
-                            <View
-                                key={day}
-                                style={[
-                                    styles.calendarDay,
-                                    isActive && styles.calendarDayActive,
-                                    isToday && styles.calendarDayToday,
-                                ]}
-                            >
-                                {isActive ? (
-                                    <CheckCircle2 size={16} color={Colors.cta} fill={`${Colors.cta}33`} />
-                                ) : (
-                                    <Text style={[styles.calendarDayText, isToday && styles.calendarDayTextToday]}>
-                                        {day}
-                                    </Text>
-                                )}
-                            </View>
-                        );
-                    })}
-                </View>
-            </GlassCard>
+            {/* 3 small stacked */}
+            <View style={sts.smallCol}>
+                {small.map((s, i) => (
+                    <Animated.View key={i} entering={FadeInRight.delay(160 + i * 50).springify()}
+                        style={[sts.smallCard, { borderColor: s.border }]}>
+                        <View style={[sts.smallIcon, { backgroundColor: s.bg }]}>{s.icon}</View>
+                        <View style={sts.smallText}>
+                            <Text style={[sts.smallVal, { color: s.color }]}>{s.val}</Text>
+                            <Text style={sts.smallUnit}>{s.unit}</Text>
+                        </View>
+                    </Animated.View>
+                ))}
+            </View>
         </Animated.View>
     );
 }
 
-// Composant pour le graphique des séances
-function WorkoutChart({ data, maxValue }: { data: { label: string; value: number }[]; maxValue: number }) {
-    const { t } = useTranslation();
+const sts = StyleSheet.create({
+    row:      { flexDirection: 'row', gap: S.sm, marginBottom: S.sm, alignItems: 'stretch' },
+    bigCard: {
+        flex: 1.15, backgroundColor: C.surface, borderRadius: R.xxxl,
+        borderWidth: 1, padding: S.xl, gap: S.sm, overflow: 'hidden',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25, shadowRadius: 14, elevation: 6,
+    },
+    bigIcon:  { width: 34, height: 34, borderRadius: R.md, alignItems: 'center', justifyContent: 'center', marginBottom: S.xs },
+    bigVal:   { fontSize: 44, fontWeight: W.black, letterSpacing: -2, lineHeight: 46, includeFontPadding: false },
+    bigUnit:  { fontSize: T.xs, color: C.textMuted, fontWeight: W.med, lineHeight: 16 },
+    smallCol: { flex: 1, gap: S.sm },
+    smallCard: {
+        flex: 1, backgroundColor: C.surface, borderRadius: R.xl,
+        borderWidth: 1, paddingHorizontal: S.md, paddingVertical: S.md,
+        flexDirection: 'row', alignItems: 'center', gap: S.sm, overflow: 'hidden',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.18, shadowRadius: 6, elevation: 3,
+    },
+    smallIcon: { width: 28, height: 28, borderRadius: R.sm, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+    smallText: { flex: 1 },
+    smallVal:  { fontSize: T.lg, fontWeight: W.black, letterSpacing: -0.5 },
+    smallUnit: { fontSize: T.micro, color: C.textMuted, fontWeight: W.med, marginTop: 1 },
+});
 
-    if (data.length === 0) {
+// ─── CALENDAR ─────────────────────────────────────────────────────────────────
+// Fixed: shows checkmark ✓ on active days instead of dot
+function MonthCalendar({ daysInMonth, startDayOfWeek, activeDays, monthName }: {
+    daysInMonth: number; startDayOfWeek: number;
+    activeDays: Set<number>; monthName: string;
+}) {
+    const { t } = useTranslation();
+    const today = new Date().getDate();
+    const days = [
+        t('calendar.mon', 'L'), t('calendar.tue', 'M'), t('calendar.wed', 'M'),
+        t('calendar.thu', 'J'), t('calendar.fri', 'V'), t('calendar.sat', 'S'),
+        t('calendar.sun', 'D'),
+    ];
+
+    return (
+        <Animated.View entering={FadeInDown.delay(200).springify()} style={cal.card}>
+            <View style={cal.header}>
+                <View style={cal.headerLeft}>
+                    <View style={cal.calIcon}>
+                        <Calendar size={13} color={C.ember} strokeWidth={2} />
+                    </View>
+                    <Text style={cal.month}>{monthName}</Text>
+                </View>
+                <View style={cal.activePill}>
+                    <CheckCircle size={11} color={C.ember} strokeWidth={2.5} />
+                    <Text style={cal.activeText}>
+                        {activeDays.size} {t('calendar.activeDays', 'jours actifs')}
+                    </Text>
+                </View>
+            </View>
+
+            {/* Day headers */}
+            <View style={cal.weekRow}>
+                {days.map((d, i) => (
+                    <Text key={i} style={cal.dayLabel}>{d}</Text>
+                ))}
+            </View>
+
+            {/* Grid */}
+            <View style={cal.grid}>
+                {Array.from({ length: 42 }).map((_, idx) => {
+                    const di = idx - startDayOfWeek;
+                    if (di < 0 || di >= daysInMonth) {
+                        return <View key={`e${idx}`} style={cal.empty} />;
+                    }
+                    const day = di + 1;
+                    const active  = activeDays.has(day);
+                    const isToday = day === today;
+                    const future  = day > today;
+
+                    return (
+                        <View key={day} style={[
+                            cal.cell,
+                            active  && cal.cellActive,
+                            isToday && !active && cal.cellToday,
+                            future  && cal.cellFuture,
+                        ]}>
+                            {active ? (
+                                // Checkmark for completed days
+                                <View style={cal.checkWrap}>
+                                    <CheckCircle
+                                        size={18}
+                                        color={C.ember}
+                                        fill={C.emberGlow}
+                                        strokeWidth={2.5}
+                                    />
+                                </View>
+                            ) : (
+                                <Text style={[
+                                    cal.cellNum,
+                                    isToday && cal.cellNumToday,
+                                    future  && cal.cellNumFuture,
+                                ]}>
+                                    {day}
+                                </Text>
+                            )}
+                        </View>
+                    );
+                })}
+            </View>
+        </Animated.View>
+    );
+}
+
+const cal = StyleSheet.create({
+    card: {
+        backgroundColor: C.surface, borderRadius: R.xxxl,
+        borderWidth: 1, borderColor: C.border,
+        padding: S.xl, marginBottom: S.sm,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2, shadowRadius: 12, elevation: 5,
+    },
+    header: {
+        flexDirection: 'row', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: S.lg,
+    },
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
+    calIcon: {
+        width: 26, height: 26, borderRadius: R.sm,
+        backgroundColor: C.emberGlow, alignItems: 'center', justifyContent: 'center',
+    },
+    month: {
+        fontSize: T.md, fontWeight: W.xbold, color: C.text,
+        textTransform: 'capitalize', letterSpacing: -0.2,
+    },
+    activePill: {
+        flexDirection: 'row', alignItems: 'center', gap: S.xs,
+        backgroundColor: C.emberGlow, borderWidth: 1, borderColor: C.emberBorder,
+        borderRadius: R.full, paddingHorizontal: S.md, paddingVertical: 5,
+    },
+    activeText: { fontSize: T.xs, fontWeight: W.bold, color: C.ember },
+    weekRow: { flexDirection: 'row', marginBottom: S.sm },
+    dayLabel: {
+        flex: 1, textAlign: 'center', fontSize: T.micro,
+        color: C.textMuted, fontWeight: W.bold, letterSpacing: 0.8,
+    },
+    grid:      { flexDirection: 'row', flexWrap: 'wrap' },
+    empty:     { width: '14.28%', aspectRatio: 1 },
+    cell: {
+        width: '14.28%', aspectRatio: 1,
+        alignItems: 'center', justifyContent: 'center',
+    },
+    cellActive: {},
+    cellToday: {
+        borderWidth: 1.5, borderColor: C.ember, borderRadius: 8,
+    },
+    cellFuture: { opacity: 0.25 },
+    checkWrap:  { alignItems: 'center', justifyContent: 'center' },
+    cellNum: {
+        fontSize: T.sm - 1, color: C.textMuted, fontWeight: W.med,
+    },
+    cellNumToday: { color: C.text, fontWeight: W.black },
+    cellNumFuture: { opacity: 0.4 },
+});
+
+// ─── BAR CHART — Fixed layout & proportions ───────────────────────────────────
+function WorkoutBarChart({ data, maxValue }: { data: { label: string; value: number }[]; maxValue: number }) {
+    const { t } = useTranslation();
+    if (!data.length) {
         return (
-            <EmptyState
-                icon="📊"
-                title={t('progress.noData')}
-                subtitle={t('progress.noDataHint')}
-            />
+            <View style={{ alignItems: 'center', paddingVertical: S.xxl, gap: S.sm }}>
+                <Text style={{ fontSize: 28 }}>📊</Text>
+                <Text style={{ color: C.textMuted, fontSize: T.sm }}>
+                    {t('chart.noData', 'Pas encore de données')}
+                </Text>
+            </View>
         );
     }
 
-    const chartWidth = 280;
-    const chartHeight = 100;
-    const barWidth = Math.min(35, (chartWidth - 20) / data.length - 8);
+    // Fixed dimensions — compute precisely
+    const cW = SW - PAD * 2 - S.xl * 2;
+    const cH = 120;
+    const BOTTOM_LABEL_H = 24;
+    const TOP_VAL_H = 18;
+    const CHART_H = cH - TOP_VAL_H;
+    const n = data.length;
+    const BAR_W = Math.min(32, Math.floor((cW * 0.7) / n));
+    const SPACING = (cW - n * BAR_W) / (n + 1);
+    const max = Math.max(maxValue, 1);
 
     return (
-        <View style={styles.chartWrapper}>
-            <Svg width="100%" height={130} viewBox={`0 0 ${chartWidth} 130`}>
+        <View style={{ alignItems: 'flex-start' }}>
+            <Svg
+                width={cW}
+                height={cH + BOTTOM_LABEL_H}
+                viewBox={`0 0 ${cW} ${cH + BOTTOM_LABEL_H}`}
+            >
                 <Defs>
-                    <SvgLinearGradient id="barGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor={Colors.cta} />
-                        <Stop offset="100%" stopColor={Colors.cta2} />
+                    <SvgLinearGradient id="barActive" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor={C.ember} stopOpacity="1" />
+                        <Stop offset="100%" stopColor={C.amber} stopOpacity="0.6" />
+                    </SvgLinearGradient>
+                    <SvgLinearGradient id="barInactive" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
+                        <Stop offset="100%" stopColor="rgba(255,255,255,0.03)" />
                     </SvgLinearGradient>
                 </Defs>
-                {data.map((item, index) => {
-                    const gap = (chartWidth - data.length * barWidth) / (data.length + 1);
-                    const x = gap + index * (barWidth + gap);
-                    const barHeight = (item.value / maxValue) * 80;
-                    const y = chartHeight - barHeight;
+
+                {/* Baseline */}
+                <Line
+                    x1={0} y1={cH} x2={cW} y2={cH}
+                    stroke="rgba(255,255,255,0.06)" strokeWidth={1}
+                />
+
+                {data.map((item, i) => {
+                    const x   = SPACING + i * (BAR_W + SPACING);
+                    const bH  = item.value > 0
+                        ? Math.max((item.value / max) * CHART_H, 8)
+                        : 6;
+                    const y   = cH - bH;
+                    const isHighlight = i === data.length - 1;
+                    const fill = item.value > 0
+                        ? (isHighlight ? 'url(#barActive)' : 'url(#barInactive)')
+                        : 'url(#barInactive)';
 
                     return (
-                        <React.Fragment key={index}>
-                            {/* Bar shadow */}
+                        <G key={i}>
+                            {/* Bar body */}
                             <Rect
-                                x={x + 2}
-                                y={y + 2}
-                                width={barWidth}
-                                height={barHeight}
-                                rx={6}
-                                fill="rgba(0,0,0,0.3)"
+                                x={x} y={y}
+                                width={BAR_W} height={bH}
+                                rx={BAR_W / 3}
+                                fill={fill}
                             />
-                            {/* Bar */}
-                            <Rect
-                                x={x}
-                                y={y}
-                                width={barWidth}
-                                height={barHeight}
-                                rx={6}
-                                fill="url(#barGradient)"
-                            />
+                            {/* Top cap glow for highlight */}
+                            {isHighlight && item.value > 0 && (
+                                <Rect
+                                    x={x} y={y}
+                                    width={BAR_W} height={Math.min(5, bH)}
+                                    rx={BAR_W / 3}
+                                    fill={C.ember}
+                                    opacity={0.9}
+                                />
+                            )}
                             {/* Value label */}
-                            <SvgText
-                                x={x + barWidth / 2}
-                                y={y - 8}
-                                fontSize="12"
-                                fill={Colors.text}
-                                textAnchor="middle"
-                                fontWeight="600"
-                            >
-                                {item.value}
-                            </SvgText>
+                            {item.value > 0 && (
+                                <SvgText
+                                    x={x + BAR_W / 2}
+                                    y={y - 5}
+                                    fontSize={10}
+                                    fill={isHighlight ? C.ember : C.textMuted}
+                                    textAnchor="middle"
+                                    fontWeight="800"
+                                >
+                                    {item.value}
+                                </SvgText>
+                            )}
                             {/* Month label */}
                             <SvgText
-                                x={x + barWidth / 2}
-                                y={chartHeight + 18}
-                                fontSize="10"
-                                fill={Colors.muted}
+                                x={x + BAR_W / 2}
+                                y={cH + 16}
+                                fontSize={10}
+                                fill={isHighlight ? C.textSub : C.textMuted}
                                 textAnchor="middle"
+                                fontWeight={isHighlight ? '700' : '400'}
                             >
                                 {item.label}
                             </SvgText>
-                        </React.Fragment>
+                        </G>
                     );
                 })}
             </Svg>
@@ -259,755 +591,720 @@ function WorkoutChart({ data, maxValue }: { data: { label: string; value: number
     );
 }
 
-// Composant pour le graphique de poids
-function WeightChart({ data }: { data: MeasureEntry[] }) {
+// ─── WEIGHT SPARKLINE ─────────────────────────────────────────────────────────
+function WeightSparkline({ data }: { data: MeasureEntry[] }) {
+    const { t } = useTranslation();
     if (data.length < 2) return null;
 
     const weights = data.map(d => d.weight!);
-    const minWeight = Math.min(...weights) - 1;
-    const maxWeight = Math.max(...weights) + 1;
-    const range = maxWeight - minWeight || 1;
-    const width = 280;
-    const height = 100;
-    const padding = 20;
+    const minW = Math.min(...weights) - 2;
+    const maxW = Math.max(...weights) + 2;
+    const range = maxW - minW || 1;
+    const cW = SW - PAD * 2 - S.xl * 2;
+    const cH = 90, pad = 16;
+    const delta = weights[weights.length - 1] - weights[0];
 
-    const points = data.map((d, i) => {
-        const x = padding + (i / (data.length - 1)) * (width - 2 * padding);
-        const y = height - padding - ((d.weight! - minWeight) / range) * (height - 2 * padding);
-        return { x, y, weight: d.weight };
-    });
+    const pts = data.map((d, i) => ({
+        x: pad + (i / (data.length - 1)) * (cW - 2 * pad),
+        y: cH - pad - ((d.weight! - minW) / range) * (cH - 2 * pad),
+        w: d.weight,
+    }));
 
-    const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-
-    // Area path
-    const areaPath = `${pathD} L ${points[points.length - 1].x} ${height - padding} L ${points[0].x} ${height - padding} Z`;
+    const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    const areaD = `${lineD} L ${pts[pts.length - 1].x} ${cH - pad} L ${pts[0].x} ${cH - pad} Z`;
 
     return (
-        <View style={styles.weightChartWrapper}>
-            <Svg width="100%" height={140} viewBox={`0 0 ${width} 140`}>
+        <View>
+            <Svg width="100%" height={cH + 6} viewBox={`0 0 ${cW} ${cH + 6}`}>
                 <Defs>
-                    <SvgLinearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <Stop offset="0%" stopColor={Colors.cta} />
-                        <Stop offset="100%" stopColor={Colors.cta2} />
+                    <SvgLinearGradient id="wl" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <Stop offset="0%" stopColor={C.blue} />
+                        <Stop offset="100%" stopColor={C.violet} />
                     </SvgLinearGradient>
-                    <SvgLinearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor={Colors.cta} stopOpacity="0.3" />
-                        <Stop offset="100%" stopColor={Colors.cta} stopOpacity="0" />
+                    <SvgLinearGradient id="wa" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <Stop offset="0%" stopColor={C.blue} stopOpacity="0.20" />
+                        <Stop offset="100%" stopColor={C.blue} stopOpacity="0" />
                     </SvgLinearGradient>
                 </Defs>
-
-                {/* Area fill */}
-                <Path d={areaPath} fill="url(#areaGradient)" />
-
-                {/* Line */}
-                <Path
-                    d={pathD}
-                    stroke="url(#lineGradient)"
-                    strokeWidth={3}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
-
-                {/* Points */}
-                {points.map((p, i) => (
-                    <React.Fragment key={i}>
-                        <Circle cx={p.x} cy={p.y} r={6} fill={Colors.cta} />
-                        <Circle cx={p.x} cy={p.y} r={3} fill={Colors.bg} />
-                        <SvgText
-                            x={p.x}
-                            y={p.y - 12}
-                            fontSize="10"
-                            fill={Colors.text}
-                            textAnchor="middle"
-                            fontWeight="600"
-                        >
-                            {p.weight}
+                <Path d={areaD} fill="url(#wa)" />
+                <Path d={lineD} stroke="url(#wl)" strokeWidth={2.5}
+                    fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                {[pts[0], pts[pts.length - 1]].map((p, i) => (
+                    <G key={i}>
+                        <Circle cx={p.x} cy={p.y} r={6} fill={C.blue} opacity={0.15} />
+                        <Circle cx={p.x} cy={p.y} r={3.5} fill={C.blue} />
+                        <Circle cx={p.x} cy={p.y} r={1.5} fill={C.bg} />
+                        <SvgText x={p.x} y={p.y - 10} fontSize="11"
+                            fill={C.text} textAnchor="middle" fontWeight="800">
+                            {p.w}
                         </SvgText>
-                    </React.Fragment>
+                    </G>
                 ))}
-
-                {/* Axis labels */}
-                <SvgText x={5} y={height - padding + 5} fontSize="9" fill={Colors.muted}>
-                    {minWeight.toFixed(1)}
-                </SvgText>
-                <SvgText x={5} y={padding} fontSize="9" fill={Colors.muted}>
-                    {maxWeight.toFixed(1)}
-                </SvgText>
             </Svg>
 
-            <View style={styles.weightSummary}>
-                <View style={styles.weightSummaryItem}>
-                    <Text style={styles.weightSummaryLabel}>Dernier</Text>
-                    <Text style={styles.weightSummaryValue}>{data[data.length - 1]?.weight} kg</Text>
-                </View>
-                {data.length >= 2 && (
-                    <View style={styles.weightSummaryItem}>
-                        <Text style={styles.weightSummaryLabel}>Évolution</Text>
-                        <Text style={[
-                            styles.weightSummaryValue,
-                            { color: data[data.length - 1].weight! <= data[0].weight! ? Colors.success : Colors.error }
-                        ]}>
-                            {data[data.length - 1].weight! - data[0].weight! > 0 ? '+' : ''}
-                            {(data[data.length - 1].weight! - data[0].weight!).toFixed(1)} kg
-                        </Text>
-                    </View>
-                )}
+            <View style={wsp.footer}>
+                {[
+                    { label: t('weight.first', 'Premier'),  val: `${weights[0]} kg`,          color: C.text },
+                    { label: t('weight.current', 'Actuel'), val: `${weights[weights.length - 1]} kg`, color: C.text },
+                    {
+                        label: t('weight.change', 'Évolution'),
+                        val: `${delta > 0 ? '+' : ''}${delta.toFixed(1)} kg`,
+                        color: delta <= 0 ? C.green : C.error,
+                    },
+                    { label: t('weight.measures', 'Mesures'), val: `${data.length}`, color: C.text },
+                ].map((item, i) => (
+                    <React.Fragment key={i}>
+                        {i > 0 && <View style={wsp.footerSep} />}
+                        <View style={wsp.footerItem}>
+                            <Text style={wsp.footerLabel}>{item.label}</Text>
+                            <Text style={[wsp.footerVal, { color: item.color }]}>{item.val}</Text>
+                        </View>
+                    </React.Fragment>
+                ))}
             </View>
         </View>
     );
 }
 
-export default function ProgressScreen() {
-    const {
-        entries,
-        settings,
-        unlockedBadges,
-        getStreak,
-        getMonthlyStats,
-        getSportEntries,
-    } = useAppStore();
+const wsp = StyleSheet.create({
+    footer: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: S.lg, marginTop: S.lg, paddingTop: S.lg,
+        borderTopWidth: 1, borderTopColor: C.border,
+    },
+    footerItem:  { alignItems: 'center', gap: 2 },
+    footerLabel: { fontSize: T.micro, color: C.textMuted, fontWeight: W.semi, letterSpacing: 0.3 },
+    footerVal:   { fontSize: T.md, fontWeight: W.black, color: C.text, letterSpacing: -0.3 },
+    footerSep:   { width: 1, height: 24, backgroundColor: C.border },
+});
 
+// ─── TOP EXERCISE CARD ────────────────────────────────────────────────────────
+function TopExCard({ name, count }: { name: string; count: number }) {
+    const { t } = useTranslation();
+    return (
+        <Animated.View entering={FadeInLeft.delay(360).springify()} style={txc.card}>
+            <LinearGradient
+                colors={['rgba(232,184,75,0.09)', 'transparent']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
+            <View style={txc.left}>
+                <EyebrowLabel text={t('progress.exerciseOfMonth', 'Exercice du mois')} color={C.gold} />
+                <Text style={txc.name}>{name}</Text>
+            </View>
+            <View style={txc.right}>
+                <Text style={txc.count}>{count}</Text>
+                <Text style={txc.countLabel}>{t('common.times', 'fois')}</Text>
+            </View>
+            <View style={txc.iconAbs} pointerEvents="none">
+                <Award size={64} color={C.gold} strokeWidth={1} opacity={0.07} />
+            </View>
+        </Animated.View>
+    );
+}
+
+const txc = StyleSheet.create({
+    card: {
+        backgroundColor: C.surface, borderRadius: R.xxxl,
+        borderWidth: 1, borderColor: C.goldBorder,
+        padding: S.xl, flexDirection: 'row', alignItems: 'center',
+        marginBottom: S.sm, overflow: 'hidden',
+        shadowColor: C.gold, shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12, shadowRadius: 14, elevation: 5,
+    },
+    left: { flex: 1, gap: S.sm },
+    name: {
+        fontSize: T.xxl, fontWeight: W.black, color: C.text,
+        textTransform: 'capitalize', letterSpacing: -0.6,
+    },
+    right:      { alignItems: 'center' },
+    count:      { fontSize: 44, fontWeight: W.black, color: C.gold, lineHeight: 46, letterSpacing: -2 },
+    countLabel: { fontSize: T.xs, color: C.textMuted, fontWeight: W.semi },
+    iconAbs:    { position: 'absolute', right: S.lg, top: '50%', transform: [{ translateY: -32 }] },
+});
+
+// ─── PERSONAL RECORDS ─────────────────────────────────────────────────────────
+function PersonalRecords({ records }: { records: { id: string; name: string; icon: string; value: string }[] }) {
+    const { t } = useTranslation();
+    if (!records.length) return null;
+
+    return (
+        <Animated.View entering={FadeInDown.delay(400).springify()} style={prc.wrap}>
+            <View style={prc.titleRow}>
+                <Trophy size={15} color={C.gold} strokeWidth={2} />
+                <Text style={prc.title}>{t('progress.personalRecords', 'Records personnels')}</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={prc.scroll}>
+                {records.map((rec, i) => (
+                    <Animated.View key={rec.id} entering={FadeInRight.delay(420 + i * 60).springify()}>
+                        <LinearGradient
+                            colors={['rgba(232,184,75,0.10)', C.surface]}
+                            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                            style={prc.card}
+                        >
+                            <Text style={prc.emoji}>{rec.icon}</Text>
+                            <Text style={prc.recVal}>{rec.value}</Text>
+                            <Text style={prc.recName}>{rec.name}</Text>
+                        </LinearGradient>
+                    </Animated.View>
+                ))}
+            </ScrollView>
+        </Animated.View>
+    );
+}
+
+const prc = StyleSheet.create({
+    wrap:     { marginBottom: S.sm },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, marginBottom: S.lg },
+    title:    { fontSize: T.xl, fontWeight: W.black, color: C.text, letterSpacing: -0.4 },
+    scroll:   { gap: S.sm, paddingBottom: S.xs },
+    card: {
+        width: 106, borderRadius: R.xxl, borderWidth: 1, borderColor: C.goldBorder,
+        padding: S.lg, alignItems: 'center', gap: S.xs,
+        shadowColor: C.gold, shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.10, shadowRadius: 8, elevation: 3,
+    },
+    emoji:   { fontSize: 28, marginBottom: S.xs },
+    recVal:  { fontSize: T.lg, fontWeight: W.black, color: C.gold, letterSpacing: -0.4 },
+    recName: { fontSize: T.micro, color: C.textMuted, fontWeight: W.semi, textAlign: 'center', lineHeight: 14 },
+});
+
+// ─── BADGE DETAIL MODAL ───────────────────────────────────────────────────────
+function BadgeModal({ badge, onClose }: { badge: any | null; onClose: () => void }) {
+    const { t } = useTranslation();
+    if (!badge) return null;
+
+    const isUnlocked = !!badge.unlockedAt;
+    const dateStr = badge.unlockedAt
+        ? new Date(badge.unlockedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        : null;
+
+    return (
+        <Modal transparent animationType="fade" visible={!!badge} onRequestClose={onClose}>
+            <Pressable style={bmo.backdrop} onPress={onClose}>
+                <Pressable style={bmo.sheet} onPress={e => e.stopPropagation()}>
+                    <LinearGradient
+                        colors={isUnlocked
+                            ? ['rgba(232,184,75,0.12)', C.surface, C.surface]
+                            : [C.surface, C.surface]}
+                        style={bmo.grad}
+                    >
+                        {/* Close button */}
+                        <TouchableOpacity style={bmo.closeBtn} onPress={onClose}>
+                            <X size={16} color={C.textMuted} strokeWidth={2.5} />
+                        </TouchableOpacity>
+
+                        {/* Emoji */}
+                        <Text style={bmo.emoji}>{badge.emoji || '🏅'}</Text>
+
+                        {/* Status pill */}
+                        <View style={[
+                            bmo.statusPill,
+                            { backgroundColor: isUnlocked ? C.goldSoft : 'rgba(255,255,255,0.05)',
+                              borderColor: isUnlocked ? C.goldBorder : C.border }
+                        ]}>
+                            {isUnlocked
+                                ? <Trophy size={11} color={C.gold} strokeWidth={2.5} />
+                                : <Lock size={11} color={C.textMuted} strokeWidth={2.5} />
+                            }
+                            <Text style={[bmo.statusText, { color: isUnlocked ? C.gold : C.textMuted }]}>
+                                {isUnlocked
+                                    ? t('badge.unlocked', 'Débloqué')
+                                    : t('badge.locked', 'Verrouillé')}
+                            </Text>
+                        </View>
+
+                        {/* Name */}
+                        <Text style={bmo.name}>{badge.name || badge.id}</Text>
+
+                        {/* Description */}
+                        <Text style={bmo.desc}>
+                            {badge.description || t('badge.noDesc', 'Complète des objectifs pour débloquer ce badge.')}
+                        </Text>
+
+                        {/* Unlock date */}
+                        {dateStr && (
+                            <View style={bmo.dateRow}>
+                                <Calendar size={12} color={C.textMuted} strokeWidth={2} />
+                                <Text style={bmo.dateText}>
+                                    {t('badge.unlockedOn', 'Débloqué le')} {dateStr}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* CTA */}
+                        <TouchableOpacity
+                            style={[bmo.cta, { backgroundColor: isUnlocked ? C.goldSoft : C.emberGlow,
+                                               borderColor: isUnlocked ? C.goldBorder : C.emberBorder }]}
+                            onPress={onClose}
+                        >
+                            <Text style={[bmo.ctaText, { color: isUnlocked ? C.gold : C.ember }]}>
+                                {t('badge.close', 'Fermer')}
+                            </Text>
+                        </TouchableOpacity>
+                    </LinearGradient>
+                </Pressable>
+            </Pressable>
+        </Modal>
+    );
+}
+
+const bmo = StyleSheet.create({
+    backdrop: {
+        flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
+        alignItems: 'center', justifyContent: 'center', padding: PAD,
+    },
+    sheet: {
+        width: '100%', maxWidth: 340, borderRadius: R.xxxl,
+        borderWidth: 1, borderColor: C.borderUp, overflow: 'hidden',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.5, shadowRadius: 40, elevation: 20,
+    },
+    grad: { padding: S.xxl, alignItems: 'center', gap: S.md },
+    closeBtn: {
+        alignSelf: 'flex-end',
+        width: 30, height: 30, borderRadius: R.full,
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        alignItems: 'center', justifyContent: 'center',
+        marginBottom: S.sm,
+    },
+    emoji:       { fontSize: 56, marginBottom: S.xs },
+    statusPill: {
+        flexDirection: 'row', alignItems: 'center', gap: S.xs,
+        borderWidth: 1, borderRadius: R.full,
+        paddingHorizontal: S.md, paddingVertical: 5,
+    },
+    statusText: { fontSize: T.xs, fontWeight: W.bold },
+    name: {
+        fontSize: T.xl, fontWeight: W.black, color: C.text,
+        textAlign: 'center', letterSpacing: -0.4,
+    },
+    desc: {
+        fontSize: T.sm, color: C.textSub, textAlign: 'center',
+        lineHeight: 20, fontWeight: W.reg,
+    },
+    dateRow: { flexDirection: 'row', alignItems: 'center', gap: S.xs, marginTop: S.xs },
+    dateText: { fontSize: T.xs, color: C.textMuted, fontWeight: W.med },
+    cta: {
+        marginTop: S.md, paddingHorizontal: S.xxl, paddingVertical: S.md,
+        borderRadius: R.full, borderWidth: 1,
+    },
+    ctaText: { fontSize: T.sm, fontWeight: W.bold },
+});
+
+// ─── BADGES GRID ──────────────────────────────────────────────────────────────
+function BadgesGrid({ badges, badgeProgress }: {
+    badges: any[];
+    badgeProgress: Record<string, { current: number; target: number; label: string }>;
+}) {
+    const { t } = useTranslation();
+    const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
+
+    const unlocked = badges.filter(b => b.unlockedAt);
+    const locked   = badges.filter(b => !b.unlockedAt);
+    const pct = badges.length > 0 ? Math.round((unlocked.length / badges.length) * 100) : 0;
+
+    return (
+        <Animated.View entering={FadeInDown.delay(460).springify()}>
+            {/* Header */}
+            <View style={bdg.header}>
+                <View style={bdg.headerLeft}>
+                    <Text style={bdg.title}>{t('progress.badges', 'Badges')}</Text>
+                    <Text style={bdg.sub}>
+                        {unlocked.length}/{badges.length} {t('badges.unlocked', 'débloqués')}
+                    </Text>
+                </View>
+                <View style={bdg.pctPill}>
+                    <View style={bdg.pctTrack}>
+                        <LinearGradient colors={[C.gold, C.amber]}
+                            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                            style={[bdg.pctFill, { width: `${pct}%` as any }]} />
+                    </View>
+                    <Text style={bdg.pctText}>{pct}%</Text>
+                </View>
+            </View>
+
+            {/* Unlocked grid */}
+            {unlocked.length > 0 && (
+                <View>
+                    <View style={bdg.sectionLabel}>
+                        <View style={[bdg.dot, { backgroundColor: C.gold }]} />
+                        <Text style={[bdg.sectionText, { color: C.gold }]}>
+                            {t('badges.sectionUnlocked', 'Débloqués')}
+                        </Text>
+                    </View>
+                    <View style={bdg.grid}>
+                        {unlocked.map((badge, i) => (
+                            <Animated.View
+                                key={badge.id}
+                                entering={FadeInDown.delay(480 + i * 40).springify()}
+                                style={bdg.tileWrap}
+                            >
+                                <TouchableOpacity
+                                    activeOpacity={0.75}
+                                    onPress={() => setSelectedBadge(badge)}
+                                >
+                                    <LinearGradient
+                                        colors={['rgba(232,184,75,0.13)', C.surface]}
+                                        style={bdg.tile}
+                                    >
+                                        <Text style={bdg.tileEmoji}>{badge.emoji || '🏅'}</Text>
+                                        <Text style={bdg.tileName}>{badge.name}</Text>
+                                        <Text style={bdg.tileDate}>
+                                            {badge.unlockedAt
+                                                ? new Date(badge.unlockedAt).toLocaleDateString('fr-FR', {
+                                                    day: 'numeric', month: 'short',
+                                                })
+                                                : ''}
+                                        </Text>
+                                    </LinearGradient>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        ))}
+                    </View>
+                </View>
+            )}
+
+            {/* Locked list */}
+            {locked.length > 0 && (
+                <View style={{ marginTop: S.lg }}>
+                    <View style={bdg.sectionLabel}>
+                        <View style={[bdg.dot, { backgroundColor: C.textMuted }]} />
+                        <Text style={[bdg.sectionText, { color: C.textMuted }]}>
+                            {t('badges.sectionInProgress', 'En cours')}
+                        </Text>
+                    </View>
+                    <View style={bdg.lockedList}>
+                        {locked.map((badge) => {
+                            const progress = badgeProgress[badge.id];
+                            const progPct  = progress ? Math.min((progress.current / progress.target) * 100, 100) : 0;
+                            return (
+                                <TouchableOpacity
+                                    key={badge.id}
+                                    activeOpacity={0.7}
+                                    onPress={() => setSelectedBadge(badge)}
+                                    style={bdg.lockedItem}
+                                >
+                                    <View style={bdg.lockedLeft}>
+                                        <View style={bdg.lockIcon}>
+                                            <Lock size={11} color={C.textMuted} strokeWidth={2} />
+                                        </View>
+                                        <View style={bdg.lockedText}>
+                                            <Text style={bdg.lockedName}>{badge.name || badge.id}</Text>
+                                            {progress && (
+                                                <Text style={bdg.lockedProgress}>{progress.label}</Text>
+                                            )}
+                                        </View>
+                                    </View>
+                                    {progress && (
+                                        <View style={bdg.lockedBar}>
+                                            <View style={[bdg.lockedBarFill, { width: `${progPct}%` as any }]} />
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
+            )}
+
+            {/* Badge detail modal */}
+            <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+        </Animated.View>
+    );
+}
+
+const bdg = StyleSheet.create({
+    header: {
+        flexDirection: 'row', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: S.xl,
+    },
+    headerLeft: { gap: 3 },
+    title:  { fontSize: T.xl, fontWeight: W.black, color: C.text, letterSpacing: -0.4 },
+    sub:    { fontSize: T.xs, color: C.textMuted, fontWeight: W.med },
+    pctPill: {
+        alignItems: 'center', gap: S.xs,
+        backgroundColor: C.surface, borderWidth: 1, borderColor: C.goldBorder,
+        borderRadius: R.full, paddingHorizontal: S.md, paddingVertical: S.sm,
+        minWidth: 80,
+    },
+    pctTrack: {
+        width: 60, height: 2, backgroundColor: 'rgba(255,255,255,0.08)',
+        borderRadius: R.full, overflow: 'hidden',
+    },
+    pctFill: { height: '100%', borderRadius: R.full },
+    pctText: { fontSize: T.xs, fontWeight: W.black, color: C.gold },
+
+    sectionLabel: { flexDirection: 'row', alignItems: 'center', gap: S.sm, marginBottom: S.md },
+    dot:          { width: 5, height: 5, borderRadius: 3 },
+    sectionText:  { fontSize: T.micro, fontWeight: W.black, letterSpacing: 2.4, textTransform: 'uppercase' },
+
+    grid:     { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm },
+    tileWrap: { width: '47.5%' },
+    tile: {
+        borderRadius: R.xxl, borderWidth: 1, borderColor: C.goldBorder,
+        padding: S.lg, alignItems: 'center', gap: S.xs,
+    },
+    tileEmoji: { fontSize: 30, marginBottom: S.xs },
+    tileName:  { fontSize: T.sm, fontWeight: W.xbold, color: C.text, textAlign: 'center', letterSpacing: -0.2 },
+    tileDate:  { fontSize: T.nano, color: C.textMuted, fontWeight: W.semi },
+
+    lockedList: {
+        backgroundColor: C.surface, borderRadius: R.xxl,
+        borderWidth: 1, borderColor: C.border, overflow: 'hidden',
+    },
+    lockedItem: {
+        flexDirection: 'row', alignItems: 'center',
+        paddingHorizontal: S.lg, paddingVertical: S.md + 2,
+        borderBottomWidth: 1, borderBottomColor: C.border, gap: S.md,
+    },
+    lockedLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: S.md },
+    lockIcon: {
+        width: 26, height: 26, borderRadius: R.sm,
+        backgroundColor: 'rgba(255,255,255,0.04)',
+        borderWidth: 1, borderColor: C.border,
+        alignItems: 'center', justifyContent: 'center',
+    },
+    lockedText:     { flex: 1, gap: 2 },
+    lockedName:     { fontSize: T.sm, fontWeight: W.bold, color: C.textSub },
+    lockedProgress: { fontSize: T.micro, color: C.textMuted, fontWeight: W.med },
+    lockedBar: {
+        width: 52, height: 3, backgroundColor: 'rgba(255,255,255,0.06)',
+        borderRadius: R.full, overflow: 'hidden',
+    },
+    lockedBarFill: {
+        height: '100%', borderRadius: R.full,
+        backgroundColor: C.ember, opacity: 0.65,
+    },
+});
+
+// ─── CARD WRAPPER ─────────────────────────────────────────────────────────────
+function CardWrap({ children, delay = 0, accent }: {
+    children: React.ReactNode; delay?: number; accent?: string;
+}) {
+    return (
+        <Animated.View entering={FadeInDown.delay(delay).springify()}
+            style={[crd.card, accent && { borderColor: accent }]}>
+            {children}
+        </Animated.View>
+    );
+}
+
+function CardTitle({ icon, label, color = C.ember }: {
+    icon: React.ReactNode; label: string; color?: string;
+}) {
+    return (
+        <View style={crd.titleRow}>
+            <View style={[crd.iconBox, { backgroundColor: color + '18' }]}>{icon}</View>
+            <Text style={crd.titleText}>{label}</Text>
+        </View>
+    );
+}
+
+const crd = StyleSheet.create({
+    card: {
+        backgroundColor: C.surface, borderRadius: R.xxxl,
+        borderWidth: 1, borderColor: C.border,
+        padding: S.xl, marginBottom: S.sm, overflow: 'hidden',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.22, shadowRadius: 12, elevation: 6,
+    },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, marginBottom: S.lg },
+    iconBox:  { width: 28, height: 28, borderRadius: R.md, alignItems: 'center', justifyContent: 'center' },
+    titleText: { fontSize: T.md, fontWeight: W.xbold, color: C.text, letterSpacing: -0.2 },
+});
+
+// ─── MAIN SCREEN ──────────────────────────────────────────────────────────────
+export default function ProgressScreen() {
+    const { entries, settings, unlockedBadges, getStreak, getMonthlyStats, getSportEntries } = useAppStore();
     const { t } = useTranslation();
 
-    const streak = getStreak();
+    const streak       = getStreak();
     const monthlyStats = getMonthlyStats();
     const sportEntries = getSportEntries();
 
-    // Stats calculées
     const totalWorkouts = sportEntries.length;
-    const totalRuns = sportEntries.filter(e => e.type === 'run').length;
-    const totalHomeWorkouts = sportEntries.filter(e => e.type === 'home').length;
     const totalDistance = sportEntries
         .filter(e => e.type === 'run')
-        .reduce((sum, e) => sum + (e.type === 'run' ? e.distanceKm : 0), 0);
-    const totalDuration = sportEntries
-        .reduce((sum, e) => {
-            if (e.type === 'run') return sum + e.durationMinutes;
-            if (e.type === 'beatsaber') return sum + e.durationMinutes;
-            return sum;
-        }, 0);
+        .reduce((s, e) => s + (e.type === 'run' ? e.distanceKm : 0), 0);
+    const totalDuration = sportEntries.reduce((s, e) => {
+        if (e.type === 'run' || e.type === 'beatsaber') return s + e.durationMinutes;
+        return s;
+    }, 0);
 
-    // Mois pertinents pour le graphique
-    const relevantMonths = useMemo(() =>
-        monthlyStats.filter(stat => stat.count > 0).slice(-6),
+    const relevantMonths = useMemo(
+        () => monthlyStats.filter(s => s.count > 0).slice(-6),
         [monthlyStats]
     );
+    const chartData  = useMemo(
+        () => relevantMonths.map(s => ({ label: s.month.slice(5), value: s.count })),
+        [relevantMonths]
+    );
+    const maxValue   = Math.max(...chartData.map(d => d.value), 1);
+    const badges     = useMemo(() => getBadgesWithState(unlockedBadges), [unlockedBadges]);
 
-    const weeklyWorkoutsData = useMemo(() => {
-        return relevantMonths.map(stat => ({
-            label: stat.month.slice(5),
-            value: stat.count,
-        }));
-    }, [relevantMonths]);
-
-    const maxValue = Math.max(...weeklyWorkoutsData.map(d => d.value), 1);
-
-    // Badges avec état
-    const badges = useMemo(() => getBadgesWithState(unlockedBadges), [unlockedBadges]);
-
-    // Badge progress
     const badgeProgress = useMemo(() => {
-        const progressMap: Record<string, { current: number; target: number; label: string }> = {};
-
-        const addProgress = (id: string, current: number, target: number, label: string) => {
+        const map: Record<string, { current: number; target: number; label: string }> = {};
+        const add = (id: string, cur: number, tgt: number, lbl: string) => {
             if (!badges.find(b => b.id === id)?.unlockedAt) {
-                progressMap[id] = { current, target, label };
+                map[id] = { current: cur, target: tgt, label: lbl };
             }
         };
+        add('first_workout', totalWorkouts, 1,   `${totalWorkouts}/1`);
+        add('streak_7',      streak.current, 7,   `${streak.current}/7 ${t('common.daysShort','j')}`);
+        add('streak_30',     streak.current, 30,  `${streak.current}/30 ${t('common.daysShort','j')}`);
+        add('workouts_10',   totalWorkouts, 10,   `${totalWorkouts}/10`);
+        add('workouts_50',   totalWorkouts, 50,   `${totalWorkouts}/50`);
+        add('workouts_100',  totalWorkouts, 100,  `${totalWorkouts}/100`);
+        add('runner_10km',   totalDistance, 10,   `${totalDistance.toFixed(1)}/10 km`);
+        add('runner_50km',   totalDistance, 50,   `${totalDistance.toFixed(1)}/50 km`);
+        return map;
+    }, [badges, totalWorkouts, totalDistance, streak, t]);
 
-        addProgress('first_workout', totalWorkouts, 1, `${totalWorkouts}/1`);
-        addProgress('streak_7', streak.current, 7, `${streak.current}/7 jours`);
-        addProgress('streak_30', streak.current, 30, `${streak.current}/30 jours`);
-        addProgress('workouts_10', totalWorkouts, 10, `${totalWorkouts}/10`);
-        addProgress('workouts_50', totalWorkouts, 50, `${totalWorkouts}/50`);
-        addProgress('workouts_100', totalWorkouts, 100, `${totalWorkouts}/100`);
-        addProgress('runner_10km', totalDistance, 10, `${totalDistance.toFixed(1)}/10 km`);
-        addProgress('runner_50km', totalDistance, 50, `${totalDistance.toFixed(1)}/50 km`);
-
-        return progressMap;
-    }, [badges, totalWorkouts, totalDistance, streak]);
-
-    // Historique de poids
-    const weightHistory = useMemo(() => {
-        return entries
+    const weightHistory = useMemo(
+        () => entries
             .filter((e): e is MeasureEntry => e.type === 'measure' && e.weight !== undefined)
-            .slice(0, 10)
-            .reverse();
-    }, [entries]);
+            .slice(0, 10).reverse(),
+        [entries]
+    );
 
-    // Personal Records (PRs) pour les exercices trackés en temps réel
     const personalRecords = useMemo(() => {
-        const prs: { id: string; name: string; icon: string; value: string; type: 'reps' | 'time' }[] = [];
-        
-        // Exercices à tracker (doit correspondre à ceux du rep-counter)
-        const trackedExercises = [
-            { id: 'pushups', name: t('repCounter.exercises.pushups'), icon: '💪', type: 'reps' as const },
-            { id: 'situps', name: t('repCounter.exercises.situps'), icon: '🔥', type: 'reps' as const },
-            { id: 'squats', name: t('repCounter.exercises.squats'), icon: '🦵', type: 'reps' as const },
-            { id: 'jumping_jacks', name: t('repCounter.exercises.jumpingJacks'), icon: '⭐', type: 'reps' as const },
-            { id: 'plank', name: t('repCounter.exercises.plank'), icon: '🧘', type: 'time' as const },
+        const tracked = [
+            { id: 'pushups',       name: t('repCounter.exercises.pushups', 'Pompes'),       icon: '💪', type: 'reps' as const },
+            { id: 'situps',        name: t('repCounter.exercises.situps', 'Abdos'),          icon: '🔥', type: 'reps' as const },
+            { id: 'squats',        name: t('repCounter.exercises.squats', 'Squats'),         icon: '🦵', type: 'reps' as const },
+            { id: 'jumping_jacks', name: t('repCounter.exercises.jumpingJacks', 'J. Jacks'), icon: '⭐', type: 'reps' as const },
+            { id: 'plank',         name: t('repCounter.exercises.plank', 'Gainage'),         icon: '🧘', type: 'time' as const },
         ];
-
-        for (const exercise of trackedExercises) {
-            const relevantWorkouts = entries.filter(
-                (e): e is HomeWorkoutEntry => e.type === 'home' && (
-                    e.exercises.toLowerCase().includes(`${exercise.id.toLowerCase()}:`) ||
-                    (e.name?.toLowerCase().includes(exercise.name.toLowerCase()) ?? false)
+        return tracked.reduce<{ id: string; name: string; icon: string; value: string }[]>((acc, ex) => {
+            const relevant = entries.filter((e): e is HomeWorkoutEntry =>
+                e.type === 'home' && (
+                    e.exercises.toLowerCase().includes(`${ex.id.toLowerCase()}:`) ||
+                    (e.name?.toLowerCase().includes(ex.name.toLowerCase()) ?? false)
                 )
             );
-
-            let bestValue = 0;
-            for (const workout of relevantWorkouts) {
-                if (exercise.type === 'time') {
-                    // Pour les exercices basés sur le temps (planche)
-                    const durationSecs = (workout.durationMinutes ?? 0) * 60;
-                    if (durationSecs > bestValue) {
-                        bestValue = durationSecs;
-                    }
-                } else {
-                    // Pour les exercices basés sur les reps
-                    const reps = workout.totalReps ?? 0;
-                    if (reps > bestValue) {
-                        bestValue = reps;
-                    }
-                }
+            let best = 0;
+            for (const w of relevant) {
+                const v = ex.type === 'time' ? (w.durationMinutes ?? 0) * 60 : (w.totalReps ?? 0);
+                if (v > best) best = v;
             }
-
-            if (bestValue > 0) {
-                prs.push({
-                    id: exercise.id,
-                    name: exercise.name,
-                    icon: exercise.icon,
-                    value: exercise.type === 'time' 
-                        ? `${bestValue}s` 
-                        : `${bestValue} reps`,
-                    type: exercise.type,
+            if (best > 0) {
+                acc.push({
+                    id: ex.id, name: ex.name, icon: ex.icon,
+                    value: ex.type === 'time' ? `${best}s` : `${best} reps`,
                 });
             }
-        }
-
-        return prs;
+            return acc;
+        }, []);
     }, [entries, t]);
 
-    // Top exercice du mois
     const topExercise = useMemo(() => {
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        const monthWorkouts = entries.filter(
-            (e): e is HomeWorkoutEntry => e.type === 'home' && e.date.startsWith(currentMonth)
-        );
-
-        const exerciseCounts: Record<string, number> = {};
-        monthWorkouts.forEach(workout => {
-            const lines = workout.exercises.split('\n');
-            lines.forEach(line => {
+        const m = new Date().toISOString().slice(0, 7);
+        const counts: Record<string, number> = {};
+        entries
+            .filter((e): e is HomeWorkoutEntry => e.type === 'home' && e.date.startsWith(m))
+            .forEach(w => w.exercises.split('\n').forEach(line => {
                 const match = line.match(/^([^:]+):/);
                 if (match) {
-                    const name = match[1].trim().toLowerCase();
-                    exerciseCounts[name] = (exerciseCounts[name] || 0) + 1;
+                    const n = match[1].trim().toLowerCase();
+                    counts[n] = (counts[n] || 0) + 1;
                 }
-            });
-        });
-
-        const sorted = Object.entries(exerciseCounts).sort((a, b) => b[1] - a[1]);
+            }));
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
         return sorted.length > 0 ? { name: sorted[0][0], count: sorted[0][1] } : null;
     }, [entries]);
 
-    // Calendrier du mois
     const calendarData = useMemo(() => {
         const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startDayOfWeek = (firstDay.getDay() + 6) % 7;
-
-        const monthStr = now.toISOString().slice(0, 7);
-        const activeDays = new Set(
+        const y = now.getFullYear(), mo = now.getMonth();
+        const daysInMonth    = new Date(y, mo + 1, 0).getDate();
+        const startDayOfWeek = (new Date(y, mo, 1).getDay() + 6) % 7;
+        const monthStr       = now.toISOString().slice(0, 7);
+        const activeDays     = new Set(
             sportEntries
                 .filter(e => e.date.startsWith(monthStr))
                 .map(e => parseInt(e.date.slice(8, 10), 10))
         );
-
-        return {
-            daysInMonth,
-            startDayOfWeek,
-            activeDays,
-            monthName: getMonthName(monthStr),
-        };
+        return { daysInMonth, startDayOfWeek, activeDays, monthName: getMonthName(monthStr) };
     }, [sportEntries]);
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
+        <SafeAreaView style={main.container} edges={['top']}>
             <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.content}
+                style={main.scroll}
+                contentContainerStyle={main.content}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Header */}
-                <Animated.View entering={FadeIn.delay(50)}>
-                    <Text style={styles.screenTitle}>{t('progress.title')}</Text>
+                <Animated.View entering={FadeIn.delay(20)} style={main.titleBlock}>
+                    <EyebrowLabel text={t('progress.eyebrow', 'TABLEAU DE BORD')} />
+                    <Text style={main.titleMain}>{t('progress.title', 'Progression')}</Text>
+                    <View style={main.titleAccent} />
                 </Animated.View>
 
-                {/* Streak Hero */}
-                <StreakHero current={streak.current} best={streak.best} />
+                {/* Streak */}
+                <StreakCover current={streak.current} best={streak.best} />
 
-                {/* Stats Grid */}
-                <View style={styles.statsGrid}>
-                    <StatCard
-                        icon={<Dumbbell size={20} color="#4ade80" />}
-                        value={totalWorkouts}
-                        label={t('progress.stats.workouts')}
-                        color="#4ade80"
-                        delay={150}
-                    />
-                    <StatCard
-                        icon={<Footprints size={20} color="#60a5fa" />}
-                        value={totalDistance.toFixed(1)}
-                        label={t('progress.stats.distance')}
-                        color="#60a5fa"
-                        delay={200}
-                    />
-                    <StatCard
-                        icon={<Zap size={20} color="#fbbf24" />}
-                        value={totalDuration}
-                        label={t('progress.stats.duration')}
-                        color="#fbbf24"
-                        delay={250}
-                    />
-                    <StatCard
-                        icon={<Target size={20} color={Colors.cta} />}
-                        value={settings.weeklyGoal}
-                        label={t('progress.stats.weeklyGoal')}
-                        color={Colors.cta}
-                        delay={300}
-                    />
-                </View>
+                {/* Stats */}
+                <StatsSection
+                    workouts={totalWorkouts}
+                    distance={totalDistance}
+                    duration={totalDuration}
+                    goal={settings.weeklyGoal}
+                />
 
-                {/* Calendrier */}
+                {/* Calendar */}
                 <MonthCalendar {...calendarData} />
 
-                {/* Graphique séances par mois */}
-                <Animated.View entering={FadeInDown.delay(400).springify()}>
-                    <GlassCard style={styles.chartCard}>
-                        <View style={styles.chartHeader}>
-                            <TrendingUp size={18} color={Colors.cta} />
-                            <Text style={styles.chartTitle}>{t('progress.workoutsPerMonth')}</Text>
-                        </View>
-                        <WorkoutChart data={weeklyWorkoutsData} maxValue={maxValue} />
-                    </GlassCard>
-                </Animated.View>
+                {/* Bar chart */}
+                <CardWrap delay={280}>
+                    <CardTitle
+                        icon={<TrendingUp size={14} color={C.ember} strokeWidth={2} />}
+                        label={t('progress.workoutsPerMonth', 'Séances par mois')}
+                    />
+                    <WorkoutBarChart data={chartData} maxValue={maxValue} />
+                </CardWrap>
 
-                {/* Évolution du poids */}
+                {/* Top exercise */}
+                {topExercise && <TopExCard name={topExercise.name} count={topExercise.count} />}
+
+                {/* Personal records */}
+                <PersonalRecords records={personalRecords} />
+
+                {/* Weight sparkline */}
                 {weightHistory.length >= 2 && (
-                    <Animated.View entering={FadeInDown.delay(500).springify()}>
-                        <GlassCard style={styles.chartCard}>
-                            <View style={styles.chartHeader}>
-                                <Scale size={18} color={Colors.cta} />
-                                <Text style={styles.chartTitle}>{t('progress.weightEvolution')}</Text>
-                            </View>
-                            <WeightChart data={weightHistory} />
-                        </GlassCard>
-                    </Animated.View>
+                    <CardWrap delay={440} accent={C.blueBorder}>
+                        <CardTitle
+                            icon={<Scale size={14} color={C.blue} strokeWidth={2} />}
+                            label={t('progress.weightEvolution', 'Évolution du poids')}
+                            color={C.blue}
+                        />
+                        <WeightSparkline data={weightHistory} />
+                    </CardWrap>
                 )}
 
-                {/* Top exercice */}
-                {topExercise && (
-                    <Animated.View entering={FadeInDown.delay(550).springify()}>
-                        <GlassCard style={styles.topExerciseCard}>
-                            <View style={styles.topExerciseRow}>
-                                <View style={styles.topExerciseIconContainer}>
-                                    <Award size={24} color={Colors.warning} />
-                                </View>
-                                <View style={styles.topExerciseInfo}>
-                                    <Text style={styles.topExerciseLabel}>{t('progress.topExercise')}</Text>
-                                    <Text style={styles.topExerciseName}>{t(`repCounter.exercises.${topExercise.name === 'jumping_jacks' ? 'jumpingJacks' : topExercise.name}`, { defaultValue: topExercise.name })}</Text>
-                                </View>
-                                <View style={styles.topExerciseCount}>
-                                    <Text style={styles.topExerciseCountValue}>{topExercise.count}×</Text>
-                                </View>
-                            </View>
-                        </GlassCard>
-                    </Animated.View>
-                )}
-
-                {/* Personal Records */}
-                {personalRecords.length > 0 && (
-                    <Animated.View entering={FadeInDown.delay(575).springify()}>
-                        <GlassCard style={styles.prCard}>
-                            <View style={styles.prHeader}>
-                                <Trophy size={18} color="#facc15" />
-                                <Text style={styles.prTitle}>{t('progress.personalRecords')}</Text>
-                            </View>
-                            <View style={styles.prGrid}>
-                                {personalRecords.map((pr) => (
-                                    <View key={pr.id} style={styles.prItem}>
-                                        <Text style={styles.prIcon}>{pr.icon}</Text>
-                                        <Text style={styles.prName}>{pr.name}</Text>
-                                        <Text style={styles.prValue}>{pr.value}</Text>
-                                    </View>
-                                ))}
-                            </View>
-                        </GlassCard>
-                    </Animated.View>
-                )}
                 {/* Badges */}
-                <Animated.View entering={FadeInDown.delay(600).springify()} style={styles.badgesSection}>
-                    <SectionHeader title={`🏆 ${t('progress.badges')}`} />
-                    <View style={styles.badgesList}>
-                        {badges.map((badge) => {
-                            const progress = badgeProgress[badge.id];
-                            return (
-                                <BadgeWithProgress
-                                    key={badge.id}
-                                    badge={badge}
-                                    currentProgress={progress ? (progress.current / progress.target) * 100 : undefined}
-                                    progressLabel={progress?.label}
-                                />
-                            );
-                        })}
-                    </View>
-                </Animated.View>
+                <BadgesGrid badges={badges} badgeProgress={badgeProgress} />
+
+                <View style={{ height: 40 }} />
             </ScrollView>
         </SafeAreaView>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.bg,
+const main = StyleSheet.create({
+    container: { flex: 1, backgroundColor: C.bg },
+    scroll:    { flex: 1 },
+    content:   { paddingHorizontal: PAD, paddingTop: S.sm, paddingBottom: 120 },
+    titleBlock: { marginTop: S.sm, marginBottom: S.xxl },
+    titleMain: {
+        fontSize: T.display, fontWeight: W.black, color: C.text,
+        letterSpacing: -2, lineHeight: 52, marginTop: S.xs,
     },
-    scrollView: {
-        flex: 1,
-    },
-    content: {
-        padding: Spacing.lg,
-        paddingBottom: 120,
-    },
-    screenTitle: {
-        fontSize: 32,
-        fontWeight: FontWeight.extrabold,
-        color: Colors.text,
-        marginBottom: Spacing.lg,
-        letterSpacing: -0.5,
-    },
-
-    // Streak Hero
-    streakHero: {
-        borderRadius: BorderRadius.xl,
-        padding: Spacing.lg,
-        marginBottom: Spacing.lg,
-    },
-    streakContent: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: Spacing.md,
-    },
-    streakMain: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: Spacing.md,
-    },
-    streakIconWrapper: {
-        width: 56,
-        height: 56,
-        borderRadius: 16,
-        backgroundColor: 'rgba(251, 191, 36, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    streakInfo: {},
-    streakLabel: {
-        fontSize: FontSize.sm,
-        color: 'rgba(255, 255, 255, 0.7)',
-        marginBottom: 2,
-    },
-    streakValue: {
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-        color: Colors.text,
-    },
-    streakUnit: {
-        fontSize: FontSize.lg,
-        fontWeight: FontWeight.medium,
-        color: Colors.muted,
-    },
-    streakBest: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        backgroundColor: 'rgba(251, 191, 36, 0.15)',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: BorderRadius.full,
-    },
-    streakBestText: {
-        fontSize: FontSize.sm,
-        color: Colors.warning,
-        fontWeight: FontWeight.semibold,
-    },
-    streakProgressContainer: {
-        marginTop: Spacing.sm,
-    },
-    streakProgressBg: {
-        height: 6,
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-        borderRadius: 3,
-        overflow: 'hidden',
-    },
-    streakProgressFill: {
-        height: '100%',
-        backgroundColor: Colors.warning,
-        borderRadius: 3,
-    },
-    streakProgressText: {
-        fontSize: FontSize.xs,
-        color: 'rgba(255, 255, 255, 0.6)',
-        marginTop: 6,
-        textAlign: 'center',
-    },
-
-    // Stats Grid
-    statsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: Spacing.sm,
-        marginBottom: Spacing.lg,
-    },
-    statCard: {
-        flex: 1,
-        minWidth: '45%',
-        backgroundColor: Colors.card,
-        borderRadius: BorderRadius.lg,
-        padding: Spacing.md,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: Colors.stroke,
-    },
-    statIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: Spacing.sm,
-    },
-    statValue: {
-        fontSize: FontSize.xxl,
-        fontWeight: FontWeight.bold,
-        color: Colors.text,
-    },
-    statLabel: {
-        fontSize: FontSize.xs,
-        color: Colors.muted,
-        marginTop: 2,
-    },
-
-    // Calendar
-    calendarCard: {
-        marginBottom: Spacing.lg,
-    },
-    calendarHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: Spacing.md,
-    },
-    calendarTitle: {
-        flex: 1,
-        fontSize: FontSize.lg,
-        fontWeight: FontWeight.bold,
-        color: Colors.text,
-        textTransform: 'capitalize',
-    },
-    calendarBadge: {
-        backgroundColor: 'rgba(215, 150, 134, 0.15)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: BorderRadius.full,
-    },
-    calendarBadgeText: {
-        fontSize: FontSize.xs,
-        color: Colors.cta,
-        fontWeight: FontWeight.semibold,
-    },
-    weekDaysRow: {
-        flexDirection: 'row',
-        marginBottom: Spacing.sm,
-    },
-    weekDayLabel: {
-        flex: 1,
-        textAlign: 'center',
-        fontSize: FontSize.xs,
-        color: Colors.muted,
-        fontWeight: FontWeight.semibold,
-    },
-    calendarGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-    },
-    calendarDayEmpty: {
-        width: '14.28%',
-        aspectRatio: 1,
-    },
-    calendarDay: {
-        width: '14.28%',
-        aspectRatio: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 8,
-    },
-    calendarDayActive: {
-        backgroundColor: 'rgba(215, 150, 134, 0.15)',
-    },
-    calendarDayToday: {
-        borderWidth: 1,
-        borderColor: Colors.cta,
-    },
-    calendarDayText: {
-        fontSize: FontSize.sm,
-        color: Colors.muted,
-        fontWeight: FontWeight.medium,
-    },
-    calendarDayTextToday: {
-        color: Colors.text,
-        fontWeight: FontWeight.bold,
-    },
-
-    // Charts
-    chartCard: {
-        marginBottom: Spacing.lg,
-    },
-    chartHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: Spacing.md,
-    },
-    chartTitle: {
-        fontSize: FontSize.lg,
-        fontWeight: FontWeight.bold,
-        color: Colors.text,
-    },
-    chartWrapper: {
-        alignItems: 'center',
-    },
-    weightChartWrapper: {
-        alignItems: 'center',
-    },
-    weightSummary: {
-        flexDirection: 'row',
-        gap: Spacing.xl,
-        marginTop: Spacing.md,
-    },
-    weightSummaryItem: {
-        alignItems: 'center',
-    },
-    weightSummaryLabel: {
-        fontSize: FontSize.xs,
-        color: Colors.muted,
-    },
-    weightSummaryValue: {
-        fontSize: FontSize.lg,
-        fontWeight: FontWeight.bold,
-        color: Colors.text,
-    },
-
-    // Top Exercise
-    topExerciseCard: {
-        marginBottom: Spacing.lg,
-    },
-    topExerciseRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    topExerciseIconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        backgroundColor: 'rgba(251, 191, 36, 0.15)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: Spacing.md,
-    },
-    topExerciseInfo: {
-        flex: 1,
-    },
-    topExerciseLabel: {
-        fontSize: FontSize.xs,
-        color: Colors.muted,
-        marginBottom: 2,
-    },
-    topExerciseName: {
-        fontSize: FontSize.lg,
-        fontWeight: FontWeight.bold,
-        color: Colors.text,
-        textTransform: 'capitalize',
-    },
-    topExerciseCount: {
-        backgroundColor: 'rgba(251, 191, 36, 0.15)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: BorderRadius.full,
-    },
-    topExerciseCountValue: {
-        fontSize: FontSize.lg,
-        fontWeight: FontWeight.bold,
-        color: Colors.warning,
-    },
-
-    // Personal Records
-    prCard: {
-        marginBottom: Spacing.lg,
-    },
-    prHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: Spacing.sm,
-        marginBottom: Spacing.md,
-    },
-    prTitle: {
-        fontSize: FontSize.lg,
-        fontWeight: FontWeight.bold,
-        color: Colors.text,
-    },
-    prGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-    },
-    prItem: {
-        backgroundColor: 'rgba(250, 204, 21, 0.1)',
-        borderRadius: BorderRadius.lg,
-        padding: Spacing.md,
-        alignItems: 'center',
-        minWidth: (SCREEN_WIDTH - Spacing.lg * 2 - 48 - 24) / 3,
-        flexGrow: 1,
-    },
-    prIcon: {
-        fontSize: 24,
-        marginBottom: 4,
-    },
-    prName: {
-        fontSize: FontSize.xs,
-        color: Colors.muted,
-        marginBottom: 2,
-        textAlign: 'center',
-    },
-    prValue: {
-        fontSize: FontSize.md,
-        fontWeight: FontWeight.bold,
-        color: '#facc15',
-    },
-
-    // Badges
-    badgesSection: {
-        marginTop: Spacing.sm,
-    },
-    badgesList: {
-        gap: 12,
+    titleAccent: {
+        marginTop: S.lg, height: 2, width: 40, borderRadius: R.full,
+        backgroundColor: C.ember,
+        shadowColor: C.ember, shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1, shadowRadius: 10, elevation: 4,
     },
 });

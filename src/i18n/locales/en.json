@@ -27,6 +27,8 @@
     "retry": "Retry",
     "days": "days",
     "day": "day",
+    "daysShort": "d",
+    "times": "times",
     "hours": "hours",
     "hour": "hour",
     "minutes": "minutes",
@@ -47,6 +49,48 @@
     "thursday": "Thursday",
     "friday": "Friday",
     "saturday": "Saturday"
+  },
+  "streak": {
+    "start": "Time to\nget started",
+    "keep": "Keep it\nup!",
+    "momentum": "You're on\na roll",
+    "exceptional": "Exceptional\nperformance",
+    "record": "Record",
+    "ofRecord": "of record",
+    "startToday": "Start today!"
+  },
+  "stats": {
+    "activity": "ACTIVITY",
+    "totalSessions": "total sessions",
+    "kmRun": "km run",
+    "minCardio": "min cardio",
+    "weeklyGoal": "goal /week"
+  },
+  "calendar": {
+    "mon": "M",
+    "tue": "T",
+    "wed": "W",
+    "thu": "T",
+    "fri": "F",
+    "sat": "S",
+    "sun": "S",
+    "activeDays": "active days"
+  },
+  "chart": {
+    "noData": "No data yet"
+  },
+  "weight": {
+    "first": "First",
+    "current": "Current",
+    "change": "Change",
+    "measures": "Measures"
+  },
+  "badge": {
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "noDesc": "Complete objectives to unlock this badge.",
+    "unlockedOn": "Unlocked on",
+    "close": "Got it"
   },
   "tabs": {
     "home": "Home",
@@ -93,7 +137,9 @@
       "description": "Weekly goal met for 4 consecutive weeks"
     },
     "unlocked": "Unlocked!",
-    "locked": "Locked"
+    "locked": "Locked",
+    "sectionUnlocked": "Unlocked",
+    "sectionInProgress": "In progress"
   },
   "home": {
     "title": "Today",
@@ -183,7 +229,10 @@
     "skip": "Skip"
   },
   "progress": {
+    "eyebrow": "DASHBOARD",
     "title": "Progress",
+    "currentStreak": "Current streak",
+    "exerciseOfMonth": "Exercise of the month",
     "monthlyProgress": "Monthly Progress",
     "monthlyCount": "{{count}} workouts",
     "streak": {
