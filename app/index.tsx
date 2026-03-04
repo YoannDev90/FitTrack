@@ -1,5 +1,6 @@
 // ============================================================================
-// TODAY SCREEN - Écran principal avec design premium et cozy
+// TODAY SCREEN — Editorial Dark Sport · Premium Redesign v3
+// Logique dynamique 100% préservée · Nouveau langage visuel radical
 // ============================================================================
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
@@ -10,47 +11,101 @@ import {
     ScrollView,
     Pressable,
     TouchableOpacity,
+    Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ScanBarcode } from 'lucide-react-native';
+import { ScanBarcode, ChevronRight, Flame } from 'lucide-react-native';
 import {
-    GlassCard,
     ProgressRing,
-    Button,
     DayBadge,
     WorkoutCard,
-    MonthCard,
-    SectionHeader,
-    EmptyState,
     EntryDetailModal,
     HealthConnectPromptModal,
 } from '../src/components/ui';
 import { AddEntryBottomSheet, AddEntryBottomSheetRef } from '../src/components/sheets';
-import { useAppStore, useGamificationStore, useEditorStore } from '../src/stores';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Gradients } from '../src/constants';
+import { useAppStore, useEditorStore } from '../src/stores';
 import { getWeekDaysInfo } from '../src/utils/date';
-import { checkHealthConnectOnStartup, setHealthConnectModalCallback, navigateToHealthConnect } from '../src/services/healthConnectStartup';
-import type { Entry, HomeWorkoutEntry, RunEntry } from '../src/types';
+import {
+    checkHealthConnectOnStartup,
+    setHealthConnectModalCallback,
+    navigateToHealthConnect,
+} from '../src/services/healthConnectStartup';
+import type { Entry } from '../src/types';
 
-// Helper pour obtenir la salutation selon l'heure
+// ─── Design System ────────────────────────────────────────────────────────────
+
+const C = {
+    bg:           '#08080b',
+    surface:      '#0f1015',
+    surfaceUp:    '#141620',
+
+    border:       'rgba(255,255,255,0.06)',
+    borderMid:    'rgba(255,255,255,0.10)',
+    borderGlow:   'rgba(255,100,60,0.30)',
+
+    text:         '#f2efe9',
+    textSub:      'rgba(242,239,233,0.55)',
+    textMuted:    'rgba(242,239,233,0.30)',
+
+    coral:        '#ff6340',
+    coralMid:     '#ff8c5a',
+    amber:        '#ffb040',
+    coralSoft:    'rgba(255,99,64,0.12)',
+    coralGlow:    'rgba(255,99,64,0.18)',
+
+    green:        '#3dd68c',
+    greenSoft:    'rgba(61,214,140,0.10)',
+    greenBorder:  'rgba(61,214,140,0.22)',
+
+    gold:         '#f0c040',
+    goldSoft:     'rgba(240,192,64,0.12)',
+    goldBorder:   'rgba(240,192,64,0.28)',
+};
+
+const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 40 };
+const R = { sm: 10, md: 14, lg: 18, xl: 22, xxl: 26, pill: 999 };
+const T = { micro: 9, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, hero: 34 };
+const W: Record<string, any> = {
+    light: '300', reg: '400', med: '500',
+    semi: '600', bold: '700', xbold: '800', black: '900',
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 const getGreeting = (): string => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Bonjour';
-    if (hour < 18) return 'Bon après-midi';
+    const h = new Date().getHours();
+    if (h < 12) return 'Bonjour';
+    if (h < 18) return 'Bon après-midi';
     return 'Bonsoir';
 };
 
-// Helper pour obtenir un message motivationnel selon l'heure
 const getMotivationalMessage = (t: (key: string) => string): string => {
-    const hour = new Date().getHours();
-    if (hour < 12) return t('home.motivational.morning');
-    if (hour < 18) return t('home.motivational.afternoon');
+    const h = new Date().getHours();
+    if (h < 12) return t('home.motivational.morning');
+    if (h < 18) return t('home.motivational.afternoon');
     return t('home.motivational.evening');
 };
+
+// ─── Chip ─────────────────────────────────────────────────────────────────────
+
+const Chip: React.FC<{
+    label: string;
+    color?: string;
+    bg?: string;
+    border?: string;
+}> = ({ label, color = C.textMuted, bg = 'transparent', border = C.border }) => (
+    <View style={{ backgroundColor: bg, borderWidth: 1, borderColor: border, borderRadius: R.pill, paddingHorizontal: 10, paddingVertical: 3 }}>
+        <Text style={{ fontSize: T.micro, fontWeight: W.black, color, letterSpacing: 1.8, textTransform: 'uppercase' }}>
+            {label}
+        </Text>
+    </View>
+);
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function TodayScreen() {
     const { t } = useTranslation();
@@ -58,170 +113,166 @@ export default function TodayScreen() {
     const bottomSheetRef = useRef<AddEntryBottomSheetRef>(null);
     const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
-    
-    // Health Connect modal state
     const [healthConnectModalVisible, setHealthConnectModalVisible] = useState(false);
     const [healthConnectWorkoutCount, setHealthConnectWorkoutCount] = useState(0);
 
-    const {
-        entries,
-        settings,
-        deleteEntry,
-        getStreak,
-        getWeekWorkoutsCount,
-        getSportEntries,
-        getMonthlyStats,
-    } = useAppStore();
+    // Animations d'entrée
+    const aHero  = useRef(new Animated.Value(0)).current;
+    const aGoal  = useRef(new Animated.Value(0)).current;
+    const aWeek  = useRef(new Animated.Value(0)).current;
+    const aCta   = useRef(new Animated.Value(0)).current;
+    const aList  = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        Animated.stagger(70, [aHero, aGoal, aWeek, aCta, aList].map(a =>
+            Animated.spring(a, { toValue: 1, useNativeDriver: true, tension: 70, friction: 11 })
+        )).start();
+    }, []);
 
-    const { checkAndRefreshQuests } = useGamificationStore();
+    const slide = (a: Animated.Value, dy = 22) => ({
+        opacity: a,
+        transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [dy, 0] }) }],
+    });
+
+    // Stores
+    const { settings, deleteEntry, getStreak, getWeekWorkoutsCount, getSportEntries } = useAppStore();
     const { entryToEdit, setEntryToEdit } = useEditorStore();
 
-    // Health Connect startup check with custom modal
     useEffect(() => {
-        // Set up the callback for showing the modal
         setHealthConnectModalCallback((count: number) => {
             setHealthConnectWorkoutCount(count);
             setHealthConnectModalVisible(true);
         });
-
-        const timer = setTimeout(() => {
-            checkHealthConnectOnStartup();
-        }, 1000);
-        
-        return () => {
-            clearTimeout(timer);
-            setHealthConnectModalCallback(null);
-        };
+        const timer = setTimeout(checkHealthConnectOnStartup, 1000);
+        return () => { clearTimeout(timer); setHealthConnectModalCallback(null); };
     }, []);
 
-    const handleHealthConnectViewActivities = useCallback(() => {
-        setHealthConnectModalVisible(false);
-        navigateToHealthConnect();
-    }, []);
-
-    const handleHealthConnectSkip = useCallback(() => {
-        setHealthConnectModalVisible(false);
-    }, []);
-
-    // Listen for entry edits from other screens
     useEffect(() => {
-        if (entryToEdit) {
-            bottomSheetRef.current?.edit(entryToEdit);
-            setEntryToEdit(null);
-        }
+        if (entryToEdit) { bottomSheetRef.current?.edit(entryToEdit); setEntryToEdit(null); }
     }, [entryToEdit, setEntryToEdit]);
 
-    const streak = getStreak();
+    const streak            = getStreak();
     const weekWorkoutsCount = getWeekWorkoutsCount();
-    const weeklyGoal = settings.weeklyGoal;
-    const sportEntries = getSportEntries();
-    const monthlyStats = getMonthlyStats();
-    const weekDays = getWeekDaysInfo();
+    const weeklyGoal        = settings.weeklyGoal;
+    const sportEntries      = getSportEntries();
+    const weekDays          = getWeekDaysInfo();
+    const goalAchieved      = weekWorkoutsCount >= weeklyGoal;
 
-    // L'objectif est atteint ?
-    const goalAchieved = weekWorkoutsCount >= weeklyGoal;
-
-    // Jours avec activité cette semaine
     const daysWithActivity = useMemo(() => {
-        const dates = new Set<string>();
-        sportEntries.forEach(e => {
-            if (weekDays.some(d => d.date === e.date)) {
-                dates.add(e.date);
-            }
-        });
-        return dates;
+        const s = new Set<string>();
+        sportEntries.forEach(e => { if (weekDays.some(d => d.date === e.date)) s.add(e.date); });
+        return s;
     }, [sportEntries, weekDays]);
 
     const recentWorkouts = sportEntries.slice(0, 5);
 
-    const handleOpenModal = useCallback(() => {
-        bottomSheetRef.current?.present();
-    }, []);
-
-    const handleLongPressAdd = useCallback(() => {
-        // Long press ouvre directement le rep counter
-        router.push('/rep-counter');
-    }, [router]);
-
-    const handleEntryPress = useCallback((entry: Entry) => {
-        setSelectedEntry(entry);
-        setDetailModalVisible(true);
-    }, []);
-
-    const handleDeleteEntry = useCallback((id: string) => {
-        // deleteEntry gère automatiquement la synchro gamification
-        deleteEntry(id);
-    }, [deleteEntry]);
-
-    const handleEditEntry = useCallback((entry: Entry) => {
+    // Handlers
+    const handleOpenModal    = useCallback(() => bottomSheetRef.current?.present(), []);
+    const handleLongPressAdd = useCallback(() => router.push('/rep-counter'), [router]);
+    const handleEntryPress   = useCallback((e: Entry) => { setSelectedEntry(e); setDetailModalVisible(true); }, []);
+    const handleDeleteEntry  = useCallback((id: string) => deleteEntry(id), [deleteEntry]);
+    const handleEditEntry    = useCallback((e: Entry) => {
         setDetailModalVisible(false);
-        setTimeout(() => {
-            bottomSheetRef.current?.edit(entry);
-        }, 100);
+        setTimeout(() => bottomSheetRef.current?.edit(e), 100);
     }, []);
 
+    // Render
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
+        <SafeAreaView style={st.container} edges={['top']}>
             <StatusBar style="light" />
 
-            <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* HERO HEADER - Gradient avec message motivationnel */}
-                <LinearGradient
-                    colors={['rgba(11, 12, 15, 0.98)', 'rgba(11, 12, 15, 0.7)', 'transparent']}
-                    style={styles.heroHeader}
-                >
-                    <View style={styles.heroHeaderContent}>
-                        <View style={styles.heroHeaderLeft}>
-                            <Text style={styles.heroGreeting}>{getGreeting()} 👋</Text>
-                            <Text style={styles.heroMotivation}>{getMotivationalMessage(t)}</Text>
+            <ScrollView style={st.scroll} contentContainerStyle={st.content} showsVerticalScrollIndicator={false}>
+
+                {/* ══════════════════════════════════════════════════════
+                    HERO — Typographie éditoriale massive
+                ══════════════════════════════════════════════════════ */}
+                <Animated.View style={[st.heroSection, slide(aHero, 28)]}>
+                    <View style={st.heroHalo} pointerEvents="none" />
+
+                    {/* Salutation + streak sur la même ligne */}
+                    <View style={st.heroTopRow}>
+                        <View style={st.heroLeft}>
+                            <Text style={st.heroGreeting}>{getGreeting()}</Text>
+                            <Text style={st.heroMotivation}>{getMotivationalMessage(t)}</Text>
                         </View>
-                        <View style={styles.streakBadge}>
-                            <Text style={styles.streakEmoji}>🔥</Text>
-                            <Text style={styles.streakValue}>{streak.current}</Text>
+                        <View style={st.streakBadge}>
+                            <LinearGradient
+                                colors={[C.coral, C.amber]}
+                                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                                style={st.streakGrad}
+                            >
+                                <Flame size={15} color="#1a0800" strokeWidth={2.5} />
+                                <Text style={st.streakNum}>{streak.current}</Text>
+                            </LinearGradient>
                         </View>
                     </View>
-                </LinearGradient>
+                    <View style={st.heroAccentLine} />
+                </Animated.View>
 
-                {/* OBJECTIF HEBDO avec progression */}
-                <GlassCard style={styles.weeklyProgressCard}>
-                    <View style={styles.weeklyProgressContent}>
-                        <View style={styles.weeklyProgressLeft}>
-                            {goalAchieved ? (
-                                <View style={styles.trophyContainer}>
-                                    <Text style={styles.trophyEmoji}>🏆</Text>
-                                </View>
-                            ) : (
-                                <ProgressRing
-                                    current={weekWorkoutsCount}
-                                    goal={weeklyGoal}
-                                    size={56}
-                                    strokeWidth={5}
-                                />
-                            )}
-                            <View style={styles.weeklyProgressMeta}>
-                                <Text style={styles.weeklyProgressLabel}>
-                                    {goalAchieved ? t('home.goalAchieved', 'OBJECTIF ATTEINT !') : t('home.weeklyGoal').toUpperCase()}
-                                </Text>
-                                <Text style={styles.weeklyProgressValue}>
-                                    {t('home.weeklyProgressRight', { current: weekWorkoutsCount, goal: weeklyGoal })}
-                                </Text>
+                {/* ══════════════════════════════════════════════════════
+                    OBJECTIF HEBDO — Grande métrique + segments
+                ══════════════════════════════════════════════════════ */}
+                <Animated.View style={slide(aGoal)}>
+                    <LinearGradient
+                        colors={[C.surfaceUp, C.surface]}
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                        style={st.goalCard}
+                    >
+                        <View style={st.goalCardGlow} pointerEvents="none" />
+
+                        <View style={st.goalCardHeader}>
+                            <Chip
+                                label={goalAchieved ? '✓ Objectif atteint' : 'Objectif hebdo'}
+                                color={goalAchieved ? C.gold : C.textSub}
+                                bg={goalAchieved ? C.goldSoft : 'transparent'}
+                                border={goalAchieved ? C.goldBorder : C.border}
+                            />
+                            {goalAchieved && <Text style={{ fontSize: 20 }}>🏆</Text>}
+                        </View>
+
+                        {/* Chiffre géant */}
+                        <View style={st.goalMetricRow}>
+                            <Text style={st.goalBigNum}>{weekWorkoutsCount}</Text>
+                            <View style={st.goalMetricRight}>
+                                <Text style={st.goalSlash}>/{weeklyGoal}</Text>
+                                <Text style={st.goalUnit}>séances</Text>
+                                <Text style={st.goalUnit}>cette semaine</Text>
                             </View>
+                            {!goalAchieved && (
+                                <View style={st.goalRingFloat}>
+                                    <ProgressRing current={weekWorkoutsCount} goal={weeklyGoal} size={54} strokeWidth={4} />
+                                </View>
+                            )}
+                        </View>
+
+                        {/* Segments */}
+                        <View style={st.segmentRow}>
+                            {Array.from({ length: weeklyGoal }).map((_, i) => (
+                                <View
+                                    key={i}
+                                    style={[
+                                        st.segment,
+                                        { flex: 1 },
+                                        i < weekWorkoutsCount ? st.segmentFilled : st.segmentEmpty,
+                                        i === 0 && { borderTopLeftRadius: R.pill, borderBottomLeftRadius: R.pill },
+                                        i === weeklyGoal - 1 && { borderTopRightRadius: R.pill, borderBottomRightRadius: R.pill },
+                                    ]}
+                                />
+                            ))}
+                        </View>
+                    </LinearGradient>
+                </Animated.View>
+
+                {/* ══════════════════════════════════════════════════════
+                    CETTE SEMAINE
+                ══════════════════════════════════════════════════════ */}
+                <Animated.View style={[st.weekCard, slide(aWeek)]}>
+                    <View style={st.weekCardHeader}>
+                        <Text style={st.weekCardTitle}>Cette semaine</Text>
+                        <View style={st.weekCountBadge}>
+                            <Text style={st.weekCountText}>{weekWorkoutsCount}/{weeklyGoal}</Text>
                         </View>
                     </View>
-                </GlassCard>
-
-                {/* CETTE SEMAINE */}
-                <GlassCard style={styles.weekSection}>
-                    <SectionHeader
-                        title={t('home.thisWeek').toUpperCase()}
-                        muted
-                        rightText={`${weekWorkoutsCount}/${weeklyGoal}`}
-                    />
-                    <View style={styles.weekRow}>
+                    <View style={st.weekDaysRow}>
                         {weekDays.map((day) => (
                             <DayBadge
                                 key={day.date}
@@ -232,50 +283,81 @@ export default function TodayScreen() {
                             />
                         ))}
                     </View>
-                </GlassCard>
+                </Animated.View>
 
-                {/* CTA - Ajouter une séance */}
-                <Pressable
-                    onPress={handleOpenModal}
-                    onLongPress={handleLongPressAdd}
-                    delayLongPress={400}
-                >
-                    {({ pressed }) => (
-                        <LinearGradient
-                            colors={Gradients.cta as any}
-                            style={[styles.ctaButton, pressed && styles.ctaPressed]}
-                        >
-                            <Text style={styles.ctaIcon}>+</Text>
-                            <Text style={styles.ctaText}>{t('home.quickActions.addWorkout')}</Text>
-                        </LinearGradient>
-                    )}
-                </Pressable>
-
-                {/* Quick Check Button - OpenFoodFacts */}
-                {settings.openFoodFactsEnabled && (
-                    <TouchableOpacity
-                        style={styles.quickCheckButton}
-                        onPress={() => router.push('/barcode-scanner')}
-                        activeOpacity={0.8}
+                {/* ══════════════════════════════════════════════════════
+                    CTA + SCAN
+                ══════════════════════════════════════════════════════ */}
+                <Animated.View style={slide(aCta)}>
+                    <Pressable
+                        onPress={handleOpenModal}
+                        onLongPress={handleLongPressAdd}
+                        delayLongPress={400}
                     >
-                        <ScanBarcode size={20} color="#22c55e" />
-                        <Text style={styles.quickCheckText}>{t('home.quickCheck')}</Text>
-                    </TouchableOpacity>
-                )}
+                        {({ pressed }) => (
+                            <View style={[st.ctaOuter, pressed && st.ctaPressed]}>
+                                <LinearGradient
+                                    colors={[C.coral, C.coralMid, C.amber]}
+                                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                                    style={st.ctaGrad}
+                                >
+                                    <View style={st.ctaInnerGlow} pointerEvents="none" />
+                                    <View style={st.ctaContent}>
+                                        <View style={st.ctaPlusCircle}>
+                                            <Text style={st.ctaPlusIcon}>+</Text>
+                                        </View>
+                                        <Text style={st.ctaText}>{t('home.quickActions.addWorkout')}</Text>
+                                    </View>
+                                    <ChevronRight size={20} color="rgba(26,8,0,0.45)" strokeWidth={2.5} />
+                                </LinearGradient>
+                            </View>
+                        )}
+                    </Pressable>
 
+                    {settings.openFoodFactsEnabled && (
+                        <TouchableOpacity
+                            style={st.scanBtn}
+                            onPress={() => router.push('/barcode-scanner')}
+                            activeOpacity={0.72}
+                        >
+                            <View style={st.scanIconWrap}>
+                                <ScanBarcode size={16} color={C.green} strokeWidth={2.5} />
+                            </View>
+                            <Text style={st.scanText}>{t('home.quickCheck')}</Text>
+                            <View style={{ flex: 1 }} />
+                            <ChevronRight size={15} color={C.green} strokeWidth={2.5} style={{ opacity: 0.6 }} />
+                        </TouchableOpacity>
+                    )}
+                </Animated.View>
 
-                {/* ACTIVITÉ RÉCENTE */}
-                <View style={styles.section}>
-                    <SectionHeader
-                        title={t('home.recentActivity')}
-                        actionLabel={sportEntries.length > 5 ? t('common.seeAll') : undefined}
-                        onAction={() => router.push('/progress')}
-                    />
+                {/* ══════════════════════════════════════════════════════
+                    ACTIVITÉ RÉCENTE
+                ══════════════════════════════════════════════════════ */}
+                <Animated.View style={[st.listSection, slide(aList)]}>
+                    <View style={st.listHeader}>
+                        <View>
+                            <Text style={st.listTitle}>Activité récente</Text>
+                            <Text style={st.listSub}>
+                                {sportEntries.length} séance{sportEntries.length !== 1 ? 's' : ''} enregistrée{sportEntries.length !== 1 ? 's' : ''}
+                            </Text>
+                        </View>
+                        {sportEntries.length > 5 && (
+                            <TouchableOpacity
+                                onPress={() => router.push('/progress')}
+                                style={st.seeAllBtn}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={st.seeAllText}>{t('common.seeAll')}</Text>
+                                <ChevronRight size={12} color={C.coral} strokeWidth={2.5} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
                     {recentWorkouts.length > 0 ? (
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.hscroll}
+                            contentContainerStyle={st.hscroll}
                         >
                             {recentWorkouts.map((workout) => (
                                 <WorkoutCard
@@ -286,19 +368,19 @@ export default function TodayScreen() {
                             ))}
                         </ScrollView>
                     ) : (
-                        <EmptyState
-                            icon="💪"
-                            title={t('home.noActivity')}
-                            subtitle={t('home.noActivityHint')}
-                        />
+                        <View style={st.emptyWrap}>
+                            <LinearGradient colors={[C.surfaceUp, C.surface]} style={st.emptyCard}>
+                                <Text style={st.emptyEmoji}>💪</Text>
+                                <Text style={st.emptyTitle}>{t('home.noActivity')}</Text>
+                                <Text style={st.emptySub}>{t('home.noActivityHint')}</Text>
+                            </LinearGradient>
+                        </View>
                     )}
-                </View>
+                </Animated.View>
 
-                {/* Espace pour le bottom nav */}
-                <View style={{ height: 20 }} />
+                <View style={{ height: 24 }} />
             </ScrollView>
 
-            {/* MODAL DÉTAILS */}
             <EntryDetailModal
                 entry={selectedEntry}
                 visible={detailModalVisible}
@@ -306,191 +388,365 @@ export default function TodayScreen() {
                 onEdit={handleEditEntry}
                 onDelete={handleDeleteEntry}
             />
-
-            {/* HEALTH CONNECT PROMPT MODAL */}
             <HealthConnectPromptModal
                 visible={healthConnectModalVisible}
                 workoutCount={healthConnectWorkoutCount}
-                onViewActivities={handleHealthConnectViewActivities}
-                onSkip={handleHealthConnectSkip}
+                onViewActivities={() => { setHealthConnectModalVisible(false); navigateToHealthConnect(); }}
+                onSkip={() => setHealthConnectModalVisible(false)}
             />
-
-            {/* BOTTOM SHEET D'AJOUT */}
             <AddEntryBottomSheet ref={bottomSheetRef} />
         </SafeAreaView>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.bg,
+// ─── StyleSheet ───────────────────────────────────────────────────────────────
+
+const st = StyleSheet.create({
+
+    container:  { flex: 1, backgroundColor: C.bg },
+    scroll:     { flex: 1 },
+    content:    { paddingHorizontal: S.lg, paddingTop: S.sm, paddingBottom: 110 },
+
+    // ── Hero
+    heroSection: {
+        marginBottom: S.xxl,
+        marginTop: S.md,
+        position: 'relative',
     },
-    scrollView: {
-        flex: 1,
+    heroHalo: {
+        position: 'absolute',
+        top: -40, right: -60,
+        width: 220, height: 220,
+        borderRadius: 110,
+        backgroundColor: 'rgba(255,99,64,0.055)',
     },
-    content: {
-        paddingHorizontal: Spacing.lg,
-        paddingBottom: 100,
+    heroTopRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: S.lg,
+    },
+    heroLeft: {
+        flex: 1,
+        gap: S.xs,
+    },
+    streakBadge: {
+        borderRadius: R.pill,
+        overflow: 'hidden',
+        shadowColor: C.coral,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.45,
+        shadowRadius: 10,
+        elevation: 8,
+        flexShrink: 0,
+        marginTop: 2,
+    },
+    streakGrad: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+    },
+    streakNum: {
+        fontSize: T.xl,
+        fontWeight: W.black,
+        color: '#1a0800',
+        letterSpacing: -0.5,
+    },
+    heroGreeting: {
+        fontSize: T.xs,
+        fontWeight: W.bold,
+        color: C.textMuted,
+        letterSpacing: 3,
+        textTransform: 'uppercase',
+    },
+    heroMotivation: {
+        fontSize: T.hero,
+        fontWeight: W.black,
+        color: C.text,
+        letterSpacing: -1.2,
+        lineHeight: 40,
+    },
+    heroAccentLine: {
+        marginTop: S.lg,
+        height: 3,
+        width: 44,
+        borderRadius: R.pill,
+        backgroundColor: C.coral,
+        shadowColor: C.coral,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 8,
+        elevation: 4,
     },
 
-    // Hero Header - Gradient avec message motivationnel
-    heroHeader: {
-        marginHorizontal: -Spacing.lg,
-        paddingHorizontal: Spacing.lg,
-        paddingTop: Spacing.md,
-        paddingBottom: Spacing.xxl,
-        marginBottom: Spacing.lg,
+    // ── Goal card
+    goalCard: {
+        borderRadius: R.xxl,
+        borderWidth: 1,
+        borderColor: C.border,
+        padding: S.xl,
+        marginBottom: S.md,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5,
+        shadowRadius: 20,
+        elevation: 12,
     },
-    heroHeaderContent: {
+    goalCardGlow: {
+        position: 'absolute',
+        top: -40, right: -40,
+        width: 140, height: 140,
+        borderRadius: 70,
+        backgroundColor: 'rgba(255,99,64,0.07)',
+    },
+    goalCardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: S.xl,
     },
-    heroHeaderLeft: {
-        flex: 1,
-        gap: 4,
+    goalMetricRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        gap: S.sm,
+        marginBottom: S.xl,
     },
-    heroGreeting: {
-        fontSize: FontSize.display,
-        fontWeight: FontWeight.bold,
-        color: Colors.text,
+    goalBigNum: {
+        fontSize: 72,
+        fontWeight: W.black,
+        color: C.text,
+        lineHeight: 72,
+        letterSpacing: -3,
+        includeFontPadding: false,
+    },
+    goalMetricRight: {
+        paddingBottom: 8,
+        gap: 1,
+    },
+    goalSlash: {
+        fontSize: T.xxl,
+        fontWeight: W.xbold,
+        color: C.textMuted,
         letterSpacing: -0.5,
+        lineHeight: 28,
     },
-    heroMotivation: {
-        fontSize: FontSize.lg,
-        color: Colors.muted,
-        fontWeight: FontWeight.medium,
-        lineHeight: 22,
+    goalUnit: {
+        fontSize: T.xs,
+        fontWeight: W.semi,
+        color: C.textMuted,
+        letterSpacing: 0.3,
     },
-    streakBadge: {
+    goalRingFloat: {
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        opacity: 0.65,
+    },
+    segmentRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        backgroundColor: 'rgba(255, 107, 90, 0.15)',
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: BorderRadius.full,
+        gap: 4,
+        height: 5,
+    },
+    segment:        { height: '100%', borderRadius: 2 },
+    segmentFilled:  {
+        backgroundColor: C.coral,
+        shadowColor: C.coral,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.55,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    segmentEmpty:   { backgroundColor: 'rgba(255,255,255,0.08)' },
+
+    // ── Week card
+    weekCard: {
+        backgroundColor: C.surface,
+        borderRadius: R.xxl,
         borderWidth: 1,
-        borderColor: 'rgba(255, 107, 90, 0.25)',
+        borderColor: C.border,
+        padding: S.xl,
+        marginBottom: S.md,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 6,
     },
-    streakEmoji: {
-        fontSize: 18,
+    weekCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: S.lg,
     },
-    streakValue: {
-        fontSize: FontSize.xl,
-        fontWeight: FontWeight.bold,
-        color: Colors.accent,
+    weekCardTitle: {
+        fontSize: T.lg,
+        fontWeight: W.xbold,
+        color: C.text,
+        letterSpacing: -0.3,
+    },
+    weekCountBadge: {
+        backgroundColor: C.coralSoft,
+        borderWidth: 1,
+        borderColor: C.coralGlow,
+        borderRadius: R.pill,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+    },
+    weekCountText: {
+        fontSize: T.xs,
+        fontWeight: W.black,
+        color: C.coral,
+        letterSpacing: 0.5,
+    },
+    weekDaysRow: {
+        flexDirection: 'row',
+        gap: S.sm - 2,
     },
 
-    // Weekly Progress Card
-    weeklyProgressCard: {
-        marginBottom: Spacing.lg,
-    },
-    weeklyProgressContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    weeklyProgressLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 14,
-        flex: 1,
-    },
-    weeklyProgressMeta: {
-        gap: 2,
-    },
-    weeklyProgressLabel: {
-        fontSize: FontSize.xs,
-        letterSpacing: 1,
-        color: 'rgba(255, 255, 255, 0.70)',
-        fontWeight: FontWeight.semibold,
-    },
-    weeklyProgressValue: {
-        fontSize: FontSize.lg,
-        color: Colors.text,
-        fontWeight: FontWeight.bold,
-    },
-    trophyContainer: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: 'rgba(245, 200, 66, 0.25)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: Colors.gold,
-    },
-    trophyEmoji: {
-        fontSize: 28,
-    },
-
-    // Week Section
-    weekSection: {
-        marginBottom: Spacing.lg,
-    },
-    weekRow: {
-        flexDirection: 'row',
-        gap: 6,
-    },
-
-    // CTA Button
-    ctaButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-        paddingVertical: 16,
-        paddingHorizontal: 14,
-        borderRadius: BorderRadius.xl,
-        marginBottom: Spacing.md,
-        shadowColor: '#d79686',
+    // ── CTA
+    ctaOuter: {
+        borderRadius: R.xxl,
+        marginBottom: S.sm,
+        overflow: 'hidden',
+        shadowColor: C.coral,
         shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.25,
-        shadowRadius: 15,
-        elevation: 8,
+        shadowOpacity: 0.35,
+        shadowRadius: 24,
+        elevation: 12,
     },
     ctaPressed: {
-        opacity: 0.9,
-        transform: [{ scale: 0.98 }],
+        opacity: 0.87,
+        transform: [{ scale: 0.973 }],
     },
-    ctaIcon: {
-        fontSize: 20,
-        color: '#1b0f0c',
-        fontWeight: FontWeight.bold,
-    },
-    ctaText: {
-        color: '#1b0f0c',
-        fontSize: FontSize.xl,
-        fontWeight: FontWeight.extrabold,
-    },
-    
-    // Quick Check Button (OpenFoodFacts)
-    quickCheckButton: {
+    ctaGrad: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: Spacing.sm,
-        backgroundColor: 'rgba(34, 197, 94, 0.15)',
-        borderWidth: 1,
-        borderColor: 'rgba(34, 197, 94, 0.3)',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: BorderRadius.lg,
-        marginBottom: Spacing.lg,
+        paddingVertical: 18,
+        paddingHorizontal: S.xl,
+        gap: S.md,
     },
-    quickCheckText: {
-        color: '#22c55e',
-        fontSize: FontSize.md,
-        fontWeight: FontWeight.semibold,
+    ctaInnerGlow: {
+        position: 'absolute',
+        left: -20, top: -20,
+        width: 100, height: 100,
+        borderRadius: 50,
+        backgroundColor: 'rgba(255,255,255,0.10)',
+    },
+    ctaContent: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: S.md,
+    },
+    ctaPlusCircle: {
+        width: 32, height: 32,
+        borderRadius: 16,
+        backgroundColor: 'rgba(26,8,0,0.20)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    ctaPlusIcon: {
+        fontSize: 20,
+        fontWeight: W.black,
+        color: '#1a0800',
+        lineHeight: 22,
+        includeFontPadding: false,
+    },
+    ctaText: {
+        fontSize: T.lg,
+        fontWeight: W.black,
+        color: '#1a0800',
+        letterSpacing: -0.3,
     },
 
-    // Sections
-    section: {
-        marginBottom: Spacing.lg,
+    // ── Scan
+    scanBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: S.md,
+        backgroundColor: C.greenSoft,
+        borderWidth: 1,
+        borderColor: C.greenBorder,
+        borderRadius: R.xl,
+        paddingVertical: 14,
+        paddingHorizontal: S.xl,
+        marginBottom: S.xl,
+    },
+    scanIconWrap: {
+        width: 30, height: 30,
+        borderRadius: 15,
+        backgroundColor: 'rgba(61,214,140,0.12)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    scanText: {
+        fontSize: T.md,
+        fontWeight: W.semi,
+        color: C.green,
+        letterSpacing: 0.1,
+    },
+
+    // ── Liste
+    listSection:    { marginBottom: S.lg },
+    listHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        marginBottom: S.lg,
+    },
+    listTitle: {
+        fontSize: T.xl,
+        fontWeight: W.black,
+        color: C.text,
+        letterSpacing: -0.4,
+        marginBottom: 2,
+    },
+    listSub: {
+        fontSize: T.xs,
+        fontWeight: W.med,
+        color: C.textMuted,
+        letterSpacing: 0.2,
+    },
+    seeAllBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 2,
+        backgroundColor: C.coralSoft,
+        borderWidth: 1,
+        borderColor: C.coralGlow,
+        borderRadius: R.pill,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+    },
+    seeAllText: {
+        fontSize: T.xs,
+        fontWeight: W.bold,
+        color: C.coral,
+        letterSpacing: 0.3,
     },
     hscroll: {
-        gap: 12,
-        paddingRight: Spacing.lg,
+        gap: S.md,
+        paddingRight: S.lg,
+        paddingBottom: S.xs,
     },
+
+    // ── Empty
+    emptyWrap: {
+        borderRadius: R.xxl,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: C.border,
+    },
+    emptyCard: {
+        alignItems: 'center',
+        paddingVertical: S.xxxl,
+        paddingHorizontal: S.xl,
+        gap: S.sm,
+    },
+    emptyEmoji:  { fontSize: 42, marginBottom: S.sm },
+    emptyTitle:  { fontSize: T.lg, fontWeight: W.bold, color: C.text },
+    emptySub:    { fontSize: T.sm, color: C.textMuted, textAlign: 'center', lineHeight: 19 },
 });
