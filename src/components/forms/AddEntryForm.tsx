@@ -504,7 +504,6 @@ export function AddEntryForm({
                     break;
 
                 case 'measure':
-                    // nettoyer les champs en remplaçant virgule par point
                     const wClean = weight.trim().replace(',', '.');
                     const bfClean = bodyFatPercent.trim().replace(',', '.');
                     const waistClean = waist.trim().replace(',', '.');
