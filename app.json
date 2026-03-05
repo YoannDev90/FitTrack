@@ -76,7 +76,13 @@
       "expo-audio",
       "expo-localization",
       "expo-secure-store",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-font",
+            {
+                "fonts": ["node_modules/@expo-google-fonts/syne/400Regular/Syne_400Regular.ttf", "node_modules/@expo-google-fonts/syne/700Bold/Syne_700Bold.ttf", "node_modules/@expo-google-fonts/syne/800ExtraBold/Syne_800ExtraBold.ttf"]
+            }
+        ]
     ],
     "experiments": {
       "typedRoutes": true

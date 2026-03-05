@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@blazejkustra/react-native-onboarding": "^1.0.0",
+    "@expo-google-fonts/syne": "^0.4.2",
     "@expo/config-plugins": "~55.0.6",
     "@expo/vector-icons": "^15.1.1",
     "@legendapp/list": "^2.0.19",

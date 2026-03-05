@@ -463,8 +463,8 @@ const st = StyleSheet.create({
     },
     heroMotivation: {
         fontSize: T.hero,
-        fontWeight: W.black,
         color: C.text,
+        fontFamily: 'Syne_700Bold',
         letterSpacing: -1.2,
         lineHeight: 40,
     },
