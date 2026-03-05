@@ -474,7 +474,7 @@ const cal = StyleSheet.create({
     cellFuture: { opacity: 0.25 },
     checkWrap:  { alignItems: 'center', justifyContent: 'center' },
     cellNum: {
-        fontSize: T.sm - 1, color: C.textMuted, fontWeight: W.med,
+        fontSize: T.sm - 1, color: C.text, fontWeight: W.med,
     },
     cellNumToday: { color: C.text, fontWeight: W.black },
     cellNumFuture: { opacity: 0.4 },
