@@ -104,13 +104,23 @@ export default function AuthScreen() {
         try {
             if (mode === 'login') {
                 await signIn(email, password);
-                router.back();
+                if (router.canGoBack()) {
+                    router.back();
+                } else {
+                    router.replace('/');
+                }
             } else {
                 await signUp(email, password, username);
                 Alert.alert(
                     t('auth.signupSuccessTitle'),
                     t('auth.signupSuccessMessage', { username }),
-                    [{ text: t('common.ok'), onPress: () => router.back() }]
+                    [{ text: t('common.ok'), onPress: () => {
+                        if (router.canGoBack()) {
+                            router.back();
+                        } else {
+                            router.replace('/');
+                        }
+                    }}]
                 );
             }
         } catch (error: any) {
@@ -135,7 +145,7 @@ export default function AuthScreen() {
                     {/* Back button */}
                     <TouchableOpacity 
                         style={styles.backButton}
-                        onPress={() => router.back()}
+                        onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
                     >
                         <ArrowLeft size={24} color={Colors.text} />
                     </TouchableOpacity>

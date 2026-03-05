@@ -193,6 +193,7 @@ export default function Layout() {
                     <Stack.Screen name="health-connect" />
                     <Stack.Screen name="auth" />
                     <Stack.Screen name="profile" />
+                    <Stack.Screen name="pollination-callback" />
                     <Stack.Screen name="privacy-policy" />
                     <Stack.Screen name="terms-of-service" />
                 </Stack>
