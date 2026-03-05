@@ -237,6 +237,12 @@ export interface UserSettings {
   // Labs: OpenFoodFacts barcode scanner enabled
   openFoodFactsEnabled?: boolean;
 
+  // AI – Ploppy settings
+  aiProgressEnabled?: boolean; // Show AI weekly summary in Progress
+  aiWorkoutEnabled?: boolean; // Show AI analysis in workout detail
+  aiModel?: string; // Pollinations model name (default: 'openai')
+  aiTone?: 'technical' | 'neutral' | 'warm'; // Style of Ploppy's responses
+
   // Personal information (optional, may be shared with analysis services)
   gender?: 'male' | 'female' | 'other';
   heightCm?: number; // Height in centimeters

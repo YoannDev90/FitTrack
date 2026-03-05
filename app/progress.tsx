@@ -4,7 +4,7 @@
 // i18n fully configured · All dynamic logic preserved
 // ============================================================================
 
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, Dimensions,
     TouchableOpacity, Modal, Pressable, Animated as RNAnimated,
@@ -23,13 +23,17 @@ import Svg, {
 import {
     Flame, Trophy, Target, TrendingUp, Calendar,
     Dumbbell, Footprints, Scale, Zap, Award,
-    Lock, X, CheckCircle,
+    Lock, X, CheckCircle, Bot, Activity, RefreshCw,
 } from 'lucide-react-native';
+import { storageHelpers } from '../src/storage/mmkv';
 import { useAppStore } from '../src/stores';
 import { getBadgesWithState } from '../src/utils/badges';
 import { useTranslation } from 'react-i18next';
 import { getMonthName } from '../src/utils/date';
-import type { MeasureEntry, HomeWorkoutEntry } from '../src/types';
+import { generateTextAnalysis } from '../src/services/pollination/textAnalysis';
+import { isPollinationConnected } from '../src/services/pollination';
+import i18n from '../src/i18n';
+import type { MeasureEntry, HomeWorkoutEntry, RunEntry, Entry } from '../src/types';
 
 const { width: SW } = Dimensions.get('window');
 const PAD = 18;
@@ -1079,6 +1083,197 @@ const bdg = StyleSheet.create({
 });
 
 // ─── CARD WRAPPER ─────────────────────────────────────────────────────────────
+// ─── Ploppy AI Weekly Summary ────────────────────────────────────────────────
+
+function getWeekStats(entries: Entry[]) {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const weekEntries = entries.filter(e => {
+        const d = new Date(e.date);
+        return d >= startOfWeek && d <= now;
+    });
+
+    const sportEntries = weekEntries.filter(e => ['home', 'run', 'beatsaber', 'custom'].includes(e.type));
+    const runEntries = weekEntries.filter((e): e is RunEntry => e.type === 'run');
+
+    const totalWorkouts = sportEntries.length;
+    const totalDistance = runEntries.reduce((s, e) => s + (e.distanceKm || 0), 0);
+    const totalDuration = sportEntries.reduce((s, e) => {
+        if ('durationMinutes' in e && (e as any).durationMinutes) return s + (e as any).durationMinutes;
+        return s;
+    }, 0);
+    const totalReps = weekEntries
+        .filter((e): e is HomeWorkoutEntry => e.type === 'home')
+        .reduce((s, e) => s + (e.totalReps || 0), 0);
+
+    const activeDays = new Set(sportEntries.map(e => e.date)).size;
+    const typeBreakdown: Record<string, number> = {};
+    sportEntries.forEach(e => { typeBreakdown[e.type] = (typeBreakdown[e.type] || 0) + 1; });
+
+    return { totalWorkouts, totalDistance, totalDuration, totalReps, activeDays, typeBreakdown };
+}
+
+function PloppyWeeklySummary({ entries, settings }: {
+    entries: Entry[];
+    settings: { aiProgressEnabled?: boolean; aiModel?: string; aiTone?: string };
+}) {
+    const { t } = useTranslation();
+    const [analysis, setAnalysis] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
+    const [connected, setConnected] = useState(false);
+
+    const weekStats = useMemo(() => getWeekStats(entries), [entries]);
+
+    const fetchSummary = useCallback(async (force: boolean = false) => {
+        if (!settings.aiProgressEnabled || !connected) return;
+        if (weekStats.totalWorkouts === 0) return;
+
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay() + (weekStart.getDay() === 0 ? -6 : 1));
+        const weekKey = weekStart.toISOString().slice(0,10);
+        const cacheKey = `aiSummary:${weekKey}:${settings.aiModel || 'openai'}:${i18n.language}:${settings.aiTone || 'neutral'}`;
+        if (!force) {
+            const cached = await storageHelpers.getString(cacheKey) as string | null;
+            if (cached) {
+                setAnalysis(cached);
+                return;
+            }
+        }
+
+        setLoading(true);
+        setError(false);
+        try {
+            const lang = i18n.language === 'fr' ? 'français' : 'English';
+            const toneDesc = settings.aiTone === 'technical'
+                ? 'Use a precise, technical tone.'
+                : settings.aiTone === 'warm'
+                ? 'Use a very warm and encouraging tone.'
+                : 'Use a neutral balanced tone.';
+            const statsLines: string[] = [];
+            statsLines.push(`Active days this week: ${weekStats.activeDays}/7`);
+            statsLines.push(`Total workouts: ${weekStats.totalWorkouts}`);
+            if (weekStats.totalDuration > 0) statsLines.push(`Total duration: ${weekStats.totalDuration} min`);
+            if (weekStats.totalDistance > 0) statsLines.push(`Total distance: ${weekStats.totalDistance.toFixed(1)} km`);
+            if (weekStats.totalReps > 0) statsLines.push(`Total reps: ${weekStats.totalReps}`);
+            const breakdown = Object.entries(weekStats.typeBreakdown)
+                .map(([type, count]) => `${type}: ${count}`)
+                .join(', ');
+            if (breakdown) statsLines.push(`Activity breakdown: ${breakdown}`);
+
+            const systemPrompt = `You are Ploppy, a motivating and friendly fitness coach. ${toneDesc} You write weekly workout summaries. Respond in ${lang}. Keep it concise (3-5 sentences). Use 1-2 emojis.`;
+            const userPrompt = `Here are my pre-calculated weekly stats:\n\n${statsLines.join('\n')}\n\nWrite a brief, motivating weekly summary. Mention specific numbers. End with one tip for next week.`;
+
+            const result = await generateTextAnalysis({
+                systemPrompt,
+                userPrompt,
+                model: settings.aiModel || 'openai',
+            });
+            setAnalysis(result);
+            await storageHelpers.setString(cacheKey, result);
+        } catch {
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
+    }, [settings.aiProgressEnabled, connected, weekStats, settings.aiModel, settings.aiTone]);
+
+    useEffect(() => {
+        isPollinationConnected().then(setConnected);
+    }, []);
+
+    useEffect(() => {
+        fetchSummary();
+    }, [fetchSummary]);
+
+
+    if (!settings.aiProgressEnabled) {
+        return (
+            <CardWrap delay={180} accent={C.violet + '35'}>
+                <CardTitle
+                    icon={<Bot size={14} color={C.violet} strokeWidth={2} />}
+                    label={t('progress.ai.title')}
+                    color={C.violet}
+                />
+                <Text style={ploppyStyles.disabledText}>{t('progress.ai.disabled')}</Text>
+                <Text style={ploppyStyles.hintText}>{t('progress.ai.enableInSettings')}</Text>
+            </CardWrap>
+        );
+    }
+
+    if (!connected) {
+        return (
+            <CardWrap delay={180} accent={C.violet + '35'}>
+                <CardTitle
+                    icon={<Bot size={14} color={C.violet} strokeWidth={2} />}
+                    label={t('progress.ai.title')}
+                    color={C.violet}
+                />
+                <Text style={ploppyStyles.disabledText}>{t('progress.ai.connectRequired')}</Text>
+            </CardWrap>
+        );
+    }
+
+    if (weekStats.totalWorkouts === 0) {
+        return (
+            <CardWrap delay={180} accent={C.violet + '35'}>
+                <CardTitle
+                    icon={<Bot size={14} color={C.violet} strokeWidth={2} />}
+                    label={t('progress.ai.title')}
+                    color={C.violet}
+                />
+                <Text style={ploppyStyles.disabledText}>{t('progress.ai.noData')}</Text>
+            </CardWrap>
+        );
+    }
+
+    return (
+        <CardWrap delay={180} accent={C.violet + '35'}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <CardTitle
+                icon={<Bot size={14} color={C.violet} strokeWidth={2} />}
+                label={t('progress.ai.title')}
+                color={C.violet}
+              />
+              {analysis && !loading && !error && (
+                <TouchableOpacity
+                  onPress={() => fetchSummary(true)}
+                  style={ploppyStyles.regenBtn}
+                  accessibilityLabel={t('progress.ai.regenerate')}
+                >
+                  <RefreshCw size={16} color={C.violet} />
+                </TouchableOpacity>
+              )}
+            </View>
+            {loading ? (
+                <View style={ploppyStyles.loadingRow}>
+                    <Activity size={16} color={C.violet} />
+                    <Text style={ploppyStyles.loadingText}>{t('progress.ai.loading')}</Text>
+                </View>
+            ) : error ? (
+                <Text style={ploppyStyles.errorText}>{t('progress.ai.error')}</Text>
+            ) : analysis ? (
+                <Text style={ploppyStyles.analysisText}>{analysis}</Text>
+            ) : null}
+        </CardWrap>
+    );
+}
+
+const ploppyStyles = StyleSheet.create({
+    disabledText: { fontSize: T.sm, color: C.textMuted, lineHeight: T.sm * 1.5 },
+    hintText: { fontSize: T.xs, color: C.textMuted, marginTop: S.xs },
+    regenBtn: { padding: S.xs, borderRadius: R.full, backgroundColor: C.surfaceHigh },
+    loadingRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, paddingVertical: S.sm },
+    loadingText: { fontSize: T.sm, color: C.textMuted },
+    errorText: { fontSize: T.sm, color: C.error },
+    analysisText: { fontSize: T.sm, color: C.textSub, lineHeight: T.sm * 1.7, fontStyle: 'italic' },
+});
+
+// ─── Shared Card Wrappers ─────────────────────────────────────────────────────
+
 function CardWrap({ children, delay = 0, accent }: {
     children: React.ReactNode; delay?: number; accent?: string;
 }) {
@@ -1244,6 +1439,9 @@ export default function ProgressScreen() {
 
                 {/* Streak */}
                 <StreakCover current={streak.current} best={streak.best} />
+
+                {/* AI Weekly Summary */}
+                <PloppyWeeklySummary entries={entries} settings={settings} />
 
                 {/* Stats */}
                 <StatsSection

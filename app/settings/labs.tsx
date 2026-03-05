@@ -12,6 +12,7 @@ import {
   Switch,
   Alert,
   Linking,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -28,6 +29,9 @@ import {
   XCircle,
   AlertTriangle,
   ScanBarcode,
+  Bot,
+  ChevronDown,
+  Activity,
 } from 'lucide-react-native';
 import { GlassCard } from '../../src/components/ui';
 import { useAppStore } from '../../src/stores';
@@ -39,11 +43,14 @@ import {
   removePollinationApiKey,
 } from '../../src/services/pollination';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
+import { POLLINATION_MODELS } from '../../src/services/pollination/textAnalysis';
 
 export default function LabsScreen() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useAppStore();
   const [pollinationStatus, setPollinationStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [modelPickerVisible, setModelPickerVisible] = useState(false);
+  const [tonePickerVisible, setTonePickerVisible] = useState(false);
 
   // Check Pollination connection status
   const checkPollinationStatus = useCallback(async () => {
@@ -251,6 +258,180 @@ export default function LabsScreen() {
                 {t('settings.pollination.betaWarning')}
               </Text>
             </View>
+          </Animated.View>
+        </GlassCard>
+
+        {/* AI – Ploppy Section */}
+        <Text style={styles.sectionTitle}>{t('settings.ai.title')}</Text>
+        
+        <GlassCard style={styles.settingsCard}>
+          <Animated.View entering={FadeInDown.delay(140).springify()}>
+            {/* Toggle: AI Progress */}
+            <View style={styles.settingItem}>
+              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
+                <Bot size={20} color="#a78bfa" />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>{t('settings.ai.toggleProgress')}</Text>
+                <Text style={styles.settingSubtitle}>{t('settings.ai.toggleProgressDesc')}</Text>
+              </View>
+              <View>
+                <Switch
+                  value={settings.aiProgressEnabled ?? false}
+                  onValueChange={(value) => updateSettings({ aiProgressEnabled: value })}
+                  trackColor={{ false: Colors.card, true: '#a78bfa' }}
+                  thumbColor="#fff"
+                  disabled={pollinationStatus !== 'connected'}
+                />
+              </View>
+            </View>
+
+            {/* Toggle: AI Workout */}
+            <View style={styles.settingItem}>
+              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
+                <Sparkles size={20} color="#a78bfa" />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>{t('settings.ai.toggleWorkout')}</Text>
+                <Text style={styles.settingSubtitle}>{t('settings.ai.toggleWorkoutDesc')}</Text>
+              </View>
+              <View>
+                <Switch
+                  value={settings.aiWorkoutEnabled ?? false}
+                  onValueChange={(value) => updateSettings({ aiWorkoutEnabled: value })}
+                  trackColor={{ false: Colors.card, true: '#a78bfa' }}
+                  thumbColor="#fff"
+                  disabled={pollinationStatus !== 'connected'}
+                />
+              </View>
+            </View>
+
+            {/* Model Selector */}
+            <View style={styles.settingItem}>
+              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
+                <ChevronDown size={20} color="#a78bfa" />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>{t('settings.ai.modelLabel')}</Text>
+                <Text style={styles.settingSubtitle}>{t('settings.ai.modelDesc')}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.modelPicker}
+                onPress={() => setModelPickerVisible(true)}
+                disabled={pollinationStatus !== 'connected'}
+              >
+                <Text style={styles.modelPickerText}>
+                  {POLLINATION_MODELS.find(m => m.id === (settings.aiModel || 'openai'))?.label || 'OpenAI'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* model picker modal */}
+              <Modal
+                transparent
+                animationType="fade"
+                visible={modelPickerVisible}
+                onRequestClose={() => setModelPickerVisible(false)}
+              >
+                <TouchableOpacity
+                  style={styles.modalOverlay}
+                  activeOpacity={1}
+                  onPress={() => setModelPickerVisible(false)}
+                >
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>{t('settings.ai.selectModelTitle')}</Text>
+                    {POLLINATION_MODELS.map(m => (
+                      <TouchableOpacity
+                        key={m.id}
+                        style={[
+                          styles.modelOption,
+                          settings.aiModel === m.id && styles.modelOptionSelected,
+                        ]}
+                        onPress={() => {
+                          updateSettings({ aiModel: m.id });
+                          setModelPickerVisible(false);
+                        }}
+                      >
+                        <Text
+                          style={
+                            settings.aiModel === m.id
+                              ? styles.modelOptionTextSelected
+                              : styles.modelOptionText
+                          }
+                        >
+                          {m.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            </View>
+
+            {/* Tone selector */}
+            <View style={styles.settingItem}>
+              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
+                <Activity size={20} color="#a78bfa" />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>{t('settings.ai.toneLabel')}</Text>
+                <Text style={styles.settingSubtitle}>{t('settings.ai.toneDesc')}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.modelPicker}
+                onPress={() => setTonePickerVisible(true)}
+                disabled={pollinationStatus !== 'connected'}
+              >
+                <Text style={styles.modelPickerText}>
+                  {settings.aiTone === 'technical' ? t('settings.ai.toneOptions.technical') :
+                   settings.aiTone === 'warm' ? t('settings.ai.toneOptions.warm') :
+                   t('settings.ai.toneOptions.neutral')}
+                </Text>
+              </TouchableOpacity>
+
+              {/* tone picker modal */}
+              <Modal
+                transparent
+                animationType="fade"
+                visible={tonePickerVisible}
+                onRequestClose={() => setTonePickerVisible(false)}
+              >
+                <TouchableOpacity
+                  style={styles.modalOverlay}
+                  activeOpacity={1}
+                  onPress={() => setTonePickerVisible(false)}
+                >
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>{t('settings.ai.toneLabel')}</Text>
+                    {['technical','neutral','warm'].map(o => (
+                      <TouchableOpacity
+                        key={o}
+                        style={
+                          settings.aiTone === o ? styles.modelOptionSelected : styles.modelOption
+                        }
+                        onPress={() => {
+                          updateSettings({ aiTone: o as any });
+                          setTonePickerVisible(false);
+                        }}
+                      >
+                        <Text style={
+                          settings.aiTone === o ? styles.modelOptionTextSelected : styles.modelOptionText
+                        }>
+                          {t(`settings.ai.toneOptions.${o}`)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            </View>
+
+            {pollinationStatus !== 'connected' && (
+              <View style={styles.featureInfo}>
+                <Text style={styles.featureInfoText}>
+                  {t('workout.ai.connectRequired')}
+                </Text>
+              </View>
+            )}
           </Animated.View>
         </GlassCard>
 
@@ -475,4 +656,66 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontStyle: 'italic',
   },
+
+  // Model Picker
+  modelPicker: {
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.25)',
+  },
+  modelPickerText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: '#a78bfa',
+  },
+
+  // model picker modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: Colors.card,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xxl,
+    width: '80%',
+    maxHeight: '60%',
+  },
+  modelOption: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.lg,
+  },
+  modelOptionSelected: {
+    backgroundColor: 'rgba(167,139,250,0.2)',
+  },
+  modelOptionText: {
+    fontSize: FontSize.md,
+    color: Colors.text,
+  },
+  modelOptionTextSelected: {
+    fontSize: FontSize.md,
+    color: '#a78bfa',
+    fontWeight: FontWeight.bold,
+  },
+  modalTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold,
+    color: Colors.text,
+    marginBottom: Spacing.md,
+    textAlign: 'center',
+  },
+
+  // removed slider styles - not needed since using dropdown
+  toneSliderContainer: {},
+  sliderTrack: {},
+  sliderThumb: {},
+  toneSlider: {},
+  toneEmoji: {},
+  toneEmojiSelected: {},
 });

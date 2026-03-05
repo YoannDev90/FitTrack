@@ -121,6 +121,7 @@ const defaultSettings: UserSettings = {
     gender: undefined,
     heightCm: undefined,
     bodyWeightKg: undefined,
+    aiTone: 'neutral',
 };
 
 // Configuration par défaut des sports
