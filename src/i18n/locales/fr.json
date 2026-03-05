@@ -248,6 +248,16 @@
       "weeklyGoal": "objectif/sem"
     },
     "activeDays": "{{count}} jours actifs",
+    "ai": {
+      "title": "Résumé de la semaine par Ploppy \uD83E\uDD16",
+      "loading": "Ploppy réfléchit...",
+      "error": "Résumé indisponible",
+      "disabled": "Le résumé IA est désactivé",
+      "enableInSettings": "Active-le dans Paramètres > IA – Ploppy",
+      "noData": "Pas assez de données pour générer un résumé",
+      "connectRequired": "Connecte-toi à Pollination dans Paramètres > Labs pour utiliser les fonctions IA",
+      "regenerate": "Régénérer"
+    },
     "workoutsPerMonth": "Séances par mois",
     "weightEvolution": "Évolution du poids",
     "lastWeight": "Dernier",
@@ -813,6 +823,23 @@
     "skipSensorSelectionDesc": "Désactiver pour passer directement à l'écran de positionnement",
     "enableToolsScreen": "Activer le screen de création de séance (bêta)",
     "enableToolsScreenDesc": "Très expérimental ! Affiche l'icône Outils dans la barre de navigation.",
+    "ai": {
+      "title": "IA – Ploppy \uD83E\uDD16",
+      "toggleProgress": "IA dans Progress",
+      "toggleProgressDesc": "Afficher le résumé IA hebdomadaire dans Progression",
+      "toggleWorkout": "IA dans les séances",
+      "toggleWorkoutDesc": "Afficher l'analyse IA dans le détail des séances",
+      "modelLabel": "Modèle IA",
+      "modelDesc": "Modèle utilisé pour l'analyse IA",
+      "selectModelTitle": "Choisir un modèle",
+      "toneLabel": "Style de réponse",
+      "toneDesc": "Ton technique ↔ chaleureux (neutre milieu)",
+      "toneOptions": {
+        "technical": "Technique",
+        "neutral": "Neutre",
+        "warm": "Chaleureux"
+      }
+    },
     "pollination": {
       "sectionTitle": "ANALYSE IA",
       "title": "Pollination AI",
@@ -1434,6 +1461,42 @@
       "beatsaber": "Beat Saber",
       "meal": "Repas",
       "measure": "Mesures"
+    },
+    "detail": {
+      "title": "Détail de la séance",
+      "duration": "Durée",
+      "distance": "Distance",
+      "speed": "Vitesse moyenne",
+      "reps": "Reps totales",
+      "bpmAvg": "BPM moyen",
+      "bpmMax": "BPM max",
+      "cardiacLoad": "Charge cardiaque",
+      "calories": "Calories",
+      "exercises": "Exercices",
+      "absBlock": "Bloc abdos",
+      "weight": "Poids",
+      "waist": "Taille",
+      "arm": "Bras",
+      "hips": "Hanches",
+      "bodyFat": "Masse grasse",
+      "mealName": "Repas",
+      "description": "Description",
+      "score": "Score",
+      "suggestions": "Suggestions",
+      "noData": "Aucune donnée",
+      "date": "Date",
+      "type": "Type"
+    },
+    "ai": {
+      "title": "Analyse de Ploppy \uD83E\uDD16",
+      "loading": "Ploppy réfléchit...",
+      "error": "Analyse indisponible",
+      "disabled": "L'analyse IA est désactivée",
+      "enableInSettings": "Active-la dans Paramètres > IA – Ploppy",
+      "bestSession": "\uD83C\uDFC6 C'est ta meilleure séance de tous les temps pour cette activité !",
+      "improvement": "Par rapport à la dernière fois",
+      "connectRequired": "Connecte-toi à Pollination dans Paramètres > Labs pour utiliser les fonctions IA",
+      "regenerate": "Régénérer"
     }
   },
   "forms": {

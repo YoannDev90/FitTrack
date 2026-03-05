@@ -248,6 +248,16 @@
       "weeklyGoal": "goal / week"
     },
     "activeDays": "{{count}} active days",
+    "ai": {
+      "title": "Weekly summary by Ploppy \uD83E\uDD16",
+      "loading": "Ploppy is thinking...",
+      "error": "Summary unavailable",
+      "disabled": "AI summary is disabled",
+      "enableInSettings": "Enable it in Settings > AI – Ploppy",
+      "noData": "Not enough data to generate a summary",
+      "connectRequired": "Connect to Pollination in Settings > Labs to use AI features",
+      "regenerate": "Regenerate"
+    },
     "workoutsPerMonth": "Workouts per month",
     "weightEvolution": "Weight evolution",
     "lastWeight": "Last",
@@ -818,6 +828,23 @@
     "skipSensorSelectionDesc": "Disable to skip directly to positioning screen",
     "enableToolsScreen": "Enable workout creation screen (beta)",
     "enableToolsScreenDesc": "Very experimental! Shows the Tools icon in the nav bar.",
+    "ai": {
+      "title": "AI – Ploppy \uD83E\uDD16",
+      "toggleProgress": "AI in Progress",
+      "toggleProgressDesc": "Show weekly AI summary on the Progress page",
+      "toggleWorkout": "AI in Sessions",
+      "toggleWorkoutDesc": "Show AI analysis in workout details",
+      "modelLabel": "AI Model",
+      "modelDesc": "Model used for AI analysis",
+      "selectModelTitle": "Choose model",
+      "toneLabel": "Response style",
+      "toneDesc": "Technical ↔ Warm tone (neutral mid)",
+      "toneOptions": {
+        "technical": "Technical",
+        "neutral": "Neutral",
+        "warm": "Warm"
+      }
+    },
     "pollination": {
       "sectionTitle": "AI ANALYSIS",
       "title": "Pollination AI",
@@ -1423,6 +1450,42 @@
       "beatsaber": "Beat Saber",
       "meal": "Meals",
       "measure": "Measurements"
+    },
+    "detail": {
+      "title": "Session Details",
+      "duration": "Duration",
+      "distance": "Distance",
+      "speed": "Average Speed",
+      "reps": "Total Reps",
+      "bpmAvg": "Avg BPM",
+      "bpmMax": "Max BPM",
+      "cardiacLoad": "Cardiac Load",
+      "calories": "Calories",
+      "exercises": "Exercises",
+      "absBlock": "Abs Block",
+      "weight": "Weight",
+      "waist": "Waist",
+      "arm": "Arm",
+      "hips": "Hips",
+      "bodyFat": "Body Fat",
+      "mealName": "Meal",
+      "description": "Description",
+      "score": "Score",
+      "suggestions": "Suggestions",
+      "noData": "No data",
+      "date": "Date",
+      "type": "Type"
+    },
+    "ai": {
+      "title": "Ploppy's Analysis \uD83E\uDD16",
+      "loading": "Ploppy is thinking...",
+      "error": "Analysis unavailable",
+      "disabled": "AI analysis is disabled",
+      "enableInSettings": "Enable it in Settings > AI – Ploppy",
+      "bestSession": "\uD83C\uDFC6 This is your best session ever for this activity!",
+      "improvement": "Compared to last time",
+      "connectRequired": "Connect to Pollination in Settings > Labs to use AI features",
+      "regenerate": "Regenerate"
     }
   },
   "entries": {
