@@ -189,7 +189,7 @@ export default function Layout() {
                     <Stack.Screen name="tools" />
                     <Stack.Screen name="settings" />
                     <Stack.Screen name="onboarding" />
-                    <Stack.Screen name="repCounter" />
+                    <Stack.Screen name="repCounter/index" />
                     <Stack.Screen name="health-connect" />
                     <Stack.Screen name="auth" />
                     <Stack.Screen name="profile" />
