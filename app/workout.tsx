@@ -1,12 +1,12 @@
 // ============================================================================
-// WORKOUT SCREEN - Historique complet des séances (Optimisé)
+// WORKOUT SCREEN - Redesigned with premium dark aesthetic
 // ============================================================================
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   FlatList,
   TouchableOpacity,
   Alert,
@@ -15,37 +15,98 @@ import {
 import { LegendList } from '@legendapp/list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  FadeIn,
+  FadeInRight,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  interpolate,
+} from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-import { 
-  Home, 
-  Footprints, 
-  Gamepad2, 
-  UtensilsCrossed, 
-  Ruler, 
+import {
+  Home,
+  Footprints,
+  Gamepad2,
+  UtensilsCrossed,
+  Ruler,
   Filter,
   Calendar,
   Flame,
   Clock,
   TrendingUp,
   Trash2,
+  Zap,
+  Activity,
+  ChevronRight,
 } from 'lucide-react-native';
-import { 
-  GlassCard, 
+import {
+  GlassCard,
   EmptyState,
   EntryDetailModal,
 } from '../src/components/ui';
 import { AddEntryBottomSheet, AddEntryBottomSheetRef } from '../src/components/sheets';
 import { useAppStore, useSportsConfig } from '../src/stores';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../src/constants';
 import { formatDisplayDate, getRelativeTime } from '../src/utils/date';
-import type { Entry, HomeWorkoutEntry, RunEntry, MealEntry, MeasureEntry, BeatSaberEntry, CustomSportEntry, SportConfig } from '../src/types';
+import type {
+  Entry,
+  HomeWorkoutEntry,
+  RunEntry,
+  MealEntry,
+  MeasureEntry,
+  BeatSaberEntry,
+  CustomSportEntry,
+  SportConfig,
+} from '../src/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const ITEM_HEIGHT = 150; // Hauteur estimée pour getItemLayout
+const ITEM_HEIGHT = 160;
 
+// ─── Design Tokens ────────────────────────────────────────────────────────────
+const C = {
+  bg:          '#070709',
+  surface:     '#0e0f14',
+  surfaceUp:   '#13151e',
+  surfaceHigh: '#1a1d28',
+  border:      'rgba(255,255,255,0.07)',
+  borderUp:    'rgba(255,255,255,0.12)',
+  text:        '#f0ece4',
+  textSub:     'rgba(240,236,228,0.55)',
+  textMuted:   'rgba(240,236,228,0.28)',
+  ember:       '#ff5533',
+  emberMid:    '#ff7a55',
+  emberGlow:   'rgba(255,85,51,0.15)',
+  emberBorder: 'rgba(255,85,51,0.25)',
+  gold:        '#e8b84b',
+  goldSoft:    'rgba(232,184,75,0.10)',
+  goldBorder:  'rgba(232,184,75,0.22)',
+  amber:       '#f5a623',
+  blue:        '#5599ff',
+  blueSoft:    'rgba(85,153,255,0.10)',
+  blueBorder:  'rgba(85,153,255,0.22)',
+  teal:        '#2dd4bf',
+  tealSoft:    'rgba(45,212,191,0.10)',
+  tealBorder:  'rgba(45,212,191,0.22)',
+  green:       '#34d370',
+  greenSoft:   'rgba(52,211,112,0.10)',
+  greenBorder: 'rgba(52,211,112,0.22)',
+  violet:      '#a78bfa',
+  error:       '#f87171',
+};
 
+const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
+const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
+const T = {
+  nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20,
+  xxl: 26, xxxl: 34, display: 48,
+};
+const W: Record<string, any> = {
+  light: '300', reg: '400', med: '500',
+  semi: '600', bold: '700', xbold: '800', black: '900',
+};
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 type FilterType = 'all' | 'home' | 'run' | 'beatsaber' | 'meal' | 'measure';
 
 interface FilterOption {
@@ -53,288 +114,255 @@ interface FilterOption {
   label: string;
   icon: React.ReactNode;
   color: string;
+  glow: string;
 }
 
-// filterOptions are localized inside the component using `t()` for labels
 const FILTER_DEFINITIONS = [
-  { value: 'all', icon: <Filter size={16} color={Colors.text} />, color: Colors.text },
-  { value: 'home', icon: <Home size={16} color="#4ade80" />, color: '#4ade80' },
-  { value: 'run', icon: <Footprints size={16} color="#60a5fa" />, color: '#60a5fa' },
-  { value: 'beatsaber', icon: <Gamepad2 size={16} color="#f472b6" />, color: '#f472b6' },
-  { value: 'meal', icon: <UtensilsCrossed size={16} color="#fbbf24" />, color: '#fbbf24' },
-  { value: 'measure', icon: <Ruler size={16} color="#a78bfa" />, color: '#a78bfa' },
+  { value: 'all',       icon: null,                                             color: C.ember,  glow: C.emberGlow  },
+  { value: 'home',      icon: <Home      size={14} color={C.green}  />,        color: C.green,  glow: C.greenSoft  },
+  { value: 'run',       icon: <Footprints size={14} color={C.blue}  />,        color: C.blue,   glow: C.blueSoft   },
+  { value: 'beatsaber', icon: <Gamepad2  size={14} color={C.violet} />,        color: C.violet, glow: 'rgba(167,139,250,0.12)' },
+  { value: 'meal',      icon: <UtensilsCrossed size={14} color={C.gold}  />,   color: C.gold,   glow: C.goldSoft   },
+  { value: 'measure',   icon: <Ruler     size={14} color={C.teal}  />,         color: C.teal,   glow: C.tealSoft   },
 ];
 
 const getEntryStyle = (type: string, sportConfig?: any) => {
   switch (type) {
-    case 'home':
-      return { icon: <Home size={20} color="#4ade80" />, color: '#4ade80', bg: 'rgba(74, 222, 128, 0.15)' };
-    case 'run':
-      return { icon: <Footprints size={20} color="#60a5fa" />, color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.15)' };
-    case 'beatsaber':
-      return { icon: <Gamepad2 size={20} color="#f472b6" />, color: '#f472b6', bg: 'rgba(244, 114, 182, 0.15)' };
-    case 'meal':
-      return { icon: <UtensilsCrossed size={20} color="#fbbf24" />, color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)' };
-    case 'measure':
-      return { icon: <Ruler size={20} color="#a78bfa" />, color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.15)' };
+    case 'home':      return { icon: <Home size={18} color={C.green}  />, color: C.green,  bg: C.greenSoft,  border: C.greenBorder  };
+    case 'run':       return { icon: <Footprints size={18} color={C.blue}  />, color: C.blue,   bg: C.blueSoft,  border: C.blueBorder   };
+    case 'beatsaber': return { icon: <Gamepad2 size={18} color={C.violet} />, color: C.violet, bg: 'rgba(167,139,250,0.10)', border: 'rgba(167,139,250,0.22)' };
+    case 'meal':      return { icon: <UtensilsCrossed size={18} color={C.gold}  />, color: C.gold,   bg: C.goldSoft,  border: C.goldBorder   };
+    case 'measure':   return { icon: <Ruler size={18} color={C.teal}  />, color: C.teal,   bg: C.tealSoft,  border: C.tealBorder   };
     case 'custom':
       if (sportConfig) {
         const color = sportConfig.color;
-        return { 
-          icon: <Text style={{ fontSize: 20 }}>{sportConfig.emoji}</Text>, 
-          color: color, 
-          bg: `${color}26` 
-        };
+        return { icon: <Text style={{ fontSize: 16 }}>{sportConfig.emoji}</Text>, color, bg: `${color}15`, border: `${color}28` };
       }
-      return { icon: <Flame size={20} color={Colors.cta} />, color: Colors.cta, bg: 'rgba(215, 150, 134, 0.15)' };
+      return { icon: <Flame size={18} color={C.ember} />, color: C.ember, bg: C.emberGlow, border: C.emberBorder };
     default:
-      return { icon: <Flame size={20} color={Colors.cta} />, color: Colors.cta, bg: 'rgba(215, 150, 134, 0.15)' };
+      return { icon: <Flame size={18} color={C.ember} />, color: C.ember, bg: C.emberGlow, border: C.emberBorder };
   }
 };
 
-// Composant FilterChip optimisé avec React.memo
-const FilterChip = React.memo(({ option, isActive, onPress }: { option: FilterOption; isActive: boolean; onPress: () => void }) => {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[
-        styles.filterChip,
-        isActive && { backgroundColor: `${option.color}22`, borderColor: `${option.color}55` },
-      ]}
-    >
-      {option.icon}
-      {isActive && <Text style={[styles.filterChipText, { color: option.color }]}>{option.label}</Text>}
-    </TouchableOpacity>
-  );
-});
+// ─── Stat Pill ────────────────────────────────────────────────────────────────
+const StatPill = ({ icon, value, label }: { icon: React.ReactNode; value: string | number; label: string }) => (
+  <View style={styles.statPill}>
+    <View style={styles.statPillIcon}>{icon}</View>
+    <View>
+      <Text style={styles.statPillValue}>{value}</Text>
+      <Text style={styles.statPillLabel}>{label}</Text>
+    </View>
+  </View>
+);
 
-// Composant EntryCard optimisé avec React.memo
-const EntryCard = React.memo(({ entry, onDelete, onPress, index }: { entry: Entry; onDelete: () => void; onPress?: () => void; index: number }) => {
+// ─── FilterChip ───────────────────────────────────────────────────────────────
+const FilterChip = React.memo(({
+  option, isActive, onPress,
+}: {
+  option: FilterOption; isActive: boolean; onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.75}
+    style={[
+      styles.filterChip,
+      isActive && {
+        backgroundColor: option.glow,
+        borderColor: option.color + '55',
+      },
+    ]}
+  >
+    {option.icon && (
+      <View style={[styles.filterChipIconWrap, isActive && { opacity: 1 }]}>
+        {option.icon}
+      </View>
+    )}
+    {!option.icon && isActive && (
+      <Filter size={12} color={option.color} />
+    )}
+    {!option.icon && !isActive && (
+      <Filter size={12} color={C.textMuted} />
+    )}
+    <Text style={[styles.filterChipText, isActive && { color: option.color }]}>
+      {option.label}
+    </Text>
+  </TouchableOpacity>
+));
+
+// ─── EntryCard ────────────────────────────────────────────────────────────────
+const EntryCard = React.memo(({
+  entry, onDelete, onPress, index,
+}: {
+  entry: Entry; onDelete: () => void; onPress?: () => void; index: number;
+}) => {
   const sportsConfig = useSportsConfig();
   const { t } = useTranslation();
-  
-  // Get sport config for custom entries
+
   let sportConfig: SportConfig | undefined;
   if (entry.type === 'custom') {
     const customEntry = entry as CustomSportEntry;
     sportConfig = sportsConfig.find((s: SportConfig) => s.id === customEntry.sportId);
   }
-  
+
   const entryStyle = getEntryStyle(entry.type, sportConfig);
-  
+
   const renderContent = useCallback(() => {
     switch (entry.type) {
       case 'home': {
-        const homeEntry = entry as HomeWorkoutEntry;
+        const e = entry as HomeWorkoutEntry;
         return (
-          <>
+          <View style={styles.contentWrap}>
             <Text style={styles.cardTitle} numberOfLines={1}>
-              {homeEntry.name || t('workout.defaultHomeName')}
+              {e.name || t('workout.defaultHomeName')}
             </Text>
-            <Text style={styles.cardDesc} numberOfLines={2}>
-              {homeEntry.exercises}
-            </Text>
-            <View style={styles.cardTags}>
-              {homeEntry.absBlock && (
-                <View style={styles.tag}>
-                  <Flame size={12} color={Colors.cta} />
-                  <Text style={styles.tagText}>{t('addEntry.absShort')}</Text>
+            <Text style={styles.cardDesc} numberOfLines={2}>{e.exercises}</Text>
+            <View style={styles.tagsRow}>
+              {e.absBlock && (
+                <View style={[styles.badge, { backgroundColor: C.emberGlow, borderColor: C.emberBorder }]}>
+                  <Flame size={10} color={C.ember} />
+                  <Text style={[styles.badgeText, { color: C.emberMid }]}>{t('addEntry.absShort')}</Text>
                 </View>
               )}
-              {homeEntry.totalReps && (
-                <View style={styles.tag}>
-                  <TrendingUp size={12} color={Colors.muted} />
-                  <Text style={styles.tagText}>{homeEntry.totalReps} {t('common.reps')}</Text>
+              {e.totalReps && (
+                <View style={[styles.badge, { backgroundColor: C.greenSoft, borderColor: C.greenBorder }]}>
+                  <TrendingUp size={10} color={C.green} />
+                  <Text style={[styles.badgeText, { color: C.green }]}>{e.totalReps} {t('common.reps')}</Text>
                 </View>
               )}
             </View>
-          </>
+          </View>
         );
       }
       case 'run': {
-        const runEntry = entry as RunEntry;
+        const e = entry as RunEntry;
         return (
-          <>
-            <Text style={styles.cardTitle}>
-              {runEntry.distanceKm} km
-            </Text>
-            <View style={styles.runStatsRow}>
-              <View style={styles.runStatItem}>
-                <Clock size={14} color={Colors.muted} />
-                <Text style={styles.runStatText}>{runEntry.durationMinutes} min</Text>
-              </View>
-              {runEntry.avgSpeed && (
-                <View style={styles.runStatItem}>
-                  <TrendingUp size={14} color={Colors.muted} />
-                  <Text style={styles.runStatText}>{runEntry.avgSpeed} km/h</Text>
-                </View>
-              )}
-              {runEntry.bpmAvg && (
-                <View style={styles.runStatItem}>
-                  <Flame size={14} color="#f87171" />
-                  <Text style={styles.runStatText}>{runEntry.bpmAvg} bpm</Text>
-                </View>
-              )}
+          <View style={styles.contentWrap}>
+            <Text style={styles.cardTitle}>{e.distanceKm} <Text style={styles.cardUnit}>km</Text></Text>
+            <View style={styles.statsRow}>
+              <StatChip icon={<Clock size={11} color={C.textMuted} />} value={`${e.durationMinutes} min`} />
+              {e.avgSpeed && <StatChip icon={<TrendingUp size={11} color={C.textMuted} />} value={`${e.avgSpeed} km/h`} />}
+              {e.bpmAvg && <StatChip icon={<Activity size={11} color={C.error} />} value={`${e.bpmAvg} bpm`} color={C.error} />}
             </View>
-          </>
+          </View>
         );
       }
       case 'beatsaber': {
-        const bsEntry = entry as BeatSaberEntry;
+        const e = entry as BeatSaberEntry;
         return (
-          <>
+          <View style={styles.contentWrap}>
             <Text style={styles.cardTitle}>Beat Saber</Text>
-            <View style={styles.runStatsRow}>
-              <View style={styles.runStatItem}>
-                <Clock size={14} color={Colors.muted} />
-                <Text style={styles.runStatText}>{bsEntry.durationMinutes} min</Text>
-              </View>
-              {bsEntry.bpmAvg && (
-                <View style={styles.runStatItem}>
-                  <Flame size={14} color="#f87171" />
-                  <Text style={styles.runStatText}>{bsEntry.bpmAvg} bpm</Text>
-                </View>
-              )}
-              {bsEntry.cardiacLoad !== undefined && (
-                <View style={styles.runStatItem}>
-                  <TrendingUp size={14} color={Colors.muted} />
-                  <Text style={styles.runStatText}>Charge: {bsEntry.cardiacLoad}</Text>
-                </View>
-              )}
+            <View style={styles.statsRow}>
+              <StatChip icon={<Clock size={11} color={C.textMuted} />} value={`${e.durationMinutes} min`} />
+              {e.bpmAvg && <StatChip icon={<Activity size={11} color={C.error} />} value={`${e.bpmAvg} bpm`} color={C.error} />}
+              {e.cardiacLoad !== undefined && <StatChip icon={<Zap size={11} color={C.violet} />} value={`${e.cardiacLoad}`} color={C.violet} />}
             </View>
-          </>
+          </View>
         );
       }
       case 'meal': {
-        const mealEntry = entry as MealEntry;
+        const e = entry as MealEntry;
         return (
-          <>
-            <Text style={styles.cardTitle}>{mealEntry.mealName}</Text>
-            <Text style={styles.cardDesc} numberOfLines={2}>
-              {mealEntry.description}
-            </Text>
-          </>
+          <View style={styles.contentWrap}>
+            <Text style={styles.cardTitle} numberOfLines={1}>{e.mealName}</Text>
+            <Text style={styles.cardDesc} numberOfLines={2}>{e.description}</Text>
+          </View>
         );
       }
       case 'measure': {
-        const measureEntry = entry as MeasureEntry;
+        const e = entry as MeasureEntry;
         return (
-          <>
+          <View style={styles.contentWrap}>
             <Text style={styles.cardTitle}>Mensurations</Text>
-            <View style={styles.measureGrid}>
-              {measureEntry.weight && (
-                <View style={styles.measureItem}>
-                  <Text style={styles.measureValue}>{measureEntry.weight}</Text>
-                  <Text style={styles.measureLabel}>kg</Text>
-                </View>
-              )}
-              {measureEntry.waist && (
-                <View style={styles.measureItem}>
-                  <Text style={styles.measureValue}>{measureEntry.waist}</Text>
-                  <Text style={styles.measureLabel}>cm - taille</Text>
-                </View>
-              )}
-              {measureEntry.arm && (
-                <View style={styles.measureItem}>
-                  <Text style={styles.measureValue}>{measureEntry.arm}</Text>
-                  <Text style={styles.measureLabel}>cm - bras</Text>
-                </View>
-              )}
-              {measureEntry.hips && (
-                <View style={styles.measureItem}>
-                  <Text style={styles.measureValue}>{measureEntry.hips}</Text>
-                  <Text style={styles.measureLabel}>cm - hanches</Text>
-                </View>
-              )}
+            <View style={styles.statsRow}>
+              {e.weight && <MeasureChip value={e.weight} unit="kg" />}
+              {e.waist  && <MeasureChip value={e.waist}  unit="cm taille" />}
+              {e.arm    && <MeasureChip value={e.arm}    unit="cm bras" />}
+              {e.hips   && <MeasureChip value={e.hips}   unit="cm hanches" />}
             </View>
-          </>
+          </View>
         );
       }
       case 'custom': {
-        const customEntry = entry as CustomSportEntry;
+        const e = entry as CustomSportEntry;
         return (
-          <>
+          <View style={styles.contentWrap}>
             <Text style={styles.cardTitle} numberOfLines={1}>
-              {customEntry.name || sportConfig?.name || t('entries.custom')}
+              {e.name || sportConfig?.name || t('entries.custom')}
             </Text>
-            <View style={styles.runStatsRow}>
-              {customEntry.durationMinutes && (
-                <View style={styles.runStatItem}>
-                  <Clock size={14} color={Colors.muted} />
-                  <Text style={styles.runStatText}>{customEntry.durationMinutes} min</Text>
-                </View>
-              )}
-              {customEntry.distanceKm && (
-                <View style={styles.runStatItem}>
-                  <TrendingUp size={14} color={Colors.muted} />
-                  <Text style={styles.runStatText}>{customEntry.distanceKm} km</Text>
-                </View>
-              )}
-              {customEntry.totalReps && (
-                <View style={styles.runStatItem}>
-                  <TrendingUp size={14} color={Colors.muted} />
-                  <Text style={styles.runStatText}>{customEntry.totalReps} reps</Text>
-                </View>
-              )}
-              {customEntry.bpmAvg && (
-                <View style={styles.runStatItem}>
-                  <Flame size={14} color="#f87171" />
-                  <Text style={styles.runStatText}>{customEntry.bpmAvg} bpm</Text>
-                </View>
-              )}
-              {customEntry.calories && (
-                <View style={styles.runStatItem}>
-                  <Flame size={14} color="#fbbf24" />
-                  <Text style={styles.runStatText}>{customEntry.calories} kcal</Text>
-                </View>
-              )}
+            <View style={styles.statsRow}>
+              {e.durationMinutes && <StatChip icon={<Clock size={11} color={C.textMuted} />} value={`${e.durationMinutes} min`} />}
+              {e.distanceKm      && <StatChip icon={<TrendingUp size={11} color={C.textMuted} />} value={`${e.distanceKm} km`} />}
+              {e.totalReps       && <StatChip icon={<TrendingUp size={11} color={C.textMuted} />} value={`${e.totalReps} reps`} />}
+              {e.bpmAvg          && <StatChip icon={<Activity size={11} color={C.error} />} value={`${e.bpmAvg} bpm`} color={C.error} />}
+              {e.calories        && <StatChip icon={<Flame size={11} color={C.gold} />} value={`${e.calories} kcal`} color={C.gold} />}
             </View>
-          </>
+          </View>
         );
       }
     }
   }, [entry, sportConfig]);
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 50).duration(300)}>
-      <TouchableOpacity 
-        onPress={onPress}
-        onLongPress={onDelete}
-        activeOpacity={0.9}
-      >
-        <GlassCard style={styles.card}>
-          <View style={styles.cardRow}>
-            <View style={[styles.cardIconContainer, { backgroundColor: entryStyle.bg }]}>
+    <Animated.View entering={FadeInDown.delay(index * 40).duration(350).springify()}>
+      <TouchableOpacity onPress={onPress} onLongPress={onDelete} activeOpacity={0.85}>
+        <View style={styles.card}>
+          {/* Left accent bar */}
+          <View style={[styles.accentBar, { backgroundColor: entryStyle.color }]} />
+
+          <View style={styles.cardInner}>
+            {/* Icon */}
+            <View style={[styles.iconWrap, { backgroundColor: entryStyle.bg, borderColor: entryStyle.border }]}>
               {entryStyle.icon}
             </View>
-            
-            <View style={styles.cardContent}>
+
+            {/* Content */}
+            <View style={styles.cardBody}>
               {renderContent()}
+
+              {/* Footer */}
+              <View style={styles.cardFooter}>
+                <Calendar size={10} color={C.textMuted} />
+                <Text style={styles.footerRelative}>{getRelativeTime(entry.createdAt)}</Text>
+                <View style={styles.footerDot} />
+                <Text style={styles.footerDate}>{formatDisplayDate(entry.date)}</Text>
+              </View>
             </View>
 
-            <TouchableOpacity 
-              onPress={onDelete} 
-              style={styles.deleteButton}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Trash2 size={18} color={Colors.muted2} />
-            </TouchableOpacity>
+            {/* Actions */}
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                onPress={onDelete}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={styles.deleteBtn}
+              >
+                <Trash2 size={14} color={C.textMuted} />
+              </TouchableOpacity>
+              <ChevronRight size={14} color={C.textMuted} style={{ marginTop: 'auto' }} />
+            </View>
           </View>
-          
-          <View style={styles.cardFooter}>
-            <Calendar size={12} color={Colors.muted2} />
-            <Text style={styles.cardDate}>{getRelativeTime(entry.createdAt)}</Text>
-            <Text style={styles.cardDateFull}>• {formatDisplayDate(entry.date)}</Text>
-          </View>
-        </GlassCard>
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
-}, (prevProps, nextProps) => {
-  return prevProps.entry.id === nextProps.entry.id && prevProps.index === nextProps.index;
-});
+}, (prev, next) => prev.entry.id === next.entry.id && prev.index === next.index);
 
+// ─── Mini Stat Chip ───────────────────────────────────────────────────────────
+const StatChip = ({ icon, value, color }: { icon: React.ReactNode; value: string; color?: string }) => (
+  <View style={styles.statChip}>
+    {icon}
+    <Text style={[styles.statChipText, color && { color }]}>{value}</Text>
+  </View>
+);
+
+// ─── Measure Chip ─────────────────────────────────────────────────────────────
+const MeasureChip = ({ value, unit }: { value: number; unit: string }) => (
+  <View style={styles.measureChip}>
+    <Text style={styles.measureChipValue}>{value}</Text>
+    <Text style={styles.measureChipUnit}>{unit}</Text>
+  </View>
+);
+
+// ─── WorkoutScreen ────────────────────────────────────────────────────────────
 export default function WorkoutScreen() {
   const { entries, deleteEntry } = useAppStore();
   const { t } = useTranslation();
@@ -343,38 +371,34 @@ export default function WorkoutScreen() {
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
 
-  // Localized filter options
-  const filterOptions = useMemo(() => FILTER_DEFINITIONS.map(def => ({
-    value: def.value as FilterType,
-    label: t(`workout.filters.${def.value}`),
-    icon: def.icon,
-    color: def.color,
-  } as FilterOption)), [t]);
+  const filterOptions = useMemo<FilterOption[]>(() =>
+    FILTER_DEFINITIONS.map(def => ({
+      value: def.value as FilterType,
+      label: t(`workout.filters.${def.value}`),
+      icon: def.icon,
+      color: def.color,
+      glow: def.glow,
+    })),
+  [t]);
 
-  // Filter and sort entries by date (most recent first)
   const filteredEntries = useMemo(() => {
     const filtered = filter === 'all' ? entries : entries.filter(e => e.type === filter);
-    // Sort by createdAt descending (newest first)
-    return [...filtered].sort((a, b) => 
+    return [...filtered].sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [entries, filter]);
 
-  // Force re-render key for LegendList when entries change
-  const listKey = useMemo(() => entries.map(e => `${e.id}-${e.createdAt}`).join(',').slice(0, 100), [entries]);
+  const listKey = useMemo(() =>
+    entries.map(e => `${e.id}-${e.createdAt}`).join(',').slice(0, 100),
+  [entries]);
 
   const quickStats = useMemo(() => {
     const sportEntries = entries.filter(e => ['home', 'run', 'beatsaber'].includes(e.type));
     const today = new Date().toISOString().split('T')[0];
     const todayEntries = entries.filter(e => e.date === today);
-    return {
-      total: entries.length,
-      sport: sportEntries.length,
-      today: todayEntries.length,
-    };
+    return { total: entries.length, sport: sportEntries.length, today: todayEntries.length };
   }, [entries]);
 
-  // Handler for delete - deleteEntry gère automatiquement la synchro gamification
   const handleDeleteEntry = useCallback((entryId: string) => {
     deleteEntry(entryId);
   }, [deleteEntry]);
@@ -385,11 +409,7 @@ export default function WorkoutScreen() {
       t('entries.deleteConfirm.message'),
       [
         { text: t('common.cancel'), style: 'cancel' },
-        { 
-          text: t('common.delete'), 
-          style: 'destructive',
-          onPress: () => handleDeleteEntry(entry.id),
-        },
+        { text: t('common.delete'), style: 'destructive', onPress: () => handleDeleteEntry(entry.id) },
       ]
     );
   }, [handleDeleteEntry, t]);
@@ -400,7 +420,7 @@ export default function WorkoutScreen() {
   }, []);
 
   const renderItem = useCallback(({ item, index }: { item: Entry; index: number }) => (
-    <EntryCard 
+    <EntryCard
       entry={item}
       index={index}
       onPress={() => handleEntryPress(item)}
@@ -409,13 +429,6 @@ export default function WorkoutScreen() {
   ), [handleDelete, handleEntryPress]);
 
   const keyExtractor = useCallback((item: Entry) => item.id, []);
-
-  // Optimisation FlatList performance
-  const getItemLayout = useCallback((data: any, index: number) => ({
-    length: ITEM_HEIGHT,
-    offset: ITEM_HEIGHT * index,
-    index,
-  }), []);
 
   const renderFilterItem = useCallback(({ item }: { item: FilterOption }) => (
     <FilterChip
@@ -429,21 +442,45 @@ export default function WorkoutScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Background radial glow */}
       <LinearGradient
-        colors={['rgba(215, 150, 134, 0.15)', 'transparent']}
-        style={styles.headerGradient}
+        colors={['rgba(255,85,51,0.06)', 'transparent']}
+        style={styles.bgGlow}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0.6 }}
       />
-      
-      <View style={styles.header}>
-        <Animated.View entering={FadeIn.delay(100)}>
-          <Text style={styles.screenTitle}>{t('workout.historyTitle')}</Text>
-          <Text style={styles.subtitle}>
-            {t('workout.historySubtitle', { total: quickStats.total, sport: quickStats.sport, today: quickStats.today })}
-          </Text>
-        </Animated.View>
-      </View>
 
-      <Animated.View entering={FadeIn.delay(200)} style={styles.filterContainer}>
+      {/* ── Header ── */}
+      <Animated.View entering={FadeIn.delay(80)} style={styles.header}>
+        <View>
+          <Text style={styles.eyebrow}>{t('workout.historyTitle').toUpperCase()}</Text>
+          <Text style={styles.screenTitle}>Journal</Text>
+        </View>
+
+        {/* Quick stats */}
+        <Animated.View entering={FadeInRight.delay(200)} style={styles.statsRow}>
+          <StatPill
+            icon={<Zap size={13} color={C.ember} />}
+            value={quickStats.total}
+            label={t('workout.filters.all')}
+          />
+          <View style={styles.statsDivider} />
+          <StatPill
+            icon={<Activity size={13} color={C.green} />}
+            value={quickStats.sport}
+            label="sport"
+          />
+          <View style={styles.statsDivider} />
+          <StatPill
+            icon={<Calendar size={13} color={C.blue} />}
+            value={quickStats.today}
+            label="today"
+          />
+        </Animated.View>
+      </Animated.View>
+
+      {/* ── Filters ── */}
+      <Animated.View entering={FadeIn.delay(160)} style={styles.filterSection}>
         <FlatList
           horizontal
           data={filterOptions}
@@ -451,12 +488,18 @@ export default function WorkoutScreen() {
           renderItem={renderFilterItem}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterList}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={6}
-          windowSize={3}
         />
       </Animated.View>
 
+      {/* ── Separator ── */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionLabel}>
+          {filteredEntries.length} {filteredEntries.length === 1 ? 'entrée' : 'entrées'}
+        </Text>
+        <View style={styles.sectionLine} />
+      </View>
+
+      {/* ── List ── */}
       <LegendList
         key={listKey}
         data={filteredEntries}
@@ -468,14 +511,15 @@ export default function WorkoutScreen() {
         recycleItems
         extraData={listKey}
         ListEmptyComponent={
-          <EmptyState 
-            icon="📋" 
-            title={t('workout.noEntriesTitle')} 
-            subtitle={filter === 'all' 
-              ? t('workout.noEntriesAll')
-              : t('workout.noEntriesType')
-            }
-          />
+          <View style={styles.emptyWrap}>
+            <View style={styles.emptyIcon}>
+              <Flame size={28} color={C.textMuted} />
+            </View>
+            <Text style={styles.emptyTitle}>{t('workout.noEntriesTitle')}</Text>
+            <Text style={styles.emptySubtitle}>
+              {filter === 'all' ? t('workout.noEntriesAll') : t('workout.noEntriesType')}
+            </Text>
+          </View>
         }
       />
 
@@ -485,192 +529,350 @@ export default function WorkoutScreen() {
         onClose={() => setDetailModalVisible(false)}
         onEdit={(entry) => {
           setDetailModalVisible(false);
-          // Open the bottom sheet directly without navigation
-          setTimeout(() => {
-            bottomSheetRef.current?.edit(entry);
-          }, 300);
+          setTimeout(() => { bottomSheetRef.current?.edit(entry); }, 300);
         }}
         onDelete={handleDeleteEntry}
       />
 
-      {/* Bottom Sheet for editing entries directly */}
       <AddEntryBottomSheet ref={bottomSheetRef} />
     </SafeAreaView>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: C.bg,
   },
-  headerGradient: {
+  bgGlow: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 200,
+    height: 260,
   },
+
+  // Header
   header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: S.lg,
+    paddingTop: S.lg,
+    paddingBottom: S.xl,
+    gap: S.xl,
+  },
+  eyebrow: {
+    fontSize: T.xs,
+    fontWeight: W.semi,
+    color: C.ember,
+    letterSpacing: 2.5,
+    marginBottom: S.xs,
   },
   screenTitle: {
-    fontSize: 32,
-    fontWeight: FontWeight.extrabold,
-    color: Colors.text,
-    letterSpacing: -0.5,
+    fontSize: T.display,
+    fontWeight: W.black,
+    color: C.text,
+    letterSpacing: -2,
+    lineHeight: T.display * 1.1,
   },
-  subtitle: {
-    fontSize: FontSize.md,
-    color: Colors.muted,
-    marginTop: 4,
+
+  // Stats row
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: C.surface,
+    borderRadius: R.xxl,
+    borderWidth: 1,
+    borderColor: C.border,
+    paddingHorizontal: S.lg,
+    paddingVertical: S.md,
   },
-  filterContainer: {
-    marginBottom: Spacing.sm,
+  statPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.sm,
+  },
+  statPillIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: R.md,
+    backgroundColor: C.surfaceHigh,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statPillValue: {
+    fontSize: T.lg,
+    fontWeight: W.bold,
+    color: C.text,
+    lineHeight: T.lg * 1.2,
+  },
+  statPillLabel: {
+    fontSize: T.xs,
+    fontWeight: W.med,
+    color: C.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  statsDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: C.border,
+    marginHorizontal: S.sm,
+  },
+
+  // Filters
+  filterSection: {
+    marginBottom: S.sm,
   },
   filterList: {
-    paddingHorizontal: Spacing.lg,
-    gap: 8,
+    paddingHorizontal: S.lg,
+    gap: S.sm,
   },
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    backgroundColor: Colors.overlay,
-    borderRadius: BorderRadius.full,
+    gap: S.xs + 2,
+    paddingVertical: S.sm - 1,
+    paddingHorizontal: S.md,
+    backgroundColor: C.surface,
+    borderRadius: R.full,
     borderWidth: 1,
-    borderColor: Colors.stroke,
+    borderColor: C.border,
+  },
+  filterChipIconWrap: {
+    opacity: 0.85,
   },
   filterChipText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
+    fontSize: T.sm,
+    fontWeight: W.semi,
+    color: C.textSub,
   },
+
+  // Section header
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: S.lg,
+    marginBottom: S.md,
+    gap: S.md,
+  },
+  sectionLabel: {
+    fontSize: T.xs,
+    fontWeight: W.semi,
+    color: C.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    flexShrink: 0,
+  },
+  sectionLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: C.border,
+  },
+
+  // List
   listContent: {
-    padding: Spacing.lg,
-    paddingTop: Spacing.sm,
-    paddingBottom: 100,
-    gap: 12,
+    paddingHorizontal: S.lg,
+    paddingBottom: 110,
+    gap: S.sm + 2,
   },
+
+  // Card
   card: {
-    padding: Spacing.md,
+    flexDirection: 'row',
+    backgroundColor: C.surface,
+    borderRadius: R.xl,
+    borderWidth: 1,
+    borderColor: C.border,
+    overflow: 'hidden',
   },
-  cardRow: {
+  accentBar: {
+    width: 3,
+    borderRadius: R.full,
+    marginVertical: S.md,
+    marginLeft: S.sm,
+    opacity: 0.8,
+  },
+  cardInner: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-start',
+    padding: S.md,
+    paddingLeft: S.sm,
+    gap: S.md,
   },
-  cardIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: R.lg,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.md,
+    flexShrink: 0,
   },
-  cardContent: {
+  cardBody: {
     flex: 1,
+    gap: S.xs,
   },
-  deleteButton: {
-    padding: 8,
-    marginTop: -4,
-    marginRight: -4,
+  contentWrap: {
+    gap: S.xs,
   },
   cardTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-    marginBottom: 4,
+    fontSize: T.md,
+    fontWeight: W.bold,
+    color: C.text,
+    lineHeight: T.md * 1.3,
+  },
+  cardUnit: {
+    fontSize: T.sm,
+    fontWeight: W.reg,
+    color: C.textSub,
   },
   cardDesc: {
-    fontSize: FontSize.sm,
-    color: Colors.muted,
-    lineHeight: 18,
+    fontSize: T.sm,
+    color: C.textSub,
+    lineHeight: T.sm * 1.5,
   },
-  cardTags: {
+
+  // Tags
+  tagsRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
+    flexWrap: 'wrap',
+    gap: S.xs,
+    marginTop: S.xs,
   },
-  tag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.overlay,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: BorderRadius.full,
-  },
-  tagText: {
-    fontSize: FontSize.xs,
-    color: Colors.muted,
-  },
-  runStatsRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 4,
-  },
-  runStatItem: {
+  badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
+    paddingVertical: 3,
+    paddingHorizontal: S.sm,
+    borderRadius: R.full,
+    borderWidth: 1,
   },
-  runStatText: {
-    fontSize: FontSize.sm,
-    color: Colors.muted,
+  badgeText: {
+    fontSize: T.xs,
+    fontWeight: W.semi,
   },
-  measureGrid: {
+
+  // Stat chips inside card
+  statsRow: {
     flexDirection: 'row',
-    gap: 16,
-    marginTop: 4,
+    flexWrap: 'wrap',
+    gap: S.xs,
+    marginTop: S.xs,
   },
-  measureItem: {
+  statChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: C.surfaceHigh,
+    paddingVertical: 3,
+    paddingHorizontal: S.sm,
+    borderRadius: R.sm,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  statChipText: {
+    fontSize: T.xs,
+    fontWeight: W.med,
+    color: C.textSub,
+  },
+
+  // Measure chips
+  measureChip: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 2,
+    gap: 3,
+    backgroundColor: C.surfaceHigh,
+    paddingVertical: 3,
+    paddingHorizontal: S.sm,
+    borderRadius: R.sm,
+    borderWidth: 1,
+    borderColor: C.border,
   },
-  measureValue: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
+  measureChipValue: {
+    fontSize: T.md,
+    fontWeight: W.bold,
+    color: C.text,
   },
-  measureLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.muted,
+  measureChipUnit: {
+    fontSize: T.nano,
+    fontWeight: W.med,
+    color: C.textMuted,
   },
+
+  // Card footer
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: Spacing.md,
-    paddingTop: Spacing.sm,
+    gap: S.xs,
+    marginTop: S.sm,
+    paddingTop: S.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.stroke,
+    borderTopColor: C.border,
   },
-  cardDate: {
-    fontSize: FontSize.xs,
-    color: Colors.muted2,
+  footerRelative: {
+    fontSize: T.xs,
+    fontWeight: W.med,
+    color: C.textMuted,
   },
-  cardDateFull: {
-    fontSize: FontSize.xs,
-    color: Colors.muted2,
+  footerDot: {
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: C.textMuted,
   },
-  hintContainer: {
-    position: 'absolute',
-    bottom: 90,
-    left: 0,
-    right: 0,
+  footerDate: {
+    fontSize: T.xs,
+    color: C.textMuted,
+  },
+
+  // Card actions
+  cardActions: {
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingVertical: S.xs,
+    gap: S.sm,
+    flexShrink: 0,
+  },
+  deleteBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: R.sm,
+    backgroundColor: C.surfaceHigh,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: C.border,
   },
-  hint: {
-    fontSize: FontSize.xs,
-    color: Colors.muted2,
-    backgroundColor: Colors.cardSolid,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: BorderRadius.full,
-    overflow: 'hidden',
+
+  // Empty state
+  emptyWrap: {
+    alignItems: 'center',
+    paddingTop: 80,
+    gap: S.md,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: R.xl,
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: S.sm,
+  },
+  emptyTitle: {
+    fontSize: T.lg,
+    fontWeight: W.bold,
+    color: C.textSub,
+  },
+  emptySubtitle: {
+    fontSize: T.sm,
+    color: C.textMuted,
+    textAlign: 'center',
+    lineHeight: T.sm * 1.5,
   },
 });
