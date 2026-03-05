@@ -44,11 +44,11 @@ import {
 import {
   GlassCard,
   EmptyState,
-  EntryDetailModal,
-} from '../src/components/ui';
-import { AddEntryBottomSheet, AddEntryBottomSheetRef } from '../src/components/sheets';
-import { useAppStore, useSportsConfig } from '../src/stores';
-import { formatDisplayDate, getRelativeTime } from '../src/utils/date';
+} from '../../src/components/ui';
+import { router } from 'expo-router';
+import { AddEntryBottomSheet, AddEntryBottomSheetRef } from '../../src/components/sheets';
+import { useAppStore, useSportsConfig } from '../../src/stores';
+import { formatDisplayDate, getRelativeTime } from '../../src/utils/date';
 import type {
   Entry,
   HomeWorkoutEntry,
@@ -58,7 +58,7 @@ import type {
   BeatSaberEntry,
   CustomSportEntry,
   SportConfig,
-} from '../src/types';
+} from '../../src/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_HEIGHT = 160;
@@ -368,8 +368,7 @@ export default function WorkoutScreen() {
   const { t } = useTranslation();
   const bottomSheetRef = useRef<AddEntryBottomSheetRef>(null);
   const [filter, setFilter] = useState<FilterType>('all');
-  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
+
 
   const filterOptions = useMemo<FilterOption[]>(() =>
     FILTER_DEFINITIONS.map(def => ({
@@ -415,8 +414,7 @@ export default function WorkoutScreen() {
   }, [handleDeleteEntry, t]);
 
   const handleEntryPress = useCallback((entry: Entry) => {
-    setSelectedEntry(entry);
-    setDetailModalVisible(true);
+    router.push(`/workout/${entry.id}`);
   }, []);
 
   const renderItem = useCallback(({ item, index }: { item: Entry; index: number }) => (
@@ -521,17 +519,6 @@ export default function WorkoutScreen() {
             </Text>
           </View>
         }
-      />
-
-      <EntryDetailModal
-        entry={selectedEntry}
-        visible={detailModalVisible}
-        onClose={() => setDetailModalVisible(false)}
-        onEdit={(entry) => {
-          setDetailModalVisible(false);
-          setTimeout(() => { bottomSheetRef.current?.edit(entry); }, 300);
-        }}
-        onDelete={handleDeleteEntry}
       />
 
       <AddEntryBottomSheet ref={bottomSheetRef} />
