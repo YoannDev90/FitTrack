@@ -333,6 +333,8 @@
     },
     "active": "Active",
     "trackedSession": "Track {{exercise}}",
+    "timeBased": "Time-based",
+    "eyebrow": "REP COUNTER",
     "motivations": {
       "pushups": [
         {

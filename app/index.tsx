@@ -167,7 +167,7 @@ export default function TodayScreen() {
 
     // Handlers
     const handleOpenModal    = useCallback(() => bottomSheetRef.current?.present(), []);
-    const handleLongPressAdd = useCallback(() => router.push('/repCounter/rep-counter'), [router]);
+    const handleLongPressAdd = useCallback(() => router.push('/repCounter'), [router]);
     const handleEntryPress   = useCallback((e: Entry) => { setSelectedEntry(e); setDetailModalVisible(true); }, []);
     const handleDeleteEntry  = useCallback((id: string) => deleteEntry(id), [deleteEntry]);
     const handleEditEntry    = useCallback((e: Entry) => {
