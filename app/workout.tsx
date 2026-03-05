@@ -238,7 +238,7 @@ const EntryCard = React.memo(({
         return (
           <View style={styles.contentWrap}>
             <Text style={styles.cardTitle}>{e.distanceKm} <Text style={styles.cardUnit}>km</Text></Text>
-            <View style={styles.statsRow}>
+        <View style={styles.cardStatsRow}>
               <StatChip icon={<Clock size={11} color={C.textMuted} />} value={`${e.durationMinutes} min`} />
               {e.avgSpeed && <StatChip icon={<TrendingUp size={11} color={C.textMuted} />} value={`${e.avgSpeed} km/h`} />}
               {e.bpmAvg && <StatChip icon={<Activity size={11} color={C.error} />} value={`${e.bpmAvg} bpm`} color={C.error} />}
@@ -251,7 +251,7 @@ const EntryCard = React.memo(({
         return (
           <View style={styles.contentWrap}>
             <Text style={styles.cardTitle}>Beat Saber</Text>
-            <View style={styles.statsRow}>
+            <View style={styles.cardStatsRow}>
               <StatChip icon={<Clock size={11} color={C.textMuted} />} value={`${e.durationMinutes} min`} />
               {e.bpmAvg && <StatChip icon={<Activity size={11} color={C.error} />} value={`${e.bpmAvg} bpm`} color={C.error} />}
               {e.cardiacLoad !== undefined && <StatChip icon={<Zap size={11} color={C.violet} />} value={`${e.cardiacLoad}`} color={C.violet} />}
@@ -273,7 +273,7 @@ const EntryCard = React.memo(({
         return (
           <View style={styles.contentWrap}>
             <Text style={styles.cardTitle}>Mensurations</Text>
-            <View style={styles.statsRow}>
+            <View style={styles.cardStatsRow}>
               {e.weight && <MeasureChip value={e.weight} unit="kg" />}
               {e.waist  && <MeasureChip value={e.waist}  unit="cm taille" />}
               {e.arm    && <MeasureChip value={e.arm}    unit="cm bras" />}
@@ -289,7 +289,7 @@ const EntryCard = React.memo(({
             <Text style={styles.cardTitle} numberOfLines={1}>
               {e.name || sportConfig?.name || t('entries.custom')}
             </Text>
-            <View style={styles.statsRow}>
+            <View style={styles.cardStatsRow}>
               {e.durationMinutes && <StatChip icon={<Clock size={11} color={C.textMuted} />} value={`${e.durationMinutes} min`} />}
               {e.distanceKm      && <StatChip icon={<TrendingUp size={11} color={C.textMuted} />} value={`${e.distanceKm} km`} />}
               {e.totalReps       && <StatChip icon={<TrendingUp size={11} color={C.textMuted} />} value={`${e.totalReps} reps`} />}
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
   },
 
   // Stat chips inside card
-  statsRow: {
+  cardStatsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: S.xs,
