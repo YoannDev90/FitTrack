@@ -29,6 +29,7 @@ export interface ExerciseConfig {
     isTimeBased?: boolean;
     keepGoingIntervalSeconds?: number;
     isNavigational?: boolean; // Exercise that navigates to a separate screen (e.g. run)
+    experimental?: boolean; // Shows a beta badge on the exercise tile
 }
 
 export interface RepCounterState {
