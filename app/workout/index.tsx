@@ -9,7 +9,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Alert,
   Dimensions,
 } from 'react-native';
 import { LegendList } from '@legendapp/list';
@@ -238,10 +237,10 @@ const EntryCard = React.memo(({
         return (
           <View style={styles.contentWrap}>
             <Text style={styles.cardTitle}>{e.distanceKm} <Text style={styles.cardUnit}>km</Text></Text>
-        <View style={styles.cardStatsRow}>
+            <View style={styles.cardStatsRow}>
               <StatChip icon={<Clock size={11} color={C.textMuted} />} value={`${e.durationMinutes} min`} />
-              {e.avgSpeed && <StatChip icon={<TrendingUp size={11} color={C.textMuted} />} value={`${e.avgSpeed} km/h`} />}
-              {e.bpmAvg && <StatChip icon={<Activity size={11} color={C.error} />} value={`${e.bpmAvg} bpm`} color={C.error} />}
+              {e.avgSpeed != null && <StatChip icon={<TrendingUp size={11} color={C.textMuted} />} value={`${e.avgSpeed} km/h`} />}
+              {e.bpmAvg != null && <StatChip icon={<Activity size={11} color={C.error} />} value={`${e.bpmAvg} bpm`} color={C.error} />}
             </View>
           </View>
         );
@@ -368,6 +367,7 @@ export default function WorkoutScreen() {
   const { t } = useTranslation();
   const bottomSheetRef = useRef<AddEntryBottomSheetRef>(null);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [deleteModal, setDeleteModal] = useState<{ visible: boolean; entryId: string }>({ visible: false, entryId: '' });
 
 
   const filterOptions = useMemo<FilterOption[]>(() =>
@@ -403,15 +403,13 @@ export default function WorkoutScreen() {
   }, [deleteEntry]);
 
   const handleDelete = useCallback((entry: Entry) => {
-    Alert.alert(
-      t('entries.deleteConfirm.title'),
-      t('entries.deleteConfirm.message'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        { text: t('common.delete'), style: 'destructive', onPress: () => handleDeleteEntry(entry.id) },
-      ]
-    );
-  }, [handleDeleteEntry, t]);
+    setDeleteModal({ visible: true, entryId: entry.id });
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (deleteModal.entryId) handleDeleteEntry(deleteModal.entryId);
+    setDeleteModal({ visible: false, entryId: '' });
+  }, [deleteModal.entryId, handleDeleteEntry]);
 
   const handleEntryPress = useCallback((entry: Entry) => {
     router.push(`/workout/${entry.id}`);
@@ -522,6 +520,24 @@ export default function WorkoutScreen() {
       />
 
       <AddEntryBottomSheet ref={bottomSheetRef} />
+
+      {/* Delete confirm modal */}
+      {deleteModal.visible && (
+        <View style={styles.modalOverlay}>
+          <Animated.View entering={FadeIn.duration(200)} style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('entries.deleteConfirm.title')}</Text>
+            <Text style={styles.modalMessage}>{t('entries.deleteConfirm.message')}</Text>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity onPress={() => setDeleteModal({ visible: false, entryId: '' })} style={styles.modalCancelBtn}>
+                <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={confirmDelete} style={styles.modalConfirmBtn}>
+                <Text style={styles.modalConfirmText}>{t('common.delete')}</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -862,4 +878,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: T.sm * 1.5,
   },
+
+  // Delete confirm modal
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject, zIndex: 100,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center' as const, alignItems: 'center' as const,
+  },
+  modalCard: {
+    width: SCREEN_WIDTH - 64, padding: S.xl,
+    backgroundColor: C.surfaceUp, borderRadius: R.xxl,
+    borderWidth: 1, borderColor: C.borderUp,
+    alignItems: 'center' as const, gap: S.lg,
+  },
+  modalTitle: { fontSize: T.lg, fontWeight: W.bold, color: C.text, textAlign: 'center' as const },
+  modalMessage: { fontSize: T.sm, color: C.textSub, textAlign: 'center' as const },
+  modalBtns: { flexDirection: 'row' as const, gap: S.md, width: '100%' as const },
+  modalCancelBtn: {
+    flex: 1, paddingVertical: 14, borderRadius: R.lg,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center' as const, borderWidth: 1, borderColor: C.border,
+  },
+  modalCancelText: { fontSize: T.md, fontWeight: W.semi, color: C.textSub },
+  modalConfirmBtn: {
+    flex: 1, paddingVertical: 14, borderRadius: R.lg,
+    backgroundColor: 'rgba(248,113,113,0.15)',
+    alignItems: 'center' as const, borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)',
+  },
+  modalConfirmText: { fontSize: T.md, fontWeight: W.bold, color: '#f87171' },
 });
