@@ -48,7 +48,10 @@
     "wednesday": "Wednesday",
     "thursday": "Thursday",
     "friday": "Friday",
-    "saturday": "Saturday"
+    "saturday": "Saturday",
+    "badge": {
+      "beta": "BETA"
+    }
   },
   "streak": {
     "start": "Time to\nget started",
@@ -249,7 +252,7 @@
     },
     "activeDays": "{{count}} active days",
     "ai": {
-      "title": "Weekly summary by Ploppy \uD83E\uDD16",
+      "title": "Weekly summary by Ploppy 🤖",
       "loading": "Ploppy is thinking...",
       "error": "Summary unavailable",
       "disabled": "AI summary is disabled",
@@ -564,7 +567,9 @@
       "squats": "Squats",
       "jumpingJacks": "Jumping Jacks",
       "plank": "Plank",
-      "elliptical": "Elliptical Bike"
+      "elliptical": "Elliptical Bike",
+      "run": "Free Run",
+      "run_ai": "AI Run"
     },
     "activeTime": "Active Time",
     "cycling": "CYCLING",
@@ -692,7 +697,8 @@
     "genderOptions": {
       "male": "Male",
       "female": "Female",
-      "other": "Other/Prefer not to say"
+      "other": "Other/Prefer not to say",
+      "prefer_not_to_say": "Prefer not to say"
     },
     "reminderInvalid": "Invalid time (00-23 : 00-59)",
     "cameraMode": "Camera Mode",
@@ -829,7 +835,7 @@
     "enableToolsScreen": "Enable workout creation screen (beta)",
     "enableToolsScreenDesc": "Very experimental! Shows the Tools icon in the nav bar.",
     "ai": {
-      "title": "AI – Ploppy \uD83E\uDD16",
+      "title": "AI Features",
       "toggleProgress": "AI in Progress",
       "toggleProgressDesc": "Show weekly AI summary on the Progress page",
       "toggleWorkout": "AI in Sessions",
@@ -843,7 +849,15 @@
         "technical": "Technical",
         "neutral": "Neutral",
         "warm": "Warm"
-      }
+      },
+      "pollinationsInfo": "This app uses Pollinations.ai to power its smart features. Pollinations is an open-source AI service that allows us to offer these features at no extra cost.",
+      "privacyTitle": "Data shared with AI",
+      "privacyText": "When AI features are enabled, the following data may be sent to Pollinations.ai:\n• Personal data: age, weight, height (if provided)\n• Sports history: session count, distances, durations, paces\n• Current session data: distance, duration, pace, elevation\n• Nutritional data: meal summaries (if active)\n• Fitness level from your profile",
+      "seePrivacyPolicy": "See the full privacy policy",
+      "consentTitle": "AI Data Sharing",
+      "consentMessage": "By enabling AI features, you agree that certain data (profile, sports history, session data) may be sent to Pollinations.ai to generate personalized advice. No data is permanently stored.",
+      "acceptConsent": "I accept",
+      "declineConsent": "No thanks"
     },
     "pollination": {
       "sectionTitle": "AI ANALYSIS",
@@ -914,7 +928,28 @@
         "disconnectMessage": "You'll need to reconnect to use Ploppy.",
         "fossWarning": "⚠️ Not available in FOSS version"
       }
-    }
+    },
+    "measurements": "Measurements",
+    "sportProfile": "Sport Profile",
+    "fitnessLevel": "Fitness Level",
+    "maxHR": "Max HR",
+    "maxHRCalc": "Calculated: 220 - age",
+    "notSet": "Not set",
+    "shareWithPloppy": "Share this info with Ploppy",
+    "shareWithPloppyDesc": "For personalized sessions",
+    "ageLabel": "Age",
+    "heightLabel": "Height",
+    "weightLabel": "Weight",
+    "fitnessLevels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "tracking": "Tracking",
+    "debugTracking": "Show tracking points",
+    "debugTrackingDesc": "Display GPS points on the map",
+    "aiTab": "AI",
+    "aiTabDesc": "Artificial intelligence features"
   },
   "addEntry": {
     "title": "What do you want to add?",
@@ -1477,12 +1512,12 @@
       "type": "Type"
     },
     "ai": {
-      "title": "Ploppy's Analysis \uD83E\uDD16",
+      "title": "Ploppy's Analysis 🤖",
       "loading": "Ploppy is thinking...",
       "error": "Analysis unavailable",
       "disabled": "AI analysis is disabled",
       "enableInSettings": "Enable it in Settings > AI – Ploppy",
-      "bestSession": "\uD83C\uDFC6 This is your best session ever for this activity!",
+      "bestSession": "🏆 This is your best session ever for this activity!",
       "improvement": "Compared to last time",
       "connectRequired": "Connect to Pollination in Settings > Labs to use AI features",
       "regenerate": "Regenerate"
@@ -1605,6 +1640,124 @@
       "disconnect": "Disconnect",
       "info": "Ploppy analyzes your meal photos to give you a nutritional score and personalized tips. Photos are deleted after 1 hour.",
       "fossNote": "Ploppy is not available in the FOSS version (no cloud services)."
+    }
+  },
+  "run": {
+    "distance": "Distance",
+    "duration": "Duration",
+    "pace": "Pace",
+    "avgPace": "Avg pace",
+    "elevation": "Elevation",
+    "calories": "Calories",
+    "currentSpeed": "Speed",
+    "remainingKm": "Remaining km",
+    "remainingTime": "Time left",
+    "progress": "Progress",
+    "start": "Start",
+    "pause": "Paused",
+    "resume": "Resume",
+    "stop": "Stop",
+    "confirmStop": "Stop the run?",
+    "permissionDenied": "GPS location is required to track your run.",
+    "permissionButton": "Allow location",
+    "exportGPX": "Export GPX",
+    "shareGPX": "Share GPX",
+    "tracking": "Tracking",
+    "objectiveReached": "Objective reached!",
+    "objectiveMissed": "Missed objective",
+    "summary": {
+      "title": "Run summary",
+      "personalBest": "Personal best!",
+      "vsObjective": "vs Objective",
+      "vsLastRun": "vs Last run",
+      "aiSummary": "AI Analysis",
+      "save": "Save",
+      "discard": "Discard"
+    },
+    "ai": {
+      "inputTitle": "AI Coach",
+      "inputPlaceholder": "Describe your goal...",
+      "notConnected": "Connect to Pollination in Settings > AI to use AI coaching.",
+      "generating": "Ploppy is thinking...",
+      "planReady": "Plan ready!",
+      "goButton": "Let's go!",
+      "restart": "Start over",
+      "generatingPlan": "Preparing your plan...",
+      "step1Title": "What are we doing today?",
+      "step1Hint": "Tell me what you have in mind, Ploppy will handle the rest.",
+      "step1Placeholder": "E.g.: Easy 5K run, or some intervals...",
+      "sendButton": "Send",
+      "suggestion1": "Easy 30 min run",
+      "suggestion2": "Interval 5K",
+      "suggestion3": "Long run",
+      "step3Title": "Your running plan"
+    },
+    "ready": "Ready",
+    "motivation": {
+      "interval": {
+        "startRun": [
+          "Run! Give it all 🏃",
+          "Let's go, pick up the pace! 💨",
+          "Off we go! 🔥"
+        ],
+        "startWalk": [
+          "Recover well 🚶",
+          "Catch your breath, you earned it!",
+          "Recovery walk 👍"
+        ],
+        "startRest": [
+          "Well-deserved break 😮‍💨",
+          "Rest up, the next effort is coming!"
+        ],
+        "halfway": [
+          "Halfway! You're killing it 💪",
+          "Half done, keep going!"
+        ],
+        "lastSegment": [
+          "Last push! Give it everything 🔥",
+          "One segment left, go for it!"
+        ]
+      },
+      "longRun": {
+        "quarter": [
+          "25%! Great start 👏",
+          "First quarter done!"
+        ],
+        "half": [
+          "Halfway! Keep up the pace 💪",
+          "50% in the bag!"
+        ],
+        "threeQuarters": [
+          "75%! Almost there 🎯",
+          "Just the last quarter!"
+        ],
+        "almostDone": [
+          "Almost done! Give it all 🔥",
+          "Just a few more meters!"
+        ]
+      },
+      "tooSlow": [
+        "Try to pick up the pace! ⚡",
+        "A bit faster, you can do it! 💨",
+        "Target pace exceeded, speed up!"
+      ],
+      "tooFast": [
+        "Careful, you're going too fast!",
+        "Slow down, manage your effort."
+      ],
+      "intervalGeneric": [
+        "Hang in there! 💪",
+        "You're doing great!",
+        "Keep it up!"
+      ]
+    },
+    "segment": {
+      "warmup": "Warm-up",
+      "run": "Run!",
+      "walk": "Walk",
+      "rest": "Rest",
+      "cooldown": "Cool down",
+      "segmentChange": "New segment"
     }
   }
 }
