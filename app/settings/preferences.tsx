@@ -22,6 +22,7 @@ import {
   Zap,
   Camera,
   Sparkles,
+  MapPin,
 } from 'lucide-react-native';
 import { GlassCard, InputField } from '../../src/components/ui';
 import { useAppStore } from '../../src/stores';
@@ -204,6 +205,25 @@ export default function PreferencesScreen() {
           />
         </GlassCard>
 
+        {/* Camera debug points (formerly in dev tab) */}
+        <GlassCard style={styles.settingsCard}>
+          <SettingItem
+            icon={<Camera size={20} color="#fbbf24" />}
+            iconColor="#fbbf24"
+            title={t('settings.debugCamera')}
+            subtitle={t('settings.debugCameraDesc')}
+            rightElement={
+              <Switch
+                value={settings.debugCamera ?? false}
+                onValueChange={(value) => updateSettings({ debugCamera: value })}
+                trackColor={{ false: Colors.card, true: Colors.teal }}
+                thumbColor="#fff"
+              />
+            }
+            delay={210}
+          />
+        </GlassCard>
+
         {/* Skip Sensor Selection */}
         <GlassCard style={styles.settingsCard}>
           <SettingItem
@@ -222,6 +242,7 @@ export default function PreferencesScreen() {
             delay={250}
           />
         </GlassCard>
+
 
         {/* Spacer */}
         <View style={{ height: 40 }} />
@@ -264,6 +285,18 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 44,
+  },
+
+  // Section Title
+  sectionTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+    marginLeft: Spacing.xs,
   },
 
   // Settings Card

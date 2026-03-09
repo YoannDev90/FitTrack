@@ -154,7 +154,6 @@ export default function DeveloperScreen() {
             // Also disable debug camera when disabling developer mode
             updateSettings({ 
               developerMode: false,
-              debugCamera: false,
             });
             router.back();
           },
@@ -194,25 +193,6 @@ export default function DeveloperScreen() {
           </View>
         </Animated.View>
 
-        {/* Debug Options */}
-        <SectionTitle title="Debug" delay={100} />
-        <GlassCard style={styles.settingsCard}>
-          <SettingItem
-            icon={<Eye size={20} color="#fbbf24" />}
-            iconColor="#fbbf24"
-            title={t('settings.debugCamera')}
-            subtitle={t('settings.debugCameraDesc')}
-            rightElement={
-              <Switch
-                value={settings.debugCamera ?? false}
-                onValueChange={(value) => updateSettings({ debugCamera: value })}
-                trackColor={{ false: Colors.card, true: Colors.teal }}
-                thumbColor="#fff"
-              />
-            }
-            delay={120}
-          />
-        </GlassCard>
 
         {/* Pollination Status */}
         <SectionTitle title="Pollination AI" delay={130} />
