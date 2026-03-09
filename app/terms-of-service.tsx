@@ -216,6 +216,12 @@ export default function TermsOfServiceScreen() {
                     <BulletPoint>{t('termsOfService.optionalServices.social.account')}</BulletPoint>
                     <BulletPoint>{t('termsOfService.optionalServices.social.rules')}</BulletPoint>
                     <BulletPoint>{t('termsOfService.optionalServices.social.delete')}</BulletPoint>
+
+                    <Text style={styles.subheading}>{t('termsOfService.optionalServices.aiCoaching.title')}</Text>
+                    <BulletPoint>{t('termsOfService.optionalServices.aiCoaching.plan')}</BulletPoint>
+                    <BulletPoint>{t('termsOfService.optionalServices.aiCoaching.data')}</BulletPoint>
+                    <BulletPoint>{t('termsOfService.optionalServices.aiCoaching.sanitized')}</BulletPoint>
+                    <BulletPoint>{t('termsOfService.optionalServices.aiCoaching.disable')}</BulletPoint>
                 </TermsSection>
 
                 {/* Social Features */}
