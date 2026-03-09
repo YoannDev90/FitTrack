@@ -62,6 +62,13 @@ function ExerciseCard({
                             </Text>
                         </View>
                     )}
+                    {exercise.experimental && (
+                        <View style={[s.timeBadge, { backgroundColor: 'rgba(245,166,35,0.15)', position: 'absolute', top: 6, left: 6 }]}>
+                            <Text style={[s.timeBadgeText, { color: '#f5a623', fontSize: 9, fontWeight: '800', letterSpacing: 1 }]}>
+                                {t('common.badge.beta', 'BÊTA')}
+                            </Text>
+                        </View>
+                    )}
                 </View>
             </TouchableOpacity>
         </Animated.View>
