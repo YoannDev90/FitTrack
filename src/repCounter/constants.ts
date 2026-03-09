@@ -160,6 +160,7 @@ export const EXERCISES: ExerciseConfig[] = [
         supportsCameraMode: false,
         preferredCameraView: 'front',
         isNavigational: true,
+        experimental: true,
     },
     {
         id: 'run_ai',
@@ -172,5 +173,6 @@ export const EXERCISES: ExerciseConfig[] = [
         supportsCameraMode: false,
         preferredCameraView: 'front',
         isNavigational: true,
+        experimental: true,
     },
 ];
