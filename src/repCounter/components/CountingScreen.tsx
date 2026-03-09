@@ -211,7 +211,7 @@ export function CountingScreen({
                     <PoseCameraView
                         facing="front"
                         showDebugOverlay={showDebugOverlay}
-                        exerciseType={exercise.id}
+                        exerciseType={exercise.id as any}
                         currentCount={exercise.isTimeBased ? plankSeconds : repCount}
                         onRepDetected={onCameraRepDetected}
                         onPlankStateChange={onPlankStateChange}
@@ -229,7 +229,7 @@ export function CountingScreen({
                     <PoseCameraView
                         facing="front"
                         showDebugOverlay={false}
-                        exerciseType={exercise.id}
+                        exerciseType={exercise.id as any}
                         currentCount={exercise.isTimeBased ? plankSeconds : repCount}
                         onRepDetected={onCameraRepDetected}
                         onPlankStateChange={onPlankStateChange}
