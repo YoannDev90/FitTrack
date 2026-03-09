@@ -1,6 +1,6 @@
 // repCounter/types.ts
 
-export type ExerciseType = 'pushups' | 'situps' | 'squats' | 'jumping_jacks' | 'plank' | 'elliptical';
+export type ExerciseType = 'pushups' | 'situps' | 'squats' | 'jumping_jacks' | 'plank' | 'elliptical' | 'run' | 'run_ai';
 export type DetectionMode = 'sensor' | 'camera' | 'manual';
 export type CameraFacing = 'front' | 'side';
 export type TutorialStep = 'select' | 'position' | 'ready' | 'counting' | 'done';
@@ -28,6 +28,7 @@ export interface ExerciseConfig {
     preferredCameraView: CameraFacing;
     isTimeBased?: boolean;
     keepGoingIntervalSeconds?: number;
+    isNavigational?: boolean; // Exercise that navigates to a separate screen (e.g. run)
 }
 
 export interface RepCounterState {
