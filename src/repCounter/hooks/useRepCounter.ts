@@ -394,7 +394,7 @@ export function useRepCounter() {
         const isResuming = repCount > 0 || plankSeconds > 0 || ellipticalSeconds > 0 || elapsedTime > 0;
         setIsTracking(true);
         startSessionTracking({
-            exerciseId: selectedExercise.id,
+            exerciseId: selectedExercise.id as any,
             exerciseName: t(`repCounter.exercises.${selectedExercise.id}`),
             exerciseEmoji: selectedExercise.icon,
             detectionMode,
@@ -513,6 +513,12 @@ export function useRepCounter() {
 
     // ── Exercise select ────────────────────────────────────────────────────────
     const handleExerciseSelect = useCallback((exercise: ExerciseConfig) => {
+        // Navigational exercises: redirect to separate screens
+        if (exercise.isNavigational) {
+            if (exercise.id === 'run') router.push('/run/simple' as any);
+            else if (exercise.id === 'run_ai') router.push('/run/ai' as any);
+            return;
+        }
         setSelectedExercise(exercise);
         if (exercise.isTimeBased && exercise.id !== 'elliptical') setDetectionMode('camera');
         else if (exercise.id === 'elliptical') setDetectionMode('manual');
