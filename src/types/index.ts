@@ -67,6 +67,21 @@ export interface RunEntry extends BaseEntry {
   bpmAvg?: number;
   bpmMax?: number;
   cardiacLoad?: number; // Charge cardiaque optionnelle
+  // GPS tracking fields
+  route?: Array<{ latitude: number; longitude: number; altitude?: number; timestamp: number }>;
+  gpxFilePath?: string;
+  avgPaceSecPerKm?: number;
+  elevationGainM?: number;
+  calories?: number;
+  xpGained?: number;
+  plan?: {
+    targetDistanceKm?: number;
+    targetDurationMinutes?: number;
+    targetPaceSecPerKm?: number;
+    summary?: string;
+  };
+  aiCoachMessages?: Array<{ role: string; content: string; timestamp: number }>;
+  notes?: string;
 }
 
 // Beat Saber
@@ -242,11 +257,17 @@ export interface UserSettings {
   aiWorkoutEnabled?: boolean; // Show AI analysis in workout detail
   aiModel?: string; // Pollinations model name (default: 'openai')
   aiTone?: 'technical' | 'neutral' | 'warm'; // Style of Ploppy's responses
+  aiDataConsent?: boolean; // User has accepted AI data sharing
+  sharePersonalWithAI?: boolean; // Share personal info with Ploppy for personalized sessions
 
   // Personal information (optional, may be shared with analysis services)
-  gender?: 'male' | 'female' | 'other';
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
   heightCm?: number; // Height in centimeters
   bodyWeightKg?: number; // Personal body weight (separate from measure entries)
+  age?: number; // Age in years
+
+  // Debug/tracking display
+  debugTracking?: boolean; // Show tracking points overlay
 }
 
 // ============================================================================
