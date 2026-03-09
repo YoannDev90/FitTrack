@@ -32,6 +32,7 @@ import {
   Languages,
   Dumbbell,
   Heart,
+  Bot,
 } from 'lucide-react-native';
 import { GlassCard } from '../../src/components/ui';
 import { useAppStore, useSocialStore } from '../../src/stores';
@@ -252,6 +253,16 @@ export default function SettingsMainScreen() {
             onPress={() => router.push('/settings/language')}
             delay={220}
           />
+          <View style={styles.divider} />
+          <CategoryButton
+            icon={<Bot size={22} color="#a78bfa" />}
+            iconColor="#a78bfa"
+            title={t('settings.aiTab', { defaultValue: 'IA' })}
+            subtitle={t('settings.aiTabDesc', { defaultValue: 'Ploppy, modèles, consentement' })}
+            onPress={() => router.push('/settings/ai')}
+            delay={240}
+            badge="BÊTA"
+          />
         </GlassCard>
 
         {/* SPORTS MANAGEMENT */}
@@ -310,6 +321,7 @@ export default function SettingsMainScreen() {
             delay={300}
           />
         </GlassCard>
+
 
         {/* LABS */}
         <SectionTitle title={t('settings.labs')} delay={320} />
