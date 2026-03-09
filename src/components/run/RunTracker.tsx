@@ -678,9 +678,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
           <MapLibreRN.Camera
             ref={cameraRef}
             defaultSettings={{
-              centerCoordinate: lastCoord
-                ? [lastCoord.longitude, lastCoord.latitude]
-                : [2.3522, 48.8566],
+              centerCoordinate: mapCenter as [number, number],
               zoomLevel: 16,
             }}
           />
@@ -714,6 +712,29 @@ export function RunTracker({ mode }: RunTrackerProps) {
                 style={{
                   circleRadius: 6,
                   circleColor: C.blue,
+                  circleStrokeWidth: 2,
+                  circleStrokeColor: '#fff',
+                }}
+              />
+            </MapLibreRN.ShapeSource>
+          )}
+
+          {/* Initial position marker (pulsing, before run starts) */}
+          {!lastCoord && initialPos && (
+            <MapLibreRN.ShapeSource id="initialMarkerSource" shape={initialMarkerGeoJSON}>
+              <MapLibreRN.CircleLayer
+                id="initialMarkerOuter"
+                style={{
+                  circleRadius: 16,
+                  circleColor: 'rgba(52,211,112,0.15)',
+                  circleStrokeWidth: 0,
+                }}
+              />
+              <MapLibreRN.CircleLayer
+                id="initialMarkerInner"
+                style={{
+                  circleRadius: 7,
+                  circleColor: C.green,
                   circleStrokeWidth: 2,
                   circleStrokeColor: '#fff',
                 }}
@@ -757,20 +778,35 @@ export function RunTracker({ mode }: RunTrackerProps) {
             {plan.targetDurationMinutes ? ` · ~${plan.targetDurationMinutes} min` : ''}
             {plan.targetPaceSecPerKm ? ` · ${formatPace(plan.targetPaceSecPerKm)}/km` : ''}
           </Text>
-          {progressPercent !== null && (
+          {/* Segmented progress bar for interval plans */}
+          {segments.length > 0 ? (
+            <SegmentedProgressBar
+              segments={segments}
+              currentIndex={store.currentSegmentIndex}
+              progressInSegment={progressInSegment}
+            />
+          ) : progressPercent !== null ? (
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
             </View>
-          )}
+          ) : null}
         </Animated.View>
       )}
 
-      {/* Coach bubble — above bottom sheet */}
+      {/* Current segment indicator */}
+      {segments.length > 0 && store.currentSegmentIndex < segments.length && (
+        <Animated.View entering={FadeIn.delay(300)} style={styles.segmentBannerWrap}>
+          <SegmentIndicator
+            segment={segments[store.currentSegmentIndex]}
+            index={store.currentSegmentIndex}
+            total={segments.length}
+          />
+        </Animated.View>
+      )}
+
+      {/* Motivation bubble — above bottom sheet */}
       {mode === 'ai' && (
-        <CoachBubble
-          message={store.lastCoachMessage}
-          isLoading={store.isLoadingCoach}
-        />
+        <MotivationBubble message={motivationMessage} />
       )}
 
       {/* Bottom metric sheet */}
@@ -896,7 +932,7 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: '100%', borderRadius: 2, backgroundColor: C.blue },
 
-  // Coach bubble
+  // Motivation bubble
   coachBubble: {
     position: 'absolute', bottom: 340, left: S.lg, right: S.lg, zIndex: 25,
   },
@@ -905,10 +941,33 @@ const styles = StyleSheet.create({
     padding: S.md,
     backgroundColor: 'rgba(14,15,20,0.92)',
     borderRadius: R.xl, borderWidth: 1,
-    borderColor: 'rgba(167,139,250,0.22)',
+    borderColor: 'rgba(52,211,112,0.22)',
   },
   coachBubbleText: { flex: 1, fontSize: T.sm, color: C.text, lineHeight: 20 },
-  coachBubbleLoading: { fontSize: T.xs, color: C.textMuted },
+
+  // Segment indicator
+  segmentBannerWrap: {
+    position: 'absolute', top: 148, left: S.lg, right: S.lg, zIndex: 14,
+  },
+  segmentIndicator: {
+    flexDirection: 'row', alignItems: 'center', gap: S.sm,
+    padding: S.md,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    borderRadius: R.lg, borderWidth: 1,
+  },
+  segmentEmoji: { fontSize: 20 },
+  segmentLabel: { fontSize: T.sm, fontWeight: W.bold },
+  segmentMeta: { fontSize: T.nano, color: C.textMuted, marginTop: 2 },
+
+  // Segmented progress bar
+  segProgressContainer: {
+    flexDirection: 'row', marginTop: S.sm, height: 6, gap: 2,
+  },
+  segProgressSlot: { overflow: 'hidden' },
+  segProgressBg: {
+    height: '100%', backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  segProgressFill: { height: '100%' },
 
   // Bottom sheet
   bottomSheet: {
