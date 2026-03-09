@@ -86,7 +86,8 @@
             "node_modules/@expo-google-fonts/syne/800ExtraBold/Syne_800ExtraBold.ttf"
           ]
         }
-      ]
+      ],
+      "@maplibre/maplibre-react-native"
     ],
     "experiments": {
       "typedRoutes": true
