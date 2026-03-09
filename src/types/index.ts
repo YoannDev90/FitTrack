@@ -257,7 +257,6 @@ export interface UserSettings {
   aiWorkoutEnabled?: boolean; // Show AI analysis in workout detail
   aiModel?: string; // Pollinations model name (default: 'openai')
   aiTone?: 'technical' | 'neutral' | 'warm'; // Style of Ploppy's responses
-  aiDataConsent?: boolean; // User has accepted AI data sharing
   sharePersonalWithAI?: boolean; // Share personal info with Ploppy for personalized sessions
 
   // Personal information (optional, may be shared with analysis services)
