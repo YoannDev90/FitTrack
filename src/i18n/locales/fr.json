@@ -258,7 +258,7 @@
       "disabled": "Le résumé IA est désactivé",
       "enableInSettings": "Active-le dans Paramètres > IA – Ploppy",
       "noData": "Pas assez de données pour générer un résumé",
-      "connectRequired": "Connecte-toi à Pollination dans Paramètres > Labs pour utiliser les fonctions IA",
+      "connectRequired": "Connecte-toi à Pollination pour utiliser les fonctions IA",
       "regenerate": "Régénérer"
     },
     "workoutsPerMonth": "Séances par mois",
@@ -692,7 +692,7 @@
     "genderOptions": {
       "male": "Homme",
       "female": "Femme",
-      "other": "Autre / Préfère ne pas dire",
+      "other": "Autre",
       "prefer_not_to_say": "Préfère ne pas dire"
     },
     "reminderInvalid": "Heure invalide (00-23 : 00-59)",
@@ -941,8 +941,6 @@
       "advanced": "Avancé"
     },
     "tracking": "Tracking",
-    "debugTracking": "Afficher les points de tracking",
-    "debugTrackingDesc": "Affiche les points GPS sur la carte",
     "aiTab": "IA",
     "aiTabDesc": "Fonctionnalités d'intelligence artificielle"
   },
@@ -1207,7 +1205,20 @@
         "apiKey": "Clé API Pollination (stockée localement, jamais envoyée à nos serveurs)"
       },
       "warning": "⚠️ C'est une fonctionnalité beta. En l'utilisant, tu acceptes que Pollination.ai puisse traiter tes images de repas pour fournir une analyse nutritionnelle. Pollination peut collecter des données d'utilisation anonymisées pour améliorer le service.",
-      "optOut": "Tu peux te déconnecter de Pollination à tout moment dans Paramètres → Labs."
+      "optOut": "Tu peux te déconnecter de Pollination à tout moment dans Paramètres → IA – Ploppy."
+    },
+    "aiCoaching": {
+      "title": "Coaching IA de course (Beta)",
+      "description": "Spix peut générer des plans de course personnalisés via l'IA Pollination. Cette fonctionnalité est opt-in et nécessite une connexion explicite.",
+      "dataTitle": "Données transmises à l'IA :",
+      "data": {
+        "profile": "Données du profil : poids, âge, taille, niveau sportif (si renseignés)",
+        "history": "Historique de courses : distances, durées, allures récentes",
+        "session": "Données de séance : position GPS, distance, allure en temps réel",
+        "text": "Texte libre décrivant tes objectifs de course"
+      },
+      "sanitization": "🛡️ Les messages envoyés à l'IA sont filtrés pour supprimer tout contenu potentiellement dangereux. Les réponses sont validées avant affichage.",
+      "optOut": "Tu peux désactiver le coaching IA dans Paramètres → IA – Ploppy. Les messages de motivation pendant la course sont pré-définis et ne nécessitent aucune connexion."
     },
     "contact": {
       "title": "Contact",
@@ -1279,6 +1290,13 @@
         "account": "Nécessite un compte Spix",
         "rules": "Soumis aux règles de bonne conduite",
         "delete": "Données supprimables sur demande"
+      },
+      "aiCoaching": {
+        "title": "Coaching IA de course (Beta)",
+        "plan": "Les plans de course sont générés par Pollination.ai",
+        "data": "Données sportives transmises pour personnalisation",
+        "sanitized": "Entrées utilisateur filtrées, réponses IA validées",
+        "disable": "Désactivable à tout moment dans Paramètres → IA"
       }
     },
     "socialRules": {
