@@ -275,6 +275,28 @@ export default function PrivacyPolicyScreen() {
                     <Text style={styles.paragraph}>{t('privacyPolicy.pollination.optOut')}</Text>
                 </PolicySection>
 
+                {/* AI Run Coaching Section */}
+                <PolicySection 
+                    title={t('privacyPolicy.aiCoaching.title')} 
+                    icon={<Sparkles size={20} color="#34d370" />}
+                    iconColor="#34d370"
+                    delay={650}
+                >
+                    <Text style={styles.paragraph}>{t('privacyPolicy.aiCoaching.description')}</Text>
+                    
+                    <Text style={styles.subheading}>{t('privacyPolicy.aiCoaching.dataTitle')}</Text>
+                    <BulletPoint>{t('privacyPolicy.aiCoaching.data.profile')}</BulletPoint>
+                    <BulletPoint>{t('privacyPolicy.aiCoaching.data.history')}</BulletPoint>
+                    <BulletPoint>{t('privacyPolicy.aiCoaching.data.session')}</BulletPoint>
+                    <BulletPoint>{t('privacyPolicy.aiCoaching.data.text')}</BulletPoint>
+                    
+                    <Text style={[styles.paragraph, styles.highlight]}>
+                        {t('privacyPolicy.aiCoaching.sanitization')}
+                    </Text>
+                    
+                    <Text style={styles.paragraph}>{t('privacyPolicy.aiCoaching.optOut')}</Text>
+                </PolicySection>
+
                 {/* Contact */}
                 <Animated.View entering={FadeInDown.delay(700).springify()}>
                     <GlassCard style={styles.contactCard}>
