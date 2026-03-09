@@ -96,7 +96,7 @@ function CustomNavBar() {
     const { socialEnabled } = useSocialStore();
 
     // Cacher la barre de navigation sur certains écrans
-    if (pathname === '/repCounter' || pathname === '/health-connect' || pathname === '/onboarding' || pathname === '/enhanced-meal') {
+    if (pathname === '/repCounter' || pathname === '/health-connect' || pathname === '/onboarding' || pathname === '/enhanced-meal' || pathname.startsWith('/run')) {
         return null;
     }
 
