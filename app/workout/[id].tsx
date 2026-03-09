@@ -11,7 +11,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,7 +39,12 @@ import {
   Trash2,
   Edit3,
   RefreshCw,
+  Navigation,
+  Mountain,
+  Share2,
 } from 'lucide-react-native';
+import { shareGPXFile } from '../../src/services/gpxExport';
+import { getMapLibreModule } from '../../src/services/maplibre';
 import { storageHelpers } from '../../src/storage/mmkv';
 import { useAppStore, useSettings, useSportsConfig } from '../../src/stores';
 import { useGamificationStore } from '../../src/stores';
@@ -60,6 +64,7 @@ import type {
 } from '../../src/types';
 
 const { width: SW } = Dimensions.get('window');
+const MapLibreRN = getMapLibreModule();
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -248,6 +253,7 @@ export default function WorkoutDetailScreen() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const fetchAnalysis = useCallback(async (force: boolean = false) => {
     if (!entry || !settings.aiWorkoutEnabled || !isConnected) return;
@@ -357,22 +363,12 @@ export default function WorkoutDetailScreen() {
     );
   }
 
-  const handleDelete = () => {
-    Alert.alert(
-      t('entries.deleteConfirm.title'),
-      t('entries.deleteConfirm.message'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: () => {
-            deleteEntry(entry.id);
-            router.back();
-          },
-        },
-      ],
-    );
+  const handleDelete = () => setDeleteModalVisible(true);
+
+  const confirmDelete = () => {
+    setDeleteModalVisible(false);
+    deleteEntry(entry.id);
+    router.back();
   };
 
   // ─── Render Entry-Specific Content ──────────────────────────────────────────
@@ -408,21 +404,110 @@ export default function WorkoutDetailScreen() {
       }
       case 'run': {
         const e = entry as RunEntry;
+        const hasRoute = e.route && e.route.length >= 2;
+        const routeGeoJSON: GeoJSON.FeatureCollection = hasRoute ? {
+          type: 'FeatureCollection',
+          features: [{
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: e.route!.map((c: any) => [c.longitude, c.latitude]),
+            },
+          }],
+        } : { type: 'FeatureCollection', features: [] };
+
+        // Calculate bounds for the route
+        const routeBounds = hasRoute ? (() => {
+          const lngs = e.route!.map((c: any) => c.longitude);
+          const lats = e.route!.map((c: any) => c.latitude);
+          return {
+            ne: [Math.max(...lngs) + 0.002, Math.max(...lats) + 0.002] as [number, number],
+            sw: [Math.min(...lngs) - 0.002, Math.min(...lats) - 0.002] as [number, number],
+          };
+        })() : null;
+
         return (
           <>
-            <StatRow icon={<TrendingUp size={16} color={C.blue} />} label={t('workout.detail.distance')} value={`${e.distanceKm} km`} color={C.blue} />
+            {/* Mini-map */}
+            {hasRoute && MapLibreRN && (
+              <View style={styles.miniMapWrap}>
+                <MapLibreRN.MapView
+                  style={styles.miniMap}
+                  mapStyle="https://tiles.openfreemap.org/styles/dark"
+                  logoEnabled={false}
+                  attributionEnabled={false}
+                  compassEnabled={false}
+                  scrollEnabled={false}
+                  pitchEnabled={false}
+                  rotateEnabled={false}
+                  zoomEnabled={false}
+                >
+                  <MapLibreRN.Camera
+                    defaultSettings={{
+                      centerCoordinate: [
+                        (routeBounds!.ne[0] + routeBounds!.sw[0]) / 2,
+                        (routeBounds!.ne[1] + routeBounds!.sw[1]) / 2,
+                      ],
+                      zoomLevel: 14,
+                    }}
+                    bounds={{
+                      ne: routeBounds!.ne,
+                      sw: routeBounds!.sw,
+                      paddingLeft: 30,
+                      paddingRight: 30,
+                      paddingTop: 30,
+                      paddingBottom: 30,
+                    }}
+                  />
+                  <MapLibreRN.ShapeSource id="routeDetail" shape={routeGeoJSON}>
+                    <MapLibreRN.LineLayer
+                      id="routeDetailLine"
+                      style={{
+                        lineColor: C.blue,
+                        lineWidth: 3,
+                        lineJoin: 'round',
+                        lineCap: 'round',
+                      }}
+                    />
+                  </MapLibreRN.ShapeSource>
+                </MapLibreRN.MapView>
+              </View>
+            )}
+
+            <StatRow icon={<Navigation size={16} color={C.blue} />} label={t('workout.detail.distance')} value={`${e.distanceKm} km`} color={C.blue} />
             <StatRow icon={<Clock size={16} color={C.textSub} />} label={t('workout.detail.duration')} value={`${e.durationMinutes} min`} />
-            {e.avgSpeed !== undefined && (
+            {(e as any).avgPaceSecPerKm != null && (
+              <StatRow icon={<Zap size={16} color={C.green} />} label={t('run.avgPace')} value={`${Math.floor((e as any).avgPaceSecPerKm / 60)}:${String(Math.floor((e as any).avgPaceSecPerKm % 60)).padStart(2, '0')}/km`} color={C.green} />
+            )}
+            {e.avgSpeed != null && (
               <StatRow icon={<Zap size={16} color={C.gold} />} label={t('workout.detail.speed')} value={`${e.avgSpeed} km/h`} color={C.gold} />
             )}
-            {e.bpmAvg !== undefined && (
+            {(e as any).elevationGainM != null && (e as any).elevationGainM > 0 && (
+              <StatRow icon={<Mountain size={16} color={C.textSub} />} label={t('run.elevation')} value={`+${(e as any).elevationGainM} m`} />
+            )}
+            {(e as any).calories != null && (
+              <StatRow icon={<Flame size={16} color={C.gold} />} label={t('run.calories')} value={`${(e as any).calories} kcal`} color={C.gold} />
+            )}
+            {e.bpmAvg != null && (
               <StatRow icon={<Activity size={16} color={C.error} />} label={t('workout.detail.bpmAvg')} value={`${e.bpmAvg}`} color={C.error} />
             )}
-            {e.bpmMax !== undefined && (
+            {e.bpmMax != null && (
               <StatRow icon={<Activity size={16} color={C.error} />} label={t('workout.detail.bpmMax')} value={`${e.bpmMax}`} color={C.error} />
             )}
-            {e.cardiacLoad !== undefined && (
+            {e.cardiacLoad != null && (
               <StatRow icon={<Zap size={16} color={C.violet} />} label={t('workout.detail.cardiacLoad')} value={`${e.cardiacLoad}`} color={C.violet} />
+            )}
+
+            {/* GPX share button */}
+            {(e as any).gpxFilePath && (
+              <TouchableOpacity
+                onPress={() => shareGPXFile((e as any).gpxFilePath)}
+                style={styles.gpxShareBtn}
+              >
+                <Share2 size={16} color={C.blue} />
+                <Text style={styles.gpxShareText}>{t('run.shareGPX')}</Text>
+              </TouchableOpacity>
             )}
           </>
         );
@@ -641,6 +726,24 @@ export default function WorkoutDetailScreen() {
 
         <View style={{ height: 120 }} />
       </ScrollView>
+
+      {/* Delete confirm modal */}
+      {deleteModalVisible && (
+        <View style={styles.modalOverlay}>
+          <Animated.View entering={FadeIn.duration(200)} style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('entries.deleteConfirm.title')}</Text>
+            <Text style={styles.modalMessage}>{t('entries.deleteConfirm.message')}</Text>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={styles.modalCancelBtn}>
+                <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={confirmDelete} style={styles.modalConfirmBtn}>
+                <Text style={styles.modalConfirmText}>{t('common.delete')}</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -740,4 +843,48 @@ const styles = StyleSheet.create({
   aiDisabled: { paddingVertical: S.md, gap: S.xs },
   aiDisabledText: { fontSize: T.sm, color: C.textMuted },
   aiDisabledHint: { fontSize: T.xs, color: C.textMuted },
+
+  // Mini-map
+  miniMapWrap: {
+    height: 220, borderRadius: R.xl, overflow: 'hidden',
+    marginBottom: S.lg, borderWidth: 1, borderColor: C.border,
+  },
+  miniMap: { flex: 1 },
+
+  // GPX share
+  gpxShareBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: S.sm,
+    paddingVertical: S.md, marginTop: S.md,
+    backgroundColor: C.blueSoft, borderRadius: R.lg,
+    borderWidth: 1, borderColor: C.blueBorder,
+  },
+  gpxShareText: { fontSize: T.sm, fontWeight: W.semi, color: C.blue },
+
+  // Delete confirm modal
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject, zIndex: 100,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center' as const, alignItems: 'center' as const,
+  },
+  modalCard: {
+    width: SW - 64, padding: S.xl,
+    backgroundColor: C.surfaceUp, borderRadius: R.xxl,
+    borderWidth: 1, borderColor: C.borderUp,
+    alignItems: 'center' as const, gap: S.lg,
+  },
+  modalTitle: { fontSize: T.lg, fontWeight: W.bold, color: C.text, textAlign: 'center' as const },
+  modalMessage: { fontSize: T.sm, color: C.textSub, textAlign: 'center' as const },
+  modalBtns: { flexDirection: 'row' as const, gap: S.md, width: '100%' as const },
+  modalCancelBtn: {
+    flex: 1, paddingVertical: 14, borderRadius: R.lg,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center' as const, borderWidth: 1, borderColor: C.border,
+  },
+  modalCancelText: { fontSize: T.md, fontWeight: W.semi, color: C.textSub },
+  modalConfirmBtn: {
+    flex: 1, paddingVertical: 14, borderRadius: R.lg,
+    backgroundColor: 'rgba(248,113,113,0.15)',
+    alignItems: 'center' as const, borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)',
+  },
+  modalConfirmText: { fontSize: T.md, fontWeight: W.bold, color: C.error },
 });
