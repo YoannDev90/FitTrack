@@ -1,5 +1,5 @@
 // ============================================================================
-// SETTINGS - PERSONAL INFO SCREEN
+// SETTINGS - PERSONAL INFO SCREEN (Redesigned)
 // ============================================================================
 
 import React, { useState, useCallback } from 'react';
@@ -10,34 +10,41 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, User, Ruler, Weight, Heart, Shield, Activity } from 'lucide-react-native';
 import { GlassCard, InputField } from '../../src/components/ui';
 import { useAppStore } from '../../src/stores';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
 
-const GENDER_OPTIONS: Array<{ value: 'male' | 'female' | 'other'; label: string }> = [
-  { value: 'male', label: 'M' },
-  { value: 'female', label: 'F' },
-  { value: 'other', label: '—' },
+const GENDER_OPTIONS: Array<{ value: 'male' | 'female' | 'other' | 'prefer_not_to_say'; emoji: string }> = [
+  { value: 'male', emoji: '♂️' },
+  { value: 'female', emoji: '♀️' },
+  { value: 'other', emoji: '⚧️' },
+  { value: 'prefer_not_to_say', emoji: '—' },
 ];
+
+const FITNESS_LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
 
 export default function PersonalInfoScreen() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useAppStore();
 
-  const [gender, setGender] = useState<'male' | 'female' | 'other'>(settings.gender ?? 'other');
+  const [gender, setGender] = useState<'male' | 'female' | 'other' | 'prefer_not_to_say'>(settings.gender ?? 'prefer_not_to_say');
+  const [age, setAge] = useState(settings.age?.toString() || '');
   const [height, setHeight] = useState(settings.heightCm?.toString() || '');
   const [weight, setWeight] = useState(settings.bodyWeightKg?.toString() || '');
+  const [fitnessLevel, setFitnessLevel] = useState<typeof FITNESS_LEVELS[number]>(settings.fitnessLevel ?? 'intermediate');
+  const [shareWithAI, setShareWithAI] = useState(settings.sharePersonalWithAI ?? false);
 
   const handleSave = useCallback(() => {
-    // sanitize
     const hClean = height.trim().replace(',', '.');
     const wClean = weight.trim().replace(',', '.');
+    const aClean = age.trim();
 
     if (hClean && isNaN(parseFloat(hClean))) {
       Alert.alert(t('common.error'), t('settings.heightError'));
@@ -47,15 +54,25 @@ export default function PersonalInfoScreen() {
       Alert.alert(t('common.error'), t('settings.weightError'));
       return;
     }
+    if (aClean && (isNaN(parseInt(aClean, 10)) || parseInt(aClean, 10) < 10 || parseInt(aClean, 10) > 120)) {
+      Alert.alert(t('common.error'), t('settings.ageError', { defaultValue: 'Âge invalide (10-120)' }));
+      return;
+    }
 
     updateSettings({
       gender,
+      age: aClean ? parseInt(aClean, 10) : undefined,
       heightCm: hClean ? parseFloat(hClean) : undefined,
       bodyWeightKg: wClean ? parseFloat(wClean) : undefined,
+      fitnessLevel,
+      sharePersonalWithAI: shareWithAI,
     });
 
     Alert.alert(t('common.success'), t('settings.personalInfoSaved'));
-  }, [gender, height, weight, t, updateSettings]);
+  }, [gender, age, height, weight, fitnessLevel, shareWithAI, t, updateSettings]);
+
+  // Compute max HR from age (220 - age formula)
+  const computedMaxHR = age && !isNaN(parseInt(age, 10)) ? 220 - parseInt(age, 10) : null;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -76,64 +93,153 @@ export default function PersonalInfoScreen() {
           <View style={styles.headerSpacer} />
         </Animated.View>
 
-        {/* Explanation */}
-        <GlassCard style={styles.card}>
-          <Text style={styles.paragraph}>{t('settings.personalInfoDesc')}</Text>
-          <Text style={[styles.paragraph, { marginTop: Spacing.sm, fontSize: FontSize.xs, color: Colors.muted }]}> 
-            {t('settings.privacyNote')}
-          </Text>
-        </GlassCard>
+        {/* Avatar / Identity */}
+        <Animated.View entering={FadeInDown.delay(80).springify()}>
+          <GlassCard style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(34, 211, 238, 0.15)' }]}>
+                <User size={20} color="#22d3ee" />
+              </View>
+              <Text style={styles.sectionLabel}>{t('settings.personalInfo')}</Text>
+            </View>
 
-        {/* Fields */}
-        <GlassCard style={styles.card}>
-          <Text style={styles.fieldLabel}>{t('settings.gender')}</Text>
-          <View style={styles.genderRow}>
-            {GENDER_OPTIONS.map(opt => (
-              <TouchableOpacity
-                key={opt.value}
-                style={[
-                  styles.genderOption,
-                  gender === opt.value && styles.genderOptionActive,
-                ]}
-                onPress={() => setGender(opt.value)}
-              >
-                <Text
-                  style={[
-                    styles.genderOptionText,
-                    gender === opt.value && { color: Colors.text },
-                  ]}
+            {/* Gender */}
+            <Text style={styles.fieldLabel}>{t('settings.gender')}</Text>
+            <View style={styles.genderRow}>
+              {GENDER_OPTIONS.map(opt => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[styles.genderChip, gender === opt.value && styles.genderChipActive]}
+                  onPress={() => setGender(opt.value)}
                 >
-                  {t(`settings.genderOptions.${opt.value}`)}
+                  <Text style={styles.genderEmoji}>{opt.emoji}</Text>
+                  <Text style={[styles.genderText, gender === opt.value && styles.genderTextActive]}>
+                    {t(`settings.genderOptions.${opt.value}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Age */}
+            <InputField
+              label={t('settings.ageLabel', { defaultValue: 'Âge' })}
+              placeholder="25"
+              value={age}
+              onChangeText={setAge}
+              keyboardType="number-pad"
+              maxLength={3}
+              containerStyle={{ marginTop: Spacing.md }}
+            />
+
+            {/* Max HR computed */}
+            {computedMaxHR && (
+              <View style={styles.hrRow}>
+                <Heart size={14} color="#f43f5e" />
+                <Text style={styles.hrText}>
+                  {t('settings.maxHRCalc', { defaultValue: 'FC max estimée' })}: {computedMaxHR} bpm
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+              </View>
+            )}
+          </GlassCard>
+        </Animated.View>
 
-          <InputField
-            label={t('settings.height')}
-            placeholder="170"
-            value={height}
-            onChangeText={setHeight}
-            keyboardType="decimal-pad"
-            containerStyle={{ marginTop: Spacing.md }}
-          />
+        {/* Measurements */}
+        <Animated.View entering={FadeInDown.delay(120).springify()}>
+          <GlassCard style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(74, 222, 128, 0.15)' }]}>
+                <Ruler size={20} color="#4ade80" />
+              </View>
+              <Text style={styles.sectionLabel}>{t('settings.measurements', { defaultValue: 'Mensurations' })}</Text>
+            </View>
 
-          <InputField
-            label={t('settings.weight')}
-            placeholder="65"
-            value={weight}
-            onChangeText={setWeight}
-            keyboardType="decimal-pad"
-            containerStyle={{ marginTop: Spacing.md }}
-          />
+            <View style={styles.fieldsRow}>
+              <View style={{ flex: 1 }}>
+                <InputField
+                  label={t('settings.heightLabel', { defaultValue: 'Taille (cm)' })}
+                  placeholder="170"
+                  value={height}
+                  onChangeText={setHeight}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <InputField
+                  label={t('settings.weightLabel', { defaultValue: 'Poids (kg)' })}
+                  placeholder="65"
+                  value={weight}
+                  onChangeText={setWeight}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            </View>
+          </GlassCard>
+        </Animated.View>
 
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSave}
-          >
+        {/* Sport Profile */}
+        <Animated.View entering={FadeInDown.delay(160).springify()}>
+          <GlassCard style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}>
+                <Activity size={20} color="#a78bfa" />
+              </View>
+              <Text style={styles.sectionLabel}>{t('settings.sportProfile', { defaultValue: 'Profil sportif' })}</Text>
+            </View>
+
+            <Text style={styles.fieldLabel}>{t('settings.fitnessLevel', { defaultValue: 'Niveau' })}</Text>
+            <View style={styles.levelRow}>
+              {FITNESS_LEVELS.map((level) => (
+                <TouchableOpacity
+                  key={level}
+                  style={[styles.levelChip, fitnessLevel === level && styles.levelChipActive]}
+                  onPress={() => setFitnessLevel(level)}
+                >
+                  <Text style={[styles.levelText, fitnessLevel === level && styles.levelTextActive]}>
+                    {t(`settings.fitnessLevels.${level}`, { defaultValue: level })}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </GlassCard>
+        </Animated.View>
+
+        {/* Privacy & Sharing */}
+        <Animated.View entering={FadeInDown.delay(200).springify()}>
+          <GlassCard style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(74, 222, 128, 0.15)' }]}>
+                <Shield size={20} color="#4ade80" />
+              </View>
+              <Text style={styles.sectionLabel}>{t('settings.ai.privacyTitle', { defaultValue: 'Confidentialité' })}</Text>
+            </View>
+
+            <View style={styles.toggleRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.toggleTitle}>
+                  {t('settings.shareWithPloppy', { defaultValue: 'Partager avec Ploppy' })}
+                </Text>
+                <Text style={styles.toggleDesc}>
+                  {t('settings.shareWithPloppyDesc', { defaultValue: 'Poids, taille et niveau pour des plans de course personnalisés' })}
+                </Text>
+              </View>
+              <Switch
+                value={shareWithAI}
+                onValueChange={setShareWithAI}
+                trackColor={{ false: Colors.card, true: '#4ade80' }}
+                thumbColor="#fff"
+              />
+            </View>
+
+            <Text style={styles.privacyNote}>{t('settings.privacyNote')}</Text>
+          </GlassCard>
+        </Animated.View>
+
+        {/* Save */}
+        <Animated.View entering={FadeInDown.delay(240).springify()}>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveText}>{t('common.save')}</Text>
           </TouchableOpacity>
-        </GlassCard>
+        </Animated.View>
 
         <View style={{ height: 60 }} />
       </ScrollView>
@@ -146,48 +252,109 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   content: { padding: Spacing.lg, paddingBottom: 100 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-    gap: Spacing.md,
+    flexDirection: 'row', alignItems: 'center',
+    marginBottom: Spacing.xl, gap: Spacing.md,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 44, height: 44, borderRadius: 14,
     backgroundColor: Colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
   screenTitle: {
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-    flex: 1,
+    fontSize: 24, fontWeight: FontWeight.bold,
+    color: Colors.text, flex: 1,
   },
   headerSpacer: { width: 44 },
+
+  // Cards
   card: { marginBottom: Spacing.md, padding: Spacing.md },
-  paragraph: { fontSize: FontSize.sm, color: Colors.text },
-  fieldLabel: { fontSize: FontSize.sm, color: Colors.muted, marginBottom: Spacing.xs },
-  genderRow: { flexDirection: 'row', gap: Spacing.sm },
-  genderOption: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
+  sectionHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    gap: Spacing.sm, marginBottom: Spacing.lg,
+  },
+  iconCircle: {
+    width: 36, height: 36, borderRadius: 10,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  sectionLabel: {
+    fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.text,
+  },
+
+  // Fields
+  fieldLabel: {
+    fontSize: FontSize.xs, fontWeight: FontWeight.semibold,
+    color: Colors.muted, textTransform: 'uppercase',
+    letterSpacing: 1, marginBottom: Spacing.sm,
+  },
+  fieldsRow: {
+    flexDirection: 'row', gap: Spacing.md,
+  },
+
+  // Gender chips
+  genderRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
+  genderChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  genderChipActive: {
+    backgroundColor: 'rgba(34, 211, 238, 0.12)',
+    borderColor: 'rgba(34, 211, 238, 0.35)',
+  },
+  genderEmoji: { fontSize: 16 },
+  genderText: { fontSize: FontSize.sm, color: Colors.muted },
+  genderTextActive: { color: '#22d3ee', fontWeight: FontWeight.semibold },
+
+  // HR
+  hrRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginTop: Spacing.sm,
+    paddingVertical: Spacing.xs, paddingHorizontal: Spacing.sm,
+    backgroundColor: 'rgba(244, 63, 94, 0.08)',
     borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.muted,
   },
-  genderOptionActive: {
-    backgroundColor: Colors.cta,
-    borderColor: Colors.cta,
+  hrText: { fontSize: FontSize.xs, color: '#f43f5e' },
+
+  // Level chips
+  levelRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
+  levelChip: {
+    paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
-  genderOptionText: { fontSize: FontSize.md, color: Colors.text },
+  levelChipActive: {
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    borderColor: 'rgba(167, 139, 250, 0.35)',
+  },
+  levelText: { fontSize: FontSize.sm, color: Colors.muted },
+  levelTextActive: { color: '#a78bfa', fontWeight: FontWeight.semibold },
+
+  // Toggle row
+  toggleRow: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  toggleTitle: { fontSize: FontSize.md, fontWeight: FontWeight.semibold, color: Colors.text },
+  toggleDesc: { fontSize: FontSize.xs, color: Colors.muted, marginTop: 2 },
+
+  // Privacy note
+  privacyNote: {
+    fontSize: FontSize.xs, color: Colors.muted, lineHeight: 18,
+    marginTop: Spacing.sm,
+  },
+
+  // Save
   saveButton: {
-    marginTop: Spacing.lg,
     backgroundColor: Colors.cta,
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
+    marginTop: Spacing.sm,
   },
-  saveText: { color: Colors.bg, fontWeight: FontWeight.semibold },
+  saveText: {
+    color: Colors.bg, fontWeight: FontWeight.bold, fontSize: FontSize.md,
+  },
 });
