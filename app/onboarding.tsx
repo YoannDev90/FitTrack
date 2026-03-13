@@ -377,16 +377,19 @@ const SocialStep = ({ enabled, onToggle }: { enabled: boolean, onToggle: (v: boo
 );
 
 // --- STEP 6: GAMIFICATION ---
-const GamificationStep = ({ enabled, onToggle }: { enabled: boolean, onToggle: (v: boolean) => void }) => (
-  <View style={styles.centerContent}>
+const GamificationStep = ({ enabled, onToggle }: { enabled: boolean, onToggle: (v: boolean) => void }) => {
+  const { t } = useTranslation();
+
+  return (
+    <View style={styles.centerContent}>
     <Animated.View entering={ZoomIn.delay(200).springify()} style={styles.featureIconContainer}>
       <Trophy size={60} color={enabled ? '#FFD700' : Colors.muted} strokeWidth={1.5} />
     </Animated.View>
     
     <Animated.View entering={FadeInDown.delay(300)}>
-      <Text style={styles.stepTitleCenter}>Un petit coup{'\n'}de boost ?</Text>
+      <Text style={styles.stepTitleCenter}>{t('onboarding.gamification.title')}</Text>
       <Text style={styles.stepSubtitleCenter}>
-        Gagne de l'XP, monte de niveau et accomplis des quêtes pour rester motivé au quotidien !
+        {t('onboarding.gamification.subtitle')}
       </Text>
     </Animated.View>
 
@@ -398,8 +401,12 @@ const GamificationStep = ({ enabled, onToggle }: { enabled: boolean, onToggle: (
         <View style={[styles.toggleIconBg, enabled && { backgroundColor: 'rgba(255, 215, 0, 0.2)' }]}>
           <Text style={{ fontSize: 24 }}>⭐</Text>
         </View>
-        <Text style={[styles.toggleTitle, enabled && styles.toggleTitleActive]}>Avec progression</Text>
-        <Text style={styles.toggleDesc}>XP, niveaux, quêtes & badges</Text>
+        <Text style={[styles.toggleTitle, enabled && styles.toggleTitleActive]}>
+          {t('onboarding.gamification.progress.title')}
+        </Text>
+        <Text style={styles.toggleDesc}>
+          {t('onboarding.gamification.progress.desc')}
+        </Text>
         {enabled && <View style={[styles.toggleCheck, { backgroundColor: '#FFD700' }]}><Text style={{ fontSize: 12, color: '#000' }}>✓</Text></View>}
       </Pressable>
       
@@ -410,34 +417,42 @@ const GamificationStep = ({ enabled, onToggle }: { enabled: boolean, onToggle: (
         <View style={[styles.toggleIconBg, !enabled && styles.toggleIconBgActive]}>
           <Text style={{ fontSize: 24 }}>📋</Text>
         </View>
-        <Text style={[styles.toggleTitle, !enabled && styles.toggleTitleActive]}>Tracking simple</Text>
-        <Text style={styles.toggleDesc}>Juste tes séances, sans fioritures</Text>
+        <Text style={[styles.toggleTitle, !enabled && styles.toggleTitleActive]}>
+          {t('onboarding.gamification.simple.title')}
+        </Text>
+        <Text style={styles.toggleDesc}>
+          {t('onboarding.gamification.simple.desc')}
+        </Text>
         {!enabled && <View style={styles.toggleCheck}><Text style={{ fontSize: 12 }}>✓</Text></View>}
       </Pressable>
     </Animated.View>
 
     <Animated.View entering={FadeInDown.delay(500)} style={styles.featureNote}>
       <Text style={styles.featureNoteText}>
-        💡 Tu pourras modifier cela dans Paramètres → Apparence
+        💡 {t('onboarding.gamification.note')}
       </Text>
     </Animated.View>
   </View>
-);
+  );
+};
 
 // --- STEP 7: READY ---
-const ReadyStep = ({ onComplete, wantsSocial, wantsGamification }: { onComplete: () => void, wantsSocial: boolean, wantsGamification: boolean }) => (
-  <SafeAreaView style={styles.readyContainer}>
-    <View style={styles.readyContent}>
-      <Animated.View entering={ZoomIn.delay(200).springify()} style={styles.successIcon}>
-        <Text style={{ fontSize: 60 }}>🚀</Text>
-      </Animated.View>
-      
-      <Animated.View entering={FadeInDown.delay(400)}>
-        <Text style={styles.readyTitle}>C'est parti !</Text>
-        <Text style={styles.readyDesc}>
-          Ton espace fitness personnalisé est prêt. Commence dès maintenant à tracker tes progrès.
-        </Text>
-      </Animated.View>
+const ReadyStep = ({ onComplete, wantsSocial, wantsGamification }: { onComplete: () => void, wantsSocial: boolean, wantsGamification: boolean }) => {
+  const { t } = useTranslation();
+
+  return (
+    <SafeAreaView style={styles.readyContainer}>
+      <View style={styles.readyContent}>
+        <Animated.View entering={ZoomIn.delay(200).springify()} style={styles.successIcon}>
+          <Text style={{ fontSize: 60 }}>🚀</Text>
+        </Animated.View>
+        
+        <Animated.View entering={FadeInDown.delay(400)}>
+          <Text style={styles.readyTitle}>{t('onboarding.ready.title')}</Text>
+          <Text style={styles.readyDesc}>
+            {t('onboarding.ready.subtitle')}
+          </Text>
+        </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(600)} style={styles.readySummary}>
         <View style={styles.readySummaryItem}>
@@ -445,7 +460,7 @@ const ReadyStep = ({ onComplete, wantsSocial, wantsGamification }: { onComplete:
             {wantsGamification ? <Trophy size={20} color="#FFD700" /> : <CheckCircle2 size={20} color={Colors.muted} />}
           </View>
           <Text style={styles.readySummaryText}>
-            {wantsGamification ? 'Progression activée' : 'Mode tracking simple'}
+            {wantsGamification ? t('onboarding.ready.progressEnabled') : t('onboarding.ready.simpleMode')}
           </Text>
         </View>
         
@@ -454,17 +469,18 @@ const ReadyStep = ({ onComplete, wantsSocial, wantsGamification }: { onComplete:
             {wantsSocial ? <Users size={20} color="#22C55E" /> : <CheckCircle2 size={20} color={Colors.muted} />}
           </View>
           <Text style={styles.readySummaryText}>
-            {wantsSocial ? 'Social activé' : 'Mode solo privé'}
+            {wantsSocial ? t('onboarding.ready.socialEnabled') : t('onboarding.ready.soloMode')}
           </Text>
         </View>
       </Animated.View>
     </View>
 
     <Animated.View entering={FadeInDown.delay(800)} style={styles.readyFooter}>
-      <PrimaryButton title="Commencer 💪" onPress={onComplete} />
+      <PrimaryButton title={t('onboarding.ready.button')} onPress={onComplete} />
     </Animated.View>
   </SafeAreaView>
-);
+  );
+};
 
 // ============================================================================
 // STYLES
