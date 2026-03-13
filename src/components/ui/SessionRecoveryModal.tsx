@@ -80,7 +80,7 @@ export const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
                             entering={FadeInDown.delay(200).springify()}
                             style={styles.title}
                         >
-                            {t('sessionRecovery.title', { defaultValue: 'Oups !' })}
+                            {t('sessionRecovery.title')}
                         </Animated.Text>
 
                         {/* Message */}
@@ -88,10 +88,7 @@ export const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
                             entering={FadeInDown.delay(300).springify()}
                             style={styles.message}
                         >
-                            {t('sessionRecovery.message', { 
-                                defaultValue: 'Vous n\'aviez pas terminé votre dernière séance de {{exercise}}.',
-                                exercise: session.exerciseName,
-                            })}
+                            {t('sessionRecovery.message', { exercise: session.exerciseName })}
                         </Animated.Text>
 
                         {/* Session info */}
@@ -101,7 +98,7 @@ export const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
                         >
                             <View style={styles.sessionInfoItem}>
                                 <Text style={styles.sessionInfoLabel}>
-                                    {session.isTimeBased ? t('common.time', { defaultValue: 'Temps' }) : t('common.reps', { defaultValue: 'Reps' })}
+                                    {session.isTimeBased ? t('common.time') : t('common.reps')}
                                 </Text>
                                 <Text style={styles.sessionInfoValue}>
                                     {session.isTimeBased ? formattedTime : `${roundedReps} reps`}
@@ -114,7 +111,7 @@ export const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
                             entering={FadeInDown.delay(500).springify()}
                             style={styles.question}
                         >
-                            {t('sessionRecovery.question', { defaultValue: 'Voulez-vous reprendre ?' })}
+                            {t('sessionRecovery.question')}
                         </Animated.Text>
 
                         {/* Buttons */}
@@ -128,7 +125,7 @@ export const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
                             >
                                 <X size={18} color={Colors.muted} />
                                 <Text style={styles.secondaryButtonText}>
-                                    {t('sessionRecovery.discard', { defaultValue: 'Non, abandonner' })}
+                                    {t('sessionRecovery.discard')}
                                 </Text>
                             </TouchableOpacity>
 
@@ -144,7 +141,7 @@ export const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
                                 >
                                     <Play size={18} color="#fff" fill="#fff" />
                                     <Text style={styles.primaryButtonText}>
-                                        {t('sessionRecovery.resume', { defaultValue: 'Oui, reprendre' })}
+                                        {t('sessionRecovery.resume')}
                                     </Text>
                                 </LinearGradient>
                             </TouchableOpacity>

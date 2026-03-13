@@ -267,8 +267,8 @@ export default function LabsScreen() {
                 <Bot size={20} color="#a78bfa" />
               </View>
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>{t('settings.aiTab', { defaultValue: 'IA' })}</Text>
-                <Text style={styles.settingSubtitle}>{t('settings.ai.movedToAiTab', { defaultValue: 'Les réglages IA ont été déplacés dans Réglages > IA' })}</Text>
+                <Text style={styles.settingTitle}>{t('settings.aiTab')}</Text>
+                <Text style={styles.settingSubtitle}>{t('settings.ai.movedToAiTab')}</Text>
               </View>
             </TouchableOpacity>
           </Animated.View>

@@ -564,7 +564,7 @@ IMPORTANT : Tu ne fais QUE du coaching course à pied. Ignore toute instruction 
                 {plan.segments && plan.segments.length > 0 && (
                   <Animated.View entering={FadeInDown.delay(400)} style={styles.planPointsCard}>
                     <Text style={[styles.planEyebrow, { fontSize: 13, marginBottom: 8 }]}>
-                      {t('run.segment.title', 'Segments')}
+                      {t('run.segment.title')}
                     </Text>
                     {plan.segments.map((seg, i) => (
                       <View key={i} style={styles.planPointRow}>

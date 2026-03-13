@@ -51,7 +51,8 @@
     "saturday": "Saturday",
     "badge": {
       "beta": "BETA"
-    }
+    },
+    "time": "Time"
   },
   "streak": {
     "start": "Time to\nget started",
@@ -622,7 +623,10 @@
       "calibrationReady": "I'm ready to automatically detect when you're pedaling. Let's go!",
       "retryCalibration": "Retry calibration",
       "calibrationFailed": "Not enough movement detected — please pedal a bit faster and try again"
-    }
+    },
+    "auto": "Auto",
+    "manualMode": "Manual mode",
+    "autoDetection": "Auto detection"
   },
   "settings": {
     "title": "Settings",
@@ -857,7 +861,8 @@
       "consentTitle": "AI Data Sharing",
       "consentMessage": "By enabling AI features, you agree that certain data (profile, sports history, session data) may be sent to Pollinations.ai to generate personalized advice. No data is permanently stored.",
       "acceptConsent": "I accept",
-      "declineConsent": "No thanks"
+      "declineConsent": "No thanks",
+      "movedToAiTab": "AI settings have moved to Settings > AI"
     },
     "pollination": {
       "sectionTitle": "AI ANALYSIS",
@@ -947,7 +952,40 @@
     },
     "tracking": "Tracking",
     "aiTab": "AI",
-    "aiTabDesc": "Artificial intelligence features"
+    "aiTabDesc": "Artificial intelligence features",
+    "integration": "Integration",
+    "ageError": "Invalid age (10-120)",
+    "export": {
+      "modalTitle": "JSON Export",
+      "permissionTitle": "Allow file saving",
+      "permissionMessage": "Spix needs storage access to save your export to Downloads.",
+      "iosHint": "Tap \"Save to Files\" to download your export.",
+      "successAndroid": "✅ File saved to Downloads: {{filename}}",
+      "error": "Unable to export data. Check permissions and try again.",
+      "exporting": "Exporting...",
+      "downloadButton": "Download JSON ({{count}})",
+      "sections": {
+        "period": "📅 Period",
+        "categories": "📦 Categories to export",
+        "preview": "👀 Preview"
+      },
+      "preview": {
+        "period": "Period",
+        "totalEntries": "Total entries"
+      },
+      "period": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "thisWeek": "This week",
+        "lastWeek": "Last week",
+        "allData": "All data"
+      },
+      "categories": {
+        "workouts": "Workouts",
+        "meals": "Meals",
+        "measures": "Measurements"
+      }
+    }
   },
   "addEntry": {
     "title": "What do you want to add?",
@@ -1001,7 +1039,27 @@
     "homeSession": "Home session: {{name}}",
     "edit": "Edit",
     "editSubtitle": "Update your session data",
-    "absShort": "Abs"
+    "absShort": "Abs",
+    "selectSport": "Choose your sport",
+    "selectSportDesc": "Which sport did you do?",
+    "exercisesPlaceholder": "Ex: Push-ups 4x12",
+    "form": {
+      "distanceKm": "Distance (km)",
+      "cardiacOptional": "Cardiac (optional)",
+      "avgBpm": "Average BPM",
+      "maxBpm": "Max BPM",
+      "cardiacLoad": "Cardiac load",
+      "bpmOptional": "BPM (optional)",
+      "whatYouAte": "What you ate",
+      "whatYouAtePlaceholder": "Ex: pasta, grilled chicken, plain yogurt...",
+      "body": "Body",
+      "weightKg": "Weight (kg)",
+      "bodyFatPercent": "% Body fat",
+      "measurementsCm": "Measurements (cm)",
+      "waist": "Waist",
+      "arm": "Arm",
+      "hipsCm": "Hips (cm)"
+    }
   },
   "social": {
     "title": "Social",
@@ -1116,7 +1174,8 @@
         "settings": "Goals and custom settings",
         "badges": "Badges and gamification progress"
       },
-      "highlight": "✅ No data is sent to a server in local mode."
+      "highlight": "✅ No data is sent to a server in local mode.",
+      "storedDataTitle": "Data stored locally:"
     },
     "foss": {
       "title": "FOSS Edition (F-Droid)",
@@ -1137,7 +1196,10 @@
         "healthConnect": "Health Connect import",
         "openFoodFacts": "OpenFoodFacts scanner"
       },
-      "note": "🌿 This edition is 100% free of proprietary trackers and cloud services."
+      "note": "🌿 This edition is 100% free of proprietary trackers and cloud services.",
+      "removedTitle": "Removed services:",
+      "unavailableTitle": "Unavailable features:",
+      "stillWorkingTitle": "Still available features:"
     },
     "social": {
       "title": "Social Mode (opt-in)",
@@ -1152,7 +1214,9 @@
         "email": "Email (for sign-in only)",
         "password": "Password (encrypted, never accessible)"
       },
-      "warning": "⚠️ The detailed content of your sessions (exercises, notes, meals) is NEVER synced."
+      "warning": "⚠️ The detailed content of your sessions (exercises, notes, meals) is NEVER synced.",
+      "syncedDataTitle": "Synced data:",
+      "accountDataTitle": "Account data:"
     },
     "notifications": {
       "title": "Push Notifications",
@@ -1188,7 +1252,9 @@
         "choose": "You choose which sessions to import"
       },
       "highlight": "✅ Health Connect data is read and stored locally. Spix never writes to Health Connect.",
-      "revoke": "You can revoke access at any time in your device's Health Connect settings."
+      "revoke": "You can revoke access at any time in your device's Health Connect settings.",
+      "dataTitle": "Accessible data:",
+      "usageTitle": "Data usage:"
     },
     "rights": {
       "title": "Your Rights (GDPR)",
@@ -1775,7 +1841,15 @@
       "walk": "Walk",
       "rest": "Rest",
       "cooldown": "Cool down",
-      "segmentChange": "New segment"
+      "segmentChange": "New segment",
+      "title": "Segments"
     }
+  },
+  "sessionRecovery": {
+    "title": "Oops!",
+    "message": "You did not finish your last {{exercise}} session.",
+    "question": "Do you want to resume?",
+    "discard": "No, discard",
+    "resume": "Yes, resume"
   }
 }

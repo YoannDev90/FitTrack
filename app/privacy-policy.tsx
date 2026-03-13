@@ -98,7 +98,7 @@ export default function PrivacyPolicyScreen() {
                     delay={200}
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.localMode.description')}</Text>
-                    <Text style={styles.subheading}>{t('privacyPolicy.localMode.storedDataTitle' , { defaultValue: 'Données stockées localement :' })}</Text>
+                    <Text style={styles.subheading}>{t('privacyPolicy.localMode.storedDataTitle')}</Text>
                     <BulletPoint>{t('privacyPolicy.localMode.storedData.sessions')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.localMode.storedData.runs')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.localMode.storedData.meals')}</BulletPoint>
@@ -120,17 +120,17 @@ export default function PrivacyPolicyScreen() {
                         delay={250}
                     >
                         <Text style={styles.paragraph}>{t('privacyPolicy.foss.description')}</Text>
-                        <Text style={styles.subheading}>{t('privacyPolicy.foss.removedTitle', { defaultValue: 'Services supprimés :' })}</Text>
+                        <Text style={styles.subheading}>{t('privacyPolicy.foss.removedTitle')}</Text>
                         <BulletPoint>{t('privacyPolicy.foss.removed.fcm')}</BulletPoint>
                         <BulletPoint>{t('privacyPolicy.foss.removed.google')}</BulletPoint>
                         <BulletPoint>{t('privacyPolicy.foss.removed.expoPush')}</BulletPoint>
                         
-                        <Text style={styles.subheading}>{t('privacyPolicy.foss.unavailableTitle', { defaultValue: 'Fonctionnalités indisponibles :' })}</Text>
+                        <Text style={styles.subheading}>{t('privacyPolicy.foss.unavailableTitle')}</Text>
                         <BulletPoint>{t('privacyPolicy.foss.unavailable.ploppy')}</BulletPoint>
                         <BulletPoint>{t('privacyPolicy.foss.unavailable.social')}</BulletPoint>
                         <BulletPoint>{t('privacyPolicy.foss.unavailable.push')}</BulletPoint>
                         
-                        <Text style={styles.subheading}>{t('privacyPolicy.foss.stillWorkingTitle', { defaultValue: 'Fonctionnalités conservées :' })}</Text>
+                        <Text style={styles.subheading}>{t('privacyPolicy.foss.stillWorkingTitle')}</Text>
                         <BulletPoint>{t('privacyPolicy.foss.stillWorking.localFeatures')}</BulletPoint>
                         <BulletPoint>{t('privacyPolicy.foss.stillWorking.localNotifications')}</BulletPoint>
                         <BulletPoint>{t('privacyPolicy.foss.stillWorking.healthConnect')}</BulletPoint>
@@ -151,13 +151,13 @@ export default function PrivacyPolicyScreen() {
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.social.description')}</Text>
                     
-                    <Text style={styles.subheading}>{t('privacyPolicy.social.syncedDataTitle', { defaultValue: 'Données synchronisées :' })}</Text>
+                    <Text style={styles.subheading}>{t('privacyPolicy.social.syncedDataTitle')}</Text>
                     <BulletPoint>{t('privacyPolicy.social.syncedData.nickname')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.social.syncedData.xp')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.social.syncedData.streak')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.social.syncedData.weeklyCount')}</BulletPoint>
                     
-                    <Text style={styles.subheading}>{t('privacyPolicy.social.accountDataTitle', { defaultValue: 'Données de compte :' })}</Text>
+                    <Text style={styles.subheading}>{t('privacyPolicy.social.accountDataTitle')}</Text>
                     <BulletPoint>{t('privacyPolicy.social.accountData.email')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.social.accountData.password')}</BulletPoint>
                     
@@ -194,7 +194,7 @@ export default function PrivacyPolicyScreen() {
                             <BulletPoint>{t('privacyPolicy.notifications.items.encouragements')}</BulletPoint>
                             <BulletPoint>{t('privacyPolicy.notifications.items.friendRequests')}</BulletPoint>
                             
-                            <Text style={styles.subheading}>{t('privacyPolicy.notifications.technologiesTitle', { defaultValue: 'Technologies utilisées :' })}</Text>
+                            <Text style={styles.subheading}>{t('privacyPolicy.notifications.technologiesTitle')}</Text>
                             <BulletPoint>{t('privacyPolicy.notifications.technologies.expo')}</BulletPoint>
                             <BulletPoint>{t('privacyPolicy.notifications.technologies.fcm')}</BulletPoint>
                             
@@ -214,14 +214,14 @@ export default function PrivacyPolicyScreen() {
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.healthConnect.description')}</Text>
                     
-                    <Text style={styles.subheading}>{t('privacyPolicy.healthConnect.dataTitle', { defaultValue: 'Données accessibles :' })}</Text>
+                    <Text style={styles.subheading}>{t('privacyPolicy.healthConnect.dataTitle')}</Text>
                     <BulletPoint>{t('privacyPolicy.healthConnect.data.sessions')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.healthConnect.data.distance')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.healthConnect.data.calories')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.healthConnect.data.hr')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.healthConnect.data.weight')}</BulletPoint>
                     
-                    <Text style={styles.subheading}>{t('privacyPolicy.healthConnect.usageTitle', { defaultValue: 'Utilisation des données :' })}</Text>
+                    <Text style={styles.subheading}>{t('privacyPolicy.healthConnect.usageTitle')}</Text>
                     <BulletPoint>{t('privacyPolicy.healthConnect.usage.localImport')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.healthConnect.usage.convert')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.healthConnect.usage.choose')}</BulletPoint>

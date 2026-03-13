@@ -55,7 +55,7 @@ export default function PersonalInfoScreen() {
       return;
     }
     if (aClean && (isNaN(parseInt(aClean, 10)) || parseInt(aClean, 10) < 10 || parseInt(aClean, 10) > 120)) {
-      Alert.alert(t('common.error'), t('settings.ageError', { defaultValue: 'Âge invalide (10-120)' }));
+      Alert.alert(t('common.error'), t('settings.ageError'));
       return;
     }
 
@@ -122,7 +122,7 @@ export default function PersonalInfoScreen() {
 
             {/* Age */}
             <InputField
-              label={t('settings.ageLabel', { defaultValue: 'Âge' })}
+              label={t('settings.ageLabel')}
               placeholder="25"
               value={age}
               onChangeText={setAge}
@@ -136,7 +136,7 @@ export default function PersonalInfoScreen() {
               <View style={styles.hrRow}>
                 <Heart size={14} color="#f43f5e" />
                 <Text style={styles.hrText}>
-                  {t('settings.maxHRCalc', { defaultValue: 'FC max estimée' })}: {computedMaxHR} bpm
+                  {t('settings.maxHRCalc')}: {computedMaxHR} bpm
                 </Text>
               </View>
             )}
@@ -150,13 +150,13 @@ export default function PersonalInfoScreen() {
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(74, 222, 128, 0.15)' }]}>
                 <Ruler size={20} color="#4ade80" />
               </View>
-              <Text style={styles.sectionLabel}>{t('settings.measurements', { defaultValue: 'Mensurations' })}</Text>
+              <Text style={styles.sectionLabel}>{t('settings.measurements')}</Text>
             </View>
 
             <View style={styles.fieldsRow}>
               <View style={{ flex: 1 }}>
                 <InputField
-                  label={t('settings.heightLabel', { defaultValue: 'Taille (cm)' })}
+                  label={t('settings.heightLabel')}
                   placeholder="170"
                   value={height}
                   onChangeText={setHeight}
@@ -165,7 +165,7 @@ export default function PersonalInfoScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <InputField
-                  label={t('settings.weightLabel', { defaultValue: 'Poids (kg)' })}
+                  label={t('settings.weightLabel')}
                   placeholder="65"
                   value={weight}
                   onChangeText={setWeight}
@@ -183,10 +183,10 @@ export default function PersonalInfoScreen() {
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}>
                 <Activity size={20} color="#a78bfa" />
               </View>
-              <Text style={styles.sectionLabel}>{t('settings.sportProfile', { defaultValue: 'Profil sportif' })}</Text>
+              <Text style={styles.sectionLabel}>{t('settings.sportProfile')}</Text>
             </View>
 
-            <Text style={styles.fieldLabel}>{t('settings.fitnessLevel', { defaultValue: 'Niveau' })}</Text>
+            <Text style={styles.fieldLabel}>{t('settings.fitnessLevel')}</Text>
             <View style={styles.levelRow}>
               {FITNESS_LEVELS.map((level) => (
                 <TouchableOpacity
@@ -195,7 +195,7 @@ export default function PersonalInfoScreen() {
                   onPress={() => setFitnessLevel(level)}
                 >
                   <Text style={[styles.levelText, fitnessLevel === level && styles.levelTextActive]}>
-                    {t(`settings.fitnessLevels.${level}`, { defaultValue: level })}
+                    {t(`settings.fitnessLevels.${level}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -210,16 +210,16 @@ export default function PersonalInfoScreen() {
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(74, 222, 128, 0.15)' }]}>
                 <Shield size={20} color="#4ade80" />
               </View>
-              <Text style={styles.sectionLabel}>{t('settings.ai.privacyTitle', { defaultValue: 'Confidentialité' })}</Text>
+              <Text style={styles.sectionLabel}>{t('settings.ai.privacyTitle')}</Text>
             </View>
 
             <View style={styles.toggleRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.toggleTitle}>
-                  {t('settings.shareWithPloppy', { defaultValue: 'Partager avec Ploppy' })}
+                  {t('settings.shareWithPloppy')}
                 </Text>
                 <Text style={styles.toggleDesc}>
-                  {t('settings.shareWithPloppyDesc', { defaultValue: 'Poids, taille et niveau pour des plans de course personnalisés' })}
+                  {t('settings.shareWithPloppyDesc')}
                 </Text>
               </View>
               <Switch

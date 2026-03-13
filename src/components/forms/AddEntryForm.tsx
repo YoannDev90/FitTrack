@@ -481,7 +481,7 @@ export function AddEntryForm({
                         >
                             <Check size={20} color="#1a0800" strokeWidth={3} />
                             <Text style={st.submitText}>
-                                {isEdit ? t('addEntry.update', 'Mettre à jour') : t('addEntry.save', 'Enregistrer')}
+                                {isEdit ? t('addEntry.update') : t('addEntry.save')}
                             </Text>
                         </LinearGradient>
                     </TouchableOpacity>

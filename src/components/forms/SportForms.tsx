@@ -22,7 +22,7 @@ export function RunForm({ km, minutes, bpmAvg, bpmMax, cardiacLoad, onChange }: 
     return (
         <View>
             <FieldGroup>
-                <InputField label="Distance (km)" placeholder="5.0"
+                <InputField label={t('addEntry.form.distanceKm')} placeholder="5.0"
                     value={km} onChangeText={v => onChange('km', v)}
                     keyboardType="decimal-pad" containerStyle={sharedStyles.halfInput} />
                 <InputField label={t('addEntry.duration')} placeholder="28"
@@ -30,18 +30,18 @@ export function RunForm({ km, minutes, bpmAvg, bpmMax, cardiacLoad, onChange }: 
                     keyboardType="number-pad" containerStyle={sharedStyles.halfInput} />
             </FieldGroup>
 
-            <SectionDivider label="Cardiaque (optionnel)" />
+            <SectionDivider label={t('addEntry.form.cardiacOptional')} />
 
             <FieldGroup>
-                <InputField label="BPM moyen" placeholder="150"
+                <InputField label={t('addEntry.form.avgBpm')} placeholder="150"
                     value={bpmAvg} onChangeText={v => onChange('bpmAvg', v)}
                     keyboardType="number-pad" containerStyle={sharedStyles.halfInput} />
-                <InputField label="BPM max" placeholder="178"
+                <InputField label={t('addEntry.form.maxBpm')} placeholder="178"
                     value={bpmMax} onChangeText={v => onChange('bpmMax', v)}
                     keyboardType="number-pad" containerStyle={sharedStyles.halfInput} />
             </FieldGroup>
 
-            <InputField label="Charge cardiaque" placeholder="120"
+            <InputField label={t('addEntry.form.cardiacLoad')} placeholder="120"
                 value={cardiacLoad} onChangeText={v => onChange('cardiacLoad', v)}
                 keyboardType="number-pad" />
         </View>
@@ -64,18 +64,18 @@ export function BeatSaberForm({ duration, cardiacLoad, bpmAvg, bpmMax, onChange 
                 <InputField label={t('addEntry.duration')} placeholder="10"
                     value={duration} onChangeText={v => onChange('duration', v)}
                     keyboardType="decimal-pad" containerStyle={sharedStyles.halfInput} />
-                <InputField label="Charge cardiaque" placeholder="120"
+                <InputField label={t('addEntry.form.cardiacLoad')} placeholder="120"
                     value={cardiacLoad} onChangeText={v => onChange('cardiacLoad', v)}
                     keyboardType="number-pad" containerStyle={sharedStyles.halfInput} />
             </FieldGroup>
 
-            <SectionDivider label="BPM (optionnel)" />
+            <SectionDivider label={t('addEntry.form.bpmOptional')} />
 
             <FieldGroup>
-                <InputField label="BPM moyen" placeholder="140"
+                <InputField label={t('addEntry.form.avgBpm')} placeholder="140"
                     value={bpmAvg} onChangeText={v => onChange('bpmAvg', v)}
                     keyboardType="number-pad" containerStyle={sharedStyles.halfInput} />
-                <InputField label="BPM max" placeholder="165"
+                <InputField label={t('addEntry.form.maxBpm')} placeholder="165"
                     value={bpmMax} onChangeText={v => onChange('bpmMax', v)}
                     keyboardType="number-pad" containerStyle={sharedStyles.halfInput} />
             </FieldGroup>
@@ -105,7 +105,7 @@ export function MealForm({ mealTime, description, onChangeMealTime, onChangeDesc
     const { t } = useTranslation();
     return (
         <View>
-            <Text style={mst.label}>Moment du repas</Text>
+            <Text style={mst.label}>{t('addEntry.mealTime')}</Text>
             <View style={mst.mealGrid}>
                 {MEAL_OPTIONS.map(opt => {
                     const active = mealTime === opt.id;
@@ -125,8 +125,8 @@ export function MealForm({ mealTime, description, onChangeMealTime, onChangeDesc
                 })}
             </View>
             <TextArea
-                label="Ce que tu as mangé"
-                placeholder="Ex : pâtes, poulet grillé, yaourt nature…"
+                label={t('addEntry.form.whatYouAte')}
+                placeholder={t('addEntry.form.whatYouAtePlaceholder')}
                 value={description}
                 onChangeText={onChangeDescription}
                 rows={4}
@@ -186,28 +186,29 @@ interface MeasureFormProps {
 }
 
 export function MeasureForm({ weight, bodyFatPercent, waist, arm, hips, onChange }: MeasureFormProps) {
+    const { t } = useTranslation();
     return (
         <View>
-            <SectionDivider label="Corps" />
+            <SectionDivider label={t('addEntry.form.body')} />
             <FieldGroup>
-                <InputField label="Poids (kg)" placeholder="72.4"
+                <InputField label={t('addEntry.form.weightKg')} placeholder="72.4"
                     value={weight} onChangeText={v => onChange('weight', v)}
                     keyboardType="decimal-pad" containerStyle={sharedStyles.halfInput} />
-                <InputField label="% Masse grasse" placeholder="18.5"
+                <InputField label={t('addEntry.form.bodyFatPercent')} placeholder="18.5"
                     value={bodyFatPercent} onChangeText={v => onChange('bodyFatPercent', v)}
                     keyboardType="decimal-pad" containerStyle={sharedStyles.halfInput} />
             </FieldGroup>
 
-            <SectionDivider label="Mensurations (cm)" />
+            <SectionDivider label={t('addEntry.form.measurementsCm')} />
             <FieldGroup>
-                <InputField label="Tour de taille" placeholder="82"
+                <InputField label={t('addEntry.form.waist')} placeholder="82"
                     value={waist} onChangeText={v => onChange('waist', v)}
                     keyboardType="decimal-pad" containerStyle={sharedStyles.halfInput} />
-                <InputField label="Bras" placeholder="31"
+                <InputField label={t('addEntry.form.arm')} placeholder="31"
                     value={arm} onChangeText={v => onChange('arm', v)}
                     keyboardType="decimal-pad" containerStyle={sharedStyles.halfInput} />
             </FieldGroup>
-            <InputField label="Hanches (cm)" placeholder="94"
+            <InputField label={t('addEntry.form.hipsCm')} placeholder="94"
                 value={hips} onChangeText={v => onChange('hips', v)}
                 keyboardType="decimal-pad" />
         </View>

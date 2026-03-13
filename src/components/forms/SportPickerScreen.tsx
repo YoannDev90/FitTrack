@@ -52,10 +52,10 @@ export function SportPickerScreen({
                 </TouchableOpacity>
                 <View style={st.headerText}>
                     <Text style={st.title}>
-                        {t('addEntry.selectSport', 'Choisis ton sport')}
+                        {t('addEntry.selectSport')}
                     </Text>
                     <Text style={st.subtitle}>
-                        {t('addEntry.selectSportDesc', 'Quel sport as-tu pratiqué ?')}
+                        {t('addEntry.selectSportDesc')}
                     </Text>
                 </View>
             </Animated.View>
@@ -73,10 +73,10 @@ export function SportPickerScreen({
                         </View>
                         <View style={st.realtimeBtnText}>
                             <Text style={st.realtimeBtnTitle}>
-                                {t('addEntry.tracking', 'Tracking temps réel')}
+                                {t('addEntry.tracking')}
                             </Text>
                             <Text style={st.realtimeBtnSub}>
-                                {t('addEntry.trackingDesc', 'Compte tes reps en direct')}
+                                {t('addEntry.trackingDesc')}
                             </Text>
                         </View>
                         <Text style={st.realtimeArrow}>›</Text>
@@ -87,7 +87,7 @@ export function SportPickerScreen({
             {/* Séparateur */}
             <Animated.View style={[st.orRow, slide(ctaAnim)]}>
                 <View style={st.orLine} />
-                <Text style={st.orText}>{t('addEntry.or', 'ou')}</Text>
+                <Text style={st.orText}>{t('addEntry.or')}</Text>
                 <View style={st.orLine} />
             </Animated.View>
 

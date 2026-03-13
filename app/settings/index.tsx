@@ -222,7 +222,7 @@ export default function SettingsMainScreen() {
             icon={<Sparkles size={22} color="#fbbf24" />}
             iconColor="#fbbf24"
             title={t('settings.preferences')}
-            subtitle={t('settings.preferencesDesc', { defaultValue: 'Objectifs, caméra, unités' })}
+            subtitle={t('settings.preferencesDesc')}
             onPress={() => router.push('/settings/preferences')}
             delay={160}
           />
@@ -231,7 +231,7 @@ export default function SettingsMainScreen() {
             icon={<Bell size={22} color="#22d3ee" />}
             iconColor="#22d3ee"
             title={t('settings.notifications')}
-            subtitle={t('settings.notificationsDesc', { defaultValue: 'Rappels et alertes' })}
+            subtitle={t('settings.notificationsDesc')}
             onPress={() => router.push('/settings/notifications')}
             delay={180}
           />
@@ -240,7 +240,7 @@ export default function SettingsMainScreen() {
             icon={<Palette size={22} color="#a78bfa" />}
             iconColor="#a78bfa"
             title={t('settings.appearance')}
-            subtitle={t('settings.appearanceDesc', { defaultValue: 'Thème et interface' })}
+            subtitle={t('settings.appearanceDesc')}
             onPress={() => router.push('/settings/appearance')}
             delay={200}
           />
@@ -257,8 +257,8 @@ export default function SettingsMainScreen() {
           <CategoryButton
             icon={<Bot size={22} color="#a78bfa" />}
             iconColor="#a78bfa"
-            title={t('settings.aiTab', { defaultValue: 'IA' })}
-            subtitle={t('settings.aiTabDesc', { defaultValue: 'Ploppy, modèles, consentement' })}
+            title={t('settings.aiTab')}
+            subtitle={t('settings.aiTabDesc')}
             onPress={() => router.push('/settings/ai')}
             delay={240}
             badge="BÊTA"
@@ -266,20 +266,20 @@ export default function SettingsMainScreen() {
         </GlassCard>
 
         {/* SPORTS MANAGEMENT */}
-        <SectionTitle title={t('settings.sportsManagement', { defaultValue: 'Gestion des sports' })} delay={230} />
+        <SectionTitle title={t('settings.sportsManagement')} delay={230} />
         <GlassCard style={styles.categoryCard}>
           <CategoryButton
             icon={<Dumbbell size={22} color="#8B5CF6" />}
             iconColor="#8B5CF6"
-            title={t('settings.manageSports', { defaultValue: 'Gérer mes sports' })}
-            subtitle={t('settings.manageSportsDesc', { defaultValue: 'Ajouter, masquer ou personnaliser' })}
+            title={t('settings.manageSports')}
+            subtitle={t('settings.manageSportsDesc')}
             onPress={() => router.push('/settings/sports')}
             delay={240}
           />
         </GlassCard>
 
         {/* INTÉGRATION */}
-        <SectionTitle title={t('settings.integration', { defaultValue: 'Intégration' })} delay={245} />
+        <SectionTitle title={t('settings.integration')} delay={245} />
         <GlassCard style={styles.categoryCard}>
           <CategoryButton
             icon={<Heart size={22} color="#f43f5e" />}
@@ -316,7 +316,7 @@ export default function SettingsMainScreen() {
             icon={<HardDrive size={22} color={Colors.cta} />}
             iconColor={Colors.cta}
             title={t('settings.data')}
-            subtitle={t('settings.dataDesc', { defaultValue: 'Sauvegarde, export, import' })}
+            subtitle={t('settings.dataDesc')}
             onPress={() => router.push('/settings/data')}
             delay={300}
           />
@@ -330,7 +330,7 @@ export default function SettingsMainScreen() {
             icon={<FlaskConical size={22} color="#a78bfa" />}
             iconColor="#a78bfa"
             title={t('settings.labs')}
-            subtitle={t('settings.labsDesc', { defaultValue: 'Fonctionnalités expérimentales' })}
+            subtitle={t('settings.labsDesc')}
             onPress={() => router.push('/settings/labs')}
             delay={340}
           />
@@ -343,7 +343,7 @@ export default function SettingsMainScreen() {
             icon={<Shield size={22} color="#4ade80" />}
             iconColor="#4ade80"
             title={t('settings.legal')}
-            subtitle={t('settings.legalDesc', { defaultValue: 'Confidentialité et CGU' })}
+            subtitle={t('settings.legalDesc')}
             onPress={() => router.push('/settings/legal')}
             delay={380}
           />
@@ -352,13 +352,13 @@ export default function SettingsMainScreen() {
         {/* DEVELOPER MODE (if enabled) */}
         {settings.developerMode && (
           <>
-            <SectionTitle title="🔧 Développeur" delay={400} />
+            <SectionTitle title={t('settings.developerMode')} delay={400} />
             <GlassCard style={[styles.categoryCard, styles.devCard]}>
               <CategoryButton
                 icon={<Code2 size={22} color="#f97316" />}
                 iconColor="#f97316"
-                title={t('settings.developerMode', { defaultValue: 'Mode développeur' })}
-                subtitle={t('settings.developerModeDesc', { defaultValue: 'Options avancées' })}
+                title={t('settings.developerMode')}
+                subtitle={t('settings.developerModeDesc')}
                 onPress={() => router.push('/settings/developer')}
                 delay={420}
               />

@@ -10,10 +10,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
 import * as DocumentPicker from 'expo-document-picker';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -27,7 +29,7 @@ import {
   Trash2,
   ChevronRight,
 } from 'lucide-react-native';
-import { GlassCard, ExportModal } from '../../src/components/ui';
+import { GlassCard, ExportModal, CustomAlertModal, type AlertType, type AlertButton } from '../../src/components/ui';
 import { useAppStore, useGamificationStore } from '../../src/stores';
 import { generateFullBackup, exportFullBackup, parseBackup } from '../../src/utils/export';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
@@ -99,7 +101,183 @@ export default function DataScreen() {
   const { restoreFromBackup: restoreGamificationFromBackup } = gamificationState;
 
   const [exportModalVisible, setExportModalVisible] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<AlertType>('info');
+  const [alertButtons, setAlertButtons] = useState<AlertButton[]>([]);
   const streak = getStreak();
+
+  const showCustomAlert = useCallback((params: {
+    title: string;
+    message: string;
+    type?: AlertType;
+    buttons?: AlertButton[];
+  }) => {
+    setAlertTitle(params.title);
+    setAlertMessage(params.message);
+    setAlertType(params.type ?? 'info');
+    setAlertButtons(params.buttons ?? [{ text: t('common.ok') }]);
+    setAlertVisible(true);
+  }, [t]);
+
+  const askPermissionRationale = useCallback((): Promise<boolean> => {
+    return new Promise((resolve) => {
+      showCustomAlert({
+        title: t('settings.export.permissionTitle'),
+        message: t('settings.export.permissionMessage'),
+        type: 'info',
+        buttons: [
+          {
+            text: t('common.cancel'),
+            style: 'cancel',
+            onPress: () => resolve(false),
+          },
+          {
+            text: t('common.continue'),
+            onPress: () => resolve(true),
+          },
+        ],
+      });
+    });
+  }, [showCustomAlert, t]);
+
+  const saveExportOnAndroid = useCallback(async (filename: string, jsonString: string): Promise<void> => {
+    const accepted = await askPermissionRationale();
+    if (!accepted) {
+      throw new Error('cancelled_by_user');
+    }
+
+    const saf = FileSystem.StorageAccessFramework;
+    if (saf && typeof saf.requestDirectoryPermissionsAsync === 'function' && typeof saf.createFileAsync === 'function') {
+      const downloadsUri = saf.getUriForDirectoryInRoot('Download');
+      const permission = await saf.requestDirectoryPermissionsAsync(downloadsUri);
+      if (permission.granted) {
+        const targetFileUri = await saf.createFileAsync(permission.directoryUri, filename, 'application/json');
+        await FileSystem.writeAsStringAsync(targetFileUri, jsonString, {
+          encoding: FileSystem.EncodingType.UTF8,
+        });
+        return;
+      }
+    }
+
+    const mediaPermission = await MediaLibrary.requestPermissionsAsync();
+    if (!mediaPermission.granted) {
+      throw new Error('media_permission_denied');
+    }
+
+    const fallbackUri = `${FileSystem.documentDirectory}${filename}`;
+    await FileSystem.writeAsStringAsync(fallbackUri, jsonString, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+
+    const asset = await MediaLibrary.createAssetAsync(fallbackUri);
+    await MediaLibrary.createAlbumAsync('Download', asset, false);
+  }, [askPermissionRationale]);
+
+  const handleDirectExport = useCallback(async (filteredExport: {
+    exportedAt: string;
+    period: { type: string; start: string | null; end: string | null; label: string };
+    entries: { workouts?: any[]; meals?: any[]; measures?: any[] };
+    stats: { totalEntries: number; totalWorkouts: number; totalRuns: number; totalDistance: number; streak: any };
+  }) => {
+    setIsExporting(true);
+
+    const backup = generateFullBackup(
+      { entries, settings, unlockedBadges, sportsConfig },
+      {
+        xp: gamificationState.xp,
+        level: gamificationState.level,
+        history: gamificationState.history,
+        quests: gamificationState.quests,
+      }
+    );
+
+    const fullExport = {
+      exportVersion: 1,
+      appName: 'Spix',
+      exportedAt: new Date().toISOString(),
+      exportType: 'data_export',
+      selectedPeriod: filteredExport.period,
+      selectedEntries: filteredExport.entries,
+      selectedStats: filteredExport.stats,
+      fullStoreData: backup,
+    };
+
+    const jsonString = JSON.stringify(fullExport, null, 2);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `Spix_export_${timestamp}.json`;
+
+    try {
+      if (Platform.OS === 'android') {
+        await saveExportOnAndroid(filename, jsonString);
+        showCustomAlert({
+          title: t('common.success'),
+          message: t('settings.export.successAndroid', { filename }),
+          type: 'success',
+          buttons: [{ text: t('common.ok') }],
+        });
+      } else {
+        const fileUri = `${FileSystem.documentDirectory}${filename}`;
+        await FileSystem.writeAsStringAsync(fileUri, jsonString, {
+          encoding: FileSystem.EncodingType.UTF8,
+        });
+
+        showCustomAlert({
+          title: t('settings.export.modalTitle'),
+          message: t('settings.export.iosHint'),
+          type: 'info',
+          buttons: [
+            {
+              text: t('common.continue'),
+              onPress: async () => {
+                if (await Sharing.isAvailableAsync()) {
+                  await Sharing.shareAsync(fileUri, {
+                    mimeType: 'application/json',
+                    dialogTitle: t('settings.export.modalTitle'),
+                  });
+                }
+              },
+            },
+          ],
+        });
+      }
+      setExportModalVisible(false);
+    } catch (error) {
+      if ((error as Error).message === 'cancelled_by_user') {
+        return;
+      }
+      showCustomAlert({
+        title: t('common.error'),
+        message: t('settings.export.error'),
+        type: 'error',
+        buttons: [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('common.retry'),
+            onPress: () => {
+              setExportModalVisible(true);
+            },
+          },
+        ],
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [
+    entries,
+    settings,
+    unlockedBadges,
+    sportsConfig,
+    gamificationState.history,
+    gamificationState.level,
+    gamificationState.quests,
+    gamificationState.xp,
+    saveExportOnAndroid,
+    showCustomAlert,
+    t,
+  ]);
 
   // Full backup
   const handleFullBackup = useCallback(async () => {
@@ -251,7 +429,7 @@ export default function DataScreen() {
         </Animated.View>
 
         {/* Backup & Restore */}
-        <SectionTitle title="Sauvegarde" delay={80} />
+        <SectionTitle title={t('settings.backup')} delay={80} />
         <GlassCard style={styles.settingsCard}>
           <SettingItem
             icon={<Save size={20} color="#22d3ee" />}
@@ -273,7 +451,7 @@ export default function DataScreen() {
         </GlassCard>
 
         {/* Export */}
-        <SectionTitle title="Export" delay={140} />
+        <SectionTitle title={t('settings.exportData')} delay={140} />
         <GlassCard style={styles.settingsCard}>
           <SettingItem
             icon={<Download size={20} color={Colors.cta} />}
@@ -310,6 +488,17 @@ export default function DataScreen() {
         onClose={() => setExportModalVisible(false)}
         entries={entries}
         streak={streak}
+        exporting={isExporting}
+        onExport={handleDirectExport}
+      />
+
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        buttons={alertButtons}
+        onClose={() => setAlertVisible(false)}
       />
     </SafeAreaView>
   );

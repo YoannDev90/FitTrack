@@ -51,7 +51,8 @@
     "saturday": "Samedi",
     "badge": {
       "beta": "BÊTA"
-    }
+    },
+    "time": "Temps"
   },
   "streak": {
     "start": "C'est\nle moment\nde commencer",
@@ -617,6 +618,14 @@
       "calibrationReady": "Je suis prêt à détecter automatiquement quand tu pédales. C'est parti !",
       "retryCalibration": "Réessayer la calibration",
       "calibrationFailed": "Calibration insuffisante — réessaye en pédalant un peu plus vite"
+    },
+    "calibration": {
+      "title": "Calibration",
+      "startPedaling": "Commence à pédaler à ton rythme normal...",
+      "keepPedaling": "Continue de pédaler...",
+      "nowStop": "Bien, arrête-toi progressivement...",
+      "stopping": "Arrête-toi complètement...",
+      "ready": "Calibration terminée !"
     }
   },
   "settings": {
@@ -852,7 +861,8 @@
       "consentTitle": "Partage de données IA",
       "consentMessage": "En activant les fonctionnalités IA, vous acceptez que certaines données (profil, historique sportif, données de séance) soient transmises à Pollinations.ai pour générer des conseils personnalisés. Aucune donnée n'est stockée de façon permanente.",
       "acceptConsent": "J'accepte",
-      "declineConsent": "Non merci"
+      "declineConsent": "Non merci",
+      "movedToAiTab": "Les réglages IA ont été déplacés dans Réglages > IA"
     },
     "pollination": {
       "sectionTitle": "ANALYSE IA",
@@ -942,7 +952,40 @@
     },
     "tracking": "Tracking",
     "aiTab": "IA",
-    "aiTabDesc": "Fonctionnalités d'intelligence artificielle"
+    "aiTabDesc": "Fonctionnalités d'intelligence artificielle",
+    "integration": "Intégration",
+    "ageError": "Âge invalide (10-120)",
+    "export": {
+      "modalTitle": "Export JSON",
+      "permissionTitle": "Autoriser l'enregistrement du fichier",
+      "permissionMessage": "Spix a besoin d'accéder au stockage pour enregistrer l'export dans Téléchargements.",
+      "iosHint": "Appuyez sur \"Enregistrer dans Fichiers\" pour télécharger votre export.",
+      "successAndroid": "✅ Fichier sauvegardé dans Téléchargements : {{filename}}",
+      "error": "Impossible d'exporter les données. Vérifie les permissions puis réessaie.",
+      "exporting": "Export en cours...",
+      "downloadButton": "Télécharger JSON ({{count}})",
+      "sections": {
+        "period": "📅 Période",
+        "categories": "📦 Catégories à exporter",
+        "preview": "👀 Aperçu"
+      },
+      "preview": {
+        "period": "Période",
+        "totalEntries": "Entrées totales"
+      },
+      "period": {
+        "today": "Aujourd'hui",
+        "yesterday": "Hier",
+        "thisWeek": "Cette semaine",
+        "lastWeek": "Semaine dernière",
+        "allData": "Toutes les données"
+      },
+      "categories": {
+        "workouts": "Séances sport",
+        "meals": "Repas",
+        "measures": "Mensurations"
+      }
+    }
   },
   "addEntry": {
     "title": "Que veux-tu ajouter ?",
@@ -996,7 +1039,27 @@
     "homeSession": "Musculation : {{name}}",
     "edit": "Modifier",
     "editSubtitle": "Mets à jour tes données",
-    "absShort": "Abdos"
+    "absShort": "Abdos",
+    "selectSport": "Choisis ton sport",
+    "selectSportDesc": "Quel sport as-tu pratiqué ?",
+    "exercisesPlaceholder": "Ex : Pompes 4x12",
+    "form": {
+      "distanceKm": "Distance (km)",
+      "cardiacOptional": "Cardiaque (optionnel)",
+      "avgBpm": "BPM moyen",
+      "maxBpm": "BPM max",
+      "cardiacLoad": "Charge cardiaque",
+      "bpmOptional": "BPM (optionnel)",
+      "whatYouAte": "Ce que tu as mangé",
+      "whatYouAtePlaceholder": "Ex : pâtes, poulet grillé, yaourt nature…",
+      "body": "Corps",
+      "weightKg": "Poids (kg)",
+      "bodyFatPercent": "% Masse grasse",
+      "measurementsCm": "Mensurations (cm)",
+      "waist": "Tour de taille",
+      "arm": "Bras",
+      "hipsCm": "Hanches (cm)"
+    }
   },
   "social": {
     "title": "Social",
@@ -1111,7 +1174,8 @@
         "settings": "Objectifs et paramètres personnalisés",
         "badges": "Badges et progression gamification"
       },
-      "highlight": "✅ Aucune donnée n'est envoyée à un serveur en mode local."
+      "highlight": "✅ Aucune donnée n'est envoyée à un serveur en mode local.",
+      "storedDataTitle": "Données stockées localement :"
     },
     "foss": {
       "title": "Version FOSS (F-Droid)",
@@ -1132,7 +1196,10 @@
         "healthConnect": "Import depuis Health Connect",
         "openFoodFacts": "Scanner OpenFoodFacts"
       },
-      "note": "🌿 Cette version est 100% libre de traceurs et services cloud propriétaires."
+      "note": "🌿 Cette version est 100% libre de traceurs et services cloud propriétaires.",
+      "removedTitle": "Services supprimés :",
+      "unavailableTitle": "Fonctionnalités indisponibles :",
+      "stillWorkingTitle": "Fonctionnalités conservées :"
     },
     "social": {
       "title": "Mode Social (opt-in)",
@@ -1147,7 +1214,9 @@
         "email": "Email (uniquement pour la connexion)",
         "password": "Mot de passe (chiffré, jamais accessible)"
       },
-      "warning": "⚠️ Le contenu détaillé de tes séances (exercices, notes, repas) n'est JAMAIS synchronisé."
+      "warning": "⚠️ Le contenu détaillé de tes séances (exercices, notes, repas) n'est JAMAIS synchronisé.",
+      "syncedDataTitle": "Données synchronisées :",
+      "accountDataTitle": "Données de compte :"
     },
     "notifications": {
       "title": "Notifications Push",
@@ -1183,7 +1252,9 @@
         "choose": "Tu choisis quelles séances importer"
       },
       "highlight": "✅ Les données Health Connect sont lues et stockées localement. Spix n'écrit jamais dans Health Connect.",
-      "revoke": "Tu peux révoquer l'accès à tout moment dans les paramètres Health Connect de ton appareil."
+      "revoke": "Tu peux révoquer l'accès à tout moment dans les paramètres Health Connect de ton appareil.",
+      "dataTitle": "Données accessibles :",
+      "usageTitle": "Utilisation des données :"
     },
     "rights": {
       "title": "Tes Droits (RGPD)",
@@ -1770,7 +1841,15 @@
       "walk": "Marchez",
       "rest": "Repos",
       "cooldown": "Retour au calme",
-      "segmentChange": "Nouveau segment"
+      "segmentChange": "Nouveau segment",
+      "title": "Segments"
     }
+  },
+  "sessionRecovery": {
+    "title": "Oups !",
+    "message": "Vous n'aviez pas terminé votre dernière séance de {{exercise}}.",
+    "question": "Voulez-vous reprendre ?",
+    "discard": "Non, abandonner",
+    "resume": "Oui, reprendre"
   }
 }

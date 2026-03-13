@@ -127,9 +127,9 @@ export default function AISettingsScreen() {
           >
             <ArrowLeft size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.screenTitle}>{t('settings.aiTab', { defaultValue: 'IA' })}</Text>
+          <Text style={styles.screenTitle}>{t('settings.aiTab')}</Text>
           <View style={styles.betaBadge}>
-            <Text style={styles.betaBadgeText}>{t('common.badge.beta', 'BÊTA')}</Text>
+            <Text style={styles.betaBadgeText}>{t('common.badge.beta')}</Text>
           </View>
         </Animated.View>
 
@@ -139,7 +139,7 @@ export default function AISettingsScreen() {
             <View style={styles.infoRow}>
               <Info size={18} color="#a78bfa" />
               <Text style={styles.infoText}>
-                {t('settings.ai.pollinationsInfo', { defaultValue: 'Spix utilise Pollinations.ai pour les fonctionnalités IA (analyse, plans de course, coaching). Aucune donnée personnelle n\'est envoyée sans votre consentement.' })}
+                {t('settings.ai.pollinationsInfo')}
               </Text>
             </View>
           </GlassCard>
@@ -311,14 +311,14 @@ export default function AISettingsScreen() {
         </GlassCard>
 
         {/* Privacy & Consent */}
-        <Text style={styles.sectionTitle}>{t('settings.ai.privacyTitle', { defaultValue: 'Confidentialité IA' })}</Text>
+        <Text style={styles.sectionTitle}>{t('settings.ai.privacyTitle')}</Text>
 
         <GlassCard style={styles.settingsCard}>
           <Animated.View entering={FadeInDown.delay(140).springify()}>
             <View style={styles.privacyBox}>
               <Shield size={18} color="#4ade80" />
               <Text style={styles.privacyText}>
-                {t('settings.ai.privacyText', { defaultValue: 'Vos données d\'entraînement restent sur votre appareil. Seules les données nécessaires au fonctionnement de l\'IA sont envoyées (texte des requêtes), jamais vos données personnelles.' })}
+                {t('settings.ai.privacyText')}
               </Text>
             </View>
 
@@ -328,7 +328,7 @@ export default function AISettingsScreen() {
               onPress={() => router.push('/privacy-policy')}
             >
               <Text style={styles.privacyLinkText}>
-                {t('settings.ai.seePrivacyPolicy', { defaultValue: 'Voir la politique de confidentialité' })}
+                {t('settings.ai.seePrivacyPolicy')}
               </Text>
             </TouchableOpacity>
           </Animated.View>
