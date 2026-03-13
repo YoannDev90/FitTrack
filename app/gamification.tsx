@@ -167,12 +167,13 @@ const QuestCard = ({ quest, index }: { quest: any; index: number }) => {
 
 // Composant pour un item d'historique
 const HistoryItem = ({ item, index, isLast }: { item: any; index: number; isLast: boolean }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const formatDate = (isoString: string) => {
         const d = new Date(isoString);
-        return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     };
 
+    const reasonText = item.reasonKey ? t(item.reasonKey, item.reasonParams) : item.reason;
     const isNegative = item.amount < 0;
     const isLevelUp = item.type === 'level_up';
 
@@ -184,7 +185,7 @@ const HistoryItem = ({ item, index, isLast }: { item: any; index: number; isLast
             <View style={[styles.historyDot, isLevelUp && styles.historyDotLevelUp, isNegative && styles.historyDotNegative]} />
             <View style={styles.historyInfo}>
                 <Text style={[styles.historyReason, isLevelUp && styles.historyReasonLevelUp]}>
-                    {item.reason}
+                    {reasonText}
                 </Text>
                 <View style={styles.historyMeta}>
                     <Clock size={10} color={Colors.muted2} />
@@ -409,7 +410,7 @@ export default function GamificationScreen() {
                     </View>
                     <View style={styles.statCardHighlight}>
                         <Text style={styles.statValueHighlight}>{completedQuests}/{quests.length}</Text>
-                        <Text style={styles.statLabelHighlight}>{t('gamification.quests')}</Text>
+                        <Text style={styles.statLabelHighlight}>{t('gamification.questsLabel')}</Text>
                     </View>
                     <View style={styles.statCard}>
                         <Text style={styles.statValue}>{history.filter(h => h.type === 'xp_gain' && h.amount > 0).length}</Text>
