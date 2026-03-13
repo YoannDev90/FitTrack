@@ -464,13 +464,13 @@ export default function WorkoutScreen() {
           <StatPill
             icon={<Activity size={13} color={C.green} />}
             value={quickStats.sport}
-            label="sport"
+            label={t('workout.stats.sport')}
           />
           <View style={styles.statsDivider} />
           <StatPill
             icon={<Calendar size={13} color={C.blue} />}
             value={quickStats.today}
-            label="today"
+            label={t('workout.stats.today')}
           />
         </Animated.View>
       </Animated.View>
@@ -490,9 +490,8 @@ export default function WorkoutScreen() {
       {/* ── Separator ── */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionLabel}>
-          {filteredEntries.length} {filteredEntries.length === 1 ? 'entrée' : 'entrées'}
+          {t('workout.entriesCount', { count: filteredEntries.length })}
         </Text>
-        <View style={styles.sectionLine} />
       </View>
 
       {/* ── List ── */}
