@@ -28,7 +28,7 @@ import { DoneScreen } from '@/repCounter/components/DoneScreen';
 import { ExitModal } from '@/repCounter/components/ExitModal';
 
 export default function RepCounterScreen() {
-    // keep-awake disabled due to occasional "activity no longer available" errors
+    useKeepAwake();
     const { t } = useTranslation();
     const rc = useRepCounter();
 
