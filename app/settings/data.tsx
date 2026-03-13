@@ -291,34 +291,59 @@ export default function DataScreen() {
           quests: gamificationState.quests,
         }
       );
-      
+
       const jsonString = exportFullBackup(backup);
       const filename = `spix-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+      if (Platform.OS === 'android') {
+        await saveExportOnAndroid(filename, jsonString);
+        showCustomAlert({
+          title: t('common.success'),
+          message: t('settings.export.successAndroid', { filename }),
+          type: 'success',
+          buttons: [{ text: t('common.ok') }],
+        });
+        return;
+      }
+
       const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-      
       await FileSystem.writeAsStringAsync(fileUri, jsonString, {
         encoding: FileSystem.EncodingType.UTF8,
       });
-      
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri, {
-          mimeType: 'application/json',
-          dialogTitle: t('settings.backup'),
-        });
-      } else {
-        Alert.alert(t('common.error'), t('settings.shareUnavailable'));
-      }
+
+      showCustomAlert({
+        title: t('settings.backup'),
+        message: t('settings.export.iosHint'),
+        type: 'info',
+        buttons: [
+          {
+            text: t('common.continue'),
+            onPress: async () => {
+              if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(fileUri, {
+                  mimeType: 'application/json',
+                  dialogTitle: t('settings.backup'),
+                });
+              }
+            },
+          },
+        ],
+      });
     } catch (error) {
+      if ((error as Error).message === 'cancelled_by_user') {
+        return;
+      }
+
       console.error('Backup error:', error);
       Alert.alert(t('common.error'), t('settings.backupError'));
     }
-  }, [entries, settings, unlockedBadges, gamificationState, t]);
+  }, [entries, settings, unlockedBadges, gamificationState, t, saveExportOnAndroid, showCustomAlert]);
 
   // Restore from file
   const handleRestore = useCallback(async () => {
     Alert.alert(
-      '⚠️ Restaurer une sauvegarde ?',
-      'Cette action remplacera TOUTES tes données actuelles par celles de la sauvegarde. Cette action est irréversible.',
+      t('settings.restoreConfirmTitle'),
+      t('settings.restoreConfirmMessage'),
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
