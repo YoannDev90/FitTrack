@@ -76,11 +76,11 @@ const W: Record<string, any> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const getGreeting = (): string => {
+const getGreeting = (t: (key: string) => string): string => {
     const h = new Date().getHours();
-    if (h < 12) return 'Bonjour';
-    if (h < 18) return 'Bon après-midi';
-    return 'Bonsoir';
+    if (h < 12) return t('home.greeting.morning');
+    if (h < 18) return t('home.greeting.afternoon');
+    return t('home.greeting.evening');
 };
 
 const getMotivationalMessage = (t: (key: string) => string): string => {
@@ -191,7 +191,7 @@ export default function TodayScreen() {
                     {/* Salutation + streak sur la même ligne */}
                     <View style={st.heroTopRow}>
                         <View style={st.heroLeft}>
-                            <Text style={st.heroGreeting}>{getGreeting()}</Text>
+                            <Text style={st.heroGreeting}>{getGreeting(t)}</Text>
                             <Text style={st.heroMotivation}>{getMotivationalMessage(t)}</Text>
                         </View>
                         <View style={st.streakBadge}>
@@ -221,7 +221,7 @@ export default function TodayScreen() {
 
                         <View style={st.goalCardHeader}>
                             <Chip
-                                label={goalAchieved ? '✓ Objectif atteint' : 'Objectif hebdo'}
+                                label={goalAchieved ? t('home.goalAchieved') : t('home.weeklyGoal')}
                                 color={goalAchieved ? C.gold : C.textSub}
                                 bg={goalAchieved ? C.goldSoft : 'transparent'}
                                 border={goalAchieved ? C.goldBorder : C.border}
@@ -234,8 +234,8 @@ export default function TodayScreen() {
                             <Text style={st.goalBigNum}>{weekWorkoutsCount}</Text>
                             <View style={st.goalMetricRight}>
                                 <Text style={st.goalSlash}>/{weeklyGoal}</Text>
-                                <Text style={st.goalUnit}>séances</Text>
-                                <Text style={st.goalUnit}>cette semaine</Text>
+                                <Text style={st.goalUnit}>{t('home.sessions')}</Text>
+                                <Text style={st.goalUnit}>{t('home.thisWeek')}</Text>
                             </View>
                             {!goalAchieved && (
                                 <View style={st.goalRingFloat}>
@@ -267,7 +267,7 @@ export default function TodayScreen() {
                 ══════════════════════════════════════════════════════ */}
                 <Animated.View style={[st.weekCard, slide(aWeek)]}>
                     <View style={st.weekCardHeader}>
-                        <Text style={st.weekCardTitle}>Cette semaine</Text>
+                        <Text style={st.weekCardTitle}>{t('home.thisWeek')}</Text>
                         <View style={st.weekCountBadge}>
                             <Text style={st.weekCountText}>{weekWorkoutsCount}/{weeklyGoal}</Text>
                         </View>
@@ -336,9 +336,9 @@ export default function TodayScreen() {
                 <Animated.View style={[st.listSection, slide(aList)]}>
                     <View style={st.listHeader}>
                         <View>
-                            <Text style={st.listTitle}>Activité récente</Text>
+                            <Text style={st.listTitle}>{t('home.recentActivity')}</Text>
                             <Text style={st.listSub}>
-                                {sportEntries.length} séance{sportEntries.length !== 1 ? 's' : ''} enregistrée{sportEntries.length !== 1 ? 's' : ''}
+                                {t('home.recentActivitySubtitle', { count: sportEntries.length })}
                             </Text>
                         </View>
                         {sportEntries.length > 5 && (
