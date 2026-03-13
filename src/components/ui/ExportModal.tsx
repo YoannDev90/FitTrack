@@ -11,13 +11,11 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
 import { BlurView } from 'expo-blur';
-import { X, Check, Calendar, FileJson, Download } from 'lucide-react-native';
+import { X, Check, FileJson } from 'lucide-react-native';
 import { format, subDays, startOfWeek, endOfWeek, subWeeks } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS, fr } from 'date-fns/locale';
 import { GlassCard } from './GlassCard';
 import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
@@ -32,26 +30,45 @@ interface ExportModalProps {
   onClose: () => void;
   entries: Entry[];
   streak: StreakInfo;
+  exporting?: boolean;
+  onExport: (payload: {
+    exportedAt: string;
+    period: { type: ExportPeriod; start: string | null; end: string | null; label: string };
+    entries: {
+      workouts?: Entry[];
+      meals?: Entry[];
+      measures?: Entry[];
+    };
+    stats: {
+      totalEntries: number;
+      totalWorkouts: number;
+      totalRuns: number;
+      totalDistance: number;
+      streak: StreakInfo;
+    };
+  }) => Promise<void>;
 }
 
-const periodOptions: { value: ExportPeriod; label: string; icon: string }[] = [
-  { value: 'today', label: "Aujourd'hui", icon: '📅' },
-  { value: 'yesterday', label: 'Hier', icon: '⏪' },
-  { value: 'week', label: 'Cette semaine', icon: '📆' },
-  { value: 'last_week', label: 'Semaine dernière', icon: '📋' },
-  { value: 'all', label: 'Toutes les données', icon: '📦' },
-];
-
-const categoryOptions: { value: ExportCategory; label: string; icon: string }[] = [
-  { value: 'workouts', label: 'Séances sport', icon: '🏋️' },
-  { value: 'meals', label: 'Repas', icon: '🍽️' },
-  { value: 'measures', label: 'Mensurations', icon: '📏' },
-];
-
-export function ExportModal({ visible, onClose, entries, streak }: ExportModalProps) {
+export function ExportModal({ visible, onClose, entries, streak, exporting = false, onExport }: ExportModalProps) {
   const { t } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<ExportPeriod>('week');
   const [selectedCategories, setSelectedCategories] = useState<ExportCategory[]>(['workouts', 'meals', 'measures']);
+
+  const dateLocale = useMemo(() => (t('common.save') === 'Enregistrer' ? fr : enUS), [t]);
+
+  const periodOptions = useMemo((): { value: ExportPeriod; label: string; icon: string }[] => [
+    { value: 'today', label: t('settings.export.period.today'), icon: '📅' },
+    { value: 'yesterday', label: t('settings.export.period.yesterday'), icon: '⏪' },
+    { value: 'week', label: t('settings.export.period.thisWeek'), icon: '📆' },
+    { value: 'last_week', label: t('settings.export.period.lastWeek'), icon: '📋' },
+    { value: 'all', label: t('settings.export.period.allData'), icon: '📦' },
+  ], [t]);
+
+  const categoryOptions = useMemo((): { value: ExportCategory; label: string; icon: string }[] => [
+    { value: 'workouts', label: t('settings.export.categories.workouts'), icon: '🏋️' },
+    { value: 'meals', label: t('settings.export.categories.meals'), icon: '🍽️' },
+    { value: 'measures', label: t('settings.export.categories.measures'), icon: '📏' },
+  ], [t]);
 
   const toggleCategory = useCallback((category: ExportCategory) => {
     setSelectedCategories(prev => {
@@ -76,27 +93,27 @@ export function ExportModal({ visible, onClose, entries, streak }: ExportModalPr
 
     switch (selectedPeriod) {
       case 'today':
-        return { start: todayStr, end: todayStr, label: format(today, 'd MMMM yyyy', { locale: fr }) };
+        return { start: todayStr, end: todayStr, label: format(today, 'd MMMM yyyy', { locale: dateLocale }) };
       case 'yesterday':
-        return { start: yesterdayStr, end: yesterdayStr, label: format(subDays(today, 1), 'd MMMM yyyy', { locale: fr }) };
+        return { start: yesterdayStr, end: yesterdayStr, label: format(subDays(today, 1), 'd MMMM yyyy', { locale: dateLocale }) };
       case 'week':
         return { 
           start: weekStart, 
           end: weekEnd, 
-          label: `${format(startOfWeek(today, { weekStartsOn: 1 }), 'd MMM', { locale: fr })} - ${format(endOfWeek(today, { weekStartsOn: 1 }), 'd MMM yyyy', { locale: fr })}` 
+          label: `${format(startOfWeek(today, { weekStartsOn: 1 }), 'd MMM', { locale: dateLocale })} - ${format(endOfWeek(today, { weekStartsOn: 1 }), 'd MMM yyyy', { locale: dateLocale })}` 
         };
       case 'last_week':
         return { 
           start: lastWeekStart, 
           end: lastWeekEnd, 
-          label: `${format(startOfWeek(subWeeks(today, 1), { weekStartsOn: 1 }), 'd MMM', { locale: fr })} - ${format(endOfWeek(subWeeks(today, 1), { weekStartsOn: 1 }), 'd MMM yyyy', { locale: fr })}` 
+          label: `${format(startOfWeek(subWeeks(today, 1), { weekStartsOn: 1 }), 'd MMM', { locale: dateLocale })} - ${format(endOfWeek(subWeeks(today, 1), { weekStartsOn: 1 }), 'd MMM yyyy', { locale: dateLocale })}` 
         };
       case 'all':
-        return { start: '', end: '', label: 'Toutes les données' };
+        return { start: '', end: '', label: t('settings.export.period.allData') };
       default:
         return { start: weekStart, end: weekEnd, label: '' };
     }
-  }, [selectedPeriod]);
+  }, [dateLocale, selectedPeriod, t]);
 
   // Filter entries based on period and categories
   const filteredEntries = useMemo(() => {
@@ -154,15 +171,8 @@ export function ExportModal({ visible, onClose, entries, streak }: ExportModalPr
   }, [filteredEntries, selectedPeriod, selectedCategories, dateRange, streak]);
 
   const handleExport = useCallback(async () => {
-    const json = JSON.stringify(exportData, null, 2);
-    await Clipboard.setStringAsync(json);
-    
-    Alert.alert(
-      'Export copié ! 📋',
-      `${dateRange.label}\n\n${exportData.stats.totalEntries} entrées exportées`,
-      [{ text: 'OK', onPress: onClose }]
-    );
-  }, [exportData, dateRange.label, onClose]);
+    await onExport(exportData);
+  }, [exportData, onExport]);
 
   return (
     <Modal
@@ -178,7 +188,7 @@ export function ExportModal({ visible, onClose, entries, streak }: ExportModalPr
             <View style={styles.header}>
               <View style={styles.headerLeft}>
                 <FileJson size={24} color={Colors.cta} />
-                <Text style={styles.title}>Export JSON</Text>
+                <Text style={styles.title}>{t('settings.export.modalTitle')}</Text>
               </View>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                 <X size={24} color={Colors.muted} />
@@ -187,7 +197,7 @@ export function ExportModal({ visible, onClose, entries, streak }: ExportModalPr
 
             <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
               {/* Period Selection */}
-              <Text style={styles.sectionTitle}>📅 Période</Text>
+              <Text style={styles.sectionTitle}>{t('settings.export.sections.period')}</Text>
               <View style={styles.optionsGrid}>
                 {periodOptions.map((option) => (
                   <TouchableOpacity
@@ -215,7 +225,7 @@ export function ExportModal({ visible, onClose, entries, streak }: ExportModalPr
               </View>
 
               {/* Category Selection */}
-              <Text style={styles.sectionTitle}>📦 Catégories à exporter</Text>
+              <Text style={styles.sectionTitle}>{t('settings.export.sections.categories')}</Text>
               <View style={styles.categoriesRow}>
                 {categoryOptions.map((option) => (
                   <TouchableOpacity
@@ -242,19 +252,19 @@ export function ExportModal({ visible, onClose, entries, streak }: ExportModalPr
 
               {/* Preview */}
               <View style={styles.previewSection}>
-                <Text style={styles.sectionTitle}>👀 Aperçu</Text>
+                <Text style={styles.sectionTitle}>{t('settings.export.sections.preview')}</Text>
                 <View style={styles.previewCard}>
                   <View style={styles.previewRow}>
-                    <Text style={styles.previewLabel}>Période</Text>
+                    <Text style={styles.previewLabel}>{t('settings.export.preview.period')}</Text>
                     <Text style={styles.previewValue}>{dateRange.label}</Text>
                   </View>
                   <View style={styles.previewRow}>
-                    <Text style={styles.previewLabel}>Entrées totales</Text>
+                    <Text style={styles.previewLabel}>{t('settings.export.preview.totalEntries')}</Text>
                     <Text style={styles.previewValue}>{filteredEntries.length}</Text>
                   </View>
                   {selectedCategories.includes('workouts') && (
                     <View style={styles.previewRow}>
-                      <Text style={styles.previewLabel}>Séances sport</Text>
+                      <Text style={styles.previewLabel}>{t('settings.export.categories.workouts')}</Text>
                       <Text style={styles.previewValue}>
                         {filteredEntries.filter(e => ['home', 'run', 'beatsaber'].includes(e.type)).length}
                       </Text>
@@ -268,9 +278,9 @@ export function ExportModal({ visible, onClose, entries, streak }: ExportModalPr
                       </Text>
                     </View>
                   )}
-                  {selectedCategories.includes('measures') && (
+                  {selectedCategories.includes('measures') && ( 
                     <View style={styles.previewRow}>
-                      <Text style={styles.previewLabel}>Mensurations</Text>
+                      <Text style={styles.previewLabel}>{t('settings.export.categories.measures')}</Text>
                       <Text style={styles.previewValue}>
                         {filteredEntries.filter(e => e.type === 'measure').length}
                       </Text>
@@ -283,17 +293,22 @@ export function ExportModal({ visible, onClose, entries, streak }: ExportModalPr
             {/* Footer */}
             <View style={styles.footer}>
               <Button
-                title="Annuler"
+                title={t('common.cancel')}
                 variant="ghost"
                 onPress={onClose}
                 style={styles.cancelButton}
+                disabled={exporting}
               />
               <Button
-                title={`📋 Copier JSON (${filteredEntries.length})`}
+                title={
+                  exporting
+                    ? t('settings.export.exporting')
+                    : t('settings.export.downloadButton', { count: filteredEntries.length })
+                }
                 variant="cta"
                 onPress={handleExport}
                 style={styles.exportButton}
-                disabled={filteredEntries.length === 0}
+                disabled={filteredEntries.length === 0 || exporting}
               />
             </View>
           </GlassCard>
