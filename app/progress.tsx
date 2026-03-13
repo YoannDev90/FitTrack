@@ -819,11 +819,13 @@ function BadgeModal({ badge, onClose }: { badge: any | null; onClose: () => void
                         </View>
 
                         {/* Name */}
-                        <Text style={bmo.name}>{badge.name || badge.id}</Text>
+                        <Text style={bmo.name}>{t(badge.name, { defaultValue: badge.id })}</Text>
 
                         {/* Description */}
                         <Text style={bmo.desc}>
-                            {badge.description || t('badge.noDesc', 'Complète des objectifs pour débloquer ce badge.')}
+                            {t(badge.description, {
+                                defaultValue: t('badge.noDesc', 'Complète des objectifs pour débloquer ce badge.'),
+                            })}
                         </Text>
 
                         {/* Unlock date */}
@@ -953,7 +955,7 @@ function BadgesGrid({ badges, badgeProgress }: {
                                         style={bdg.tile}
                                     >
                                         <Text style={bdg.tileEmoji}>{badge.emoji || '🏅'}</Text>
-                                        <Text style={bdg.tileName}>{badge.name}</Text>
+                                        <Text style={bdg.tileName}>{t(badge.name, { defaultValue: badge.id })}</Text>
                                         <Text style={bdg.tileDate}>
                                             {badge.unlockedAt
                                                 ? new Date(badge.unlockedAt).toLocaleDateString('fr-FR', {
@@ -994,7 +996,7 @@ function BadgesGrid({ badges, badgeProgress }: {
                                             <Lock size={11} color={C.textMuted} strokeWidth={2} />
                                         </View>
                                         <View style={bdg.lockedText}>
-                                            <Text style={bdg.lockedName}>{badge.name || badge.id}</Text>
+                                            <Text style={bdg.lockedName}>{t(badge.name, { defaultValue: badge.id })}</Text>
                                             {progress && (
                                                 <Text style={bdg.lockedProgress}>{progress.label}</Text>
                                             )}
