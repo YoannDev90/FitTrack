@@ -170,11 +170,14 @@
       "repCounter": "Compteur reps"
     },
     "recentActivity": "Activité récente",
+    "recentActivitySubtitle": "{{count}} séance",
+    "recentActivitySubtitle_plural": "{{count}} séances",
     "noActivity": "Pas encore d'activité",
     "noActivityHint": "Commence par ajouter ta première séance !",
     "weeklyGoal": "Objectif hebdo",
     "weeklyProgress": "{{current}}/{{goal}} séances",
     "weeklyProgressRight": "{{current}} / {{goal}} séances",
+    "sessions": "séances",
     "thisWeek": "Cette semaine",
     "goalAchieved": "OBJECTIF ATTEINT !",
     "daysActive": "Actifs",
@@ -225,10 +228,28 @@
       "button": "Terminer",
       "times": "fois par semaine"
     },
+    "gamification": {
+      "label": "Étape 5",
+      "title": "Un petit coup de boost ?",
+      "subtitle": "Gagne de l'XP, monte de niveau et accomplis des quêtes pour rester motivé !",
+      "progress": {
+        "title": "Avec progression",
+        "desc": "XP, niveaux, quêtes & badges"
+      },
+      "simple": {
+        "title": "Tracking simple",
+        "desc": "Juste tes séances, sans fioritures"
+      },
+      "note": "Tu pourras modifier cela dans Paramètres → Apparence"
+    },
     "ready": {
       "title": "C'est parti ! 🚀",
       "subtitle": "Tu es prêt à commencer ton parcours fitness. Chaque séance compte !",
-      "button": "Commencer l'aventure"
+      "button": "Commencer l'aventure",
+      "progressEnabled": "Progression activée",
+      "simpleMode": "Mode tracking simple",
+      "socialEnabled": "Social activé",
+      "soloMode": "Mode solo privé"
     },
     "skip": "Passer"
   },
@@ -684,6 +705,8 @@
     "backupError": "Impossible de créer la sauvegarde",
     "restoreInvalidFile": "Le fichier de sauvegarde est invalide ou corrompu",
     "restoreError": "Impossible de restaurer la sauvegarde",
+    "restoreConfirmTitle": "Restaurer une sauvegarde ?",
+    "restoreConfirmMessage": "Cela remplacera toutes tes données actuelles par celles de la sauvegarde. Cette action est irréversible.",
     "deleteDataError": "Impossible de supprimer les données. Réessaie plus tard.",
     "visibilityError": "Impossible de modifier la visibilité.",
     "streakReminderEnabled": "Tu recevras un rappel tous les jours à {{time}} si tu n'as pas encore fait de sport.",
@@ -1538,8 +1561,15 @@
     "title": "Gamification",
     "xp": "XP",
     "level": "Niveau",
+    "ranks": {
+      "novice": "Novice",
+      "apprentice": "Apprenti",
+      "intermediate": "Intermédiaire",
+      "advanced": "Avancé",
+      "expert": "Expert",
+      "master": "Maître"
+    },
     "levelUp": "Passage de niveau !",
-    "quests": "Quêtes",
     "gains": "Gains",
     "dailyQuests": "Quêtes quotidiennes",
     "weeklyQuests": "Quêtes hebdomadaires",
@@ -1547,12 +1577,48 @@
     "inProgress": "En cours",
     "claimed": "Réclamé",
     "claim": "Réclamer",
+    "questsLabel": "Quêtes",
     "questProgress": "{{current}}/{{target}}",
     "noActiveQuests": "Aucune quête active",
     "noActiveQuestsDesc": "Les quêtes se génèrent automatiquement",
     "recentGains": "Derniers gains",
     "noRecentActivity": "Aucune activité récente",
-    "noRecentActivityDesc": "Tes gains d'XP apparaîtront ici"
+    "noRecentActivityDesc": "Tes gains d'XP apparaîtront ici",
+    "history": {
+      "entry": {
+        "home": "Séance de musculation",
+        "run": "Séance de course",
+        "beatsaber": "Séance Beat Saber",
+        "custom": "Séance de sport",
+        "generic": "Activité"
+      },
+      "levelUp": "Niveau {{level}} atteint !",
+      "levelDown": "Retour au niveau {{level}}",
+      "entryDeleted": "Séance supprimée",
+      "questCompleted": "Quête complétée : {{description}}"
+    },
+    "quests": {
+      "exercises": {
+        "50": "Faire 50 répétitions",
+        "100": "Faire 100 répétitions",
+        "150": "Atteindre 150 répétitions"
+      },
+      "workouts": {
+        "2": "Compléter 2 séances",
+        "3": "Compléter 3 séances",
+        "4": "Compléter 4 séances"
+      },
+      "duration": {
+        "30": "30 minutes de sport",
+        "60": "60 minutes de sport",
+        "90": "90 minutes de sport"
+      },
+      "distance": {
+        "3": "Courir 3 km",
+        "5": "Courir 5 km",
+        "10": "Courir 10 km"
+      }
+    }
   },
   "entries": {
     "workout": "Séance",
@@ -1574,6 +1640,12 @@
     "homeLabel": "Musculation",
     "defaultHomeName": "Musculation",
     "historyTitle": "Historique",
+    "entriesCount": "{{count}} entrée",
+    "entriesCount_plural": "{{count}} entrées",
+    "stats": {
+      "sport": "Sport",
+      "today": "Aujourd'hui"
+    },
     "historySubtitle": "{{total}} entrées • {{sport}} séances • {{today}} aujourd'hui",
     "noEntriesTitle": "Aucune entrée",
     "noEntriesAll": "Commence à tracker tes activités !",
