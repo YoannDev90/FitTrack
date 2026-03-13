@@ -3,6 +3,7 @@
 // Version complètement refaite pour fiabilité
 // ============================================================================
 
+import i18next from 'i18next';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { nanoid } from 'nanoid/non-secure';
@@ -39,6 +40,8 @@ export interface GamificationLog {
     date: string;
     amount: number;
     reason: string;
+    reasonKey?: string;
+    reasonParams?: Record<string, any>;
     type: 'xp_gain' | 'xp_loss' | 'level_up' | 'level_down' | 'quest_complete';
     entryId?: string; // Lien vers l'entrée qui a généré cet XP
 }
@@ -67,7 +70,7 @@ export interface GamificationState {
     processEntryUpdated: (oldEntry: Entry, newEntry: Entry) => void;
     
     // Actions internes
-    addXp: (amount: number, reason: string, entryId?: string) => void;
+    addXp: (amount: number, reason: string, entryId?: string, reasonKey?: string, reasonParams?: Record<string, any>) => void;
     removeXpForEntry: (entryId: string) => void;
     
     // Quêtes
@@ -88,12 +91,12 @@ export interface GamificationState {
 
 /** Calcul du rang basé sur le niveau */
 const getRank = (level: number): string => {
-    if (level < 5) return 'Novice';
-    if (level < 10) return 'Apprenti';
-    if (level < 20) return 'Intermédiaire';
-    if (level < 30) return 'Avancé';
-    if (level < 50) return 'Expert';
-    return 'Maître';
+    if (level < 5) return i18next.t('gamification.ranks.novice');
+    if (level < 10) return i18next.t('gamification.ranks.apprentice');
+    if (level < 20) return i18next.t('gamification.ranks.intermediate');
+    if (level < 30) return i18next.t('gamification.ranks.advanced');
+    if (level < 50) return i18next.t('gamification.ranks.expert');
+    return i18next.t('gamification.ranks.master');
 };
 
 /** XP requis pour passer au niveau suivant */
@@ -105,19 +108,42 @@ const isSportEntry = (entry: Entry): boolean => {
 };
 
 /** Génère une description pour l'historique basée sur l'entrée */
-const getReasonForEntry = (entry: Entry): string => {
+const getReasonForEntry = (entry: Entry): { key: string; text: string } => {
     switch (entry.type) {
         case 'home':
-            return 'Séance de musculation';
+            return {
+                key: 'gamification.history.entry.home',
+                text: i18next.t('gamification.history.entry.home'),
+            };
         case 'run':
-            return 'Séance de course';
+            return {
+                key: 'gamification.history.entry.run',
+                text: i18next.t('gamification.history.entry.run'),
+            };
         case 'beatsaber':
-            return 'Séance Beat Saber';
+            return {
+                key: 'gamification.history.entry.beatsaber',
+                text: i18next.t('gamification.history.entry.beatsaber'),
+            };
         case 'custom':
-            return 'Séance de sport';
+            return {
+                key: 'gamification.history.entry.custom',
+                text: i18next.t('gamification.history.entry.custom'),
+            };
         default:
-            return 'Activité';
+            return {
+                key: 'gamification.history.entry.generic',
+                text: i18next.t('gamification.history.entry.generic'),
+            };
     }
+};
+
+/** Traduire une description de quête (utile lorsque la langue change) */
+const translateQuestDescription = (quest: Quest): string => {
+    const key = `gamification.quests.${quest.type}.${quest.target}`;
+    const translated = i18next.t(key);
+    // Si la traduction n'existe pas, conserver l'ancienne description
+    return translated === key ? quest.description : translated;
 };
 
 /** Calcule l'XP gagné pour une entrée donnée */
@@ -233,383 +259,423 @@ const getCurrentWeekId = (): string => {
 // STORE
 // ============================================================================
 
+let languageListenerRegistered = false;
+
 export const useGamificationStore = create<GamificationState>()(
     persist(
-        (set, get) => ({
-            // État initial
-            xp: 0,
-            level: 1,
-            rank: 'Novice',
-            quests: [],
-            history: [],
-            lastQuestWeek: undefined,
-            lastSeenXp: 0,
-            lastSeenLevel: 1,
+        (set, get) => {
+            if (!languageListenerRegistered) {
+                languageListenerRegistered = true;
 
-            // ================================================================
-            // ACTIONS PRINCIPALES - Appelées par appStore
-            // ================================================================
+                const refreshLanguage = () => {
+                    const state = get();
+                    if (!state) return;
 
-            processEntryAdded: (entry: Entry) => {
-                if (!isSportEntry(entry)) return;
+                    const { quests = [], level } = state;
+                    set({
+                        quests: quests.map(q => ({ ...q, description: translateQuestDescription(q) })),
+                        rank: getRank(level),
+                    });
+                };
 
-                const xpGained = calculateXpForEntry(entry);
-                if (xpGained > 0) {
-                    const reason = getReasonForEntry(entry);
-                    get().addXp(xpGained, reason, entry.id);
-                }
-                
-                storeLogger.debug('Processed entry added', { entryId: entry.id, xpGained });
-            },
+                i18next.on('languageChanged', refreshLanguage);
+                // Apply translations immediately on store init (useful when restoring persisted state)
+                refreshLanguage();
+            }
 
-            processEntryDeleted: (entry: Entry) => {
-                if (!isSportEntry(entry)) return;
+            return {
+                // État initial
+                xp: 0,
+                level: 1,
+                rank: getRank(1),
+                quests: [],
+                history: [],
+                lastQuestWeek: undefined,
+                lastSeenXp: 0,
+                lastSeenLevel: 1,
 
-                get().removeXpForEntry(entry.id);
-                storeLogger.debug('Processed entry deleted', { entryId: entry.id });
-            },
+                // ================================================================
+                // ACTIONS PRINCIPALES - Appelées par appStore
+                // ================================================================
 
-            processEntryUpdated: (oldEntry: Entry, newEntry: Entry) => {
-                if (!isSportEntry(oldEntry) && !isSportEntry(newEntry)) return;
+                processEntryAdded: (entry: Entry) => {
+                    if (!isSportEntry(entry)) return;
 
-                // Si les deux sont des sports, recalculer la différence
-                if (isSportEntry(oldEntry) && isSportEntry(newEntry)) {
-                    const oldXp = calculateXpForEntry(oldEntry);
-                    const newXp = calculateXpForEntry(newEntry);
-                    
-                    if (newXp !== oldXp) {
-                        // Retirer l'ancien XP et ajouter le nouveau
+                    const xpGained = calculateXpForEntry(entry);
+                    if (xpGained > 0) {
+                        const reason = getReasonForEntry(entry);
+                        get().addXp(xpGained, reason.text, entry.id, reason.key);
+                    }
+
+                    storeLogger.debug('Processed entry added', { entryId: entry.id, xpGained });
+                },
+
+                processEntryDeleted: (entry: Entry) => {
+                    if (!isSportEntry(entry)) return;
+
+                    get().removeXpForEntry(entry.id);
+                    storeLogger.debug('Processed entry deleted', { entryId: entry.id });
+                },
+
+                processEntryUpdated: (oldEntry: Entry, newEntry: Entry) => {
+                    if (!isSportEntry(oldEntry) && !isSportEntry(newEntry)) return;
+
+                    // Si les deux sont des sports, recalculer la différence
+                    if (isSportEntry(oldEntry) && isSportEntry(newEntry)) {
+                        const oldXp = calculateXpForEntry(oldEntry);
+                        const newXp = calculateXpForEntry(newEntry);
+
+                        if (newXp !== oldXp) {
+                            // Retirer l'ancien XP et ajouter le nouveau
+                            get().removeXpForEntry(oldEntry.id);
+                            if (newXp > 0) {
+                                const reason = getReasonForEntry(newEntry);
+                                get().addXp(newXp, reason.text, newEntry.id, reason.key);
+                            }
+                        }
+                    } else if (isSportEntry(oldEntry)) {
+                        // L'ancienne était un sport, la nouvelle non
                         get().removeXpForEntry(oldEntry.id);
-                        if (newXp > 0) {
+                    } else if (isSportEntry(newEntry)) {
+                        // La nouvelle est un sport, l'ancienne non
+                        const xpGained = calculateXpForEntry(newEntry);
+                        if (xpGained > 0) {
                             const reason = getReasonForEntry(newEntry);
-                            get().addXp(newXp, reason, newEntry.id);
+                            get().addXp(xpGained, reason.text, newEntry.id, reason.key);
                         }
                     }
-                } else if (isSportEntry(oldEntry)) {
-                    // L'ancienne était un sport, la nouvelle non
-                    get().removeXpForEntry(oldEntry.id);
-                } else if (isSportEntry(newEntry)) {
-                    // La nouvelle est un sport, l'ancienne non
-                    const xpGained = calculateXpForEntry(newEntry);
-                    if (xpGained > 0) {
-                        const reason = getReasonForEntry(newEntry);
-                        get().addXp(xpGained, reason, newEntry.id);
-                    }
-                }
 
-                storeLogger.debug('Processed entry updated', { entryId: newEntry.id });
-            },
+                    storeLogger.debug('Processed entry updated', { entryId: newEntry.id });
+                },
 
-            // ================================================================
-            // GESTION XP
-            // ================================================================
+                // ================================================================
+                // GESTION XP
+                // ================================================================
 
-            addXp: (amount: number, reason: string, entryId?: string) => {
-                if (amount <= 0) return;
+                addXp: (amount: number, reason: string, entryId?: string, reasonKey?: string, reasonParams?: Record<string, any>) => {
+                    if (amount <= 0) return;
 
-                const { xp, level, history } = get();
-                let newXp = xp + amount;
-                let newLevel = level;
+                    const { xp, level, history } = get();
+                    let newXp = xp + amount;
+                    let newLevel = level;
 
-                // Créer l'entrée d'historique pour le gain
-                const newHistoryEntries: GamificationLog[] = [{
-                    id: nanoid(),
-                    date: new Date().toISOString(),
-                    amount,
-                    reason,
-                    type: 'xp_gain',
-                    entryId,
-                }];
-
-                // Vérifier level up (peut être multiple)
-                while (newXp >= getXpForNextLevel(newLevel)) {
-                    newXp -= getXpForNextLevel(newLevel);
-                    newLevel += 1;
-                    
-                    newHistoryEntries.push({
+                    // Créer l'entrée d'historique pour le gain
+                    const newHistoryEntries: GamificationLog[] = [{
                         id: nanoid(),
                         date: new Date().toISOString(),
-                        amount: 0,
-                        reason: `Niveau ${newLevel} atteint !`,
-                        type: 'level_up',
-                    });
-                }
+                        amount,
+                        reason,
+                        reasonKey,
+                        reasonParams,
+                        type: 'xp_gain',
+                        entryId,
+                    }];
 
-                const newHistory = [...newHistoryEntries, ...history]
-                    .slice(0, MAX_GAMIFICATION_HISTORY_ENTRIES);
+                    // Vérifier level up (peut être multiple)
+                    while (newXp >= getXpForNextLevel(newLevel)) {
+                        newXp -= getXpForNextLevel(newLevel);
+                        newLevel += 1;
 
-                set({
-                    xp: newXp,
-                    level: newLevel,
-                    rank: getRank(newLevel),
-                    history: newHistory,
-                });
-
-                storeLogger.debug('XP added', { amount, newXp, newLevel, entryId });
-            },
-
-            removeXpForEntry: (entryId: string) => {
-                const { xp, level, history } = get();
-
-                // Trouver tous les gains XP liés à cette entrée
-                const relatedGains = history.filter(h => 
-                    h.entryId === entryId && h.type === 'xp_gain' && h.amount > 0
-                );
-
-                if (relatedGains.length === 0) {
-                    storeLogger.debug('No XP found for entry', { entryId });
-                    return;
-                }
-
-                // Calculer le total à retirer
-                const totalToRemove = relatedGains.reduce((sum, h) => sum + h.amount, 0);
-                
-                let newXp = xp - totalToRemove;
-                let newLevel = level;
-
-                // Gérer la descente de niveau si nécessaire
-                const newHistoryEntries: GamificationLog[] = [];
-                
-                while (newXp < 0 && newLevel > 1) {
-                    newLevel -= 1;
-                    newXp += getXpForNextLevel(newLevel);
-                    
-                    newHistoryEntries.push({
-                        id: nanoid(),
-                        date: new Date().toISOString(),
-                        amount: 0,
-                        reason: `Retour au niveau ${newLevel}`,
-                        type: 'level_down',
-                    });
-                }
-
-                // S'assurer qu'on ne descend pas sous 0
-                if (newXp < 0) newXp = 0;
-
-                // Ajouter l'entrée de retrait
-                newHistoryEntries.unshift({
-                    id: nanoid(),
-                    date: new Date().toISOString(),
-                    amount: -totalToRemove,
-                    reason: 'Séance supprimée',
-                    type: 'xp_loss',
-                    entryId,
-                });
-
-                // Filtrer les anciens gains de l'historique et ajouter les nouveaux
-                const filteredHistory = history.filter(h => h.entryId !== entryId);
-                const newHistory = [...newHistoryEntries, ...filteredHistory]
-                    .slice(0, MAX_GAMIFICATION_HISTORY_ENTRIES);
-
-                set({
-                    xp: newXp,
-                    level: newLevel,
-                    rank: getRank(newLevel),
-                    history: newHistory,
-                });
-
-                storeLogger.debug('XP removed for entry', { entryId, totalRemoved: totalToRemove, newXp, newLevel });
-            },
-
-            // ================================================================
-            // QUÊTES
-            // ================================================================
-
-            syncQuestsWithEntries: (entries: Entry[]) => {
-                const { quests } = get();
-                const totals = calculateQuestTotals(entries);
-                
-                let hasChanges = false;
-                const questsToComplete: Quest[] = [];
-
-                const updatedQuests = quests.map(quest => {
-                    const newTotal = totals[quest.type] || 0;
-                    const newCurrent = Math.min(newTotal, quest.target);
-                    const wasCompleted = quest.completed;
-                    const isNowCompleted = newCurrent >= quest.target;
-
-                    // Détecter nouvelle complétion
-                    if (isNowCompleted && !wasCompleted) {
-                        questsToComplete.push({ ...quest, current: newCurrent, completed: true });
-                    }
-
-                    if (newCurrent !== quest.current || isNowCompleted !== wasCompleted) {
-                        hasChanges = true;
-                    }
-
-                    return {
-                        ...quest,
-                        current: newCurrent,
-                        completed: isNowCompleted,
-                    };
-                });
-
-                if (hasChanges) {
-                    set({ quests: updatedQuests });
-                }
-
-                // Ajouter XP pour les quêtes nouvellement complétées
-                const { addXp } = get();
-                questsToComplete.forEach(quest => {
-                    addXp(quest.rewardXp, `Quête complétée : ${quest.description}`);
-                });
-
-                if (questsToComplete.length > 0) {
-                    storeLogger.debug('Quests completed', { count: questsToComplete.length });
-                }
-            },
-
-            generateWeeklyQuests: () => {
-                const weekId = getCurrentWeekId();
-                
-                // Pool de quêtes
-                const questPool: Record<QuestType, Array<{ description: string; target: number; rewardXp: number }>> = {
-                    exercises: [
-                        { description: 'Faire 50 répétitions', target: 50, rewardXp: 50 },
-                        { description: 'Faire 100 répétitions', target: 100, rewardXp: 100 },
-                        { description: 'Atteindre 150 répétitions', target: 150, rewardXp: 150 },
-                    ],
-                    workouts: [
-                        { description: 'Compléter 2 séances', target: 2, rewardXp: 75 },
-                        { description: 'Compléter 3 séances', target: 3, rewardXp: 100 },
-                        { description: 'Compléter 4 séances', target: 4, rewardXp: 125 },
-                    ],
-                    duration: [
-                        { description: '30 minutes de sport', target: 30, rewardXp: 40 },
-                        { description: '60 minutes de sport', target: 60, rewardXp: 75 },
-                        { description: '90 minutes de sport', target: 90, rewardXp: 100 },
-                    ],
-                    distance: [
-                        { description: 'Courir 3 km', target: 3, rewardXp: 50 },
-                        { description: 'Courir 5 km', target: 5, rewardXp: 80 },
-                        { description: 'Courir 10 km', target: 10, rewardXp: 120 },
-                    ],
-                };
-
-                // Sélection basée sur le numéro de semaine pour variété
-                const now = new Date();
-                const seed = getWeek(now, { weekStartsOn: 1 }) + getYear(now);
-                
-                const selectQuest = (type: QuestType): Quest => {
-                    const pool = questPool[type];
-                    const index = (seed + type.charCodeAt(0)) % pool.length;
-                    const template = pool[index];
-                    return {
-                        id: `quest-${type}-${weekId}`,
-                        type,
-                        description: template.description,
-                        target: template.target,
-                        rewardXp: template.rewardXp,
-                        current: 0,
-                        completed: false,
-                        weekId,
-                    };
-                };
-
-                const newQuests: Quest[] = [
-                    selectQuest('exercises'),
-                    selectQuest('workouts'),
-                    selectQuest('duration'),
-                ];
-
-                // Ajouter quête distance 50% du temps
-                if (seed % 2 === 0) {
-                    newQuests.push(selectQuest('distance'));
-                }
-
-                set({ quests: newQuests, lastQuestWeek: weekId });
-                storeLogger.debug('Weekly quests generated', { weekId, count: newQuests.length });
-            },
-
-            checkAndRefreshQuests: () => {
-                const { lastQuestWeek, generateWeeklyQuests } = get();
-                const currentWeekId = getCurrentWeekId();
-
-                if (lastQuestWeek !== currentWeekId) {
-                    generateWeeklyQuests();
-                }
-            },
-
-            // ================================================================
-            // UTILITAIRES
-            // ================================================================
-
-            updateLastSeen: () => {
-                const { xp, level } = get();
-                set({ lastSeenXp: xp, lastSeenLevel: level });
-            },
-
-            recalculateFromEntries: (entries: Entry[]) => {
-                // Reset et recalcule tout depuis zéro
-                const sportEntries = entries.filter(isSportEntry);
-                
-                // Calculer le total XP
-                let totalXp = 0;
-                const newHistory: GamificationLog[] = [];
-
-                sportEntries.forEach(entry => {
-                    const entryXp = calculateXpForEntry(entry);
-                    if (entryXp > 0) {
-                        totalXp += entryXp;
-                        newHistory.push({
+                        newHistoryEntries.push({
                             id: nanoid(),
-                            date: entry.createdAt,
-                            amount: entryXp,
-                            reason: getReasonForEntry(entry),
-                            type: 'xp_gain',
-                            entryId: entry.id,
+                            date: new Date().toISOString(),
+                            amount: 0,
+                            reason: i18next.t('gamification.history.levelUp', { level: newLevel }),
+                            reasonKey: 'gamification.history.levelUp',
+                            reasonParams: { level: newLevel },
+                            type: 'level_up',
                         });
                     }
-                });
 
-                // Calculer le niveau
-                let newLevel = 1;
-                let remainingXp = totalXp;
-                while (remainingXp >= getXpForNextLevel(newLevel)) {
-                    remainingXp -= getXpForNextLevel(newLevel);
-                    newLevel += 1;
-                }
+                    const newHistory = [...newHistoryEntries, ...history]
+                        .slice(0, MAX_GAMIFICATION_HISTORY_ENTRIES);
 
-                // Régénérer les quêtes
-                const currentWeekId = getCurrentWeekId();
+                    set({
+                        xp: newXp,
+                        level: newLevel,
+                        rank: getRank(newLevel),
+                        history: newHistory,
+                    });
 
-                set({
-                    xp: remainingXp,
-                    level: newLevel,
-                    rank: getRank(newLevel),
-                    history: newHistory.slice(0, MAX_GAMIFICATION_HISTORY_ENTRIES),
-                    lastSeenXp: remainingXp,
-                    lastSeenLevel: newLevel,
-                    lastQuestWeek: undefined, // Force la régénération
-                });
+                    storeLogger.debug('XP added', { amount, newXp, newLevel, entryId });
+                },
 
-                // Régénérer les quêtes et synchro
-                get().checkAndRefreshQuests();
-                get().syncQuestsWithEntries(entries);
+                removeXpForEntry: (entryId: string) => {
+                    const { xp, level, history } = get();
 
-                storeLogger.info('Gamification recalculated from scratch', { 
-                    totalXp, 
-                    level: newLevel, 
-                    entriesProcessed: sportEntries.length 
-                });
-            },
+                    // Trouver tous les gains XP liés à cette entrée
+                    const relatedGains = history.filter(h => 
+                        h.entryId === entryId && h.type === 'xp_gain' && h.amount > 0
+                    );
 
-            restoreFromBackup: (data) => {
-                set({
-                    xp: data.xp ?? 0,
-                    level: data.level ?? 1,
-                    rank: getRank(data.level ?? 1),
-                    history: data.history ?? [],
-                    quests: data.quests ?? [],
-                    lastSeenXp: data.xp ?? 0,
-                    lastSeenLevel: data.level ?? 1,
-                });
-            },
+                    if (relatedGains.length === 0) {
+                        storeLogger.debug('No XP found for entry', { entryId });
+                        return;
+                    }
 
-            clearHistory: () => {
-                set({ history: [] });
-            },
-        }),
+                    // Calculer le total à retirer
+                    const totalToRemove = relatedGains.reduce((sum, h) => sum + h.amount, 0);
+                    
+                    let newXp = xp - totalToRemove;
+                    let newLevel = level;
+
+                    // Gérer la descente de niveau si nécessaire
+                    const newHistoryEntries: GamificationLog[] = [];
+                    
+                    while (newXp < 0 && newLevel > 1) {
+                        newLevel -= 1;
+                        newXp += getXpForNextLevel(newLevel);
+                        
+                        newHistoryEntries.push({
+                            id: nanoid(),
+                            date: new Date().toISOString(),
+                            amount: 0,
+                            reason: i18next.t('gamification.history.levelDown', { level: newLevel }),
+                            reasonKey: 'gamification.history.levelDown',
+                            reasonParams: { level: newLevel },
+                            type: 'level_down',
+                        });
+                    }
+
+                    // S'assurer qu'on ne descend pas sous 0
+                    if (newXp < 0) newXp = 0;
+
+                    // Ajouter l'entrée de retrait
+                    newHistoryEntries.unshift({
+                        id: nanoid(),
+                        date: new Date().toISOString(),
+                        amount: -totalToRemove,
+                        reason: i18next.t('gamification.history.entryDeleted'),
+                        reasonKey: 'gamification.history.entryDeleted',
+                        type: 'xp_loss',
+                        entryId,
+                    });
+
+                    // Filtrer les anciens gains de l'historique et ajouter les nouveaux
+                    const filteredHistory = history.filter(h => h.entryId !== entryId);
+                    const newHistory = [...newHistoryEntries, ...filteredHistory]
+                        .slice(0, MAX_GAMIFICATION_HISTORY_ENTRIES);
+
+                    set({
+                        xp: newXp,
+                        level: newLevel,
+                        rank: getRank(newLevel),
+                        history: newHistory,
+                    });
+
+                    storeLogger.debug('XP removed for entry', { entryId, totalRemoved: totalToRemove, newXp, newLevel });
+                },
+
+                // ================================================================
+                // QUÊTES
+                // ================================================================
+
+                syncQuestsWithEntries: (entries: Entry[]) => {
+                    const { quests } = get();
+                    const totals = calculateQuestTotals(entries);
+                    
+                    let hasChanges = false;
+                    const questsToComplete: Quest[] = [];
+
+                    const updatedQuests = quests.map(quest => {
+                        const newTotal = totals[quest.type] || 0;
+                        const newCurrent = Math.min(newTotal, quest.target);
+                        const wasCompleted = quest.completed;
+                        const isNowCompleted = newCurrent >= quest.target;
+
+                        // Détecter nouvelle complétion
+                        if (isNowCompleted && !wasCompleted) {
+                            questsToComplete.push({ ...quest, current: newCurrent, completed: true });
+                        }
+
+                        if (newCurrent !== quest.current || isNowCompleted !== wasCompleted) {
+                            hasChanges = true;
+                        }
+
+                        return {
+                            ...quest,
+                            current: newCurrent,
+                            completed: isNowCompleted,
+                        };
+                    });
+
+                    if (hasChanges) {
+                        set({ quests: updatedQuests });
+                    }
+
+                    // Ajouter XP pour les quêtes nouvellement complétées
+                    const { addXp } = get();
+                    questsToComplete.forEach(quest => {
+                        const reasonKey = 'gamification.history.questCompleted';
+                        addXp(
+                            quest.rewardXp,
+                            i18next.t(reasonKey, { description: quest.description }),
+                            undefined,
+                            reasonKey,
+                            { description: quest.description }
+                        );
+                    });
+
+                    if (questsToComplete.length > 0) {
+                        storeLogger.debug('Quests completed', { count: questsToComplete.length });
+                    }
+                },
+
+                generateWeeklyQuests: () => {
+                    const weekId = getCurrentWeekId();
+                    
+                    // Pool de quêtes
+                    const questPool: Record<QuestType, Array<{ description: string; target: number; rewardXp: number }>> = {
+                        exercises: [
+                            { description: i18next.t('gamification.quests.exercises.50'), target: 50, rewardXp: 50 },
+                            { description: i18next.t('gamification.quests.exercises.100'), target: 100, rewardXp: 100 },
+                            { description: i18next.t('gamification.quests.exercises.150'), target: 150, rewardXp: 150 },
+                        ],
+                        workouts: [
+                            { description: i18next.t('gamification.quests.workouts.2'), target: 2, rewardXp: 75 },
+                            { description: i18next.t('gamification.quests.workouts.3'), target: 3, rewardXp: 100 },
+                            { description: i18next.t('gamification.quests.workouts.4'), target: 4, rewardXp: 125 },
+                        ],
+                        duration: [
+                            { description: i18next.t('gamification.quests.duration.30'), target: 30, rewardXp: 40 },
+                            { description: i18next.t('gamification.quests.duration.60'), target: 60, rewardXp: 75 },
+                            { description: i18next.t('gamification.quests.duration.90'), target: 90, rewardXp: 100 },
+                        ],
+                        distance: [
+                            { description: i18next.t('gamification.quests.distance.3'), target: 3, rewardXp: 50 },
+                            { description: i18next.t('gamification.quests.distance.5'), target: 5, rewardXp: 80 },
+                            { description: i18next.t('gamification.quests.distance.10'), target: 10, rewardXp: 120 },
+                        ],
+                    };
+
+                    // Sélection basée sur le numéro de semaine pour variété
+                    const now = new Date();
+                    const seed = getWeek(now, { weekStartsOn: 1 }) + getYear(now);
+                    
+                    const selectQuest = (type: QuestType): Quest => {
+                        const pool = questPool[type];
+                        const index = (seed + type.charCodeAt(0)) % pool.length;
+                        const template = pool[index];
+                        return {
+                            id: `quest-${type}-${weekId}`,
+                            type,
+                            description: template.description,
+                            target: template.target,
+                            rewardXp: template.rewardXp,
+                            current: 0,
+                            completed: false,
+                            weekId,
+                        };
+                    };
+
+                    const newQuests: Quest[] = [
+                        selectQuest('exercises'),
+                        selectQuest('workouts'),
+                        selectQuest('duration'),
+                    ];
+
+                    // Ajouter quête distance 50% du temps
+                    if (seed % 2 === 0) {
+                        newQuests.push(selectQuest('distance'));
+                    }
+
+                    set({ quests: newQuests, lastQuestWeek: weekId });
+                    storeLogger.debug('Weekly quests generated', { weekId, count: newQuests.length });
+                },
+
+                checkAndRefreshQuests: () => {
+                    const { lastQuestWeek, generateWeeklyQuests } = get();
+                    const currentWeekId = getCurrentWeekId();
+
+                    if (lastQuestWeek !== currentWeekId) {
+                        generateWeeklyQuests();
+                    }
+                },
+
+                // ================================================================
+                // UTILITAIRES
+                // ================================================================
+
+                updateLastSeen: () => {
+                    const { xp, level } = get();
+                    set({ lastSeenXp: xp, lastSeenLevel: level });
+                },
+
+                recalculateFromEntries: (entries: Entry[]) => {
+                    // Reset et recalcule tout depuis zéro
+                    const sportEntries = entries.filter(isSportEntry);
+                    
+                    // Calculer le total XP
+                    let totalXp = 0;
+                    const newHistory: GamificationLog[] = [];
+
+                    sportEntries.forEach(entry => {
+                        const entryXp = calculateXpForEntry(entry);
+                        if (entryXp > 0) {
+                            totalXp += entryXp;
+                            const entryReason = getReasonForEntry(entry);
+                            newHistory.push({
+                                id: nanoid(),
+                                date: entry.createdAt,
+                                amount: entryXp,
+                                reason: entryReason.text,
+                                reasonKey: entryReason.key,
+                                type: 'xp_gain',
+                                entryId: entry.id,
+                            });
+                        }
+                    });
+
+                    // Calculer le niveau
+                    let newLevel = 1;
+                    let remainingXp = totalXp;
+                    while (remainingXp >= getXpForNextLevel(newLevel)) {
+                        remainingXp -= getXpForNextLevel(newLevel);
+                        newLevel += 1;
+                    }
+
+                    // Régénérer les quêtes
+                    const currentWeekId = getCurrentWeekId();
+
+                    set({
+                        xp: remainingXp,
+                        level: newLevel,
+                        rank: getRank(newLevel),
+                        history: newHistory.slice(0, MAX_GAMIFICATION_HISTORY_ENTRIES),
+                        lastSeenXp: remainingXp,
+                        lastSeenLevel: newLevel,
+                        lastQuestWeek: undefined, // Force la régénération
+                    });
+
+                    // Régénérer les quêtes et synchro
+                    get().checkAndRefreshQuests();
+                    get().syncQuestsWithEntries(entries);
+
+                    storeLogger.info('Gamification recalculated from scratch', { 
+                        totalXp, 
+                        level: newLevel, 
+                        entriesProcessed: sportEntries.length 
+                    });
+                },
+
+                restoreFromBackup: (data) => {
+                    const safeData = data ?? ({} as Partial<{ xp: number; level: number; history: GamificationLog[]; quests: Quest[] }>);
+                    set({
+                        xp: safeData.xp ?? 0,
+                        level: safeData.level ?? 1,
+                        rank: getRank(safeData.level ?? 1),
+                        history: safeData.history ?? [],
+                        quests: safeData.quests ?? [],
+                        lastSeenXp: safeData.xp ?? 0,
+                        lastSeenLevel: safeData.level ?? 1,
+                    });
+                },
+
+                clearHistory: () => {
+                    set({ history: [] });
+                },
+            };
+        },
         {
             name: STORAGE_KEYS.gamificationStore,
             storage: createJSONStorage(() => zustandStorage),
