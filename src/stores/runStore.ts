@@ -77,6 +77,7 @@ export interface RunState {
   reset: () => void;
   setMode: (mode: 'simple' | 'ai') => void;
   appendPosition: (pos: LatLng) => void;
+  setCoords: (coords: LatLng[]) => void;
   setPlan: (plan: RunPlan) => void;
   setLastCoachMessage: (msg: string) => void;
   setIsLoadingCoach: (v: boolean) => void;
@@ -144,6 +145,7 @@ export const useRunStore = create<RunState>((set) => ({
 
   setMode: (mode) => set({ mode }),
   appendPosition: (pos) => set((state) => ({ coords: [...state.coords, pos] })),
+  setCoords: (coords) => set({ coords }),
   setPlan: (plan) => set({ plan }),
   setLastCoachMessage: (msg) => set({ lastCoachMessage: msg }),
   setIsLoadingCoach: (v) => set({ isLoadingCoach: v }),

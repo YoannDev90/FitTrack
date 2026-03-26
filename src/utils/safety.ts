@@ -4,6 +4,7 @@ export const getDefaultSafetySettings = () => ({
   contacts: [],
   defaultIntervalMinutes: DEFAULT_SAFETY_INTERVAL_MINUTES,
   defaultAutoAlertDelaySeconds: DEFAULT_SAFETY_AUTO_ALERT_DELAY_SECONDS,
+  fallDetectionEnabled: false,
 });
 
 export function formatSafetyInterval(minutes: number, minShortLabel: string, hourLabel: string): string {

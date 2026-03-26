@@ -81,6 +81,20 @@ const HiddenTabsSchema = z.object({
     workout: z.boolean().optional(),
 });
 
+const SafetyContactSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    phone: z.string(),
+    method: z.enum(['sms', 'whatsapp']),
+});
+
+const SafetySettingsSchema = z.object({
+    contacts: z.array(SafetyContactSchema).optional(),
+    defaultIntervalMinutes: z.number().int().positive().optional(),
+    defaultAutoAlertDelaySeconds: z.number().int().positive().optional(),
+    fallDetectionEnabled: z.boolean().optional(),
+});
+
 export const SettingsSchema = z.object({
     weeklyGoal: z.number().int().positive().max(14),
     units: UnitsSchema.optional(),
@@ -91,6 +105,7 @@ export const SettingsSchema = z.object({
     onboardingCompleted: z.boolean().optional(),
     keepGoingIntervalSeconds: z.number().int().positive().optional(),
     fullOpacityNavbar: z.boolean().optional(),
+    safety: SafetySettingsSchema.optional(),
 });
 
 // ============================================================================

@@ -134,8 +134,8 @@ export async function startTracking(onPosition: OnPositionCallback): Promise<voi
   locationSubscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.BestForNavigation,
-      timeInterval: 2000,
-      distanceInterval: 3,
+      timeInterval: 1000,
+      distanceInterval: 2,
     },
     (location) => {
       const { latitude, longitude, altitude, accuracy, speed } = location.coords;

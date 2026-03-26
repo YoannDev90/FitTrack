@@ -8,6 +8,7 @@ import {
   Modal,
   TextInput,
   Switch,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
@@ -42,6 +43,9 @@ export default function SafetySettingsScreen() {
   const [method, setMethod] = useState<'sms' | 'whatsapp'>('sms');
   const [selectedDelete, setSelectedDelete] = useState<SafetyContact | null>(null);
   const [whatsAppAvailable, setWhatsAppAvailable] = useState(false);
+  const [customIntervalText, setCustomIntervalText] = useState('');
+  const [isCustomInterval, setIsCustomInterval] = useState(false);
+  const [customIntervalError, setCustomIntervalError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkWhatsApp = async () => {
@@ -50,6 +54,18 @@ export default function SafetySettingsScreen() {
     };
     checkWhatsApp();
   }, []);
+
+  useEffect(() => {
+    if ((SAFETY_INTERVAL_OPTIONS as readonly number[]).includes(safetySettings.defaultIntervalMinutes)) {
+      setIsCustomInterval(false);
+      setCustomIntervalText('');
+      setCustomIntervalError(null);
+    } else {
+      setIsCustomInterval(true);
+      setCustomIntervalText(String(safetySettings.defaultIntervalMinutes));
+      setCustomIntervalError(null);
+    }
+  }, [safetySettings.defaultIntervalMinutes]);
 
   const canAdd = useMemo(() => name.trim().length > 0 && PHONE_NUMBER_REGEX.test(phone), [name, phone]);
 
@@ -148,21 +164,74 @@ export default function SafetySettingsScreen() {
                   key={interval}
                   style={[
                     styles.chip,
-                    safetySettings.defaultIntervalMinutes === interval && styles.chipActive,
+                    !isCustomInterval && safetySettings.defaultIntervalMinutes === interval && styles.chipActive,
                   ]}
-                  onPress={() => updateSafetySettings({ defaultIntervalMinutes: interval })}
+                  onPress={() => {
+                    setIsCustomInterval(false);
+                    setCustomIntervalText('');
+                    setCustomIntervalError(null);
+                    updateSafetySettings({ defaultIntervalMinutes: interval });
+                  }}
                 >
                   <Text
                     style={[
                       styles.chipText,
-                      safetySettings.defaultIntervalMinutes === interval && styles.chipTextActive,
+                      !isCustomInterval && safetySettings.defaultIntervalMinutes === interval && styles.chipTextActive,
                     ]}
                   >
                     {formatSafetyInterval(interval, t('common.minShort'), t('common.hour'))}
                   </Text>
                 </TouchableOpacity>
               ))}
+
+              <TouchableOpacity
+                key="custom"
+                style={[styles.chip, isCustomInterval && styles.chipActive]}
+                onPress={() => {
+                  setIsCustomInterval(true);
+                  setCustomIntervalText(String(safetySettings.defaultIntervalMinutes));
+                  setCustomIntervalError(null);
+                }}
+              >
+                <Text style={[styles.chipText, isCustomInterval && styles.chipTextActive]}>
+                  {t('safety.config.custom')}
+                </Text>
+              </TouchableOpacity>
             </View>
+
+            {isCustomInterval && (
+              <View style={styles.customIntervalRow}>
+                <TextInput
+                  style={[styles.input, customIntervalError && styles.inputError]}
+                  placeholder={t('safety.config.customPlaceholder')}
+                  placeholderTextColor={Colors.muted2}
+                  keyboardType="numeric"
+                  value={customIntervalText}
+                  onChangeText={(value) => {
+                    setCustomIntervalText(value);
+                    const parsed = Number(value);
+                    if (!value || Number.isNaN(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
+                      setCustomIntervalError(t('safety.config.customError'));
+                      return;
+                    }
+                    setCustomIntervalError(null);
+                    updateSafetySettings({ defaultIntervalMinutes: parsed });
+                  }}
+                  onBlur={() => {
+                    const parsed = Number(customIntervalText);
+                    if (customIntervalText && !Number.isNaN(parsed) && parsed > 0 && Number.isInteger(parsed)) {
+                      updateSafetySettings({ defaultIntervalMinutes: parsed });
+                    }
+                  }}
+                  returnKeyType="done"
+                />
+                {customIntervalError ? (
+                  <Text style={styles.errorText}>{customIntervalError}</Text>
+                ) : (
+                  <Text style={styles.customHintText}>{t('safety.config.customHint')}</Text>
+                )}
+              </View>
+            )}
           </GlassCard>
         </Animated.View>
 
@@ -190,6 +259,27 @@ export default function SafetySettingsScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+          </GlassCard>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(180).springify()}>
+          <GlassCard style={styles.card}>
+            <View style={styles.rowBetween}>
+              <View style={styles.toggleInfoWrap}>
+                <Text style={styles.cardTitle}>{t('settings.safety.fallDetection')}</Text>
+                <Text style={styles.toggleDescription}>{t('settings.safety.fallDetectionDesc')}</Text>
+              </View>
+              <Switch
+                value={Boolean(safetySettings.fallDetectionEnabled)}
+                onValueChange={(value) => updateSafetySettings({ fallDetectionEnabled: value })}
+                trackColor={{ true: Colors.success, false: Colors.cardSolid }}
+                thumbColor="#fff"
+              />
+            </View>
+            <Text style={styles.warningNote}>{t('settings.safety.fallDetectionWarning')}</Text>
+            {Platform.OS === 'ios' && (
+              <Text style={styles.iosNote}>{t('settings.safety.iosNote')}</Text>
+            )}
           </GlassCard>
         </Animated.View>
 
@@ -222,7 +312,7 @@ export default function SafetySettingsScreen() {
             <TextInput
               value={phone}
               onChangeText={setPhone}
-              placeholder="+33612345678"
+              placeholder={t('settings.safety.phonePlaceholder')}
               placeholderTextColor={Colors.muted2}
               keyboardType="phone-pad"
               style={styles.input}
@@ -326,6 +416,10 @@ const styles = StyleSheet.create({
   contactMeta: { color: Colors.muted, fontSize: FontSize.xs, marginTop: 2 },
   deleteBtn: { padding: Spacing.xs },
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  toggleInfoWrap: { flex: 1, paddingRight: Spacing.md },
+  toggleDescription: { color: Colors.muted, fontSize: FontSize.sm, lineHeight: 18 },
+  warningNote: { color: Colors.warning, fontSize: FontSize.xs, marginTop: Spacing.sm, lineHeight: 16 },
+  iosNote: { color: Colors.textSecondary, fontSize: FontSize.xs, marginTop: Spacing.sm, lineHeight: 16 },
   chip: {
     borderRadius: BorderRadius.full,
     borderWidth: 1,
@@ -337,6 +431,13 @@ const styles = StyleSheet.create({
   chipActive: { borderColor: Colors.teal, backgroundColor: Colors.tealLight },
   chipText: { color: Colors.textSecondary, fontSize: FontSize.sm },
   chipTextActive: { color: Colors.text, fontWeight: FontWeight.bold },
+  customIntervalRow: {
+    marginTop: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  inputError: { borderColor: Colors.error },
+  customHintText: { color: Colors.muted, fontSize: FontSize.xs },
+  errorText: { color: Colors.error, fontSize: FontSize.xs, marginTop: 4 },
   disclaimerCard: {
     borderColor: 'rgba(245,166,35,0.45)',
     backgroundColor: 'rgba(245,166,35,0.12)',

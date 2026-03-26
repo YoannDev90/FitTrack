@@ -16,7 +16,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.spix.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "$(PRODUCT_NAME) a besoin de la caméra pour détecter vos mouvements"
+        "NSCameraUsageDescription": "$(PRODUCT_NAME) a besoin de la caméra pour détecter vos mouvements",
+        "UIBackgroundModes": [
+          "location"
+        ]
       },
       "buildNumber": "10.1.0"
     },
@@ -29,6 +32,10 @@
       "package": "com.spix.app",
       "permissions": [
         "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
         "android.permission.health.READ_EXERCISE",
         "android.permission.health.READ_DISTANCE",
         "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
@@ -47,6 +54,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permettez à $(PRODUCT_NAME) d'accéder à votre position pendant vos courses.",
+          "locationAlwaysAndWhenInUsePermission": "Permettez à $(PRODUCT_NAME) d'accéder à votre position en arrière-plan pour poursuivre le tracking de course.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
       [
         "expo-notifications",
         {

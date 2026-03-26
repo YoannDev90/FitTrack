@@ -204,6 +204,7 @@ export interface SafetySettings {
   contacts: SafetyContact[];
   defaultIntervalMinutes: number;
   defaultAutoAlertDelaySeconds: number;
+  fallDetectionEnabled: boolean;
 }
 
 export interface UserSettings {

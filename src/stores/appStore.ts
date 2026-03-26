@@ -127,6 +127,7 @@ const defaultSettings: UserSettings = {
         contacts: [],
         defaultIntervalMinutes: DEFAULT_SAFETY_INTERVAL_MINUTES,
         defaultAutoAlertDelaySeconds: DEFAULT_SAFETY_AUTO_ALERT_DELAY_SECONDS,
+        fallDetectionEnabled: false,
     },
 };
 

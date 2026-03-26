@@ -17,16 +17,25 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import Animated, {
   FadeIn,
   FadeInUp,
   FadeOut,
   SlideInDown,
   SlideOutDown,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
+import Svg, { Circle } from 'react-native-svg';
 import {
   Play,
   Pause,
@@ -41,10 +50,11 @@ import {
   Clock3,
   Loader,
   ChevronRight,
+  TriangleAlert,
 } from 'lucide-react-native';
 import { useRunStore, type LatLng, type RunSegment } from '../../stores/runStore';
 import { useAppStore } from '../../stores';
-import { useSafetyStore } from '../../stores/safetyStore';
+import { useSafetyStore, type SafetyAutoAlertType } from '../../stores/safetyStore';
 import { getMapLibreModule } from '../../services/maplibre';
 import {
   startTracking,
@@ -56,11 +66,12 @@ import {
   calculateElevationGain,
 } from '../../services/runTracker';
 import i18n from '../../i18n';
-import { SafetyCheckConfig } from './SafetyCheckConfig';
-import { sendSafetyAlert, sendAllClearSafetyAlert, type AlertPayload } from '../../services/safetyAlert';
-import { CustomAlertModal } from '../ui/CustomAlertModal';
+import { SafetyCheckConfig } from '@/components/run/SafetyCheckConfig';
+import { sendSafetyAlert, sendAllClearSafetyAlert, type AlertPayload } from '@/services/safetyAlert';
 import type { SafetyContact } from '../../types';
 import { getDefaultSafetySettings } from '../../utils/safety';
+import { startFallDetection } from '../../services/fallDetection';
+import { simplifyRouteRdp } from '../../utils/geoUtils';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const MapLibreRN = getMapLibreModule();
@@ -194,6 +205,27 @@ function buildGeoJSON(coords: LatLng[]): GeoJSON.FeatureCollection {
   };
 }
 
+function buildPointGeoJSON(coord: LatLng | null): GeoJSON.FeatureCollection {
+  if (!coord) {
+    return { type: 'FeatureCollection', features: [] };
+  }
+
+  return {
+    type: 'FeatureCollection',
+    features: [{
+      type: 'Feature',
+      properties: {},
+      geometry: { type: 'Point', coordinates: [coord.longitude, coord.latitude] },
+    }],
+  };
+}
+
+const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+const RING_SIZE = 128;
+const RING_STROKE = 10;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
 // ============================================================================
 // METRIC CARD
 // ============================================================================
@@ -321,9 +353,9 @@ const SlideAction = ({
 }) => {
   const [trackWidth, setTrackWidth] = useState(0);
   const [thumbX, setThumbX] = useState(0);
-  const thresholdRatio = 0.88;
-  const thumbSize = 44;
-  const maxX = Math.max(0, trackWidth - thumbSize - 6);
+  const thresholdRatio = 0.9;
+  const thumbSize = 56;
+  const maxX = Math.max(0, trackWidth - thumbSize - 8);
 
   const disabledRef = useRef(disabled);
   const maxXRef = useRef(maxX);
@@ -340,7 +372,7 @@ const SlideAction = ({
         if (maxXRef.current > 0 && nextX >= maxXRef.current * thresholdRatio) {
           setThumbX(maxXRef.current);
           onCompleteRef.current();
-          setTimeout(() => setThumbX(0), 160);
+          setTimeout(() => setThumbX(0), 220);
         } else {
           setThumbX(0);
         }
@@ -360,9 +392,19 @@ const SlideAction = ({
       style={[styles.slideTrack, { borderColor: `${color}66`, backgroundColor: `${color}18` }]}
       onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
     >
+      <View style={[styles.slideFill, { backgroundColor: `${color}35`, width: thumbX + thumbSize / 2 }]} />
       <View style={styles.slideLabelWrap}>
+        <Text style={[styles.slideChevrons, { color: `${color}aa` }]}>{'>>> '}</Text>
         {icon}
-        <Text style={[styles.slideLabel, { color }]}>{label}</Text>
+        <Text
+          style={[
+            styles.slideLabel,
+            { color },
+            trackWidth > 0 ? { opacity: Math.max(0, 1 - thumbX / (trackWidth * 0.6)) } : null,
+          ]}
+        >
+          {label}
+        </Text>
       </View>
       <View
         style={[
@@ -375,9 +417,55 @@ const SlideAction = ({
         ]}
         {...(!disabled ? panResponder.panHandlers : {})}
       >
-        <ChevronRight size={20} color="#fff" />
+        <ChevronRight size={22} color="#fff" />
       </View>
     </View>
+  );
+};
+
+const SafetyCountdownRing = ({
+  seconds,
+  totalSeconds,
+  urgentShake,
+}: {
+  seconds: number;
+  totalSeconds: number;
+  urgentShake: any;
+}) => {
+  const safeTotal = Math.max(1, totalSeconds);
+  const ratio = Math.max(0, Math.min(1, seconds / safeTotal));
+  const dashOffset = RING_CIRCUMFERENCE * (1 - ratio);
+
+  const color = seconds > 60 ? C.green : seconds > 30 ? C.orange : C.red;
+
+  return (
+    <Animated.View style={[styles.ringWrap, urgentShake]}>
+      <Svg width={RING_SIZE} height={RING_SIZE}>
+        <Circle
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          stroke="rgba(255,255,255,0.16)"
+          strokeWidth={RING_STROKE}
+          fill="none"
+        />
+        <Circle
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          stroke={color}
+          strokeWidth={RING_STROKE}
+          fill="none"
+          strokeDasharray={`${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+        />
+      </Svg>
+      <View style={styles.ringCenter}>
+        <Text style={styles.ringValue}>{seconds}</Text>
+      </View>
+    </Animated.View>
   );
 };
 
@@ -432,7 +520,18 @@ export function RunTracker({ mode }: RunTrackerProps) {
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
   const cameraRef = useRef<any>(null);
+  const routeSourceRef = useRef<any>(null);
+  const markerSourceRef = useRef<any>(null);
+  const fallDetectionCleanupRef = useRef<(() => void) | null>(null);
+  const coordsRef = useRef<LatLng[]>([]);
+  const lastPointRef = useRef<LatLng | null>(null);
+  const distanceRef = useRef<number>(0);
+  const throttledUpdateRef = useRef<number>(0);
+  const latestSpeedRef = useRef<number>(0);
   const isMountedRef = useRef(true);
+  const alertHapticsLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pendingShake = useSharedValue(0);
+  const alertGlow = useSharedValue(0.35);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [motivationMessage, setMotivationMessage] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
@@ -441,25 +540,41 @@ export function RunTracker({ mode }: RunTrackerProps) {
   }>({ visible: false, title: '', onConfirm: () => {}, confirmLabel: '' });
   const [showSafetyConfig, setShowSafetyConfig] = useState(false);
   const [showAddTimePicker, setShowAddTimePicker] = useState(false);
-  const [alertFeedback, setAlertFeedback] = useState<{
-    visible: boolean;
-    type: 'success' | 'warning' | 'error' | 'info';
-    title: string;
-    message: string;
-    retryContacts?: SafetyContact[];
-  }>({ visible: false, type: 'info', title: '', message: '' });
+  const [iosSendPromptVisible, setIosSendPromptVisible] = useState(false);
   const sendingRef = useRef(false);
+
+  const pendingShakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: pendingShake.value }],
+  }));
+
+  const alertGlowStyle = useAnimatedStyle(() => ({
+    opacity: alertGlow.value,
+  }));
 
   // Initialize mode
   useEffect(() => {
     store.setMode(mode);
   }, [mode]);
 
+  useEffect(() => {
+    coordsRef.current = store.coords;
+    lastPointRef.current = store.coords.length > 0 ? store.coords[store.coords.length - 1] : null;
+    distanceRef.current = store.distanceKm;
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      if (fallDetectionCleanupRef.current) {
+        fallDetectionCleanupRef.current();
+        fallDetectionCleanupRef.current = null;
+      }
+      if (alertHapticsLoopRef.current) {
+        clearInterval(alertHapticsLoopRef.current);
+        alertHapticsLoopRef.current = null;
+      }
       stopTracking();
       useSafetyStore.getState().resetCheck();
     };
@@ -527,7 +642,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
     const interval = setInterval(() => {
       const current = useSafetyStore.getState();
       if (!current.isEnabled) return;
-      if (current.checkStatus === 'pending') {
+      if (current.checkStatus === 'pending' || current.checkStatus === 'fall_detected') {
         current.tickPending();
       } else {
         current.tickCountdown();
@@ -536,20 +651,6 @@ export function RunTracker({ mode }: RunTrackerProps) {
 
     return () => clearInterval(interval);
   }, [store.status]);
-
-  // Follow user on camera
-  useEffect(() => {
-    if (!MapLibreRN || !isMountedRef.current) return;
-    const coords = store.coords;
-    if (coords.length > 0 && cameraRef.current) {
-      const last = coords[coords.length - 1];
-      cameraRef.current.setCamera({
-        centerCoordinate: [last.longitude, last.latitude],
-        zoomLevel: 16,
-        animationDuration: 500,
-      });
-    }
-  }, [store.coords.length]);
 
   // Motivation message check (every 30s or on segment change)
   useEffect(() => {
@@ -616,30 +717,60 @@ export function RunTracker({ mode }: RunTrackerProps) {
     const state = useRunStore.getState();
     if (state.status !== 'running') return;
 
-    const coords = state.coords;
-    let newDistance = state.distanceKm;
+    coordsRef.current.push(pos);
 
-    if (coords.length > 0) {
-      const last = coords[coords.length - 1];
+    if (lastPointRef.current) {
       const delta = haversineDistance(
-        last.latitude, last.longitude,
-        pos.latitude, pos.longitude,
+        lastPointRef.current.latitude,
+        lastPointRef.current.longitude,
+        pos.latitude,
+        pos.longitude,
       );
-      newDistance += delta;
+      distanceRef.current += delta;
     }
 
-    state.appendPosition(pos);
-    useSafetyStore.getState().updatePosition(pos);
-    state.setDistanceKm(newDistance);
+    lastPointRef.current = pos;
 
-    const updatedCoords = [...coords, pos];
-    const instantPace = calculateInstantPace(updatedCoords, 5);
-    const avgPace = calculateAvgPace(newDistance, state.elapsedSeconds);
+    if (typeof pos.speed === 'number' && pos.speed > 0) {
+      latestSpeedRef.current = pos.speed;
+    }
+
+    const routePoints = coordsRef.current.length > 500
+      ? simplifyRouteRdp(coordsRef.current, 0.00001)
+      : coordsRef.current;
+
+    routeSourceRef.current?.setNativeProps({ shape: buildGeoJSON(routePoints) });
+    markerSourceRef.current?.setNativeProps({ shape: buildPointGeoJSON(pos) });
+
+    cameraRef.current?.setCamera({
+      centerCoordinate: [pos.longitude, pos.latitude],
+      zoomLevel: 16,
+      animationDuration: 800,
+    });
+
+    useSafetyStore.getState().updatePosition(pos);
+
+    const now = Date.now();
+    if (now - throttledUpdateRef.current < 1000) {
+      return;
+    }
+
+    throttledUpdateRef.current = now;
+
+    state.appendPosition(pos);
+    state.setDistanceKm(distanceRef.current);
+
+    const paceFromSpeed = latestSpeedRef.current > 0 ? 1000 / latestSpeedRef.current : 0;
+    const instantPace = paceFromSpeed > 0
+      ? paceFromSpeed
+      : calculateInstantPace(coordsRef.current, 5);
+    const avgPace = calculateAvgPace(distanceRef.current, state.elapsedSeconds);
+
     state.setCurrentPaceSecPerKm(instantPace);
     state.setAvgPaceSecPerKm(avgPace);
   }, []);
 
-  const sendAlert = useCallback(async (type: 'no_response' | 'help_requested', contactsOverride?: SafetyContact[]) => {
+  const sendAlert = useCallback(async (type: SafetyAutoAlertType, contactsOverride?: SafetyContact[]) => {
     const currentSafety = useSafetyStore.getState();
     if (!currentSafety.lastKnownPosition) return;
     const contacts = contactsOverride ?? currentSafety.contacts;
@@ -647,6 +778,8 @@ export function RunTracker({ mode }: RunTrackerProps) {
     if (sendingRef.current) return;
 
     sendingRef.current = true;
+    useSafetyStore.getState().markAlertSending(type);
+
     const payload: AlertPayload = {
       type,
       position: currentSafety.lastKnownPosition,
@@ -656,47 +789,108 @@ export function RunTracker({ mode }: RunTrackerProps) {
     };
 
     const result = await sendSafetyAlert(contacts, payload);
-    useSafetyStore.getState().markAlertSent();
+    useSafetyStore.getState().markAlertSent({
+      type,
+      success: result.success,
+      failed: result.failed,
+    });
 
-    if (result.failed.length === 0) {
-      setAlertFeedback({
-        visible: true,
-        type: 'success',
-        title: t('safety.alert.sendSuccess'),
-        message: t('safety.overlay.alertSent', { count: result.success.length }),
-      });
-    } else if (result.success.length > 0) {
-      setAlertFeedback({
-        visible: true,
-        type: 'warning',
-        title: t('safety.alert.sendPartialFailure'),
-        message: `${t('safety.overlay.alertSent', { count: result.success.length })}\n${result.failed.map((c) => `• ${c.name}`).join('\n')}`,
-        retryContacts: result.failed,
-      });
-    } else {
-      setAlertFeedback({
-        visible: true,
-        type: 'error',
-        title: t('safety.alert.sendFailure'),
-        message: result.failed.map((c) => `• ${c.name}`).join('\n'),
-        retryContacts: result.failed,
-      });
+    if (result.iosUserActionRequired) {
+      setIosSendPromptVisible(true);
     }
 
     sendingRef.current = false;
-  }, [store.distanceKm, store.elapsedSeconds, t]);
+  }, [store.distanceKm, store.elapsedSeconds]);
 
   useEffect(() => {
     if (!safety.isEnabled) return;
-    if (safety.checkStatus === 'auto_alerting' && safety.alertSentAt === null) {
-      sendAlert('no_response');
+    if (safety.checkStatus === 'auto_alerting' && safety.alertSummary === null) {
+      sendAlert(safety.autoAlertType ?? 'no_response');
     }
-  }, [sendAlert, safety.alertSentAt, safety.checkStatus, safety.isEnabled]);
+  }, [sendAlert, safety.alertSummary, safety.autoAlertType, safety.checkStatus, safety.isEnabled]);
+
+  useEffect(() => {
+    if (store.status === 'running' && safety.fallDetectionEnabled) {
+      fallDetectionCleanupRef.current?.();
+      fallDetectionCleanupRef.current = startFallDetection(
+        () => {
+          useSafetyStore.getState().triggerFallCheck();
+        },
+        () => useRunStore.getState().status === 'running',
+        () => latestSpeedRef.current,
+      );
+      return;
+    }
+
+    if (fallDetectionCleanupRef.current) {
+      fallDetectionCleanupRef.current();
+      fallDetectionCleanupRef.current = null;
+    }
+  }, [safety.fallDetectionEnabled, store.status]);
+
+  useEffect(() => {
+    const pendingStates = safety.checkStatus === 'pending' || safety.checkStatus === 'fall_detected';
+    if (!pendingStates || safety.pendingSeconds >= 10) {
+      pendingShake.value = withTiming(0, { duration: 150 });
+      return;
+    }
+
+    pendingShake.value = withRepeat(
+      withSequence(
+        withTiming(-4, { duration: 45, easing: Easing.linear }),
+        withTiming(4, { duration: 45, easing: Easing.linear }),
+      ),
+      -1,
+      true,
+    );
+  }, [pendingShake, safety.checkStatus, safety.pendingSeconds]);
+
+  useEffect(() => {
+    if (safety.checkStatus !== 'fall_detected') return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => undefined);
+  }, [safety.checkStatus]);
+
+  useEffect(() => {
+    if (safety.checkStatus !== 'alert_sent') {
+      if (alertHapticsLoopRef.current) {
+        clearInterval(alertHapticsLoopRef.current);
+        alertHapticsLoopRef.current = null;
+      }
+      return;
+    }
+
+    alertGlow.value = withRepeat(
+      withSequence(
+        withTiming(0.3, { duration: 900 }),
+        withTiming(0.8, { duration: 1100 }),
+      ),
+      -1,
+      true,
+    );
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => undefined);
+    alertHapticsLoopRef.current = setInterval(() => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
+    }, 2000);
+
+    return () => {
+      if (alertHapticsLoopRef.current) {
+        clearInterval(alertHapticsLoopRef.current);
+        alertHapticsLoopRef.current = null;
+      }
+    };
+  }, [alertGlow, safety.checkStatus]);
 
   // Start GPS tracking
   const handleStart = useCallback(async () => {
     try {
       await requestLocationPermission();
+      coordsRef.current = [];
+      lastPointRef.current = null;
+      distanceRef.current = 0;
+      throttledUpdateRef.current = 0;
+      latestSpeedRef.current = 0;
+      routeSourceRef.current?.setNativeProps({ shape: EMPTY_GEOJSON });
       store.start();
       startTimeRef.current = Date.now();
       await startTracking(handlePosition);
@@ -727,6 +921,8 @@ export function RunTracker({ mode }: RunTrackerProps) {
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, visible: false }));
         await stopTracking();
+        useRunStore.getState().setCoords(coordsRef.current);
+        useRunStore.getState().setDistanceKm(distanceRef.current);
         store.finish();
         useSafetyStore.getState().resetCheck();
       },
@@ -743,6 +939,8 @@ export function RunTracker({ mode }: RunTrackerProps) {
         onConfirm: async () => {
           setConfirmModal(prev => ({ ...prev, visible: false }));
           await stopTracking();
+          useRunStore.getState().setCoords(coordsRef.current);
+          useRunStore.getState().setDistanceKm(distanceRef.current);
           store.reset();
           useSafetyStore.getState().resetCheck();
           router.back();
@@ -788,7 +986,8 @@ export function RunTracker({ mode }: RunTrackerProps) {
 
   useEffect(() => {
     useSafetyStore.getState().setContacts(safetyDefaults.contacts);
-  }, [safetyDefaults.contacts]);
+    useSafetyStore.getState().setFallDetectionEnabled(Boolean(safetyDefaults.fallDetectionEnabled));
+  }, [safetyDefaults.contacts, safetyDefaults.fallDetectionEnabled]);
   const displayedMetrics: string[] = runSettings?.displayedMetrics ?? [
     'distance', 'duration', 'currentPace', 'avgPace',
   ];
@@ -817,8 +1016,10 @@ export function RunTracker({ mode }: RunTrackerProps) {
     }
   }
 
-  const routeGeoJSON = buildGeoJSON(store.coords);
-  const lastCoord = store.coords.length > 0 ? store.coords[store.coords.length - 1] : null;
+  const routeGeoJSON = coordsRef.current.length > 0
+    ? buildGeoJSON(coordsRef.current)
+    : EMPTY_GEOJSON;
+  const lastCoord = lastPointRef.current;
   const initialPos = store.initialPosition;
   const nextMinutes = safety.nextCheckAt
     ? Math.max(0, Math.ceil((safety.nextCheckAt - Date.now()) / 60000))
@@ -831,14 +1032,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
     ? [initialPos.longitude, initialPos.latitude]
     : [2.3522, 48.8566];
 
-  const markerGeoJSON: GeoJSON.FeatureCollection = lastCoord ? {
-    type: 'FeatureCollection',
-    features: [{
-      type: 'Feature',
-      properties: {},
-      geometry: { type: 'Point', coordinates: [lastCoord.longitude, lastCoord.latitude] },
-    }],
-  } : { type: 'FeatureCollection', features: [] };
+  const markerGeoJSON = buildPointGeoJSON(lastCoord);
 
   // Initial position marker (shown before run starts)
   const initialMarkerGeoJSON: GeoJSON.FeatureCollection = (!lastCoord && initialPos) ? {
@@ -870,7 +1064,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
           />
 
           {/* Route polyline */}
-          <MapLibreRN.ShapeSource id="routeSource" shape={routeGeoJSON}>
+          <MapLibreRN.ShapeSource ref={routeSourceRef} id="routeSource" shape={routeGeoJSON}>
             <MapLibreRN.LineLayer
               id="routeLine"
               style={{
@@ -884,7 +1078,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
 
           {/* Current position marker */}
           {lastCoord && (
-            <MapLibreRN.ShapeSource id="markerSource" shape={markerGeoJSON}>
+            <MapLibreRN.ShapeSource ref={markerSourceRef} id="markerSource" shape={markerGeoJSON}>
               <MapLibreRN.CircleLayer
                 id="markerOuter"
                 style={{
@@ -968,6 +1162,29 @@ export function RunTracker({ mode }: RunTrackerProps) {
           </Text>
         </TouchableOpacity>
       </SafeAreaView>
+
+      {safety.checkStatus === 'countdown' && (
+        <TouchableOpacity
+          style={styles.safetyCountdownBanner}
+          activeOpacity={0.85}
+          onPress={() => useSafetyStore.getState().startPendingCheck()}
+        >
+          <BlurView intensity={35} tint="dark" style={styles.safetyCountdownBannerInner}>
+            <Shield size={16} color={C.blue} />
+            <Text style={styles.safetyCountdownText}>
+              {t('safety.overlay.upcomingCheck', { seconds: safety.countdownSeconds })}
+            </Text>
+            <View style={styles.safetyCountdownProgressTrack}>
+              <View
+                style={[
+                  styles.safetyCountdownProgressFill,
+                  { width: `${Math.max(0, Math.min(100, (safety.countdownSeconds / 60) * 100))}%` },
+                ]}
+              />
+            </View>
+          </BlurView>
+        </TouchableOpacity>
+      )}
 
 
       {/* Plan objective banner */}
@@ -1087,96 +1304,146 @@ export function RunTracker({ mode }: RunTrackerProps) {
         confirmColor={confirmModal.confirmColor}
       />
 
-      {(safety.checkStatus === 'pending' || safety.checkStatus === 'auto_alerting') && (
+      {(safety.checkStatus === 'pending' || safety.checkStatus === 'fall_detected' || safety.checkStatus === 'auto_alerting') && (
         <View style={styles.safetyOverlay}>
-          <View style={styles.safetyOverlayCard}>
-            <View style={styles.safetyOverlayHeader}>
-              <Shield size={22} color={C.green} />
-              <Text style={styles.safetyOverlayTitle}>{t('safety.overlay.title')}</Text>
-            </View>
-            <Text style={styles.safetyOverlaySubtitle}>{t('safety.overlay.subtitle')}</Text>
-
-            <View style={styles.safetyCountdownCircle}>
-              {safety.checkStatus === 'auto_alerting' ? (
-                <>
-                  <Loader size={20} color={C.orange} />
-                  <Text style={styles.safetyCountdownCircleText}>{t('safety.overlay.sending')}</Text>
-                </>
-              ) : (
-                <Text
-                  style={[
-                    styles.safetyCountdownCircleText,
-                    safety.pendingSeconds < 30
-                      ? { color: C.red }
-                      : safety.pendingSeconds < 60
-                        ? { color: C.orange }
-                        : { color: C.green },
-                  ]}
-                >
-                  {t('safety.overlay.countdown', { seconds: safety.pendingSeconds })}
+          <BlurView intensity={30} tint="dark" style={styles.safetyOverlayBackdrop}>
+            <View
+              style={[
+                styles.safetyOverlayCard,
+                safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall'
+                  ? styles.safetyOverlayCardFall
+                  : null,
+              ]}
+            >
+              <View style={styles.safetyOverlayHeaderStack}>
+                <View style={styles.safetyIconGlow}>
+                  {safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall' ? (
+                    <TriangleAlert size={42} color="#ffb15a" />
+                  ) : (
+                    <Shield size={42} color="#80bfff" />
+                  )}
+                </View>
+                <Text style={styles.safetyOverlayTitle}>
+                  {safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall'
+                    ? t('safety.fall.title')
+                    : t('safety.overlay.title')}
                 </Text>
+                <Text style={styles.safetyOverlaySubtitle}>
+                  {safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall'
+                    ? t('safety.fall.subtitle')
+                    : t('safety.overlay.subtitle')}
+                </Text>
+              </View>
+
+              {safety.checkStatus === 'auto_alerting' ? (
+                <View style={styles.sendingWrap}>
+                  <Loader size={20} color={C.orange} />
+                  <Text style={styles.sendingText}>{t('safety.overlay.sending')}</Text>
+                </View>
+              ) : (
+                <SafetyCountdownRing
+                  seconds={safety.pendingSeconds}
+                  totalSeconds={safety.autoAlertDelaySeconds}
+                  urgentShake={pendingShakeStyle}
+                />
+              )}
+
+              <SlideAction
+                label={t('safety.overlay.slideImOk')}
+                color={C.green}
+                icon={<CheckCircle2 size={17} color={C.green} />}
+                onComplete={() => {
+                  useSafetyStore.getState().dismissCheck();
+                }}
+                disabled={safety.checkStatus === 'auto_alerting'}
+              />
+              <SlideAction
+                label={t('safety.overlay.slideNeedHelp')}
+                color={C.orange}
+                icon={<Siren size={17} color={C.orange} />}
+                onComplete={async () => {
+                  useSafetyStore.getState().triggerHelp();
+                  await sendAlert('help_requested');
+                }}
+                disabled={safety.checkStatus === 'auto_alerting'}
+              />
+              <SlideAction
+                label={t('safety.overlay.slideCall112')}
+                color={C.red}
+                icon={<PhoneCall size={17} color={C.red} />}
+                onComplete={() => {
+                  Linking.openURL('tel:112');
+                }}
+                disabled={safety.checkStatus === 'auto_alerting'}
+              />
+
+              <TouchableOpacity style={styles.addTimeLink} onPress={() => setShowAddTimePicker(true)}>
+                <Text style={styles.addTimeLinkText}>{t('safety.overlay.addTime')}</Text>
+              </TouchableOpacity>
+            </View>
+          </BlurView>
+        </View>
+      )}
+
+      {safety.checkStatus === 'alert_sent' && safety.alertSummary && (
+        <View style={styles.alertSentOverlay}>
+          <Animated.View style={[styles.alertSentGlowEdges, alertGlowStyle]} />
+          <SafeAreaView style={styles.alertSentSafeArea} edges={['top', 'bottom']}>
+            <View style={styles.alertSentContent}>
+              <View style={styles.alertSentIconWrap}>
+                <Siren size={56} color="#ffd4d4" />
+              </View>
+              <Text style={styles.alertSentTitle}>{t('safety.alertSent.title')}</Text>
+              <Text style={styles.alertSentSubtitle}>{t('safety.alertSent.subtitle')}</Text>
+
+              <View style={styles.alertSentContactsCard}>
+                <Text style={styles.alertSentContactsTitle}>{t('safety.alertSent.contacts')}</Text>
+                {[...safety.alertSummary.success.map((contact) => ({ contact, ok: true })), ...safety.alertSummary.failed.map((contact) => ({ contact, ok: false }))].map(({ contact, ok }) => (
+                  <View key={contact.id} style={styles.alertSentContactRow}>
+                    {ok ? <CheckCircle2 size={14} color={C.green} /> : <TriangleAlert size={14} color={C.orange} />}
+                    <Text style={styles.alertSentContactName}>{contact.name}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Text style={styles.alertSentMeta}>
+                {t('safety.alertSent.timestamp', { time: new Date(safety.alertSummary.sentAt).toLocaleTimeString() })}
+              </Text>
+
+              {safety.lastKnownPosition && (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(`https://maps.google.com/?q=${safety.lastKnownPosition?.latitude},${safety.lastKnownPosition?.longitude}`)}
+                  style={styles.alertSentMapLinkBtn}
+                >
+                  <Text style={styles.alertSentMapLinkText}>
+                    {t('safety.alertSent.position', {
+                      latitude: safety.lastKnownPosition.latitude.toFixed(5),
+                      longitude: safety.lastKnownPosition.longitude.toFixed(5),
+                    })}
+                  </Text>
+                  <Text style={styles.alertSentMapLinkSecondary}>{t('safety.alertSent.openMap')}</Text>
+                </TouchableOpacity>
               )}
             </View>
 
-            <SlideAction
-              label={t('safety.overlay.imOk')}
-              color={C.green}
-              icon={<CheckCircle2 size={16} color={C.green} />}
-              onComplete={async () => {
-                const sentBefore = useSafetyStore.getState().alertSentAt !== null;
-                useSafetyStore.getState().dismissCheck();
-                if (sentBefore) {
-                  const allClearResult = await sendAllClearSafetyAlert(useSafetyStore.getState().contacts);
-                  if (allClearResult.failed.length === 0) {
-                    setAlertFeedback({
-                      visible: true,
-                      type: 'success',
-                      title: t('safety.overlay.allClear'),
-                      message: t('safety.overlay.allClear'),
-                    });
-                  } else if (allClearResult.success.length > 0) {
-                    setAlertFeedback({
-                      visible: true,
-                      type: 'warning',
-                      title: t('safety.alert.sendPartialFailure'),
-                      message: `${t('safety.overlay.allClear')}\n${allClearResult.failed.map((c) => `• ${c.name}`).join('\n')}`,
-                      retryContacts: allClearResult.failed,
-                    });
-                  } else {
-                    setAlertFeedback({
-                      visible: true,
-                      type: 'error',
-                      title: t('safety.alert.sendFailure'),
-                      message: allClearResult.failed.map((c) => `• ${c.name}`).join('\n'),
-                      retryContacts: allClearResult.failed,
-                    });
+            <View style={styles.alertSentActions}>
+              <TouchableOpacity style={styles.alertSentCallButton} onPress={() => Linking.openURL('tel:112')}>
+                <Text style={styles.alertSentCallButtonText}>{t('safety.alertSent.callEmergency')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.alertSentOkButton}
+                onPress={async () => {
+                  const result = await sendAllClearSafetyAlert(useSafetyStore.getState().contacts);
+                  if (result.iosUserActionRequired) {
+                    setIosSendPromptVisible(true);
                   }
-                }
-              }}
-            />
-            <SlideAction
-              label={t('safety.overlay.needHelp')}
-              color={C.orange}
-              icon={<Siren size={16} color={C.orange} />}
-              onComplete={async () => {
-                useSafetyStore.getState().triggerHelp();
-                await sendAlert('help_requested');
-              }}
-            />
-            <SlideAction
-              label={t('safety.overlay.call112')}
-              color={C.red}
-              icon={<PhoneCall size={16} color={C.red} />}
-              onComplete={() => {
-                Linking.openURL('tel:112');
-              }}
-            />
-
-            <TouchableOpacity style={styles.addTimeButton} onPress={() => setShowAddTimePicker(true)}>
-              <Clock3 size={14} color={C.gold} />
-              <Text style={styles.addTimeText}>{t('safety.overlay.addTime')}</Text>
-            </TouchableOpacity>
-          </View>
+                  useSafetyStore.getState().clearAlertSummary();
+                }}
+              >
+                <Text style={styles.alertSentOkButtonText}>{t('safety.alertSent.imOkCancel')}</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
         </View>
       )}
 
@@ -1186,12 +1453,23 @@ export function RunTracker({ mode }: RunTrackerProps) {
         initialEnabled={safety.isEnabled}
         defaultIntervalMinutes={safetyDefaults.defaultIntervalMinutes}
         defaultAutoAlertDelaySeconds={safetyDefaults.defaultAutoAlertDelaySeconds}
+        defaultFallDetectionEnabled={Boolean(safetyDefaults.fallDetectionEnabled)}
         onClose={() => setShowSafetyConfig(false)}
         onGoToSettings={() => {
           setShowSafetyConfig(false);
           router.push('/settings/safety');
         }}
-        onActivate={({ enabled, intervalMinutes, autoAlertDelaySeconds }) => {
+        onActivate={({
+          enabled,
+          intervalMinutes,
+          autoAlertDelaySeconds,
+          fallDetectionEnabled,
+        }: {
+          enabled: boolean;
+          intervalMinutes: number;
+          autoAlertDelaySeconds: number;
+          fallDetectionEnabled: boolean;
+        }) => {
           if (!enabled) {
             useSafetyStore.getState().resetCheck();
             return;
@@ -1199,54 +1477,61 @@ export function RunTracker({ mode }: RunTrackerProps) {
           useSafetyStore.getState().initCheck(
             intervalMinutes,
             autoAlertDelaySeconds,
-            safetyDefaults.contacts
+            safetyDefaults.contacts,
+            fallDetectionEnabled,
           );
         }}
       />
 
-      <CustomAlertModal
-        visible={showAddTimePicker}
-        type="info"
-        title={t('safety.overlay.addTime')}
-        message={t('safety.overlay.addTimeOptions')}
-        onClose={() => setShowAddTimePicker(false)}
-        showCloseButton
-        buttons={[
-          {
-            text: `+15 ${t('common.minShort')}`,
-            onPress: () => useSafetyStore.getState().extendCheck(15),
-          },
-          {
-            text: `+30 ${t('common.minShort')}`,
-            onPress: () => useSafetyStore.getState().extendCheck(30),
-          },
-          {
-            text: `+1${t('common.hour')}`,
-            onPress: () => useSafetyStore.getState().extendCheck(60),
-          },
-        ]}
-      />
+      {showAddTimePicker && (
+        <View style={styles.addTimeSheetOverlay}>
+          <TouchableOpacity style={styles.addTimeSheetBackdrop} onPress={() => setShowAddTimePicker(false)} />
+          <View style={styles.addTimeSheetCard}>
+            <Text style={styles.addTimeSheetTitle}>{t('safety.overlay.addTimeOptions')}</Text>
+            <View style={styles.addTimePillsRow}>
+              <TouchableOpacity
+                style={styles.addTimePill}
+                onPress={() => {
+                  useSafetyStore.getState().extendCheck(15);
+                  setShowAddTimePicker(false);
+                }}
+              >
+                <Text style={styles.addTimePillText}>+15 {t('common.minShort')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addTimePill}
+                onPress={() => {
+                  useSafetyStore.getState().extendCheck(30);
+                  setShowAddTimePicker(false);
+                }}
+              >
+                <Text style={styles.addTimePillText}>+30 {t('common.minShort')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addTimePill}
+                onPress={() => {
+                  useSafetyStore.getState().extendCheck(60);
+                  setShowAddTimePicker(false);
+                }}
+              >
+                <Text style={styles.addTimePillText}>+1 {t('common.hour')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
 
-      <CustomAlertModal
-        visible={alertFeedback.visible}
-        type={alertFeedback.type}
-        title={alertFeedback.title}
-        message={alertFeedback.message}
-        onClose={() => setAlertFeedback((prev) => ({ ...prev, visible: false }))}
-        showCloseButton
-        buttons={[
-          ...(alertFeedback.retryContacts && alertFeedback.retryContacts.length > 0
-            ? [{
-              text: t('safety.alert.retry'),
-              onPress: () => sendAlert('help_requested', alertFeedback.retryContacts),
-            }]
-            : []),
-          {
-            text: t('common.ok'),
-            style: 'cancel' as const,
-          },
-        ]}
-      />
+      {iosSendPromptVisible && (
+        <View style={styles.iosPromptOverlay}>
+          <View style={styles.iosPromptCard}>
+            <Text style={styles.iosPromptTitle}>{t('safety.alert.sendSuccess')}</Text>
+            <Text style={styles.iosPromptText}>{t('safety.alert.iosSendPrompt')}</Text>
+            <TouchableOpacity style={styles.iosPromptButton} onPress={() => setIosSendPromptVisible(false)}>
+              <Text style={styles.iosPromptButtonText}>{t('common.ok')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -1304,23 +1589,40 @@ const styles = StyleSheet.create({
   },
   safetyCountdownBanner: {
     position: 'absolute',
-    top: 110,
+    top: 108,
     alignSelf: 'center',
     zIndex: 50,
+    width: SW - 32,
+    borderRadius: R.xl,
+    overflow: 'hidden',
+  },
+  safetyCountdownBannerInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: S.sm,
-    backgroundColor: 'rgba(0,0,0,0.72)',
+    backgroundColor: 'rgba(7,12,20,0.62)',
+    borderColor: 'rgba(128,182,255,0.24)',
     borderWidth: 1,
-    borderColor: C.greenBorder,
-    borderRadius: R.full,
-    paddingHorizontal: S.lg,
+    paddingHorizontal: S.md,
     paddingVertical: S.sm,
   },
   safetyCountdownText: {
     color: C.text,
-    fontSize: T.sm,
+    fontSize: T.xs,
     fontWeight: W.semi,
+    flex: 1,
+  },
+  safetyCountdownProgressTrack: {
+    flex: 1,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden',
+  },
+  safetyCountdownProgressFill: {
+    height: '100%',
+    backgroundColor: '#79b5ff',
   },
 
   // Plan banner
@@ -1456,59 +1758,93 @@ const styles = StyleSheet.create({
   safetyOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 120,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
+  },
+  safetyOverlayBackdrop: {
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: S.lg,
   },
   safetyOverlayCard: {
-    backgroundColor: '#141722',
+    backgroundColor: 'rgba(9,16,28,0.88)',
     borderWidth: 1,
-    borderColor: C.borderUp,
+    borderColor: 'rgba(132,170,230,0.35)',
     borderRadius: R.xxl,
     padding: S.xl,
     gap: S.md,
   },
-  safetyOverlayHeader: {
-    flexDirection: 'row',
+  safetyOverlayCardFall: {
+    backgroundColor: 'rgba(38,18,16,0.92)',
+    borderColor: 'rgba(232,134,79,0.4)',
+  },
+  safetyOverlayHeaderStack: {
+    alignItems: 'center',
+    gap: S.xs,
+  },
+  safetyIconGlow: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(121,180,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: S.sm,
+    marginBottom: S.xs,
   },
   safetyOverlayTitle: {
     color: C.text,
-    fontSize: T.xl,
+    fontSize: T.xxl,
     fontWeight: W.bold,
     textAlign: 'center',
   },
   safetyOverlaySubtitle: {
     color: C.textSub,
-    fontSize: T.sm,
+    fontSize: T.md,
     textAlign: 'center',
+    marginBottom: S.sm,
   },
-  safetyCountdownCircle: {
-    borderRadius: R.full,
-    width: 130,
-    height: 130,
+  ringWrap: {
+    width: RING_SIZE,
+    height: RING_SIZE,
     alignSelf: 'center',
-    borderWidth: 4,
-    borderColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: S.md,
   },
-  safetyCountdownCircleText: {
+  ringCenter: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringValue: {
     color: C.text,
-    fontSize: T.md,
+    fontSize: 40,
     fontWeight: W.bold,
-    textAlign: 'center',
+    letterSpacing: -1,
+  },
+  sendingWrap: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: S.sm,
+    minHeight: RING_SIZE,
+  },
+  sendingText: {
+    color: C.text,
+    fontSize: T.sm,
+    fontWeight: W.semi,
   },
   slideTrack: {
-    height: 56,
-    borderRadius: R.full,
+    height: 64,
+    borderRadius: 32,
     borderWidth: 1,
     justifyContent: 'center',
     paddingHorizontal: S.md,
     overflow: 'hidden',
+  },
+  slideFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
   },
   slideLabelWrap: {
     flexDirection: 'row',
@@ -1516,35 +1852,239 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: S.sm,
   },
+  slideChevrons: {
+    fontSize: T.sm,
+    fontWeight: W.bold,
+    letterSpacing: 1,
+  },
   slideLabel: {
     fontSize: T.md,
     fontWeight: W.semi,
   },
   slideThumb: {
     position: 'absolute',
-    left: 3,
-    width: 44,
-    height: 44,
+    left: 4,
+    width: 56,
+    height: 56,
     borderRadius: R.full,
     justifyContent: 'center',
     alignItems: 'center',
-    top: 5,
+    top: 4,
   },
-  addTimeButton: {
+  addTimeLink: {
     marginTop: S.sm,
     alignSelf: 'center',
+    paddingVertical: S.xs,
+    paddingHorizontal: S.md,
+  },
+  addTimeLinkText: {
+    color: C.gold,
+    fontSize: T.sm,
+    fontWeight: W.semi,
+    textDecorationLine: 'underline',
+  },
+  alertSentOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 130,
+    backgroundColor: '#5a0f16',
+  },
+  alertSentGlowEdges: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 6,
+    borderColor: 'rgba(255,120,120,0.65)',
+    shadowColor: '#ff6b6b',
+    shadowOpacity: 0.8,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  alertSentSafeArea: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: S.xl,
+    paddingVertical: S.xl,
+  },
+  alertSentContent: {
+    alignItems: 'center',
+    gap: S.md,
+  },
+  alertSentIconWrap: {
+    marginTop: S.xl,
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertSentTitle: {
+    color: '#fff0f0',
+    fontSize: 34,
+    fontWeight: W.black,
+    textAlign: 'center',
+  },
+  alertSentSubtitle: {
+    color: 'rgba(255,233,233,0.9)',
+    fontSize: T.lg,
+    fontWeight: W.semi,
+    textAlign: 'center',
+  },
+  alertSentContactsCard: {
+    width: '100%',
+    borderRadius: R.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,209,209,0.3)',
+    backgroundColor: 'rgba(36,7,10,0.5)',
+    padding: S.md,
+    gap: S.xs,
+  },
+  alertSentContactsTitle: {
+    color: '#ffe3e3',
+    fontSize: T.sm,
+    fontWeight: W.bold,
+    marginBottom: 2,
+  },
+  alertSentContactRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: S.xs,
-    backgroundColor: C.goldSoft,
-    borderWidth: 1,
-    borderColor: 'rgba(232,184,75,0.35)',
-    borderRadius: R.full,
-    paddingHorizontal: S.lg,
-    paddingVertical: S.sm,
   },
-  addTimeText: {
+  alertSentContactName: {
+    color: '#fff3f3',
+    fontSize: T.sm,
+  },
+  alertSentMeta: {
+    color: 'rgba(255,225,225,0.88)',
+    fontSize: T.xs,
+  },
+  alertSentMapLinkBtn: {
+    paddingVertical: S.sm,
+    paddingHorizontal: S.md,
+    borderRadius: R.lg,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,214,214,0.28)',
+    gap: 2,
+  },
+  alertSentMapLinkText: {
+    color: '#fff3f3',
+    fontSize: T.xs,
+  },
+  alertSentMapLinkSecondary: {
+    color: '#ffd8d8',
+    fontSize: T.xs,
+    textDecorationLine: 'underline',
+  },
+  alertSentActions: {
+    gap: S.sm,
+  },
+  alertSentCallButton: {
+    borderRadius: R.full,
+    backgroundColor: '#d82727',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 54,
+  },
+  alertSentCallButtonText: {
+    color: '#fff',
+    fontSize: T.md,
+    fontWeight: W.bold,
+  },
+  alertSentOkButton: {
+    borderRadius: R.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,218,218,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 46,
+  },
+  alertSentOkButtonText: {
+    color: '#ffe2e2',
+    fontSize: T.sm,
+    fontWeight: W.semi,
+  },
+  addTimeSheetOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 132,
+    justifyContent: 'flex-end',
+  },
+  addTimeSheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  addTimeSheetCard: {
+    margin: S.lg,
+    borderRadius: R.xxl,
+    borderWidth: 1,
+    borderColor: C.borderUp,
+    backgroundColor: '#10131d',
+    padding: S.lg,
+    gap: S.sm,
+  },
+  addTimeSheetTitle: {
+    color: C.text,
+    fontSize: T.sm,
+    fontWeight: W.semi,
+    textAlign: 'center',
+  },
+  addTimePillsRow: {
+    flexDirection: 'row',
+    gap: S.sm,
+  },
+  addTimePill: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: R.full,
+    borderWidth: 1,
+    borderColor: 'rgba(245,166,35,0.35)',
+    backgroundColor: 'rgba(245,166,35,0.12)',
+    minHeight: 42,
+  },
+  addTimePillText: {
     color: C.gold,
+    fontSize: T.xs,
+    fontWeight: W.bold,
+  },
+  iosPromptOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 135,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    paddingHorizontal: S.xl,
+  },
+  iosPromptCard: {
+    width: '100%',
+    borderRadius: R.xl,
+    borderWidth: 1,
+    borderColor: C.borderUp,
+    backgroundColor: '#111827',
+    padding: S.lg,
+    gap: S.md,
+  },
+  iosPromptTitle: {
+    color: C.text,
+    fontSize: T.lg,
+    fontWeight: W.bold,
+    textAlign: 'center',
+  },
+  iosPromptText: {
+    color: C.textSub,
+    fontSize: T.sm,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  iosPromptButton: {
+    borderRadius: R.full,
+    backgroundColor: C.blue,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iosPromptButtonText: {
+    color: '#fff',
     fontSize: T.sm,
     fontWeight: W.bold,
   },
