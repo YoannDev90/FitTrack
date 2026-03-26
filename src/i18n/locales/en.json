@@ -654,7 +654,7 @@
       "customError": "Please enter a valid number greater than 0."
     },
     "overlay": {
-      "title": "Situation check 🛡️",
+      "title": "Situation check",
       "subtitle": "Are you safe?",
       "countdown": "{{seconds}} seconds",
       "upcomingCheck": "Check in {{seconds}}s",
@@ -672,7 +672,7 @@
     },
     "fall": {
       "title": "Fall detected!",
-      "subtitle": "Are you injured?",
+      "subtitle": "It looks like you had a fall. Are you okay?",
       "countdown": "Respond within {{seconds}} seconds",
       "dismissed": "Fall check dismissed"
     },
@@ -697,6 +697,13 @@
       "sendFailure": "Unable to alert contacts",
       "retry": "Retry",
       "iosSendPrompt": "Tap Send to alert your contacts"
+    },
+    "permission": {
+      "motionTitle": "Physical activity permission",
+      "motion": "Required to detect falls automatically during your run.",
+      "allow": "Allow",
+      "smsTitle": "SMS permission not granted",
+      "smsManual": "Emergency SMS messages will need to be sent manually until SMS permission is granted in Android settings."
     }
   },
   "settings": {
@@ -923,6 +930,49 @@
     "developerWarning": "These options are for developers. Use with caution.",
     "disableDeveloperMode": "Disable developer mode",
     "disableDeveloperModeDesc": "Hide these advanced options",
+    "developer": {
+      "sections": {
+        "pollination": "Pollination AI",
+        "interface": "Interface",
+        "gamification": "Gamification",
+        "safety": "Safety",
+        "developerMode": "Developer mode"
+      },
+      "pollination": {
+        "title": "Pollen Balance",
+        "connected": "Connected",
+        "disconnected": "Not connected",
+        "remainingCredit": "Remaining credit:",
+        "unit": "pollen",
+        "notAvailable": "N/A",
+        "errorPrefix": "Error:"
+      },
+      "onboardingResetTitle": "Reset Ploppy onboarding",
+      "onboardingResetSubtitle": "Show the Ploppy welcome modal again",
+      "onboardingResetDoneTitle": "Onboarding reset",
+      "onboardingResetDoneMessage": "The Ploppy welcome modal will appear the next time you open the meal page.",
+      "recalculateTitle": "Recalculate gamification",
+      "recalculateSubtitle": "Current XP: {{xp}} | Level: {{level}}",
+      "recalculateConfirmTitle": "Recalculate gamification?",
+      "recalculateConfirmMessage": "This will recalculate XP and level from all your sessions ({{count}} sport sessions).\n\nCurrent: Level {{level}}, {{xp}} XP",
+      "recalculateAction": "Recalculate",
+      "recalculateDoneTitle": "Recalculated",
+      "recalculateDoneMessage": "Level {{level}}, {{xp}} XP",
+      "clearHistoryTitle": "Clear XP history",
+      "clearHistorySubtitle": "Remove history without touching entries",
+      "clearHistoryConfirmTitle": "Clear history?",
+      "clearHistoryConfirmMessage": "This only clears XP gain history, not your current level.",
+      "clearHistoryAction": "Clear",
+      "clearHistoryDoneTitle": "History cleared",
+      "clearHistoryDoneMessage": "XP history has been cleared.",
+      "disableConfirmTitle": "Disable developer mode?",
+      "disableConfirmMessage": "You can enable it again by tapping About 10 times.",
+      "disableAction": "Disable",
+      "testFallTitle": "Fall detection test",
+      "testFallSubtitle": "Trigger emergency overlay without actually falling",
+      "testFallDoneTitle": "Fall test triggered",
+      "testFallDoneMessage": "Safety overlay has been triggered for testing."
+    },
     "cameraPreview": "Camera preview",
     "cameraPreviewDesc": "See camera feed during tracking",
     "skipSensorSelection": "Show sensor mode in tracking",

@@ -11,21 +11,14 @@ import {
   Dimensions,
   Platform,
   Linking,
-  PanResponder,
-  type GestureResponderEvent,
-  type PanResponderGestureState,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   FadeIn,
-  FadeInUp,
   FadeOut,
   SlideInDown,
-  SlideOutDown,
-  Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -35,7 +28,6 @@ import Animated, {
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
-import Svg, { Circle } from 'react-native-svg';
 import {
   Play,
   Pause,
@@ -46,10 +38,6 @@ import {
   Shield,
   CheckCircle2,
   Siren,
-  PhoneCall,
-  Clock3,
-  Loader,
-  ChevronRight,
   TriangleAlert,
 } from 'lucide-react-native';
 import { useRunStore, type LatLng, type RunSegment } from '../../stores/runStore';
@@ -72,6 +60,9 @@ import type { SafetyContact } from '../../types';
 import { getDefaultSafetySettings } from '../../utils/safety';
 import { startFallDetection } from '../../services/fallDetection';
 import { simplifyRouteRdp } from '../../utils/geoUtils';
+import { serviceLogger } from '../../utils/logger';
+import { SafetyCheckOverlay } from './SafetyCheckOverlay';
+import { CountdownBanner } from './CountdownBanner';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const MapLibreRN = getMapLibreModule();
@@ -222,9 +213,6 @@ function buildPointGeoJSON(coord: LatLng | null): GeoJSON.FeatureCollection {
 
 const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const RING_SIZE = 128;
-const RING_STROKE = 10;
-const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 // ============================================================================
 // METRIC CARD
@@ -338,137 +326,6 @@ const SegmentedProgressBar = ({ segments, currentIndex, progressInSegment }: {
   );
 };
 
-const SlideAction = ({
-  label,
-  color,
-  icon,
-  onComplete,
-  disabled,
-}: {
-  label: string;
-  color: string;
-  icon: React.ReactNode;
-  onComplete: () => void;
-  disabled?: boolean;
-}) => {
-  const [trackWidth, setTrackWidth] = useState(0);
-  const [thumbX, setThumbX] = useState(0);
-  const thresholdRatio = 0.9;
-  const thumbSize = 56;
-  const maxX = Math.max(0, trackWidth - thumbSize - 8);
-
-  const disabledRef = useRef(disabled);
-  const maxXRef = useRef(maxX);
-  const onCompleteRef = useRef(onComplete);
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => !disabledRef.current,
-      onPanResponderMove: (_evt: GestureResponderEvent, gesture: PanResponderGestureState) => {
-        const nextX = Math.max(0, Math.min(maxXRef.current, gesture.dx));
-        setThumbX(nextX);
-      },
-      onPanResponderRelease: (_evt: GestureResponderEvent, gesture: PanResponderGestureState) => {
-        const nextX = Math.max(0, Math.min(maxXRef.current, gesture.dx));
-        if (maxXRef.current > 0 && nextX >= maxXRef.current * thresholdRatio) {
-          setThumbX(maxXRef.current);
-          onCompleteRef.current();
-          setTimeout(() => setThumbX(0), 220);
-        } else {
-          setThumbX(0);
-        }
-      },
-      onPanResponderTerminate: () => setThumbX(0),
-    })
-  ).current;
-
-  useEffect(() => {
-    disabledRef.current = disabled;
-    maxXRef.current = maxX;
-    onCompleteRef.current = onComplete;
-  }, [disabled, maxX, onComplete]);
-
-  return (
-    <View
-      style={[styles.slideTrack, { borderColor: `${color}66`, backgroundColor: `${color}18` }]}
-      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-    >
-      <View style={[styles.slideFill, { backgroundColor: `${color}35`, width: thumbX + thumbSize / 2 }]} />
-      <View style={styles.slideLabelWrap}>
-        <Text style={[styles.slideChevrons, { color: `${color}aa` }]}>{'>>> '}</Text>
-        {icon}
-        <Text
-          style={[
-            styles.slideLabel,
-            { color },
-            trackWidth > 0 ? { opacity: Math.max(0, 1 - thumbX / (trackWidth * 0.6)) } : null,
-          ]}
-        >
-          {label}
-        </Text>
-      </View>
-      <View
-        style={[
-          styles.slideThumb,
-          {
-            backgroundColor: color,
-            transform: [{ translateX: thumbX }],
-          },
-          disabled && { opacity: 0.4 },
-        ]}
-        {...(!disabled ? panResponder.panHandlers : {})}
-      >
-        <ChevronRight size={22} color="#fff" />
-      </View>
-    </View>
-  );
-};
-
-const SafetyCountdownRing = ({
-  seconds,
-  totalSeconds,
-  urgentShake,
-}: {
-  seconds: number;
-  totalSeconds: number;
-  urgentShake: any;
-}) => {
-  const safeTotal = Math.max(1, totalSeconds);
-  const ratio = Math.max(0, Math.min(1, seconds / safeTotal));
-  const dashOffset = RING_CIRCUMFERENCE * (1 - ratio);
-
-  const color = seconds > 60 ? C.green : seconds > 30 ? C.orange : C.red;
-
-  return (
-    <Animated.View style={[styles.ringWrap, urgentShake]}>
-      <Svg width={RING_SIZE} height={RING_SIZE}>
-        <Circle
-          cx={RING_SIZE / 2}
-          cy={RING_SIZE / 2}
-          r={RING_RADIUS}
-          stroke="rgba(255,255,255,0.16)"
-          strokeWidth={RING_STROKE}
-          fill="none"
-        />
-        <Circle
-          cx={RING_SIZE / 2}
-          cy={RING_SIZE / 2}
-          r={RING_RADIUS}
-          stroke={color}
-          strokeWidth={RING_STROKE}
-          fill="none"
-          strokeDasharray={`${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`}
-          strokeDashoffset={dashOffset}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
-        />
-      </Svg>
-      <View style={styles.ringCenter}>
-        <Text style={styles.ringValue}>{seconds}</Text>
-      </View>
-    </Animated.View>
-  );
-};
-
 // ============================================================================
 // CONFIRMATION MODAL (replaces Alert.alert)
 // ============================================================================
@@ -530,7 +387,6 @@ export function RunTracker({ mode }: RunTrackerProps) {
   const latestSpeedRef = useRef<number>(0);
   const isMountedRef = useRef(true);
   const alertHapticsLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pendingShake = useSharedValue(0);
   const alertGlow = useSharedValue(0.35);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [motivationMessage, setMotivationMessage] = useState<string | null>(null);
@@ -539,13 +395,8 @@ export function RunTracker({ mode }: RunTrackerProps) {
     confirmLabel: string; confirmColor?: string;
   }>({ visible: false, title: '', onConfirm: () => {}, confirmLabel: '' });
   const [showSafetyConfig, setShowSafetyConfig] = useState(false);
-  const [showAddTimePicker, setShowAddTimePicker] = useState(false);
   const [iosSendPromptVisible, setIosSendPromptVisible] = useState(false);
   const sendingRef = useRef(false);
-
-  const pendingShakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: pendingShake.value }],
-  }));
 
   const alertGlowStyle = useAnimatedStyle(() => ({
     opacity: alertGlow.value,
@@ -771,41 +622,70 @@ export function RunTracker({ mode }: RunTrackerProps) {
   }, []);
 
   const sendAlert = useCallback(async (type: SafetyAutoAlertType, contactsOverride?: SafetyContact[]) => {
-    const currentSafety = useSafetyStore.getState();
-    if (!currentSafety.lastKnownPosition) return;
-    const contacts = contactsOverride ?? currentSafety.contacts;
-    if (!contacts.length) return;
     if (sendingRef.current) return;
 
     sendingRef.current = true;
     useSafetyStore.getState().markAlertSending(type);
 
-    const payload: AlertPayload = {
-      type,
-      position: currentSafety.lastKnownPosition,
-      runDurationMinutes: store.elapsedSeconds / 60,
-      distanceKm: store.distanceKm,
-      timestamp: new Date(),
-    };
+    const currentSafety = useSafetyStore.getState();
+    const contacts = contactsOverride ?? currentSafety.contacts;
 
-    const result = await sendSafetyAlert(contacts, payload);
-    useSafetyStore.getState().markAlertSent({
-      type,
-      success: result.success,
-      failed: result.failed,
-    });
+    try {
+      if (!contacts.length) {
+        useSafetyStore.getState().markAlertSent({
+          type,
+          success: [],
+          failed: [],
+        });
+        return;
+      }
 
-    if (result.iosUserActionRequired) {
-      setIosSendPromptVisible(true);
+      if (!currentSafety.lastKnownPosition) {
+        useSafetyStore.getState().markAlertSent({
+          type,
+          success: [],
+          failed: contacts,
+        });
+        return;
+      }
+
+      const payload: AlertPayload = {
+        type,
+        position: currentSafety.lastKnownPosition,
+        runDurationMinutes: store.elapsedSeconds / 60,
+        distanceKm: store.distanceKm,
+        timestamp: new Date(),
+      };
+
+      const result = await sendSafetyAlert(contacts, payload);
+      useSafetyStore.getState().markAlertSent({
+        type,
+        success: result.success,
+        failed: result.failed,
+      });
+
+      if (result.iosUserActionRequired) {
+        setIosSendPromptVisible(true);
+      }
+    } catch (error) {
+      serviceLogger.warn('[RunTracker] Automatic safety alert failed', error);
+      useSafetyStore.getState().markAlertSent({
+        type,
+        success: [],
+        failed: contacts,
+      });
+    } finally {
+      sendingRef.current = false;
     }
-
-    sendingRef.current = false;
   }, [store.distanceKm, store.elapsedSeconds]);
 
   useEffect(() => {
     if (!safety.isEnabled) return;
     if (safety.checkStatus === 'auto_alerting' && safety.alertSummary === null) {
-      sendAlert(safety.autoAlertType ?? 'no_response');
+      const runAutoAlert = async () => {
+        await sendAlert(safety.autoAlertType ?? 'no_response');
+      };
+      void runAutoAlert();
     }
   }, [sendAlert, safety.alertSummary, safety.autoAlertType, safety.checkStatus, safety.isEnabled]);
 
@@ -827,23 +707,6 @@ export function RunTracker({ mode }: RunTrackerProps) {
       fallDetectionCleanupRef.current = null;
     }
   }, [safety.fallDetectionEnabled, store.status]);
-
-  useEffect(() => {
-    const pendingStates = safety.checkStatus === 'pending' || safety.checkStatus === 'fall_detected';
-    if (!pendingStates || safety.pendingSeconds >= 10) {
-      pendingShake.value = withTiming(0, { duration: 150 });
-      return;
-    }
-
-    pendingShake.value = withRepeat(
-      withSequence(
-        withTiming(-4, { duration: 45, easing: Easing.linear }),
-        withTiming(4, { duration: 45, easing: Easing.linear }),
-      ),
-      -1,
-      true,
-    );
-  }, [pendingShake, safety.checkStatus, safety.pendingSeconds]);
 
   useEffect(() => {
     if (safety.checkStatus !== 'fall_detected') return;
@@ -1163,30 +1026,6 @@ export function RunTracker({ mode }: RunTrackerProps) {
         </TouchableOpacity>
       </SafeAreaView>
 
-      {safety.checkStatus === 'countdown' && (
-        <TouchableOpacity
-          style={styles.safetyCountdownBanner}
-          activeOpacity={0.85}
-          onPress={() => useSafetyStore.getState().startPendingCheck()}
-        >
-          <BlurView intensity={35} tint="dark" style={styles.safetyCountdownBannerInner}>
-            <Shield size={16} color={C.blue} />
-            <Text style={styles.safetyCountdownText}>
-              {t('safety.overlay.upcomingCheck', { seconds: safety.countdownSeconds })}
-            </Text>
-            <View style={styles.safetyCountdownProgressTrack}>
-              <View
-                style={[
-                  styles.safetyCountdownProgressFill,
-                  { width: `${Math.max(0, Math.min(100, (safety.countdownSeconds / 60) * 100))}%` },
-                ]}
-              />
-            </View>
-          </BlurView>
-        </TouchableOpacity>
-      )}
-
-
       {/* Plan objective banner */}
       {plan && (
         <Animated.View entering={FadeIn.delay(200)} style={styles.planBanner}>
@@ -1294,6 +1133,14 @@ export function RunTracker({ mode }: RunTrackerProps) {
         </View>
       </View>
 
+      <View style={styles.safetyCountdownBottomWrap}>
+        <CountdownBanner
+          visible={safety.checkStatus === 'countdown'}
+          seconds={safety.countdownSeconds}
+          onPress={() => useSafetyStore.getState().startPendingCheck()}
+        />
+      </View>
+
       {/* Confirm modal */}
       <ConfirmOverlay
         visible={confirmModal.visible}
@@ -1304,89 +1151,27 @@ export function RunTracker({ mode }: RunTrackerProps) {
         confirmColor={confirmModal.confirmColor}
       />
 
-      {(safety.checkStatus === 'pending' || safety.checkStatus === 'fall_detected' || safety.checkStatus === 'auto_alerting') && (
-        <View style={styles.safetyOverlay}>
-          <BlurView intensity={30} tint="dark" style={styles.safetyOverlayBackdrop}>
-            <View
-              style={[
-                styles.safetyOverlayCard,
-                safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall'
-                  ? styles.safetyOverlayCardFall
-                  : null,
-              ]}
-            >
-              <View style={styles.safetyOverlayHeaderStack}>
-                <View style={styles.safetyIconGlow}>
-                  {safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall' ? (
-                    <TriangleAlert size={42} color="#ffb15a" />
-                  ) : (
-                    <Shield size={42} color="#80bfff" />
-                  )}
-                </View>
-                <Text style={styles.safetyOverlayTitle}>
-                  {safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall'
-                    ? t('safety.fall.title')
-                    : t('safety.overlay.title')}
-                </Text>
-                <Text style={styles.safetyOverlaySubtitle}>
-                  {safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall'
-                    ? t('safety.fall.subtitle')
-                    : t('safety.overlay.subtitle')}
-                </Text>
-              </View>
-
-              {safety.checkStatus === 'auto_alerting' ? (
-                <View style={styles.sendingWrap}>
-                  <Loader size={20} color={C.orange} />
-                  <Text style={styles.sendingText}>{t('safety.overlay.sending')}</Text>
-                </View>
-              ) : (
-                <SafetyCountdownRing
-                  seconds={safety.pendingSeconds}
-                  totalSeconds={safety.autoAlertDelaySeconds}
-                  urgentShake={pendingShakeStyle}
-                />
-              )}
-
-              <SlideAction
-                label={t('safety.overlay.slideImOk')}
-                color={C.green}
-                icon={<CheckCircle2 size={17} color={C.green} />}
-                onComplete={() => {
-                  useSafetyStore.getState().dismissCheck();
-                }}
-                disabled={safety.checkStatus === 'auto_alerting'}
-              />
-              <SlideAction
-                label={t('safety.overlay.slideNeedHelp')}
-                color={C.orange}
-                icon={<Siren size={17} color={C.orange} />}
-                onComplete={async () => {
-                  useSafetyStore.getState().triggerHelp();
-                  await sendAlert('help_requested');
-                }}
-                disabled={safety.checkStatus === 'auto_alerting'}
-              />
-              <SlideAction
-                label={t('safety.overlay.slideCall112')}
-                color={C.red}
-                icon={<PhoneCall size={17} color={C.red} />}
-                onComplete={() => {
-                  Linking.openURL('tel:112');
-                }}
-                disabled={safety.checkStatus === 'auto_alerting'}
-              />
-
-              <TouchableOpacity style={styles.addTimeLink} onPress={() => setShowAddTimePicker(true)}>
-                <Text style={styles.addTimeLinkText}>{t('safety.overlay.addTime')}</Text>
-              </TouchableOpacity>
-            </View>
-          </BlurView>
-        </View>
-      )}
+      <SafetyCheckOverlay
+        visible={safety.checkStatus === 'pending' || safety.checkStatus === 'fall_detected' || safety.checkStatus === 'auto_alerting'}
+        isFallMode={safety.checkStatus === 'fall_detected' || safety.pendingReason === 'fall'}
+        pendingSeconds={safety.pendingSeconds}
+        autoAlertDelaySeconds={safety.autoAlertDelaySeconds}
+        isSending={safety.checkStatus === 'auto_alerting'}
+        onImOk={() => useSafetyStore.getState().dismissCheck()}
+        onNeedHelp={() => {
+          useSafetyStore.getState().triggerHelp();
+          void sendAlert('help_requested');
+        }}
+        onCall112={() => {
+          void Linking.openURL('tel:112');
+        }}
+        onExtendTime={(minutes) => {
+          useSafetyStore.getState().extendCheck(minutes);
+        }}
+      />
 
       {safety.checkStatus === 'alert_sent' && safety.alertSummary && (
-        <View style={styles.alertSentOverlay}>
+        <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={styles.alertSentOverlay}>
           <Animated.View style={[styles.alertSentGlowEdges, alertGlowStyle]} />
           <SafeAreaView style={styles.alertSentSafeArea} edges={['top', 'bottom']}>
             <View style={styles.alertSentContent}>
@@ -1444,7 +1229,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
               </TouchableOpacity>
             </View>
           </SafeAreaView>
-        </View>
+        </Animated.View>
       )}
 
       <SafetyCheckConfig
@@ -1482,44 +1267,6 @@ export function RunTracker({ mode }: RunTrackerProps) {
           );
         }}
       />
-
-      {showAddTimePicker && (
-        <View style={styles.addTimeSheetOverlay}>
-          <TouchableOpacity style={styles.addTimeSheetBackdrop} onPress={() => setShowAddTimePicker(false)} />
-          <View style={styles.addTimeSheetCard}>
-            <Text style={styles.addTimeSheetTitle}>{t('safety.overlay.addTimeOptions')}</Text>
-            <View style={styles.addTimePillsRow}>
-              <TouchableOpacity
-                style={styles.addTimePill}
-                onPress={() => {
-                  useSafetyStore.getState().extendCheck(15);
-                  setShowAddTimePicker(false);
-                }}
-              >
-                <Text style={styles.addTimePillText}>+15 {t('common.minShort')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.addTimePill}
-                onPress={() => {
-                  useSafetyStore.getState().extendCheck(30);
-                  setShowAddTimePicker(false);
-                }}
-              >
-                <Text style={styles.addTimePillText}>+30 {t('common.minShort')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.addTimePill}
-                onPress={() => {
-                  useSafetyStore.getState().extendCheck(60);
-                  setShowAddTimePicker(false);
-                }}
-              >
-                <Text style={styles.addTimePillText}>+1 {t('common.hour')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
 
       {iosSendPromptVisible && (
         <View style={styles.iosPromptOverlay}>
@@ -1587,42 +1334,12 @@ const styles = StyleSheet.create({
     fontSize: T.xs,
     fontWeight: W.bold,
   },
-  safetyCountdownBanner: {
+  safetyCountdownBottomWrap: {
     position: 'absolute',
-    top: 108,
-    alignSelf: 'center',
-    zIndex: 50,
-    width: SW - 32,
-    borderRadius: R.xl,
-    overflow: 'hidden',
-  },
-  safetyCountdownBannerInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: S.sm,
-    backgroundColor: 'rgba(7,12,20,0.62)',
-    borderColor: 'rgba(128,182,255,0.24)',
-    borderWidth: 1,
-    paddingHorizontal: S.md,
-    paddingVertical: S.sm,
-  },
-  safetyCountdownText: {
-    color: C.text,
-    fontSize: T.xs,
-    fontWeight: W.semi,
-    flex: 1,
-  },
-  safetyCountdownProgressTrack: {
-    flex: 1,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    overflow: 'hidden',
-  },
-  safetyCountdownProgressFill: {
-    height: '100%',
-    backgroundColor: '#79b5ff',
+    left: 0,
+    right: 0,
+    bottom: Platform.OS === 'ios' ? 280 : 256,
+    zIndex: 45,
   },
 
   // Plan banner

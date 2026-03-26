@@ -28,6 +28,8 @@ import {
   SAFETY_AUTO_ALERT_OPTIONS,
 } from '../../src/constants/safety';
 import { formatSafetyDelay, formatSafetyInterval, getDefaultSafetySettings } from '../../src/utils/safety';
+import { isAndroidSmsPermissionGranted } from '../../src/services/safetyAlert';
+import { serviceLogger } from '../../src/utils/logger';
 
 const MAX_CONTACTS = 5;
 
@@ -46,6 +48,7 @@ export default function SafetySettingsScreen() {
   const [customIntervalText, setCustomIntervalText] = useState('');
   const [isCustomInterval, setIsCustomInterval] = useState(false);
   const [customIntervalError, setCustomIntervalError] = useState<string | null>(null);
+  const [showSmsPermissionWarning, setShowSmsPermissionWarning] = useState(false);
 
   useEffect(() => {
     const checkWhatsApp = async () => {
@@ -78,16 +81,33 @@ export default function SafetySettingsScreen() {
     });
   };
 
-  const handleSaveContact = () => {
+  const handleSaveContact = async () => {
     if (!canAdd) return;
     if (contacts.length >= MAX_CONTACTS) return;
+
     const newContact: SafetyContact = {
       id: nanoid(),
       name: name.trim(),
       phone: phone.trim(),
       method,
     };
+
     updateSafetySettings({ contacts: [...contacts, newContact] });
+
+    if (Platform.OS === 'android' && newContact.method === 'sms') {
+      try {
+        const smsPermissionGranted = await isAndroidSmsPermissionGranted();
+        if (smsPermissionGranted) {
+          serviceLogger.info('SMS GRANTED');
+        } else {
+          setShowSmsPermissionWarning(true);
+        }
+      } catch (error) {
+        serviceLogger.warn('[SafetySettings] SMS permission check failed', error);
+        setShowSmsPermissionWarning(true);
+      }
+    }
+
     setName('');
     setPhone('');
     setMethod('sms');
@@ -365,6 +385,15 @@ export default function SafetySettingsScreen() {
             },
           },
         ]}
+      />
+
+      <CustomAlertModal
+        visible={showSmsPermissionWarning}
+        type="warning"
+        title={t('safety.permission.smsTitle')}
+        message={t('safety.permission.smsManual')}
+        onClose={() => setShowSmsPermissionWarning(false)}
+        buttons={[{ text: t('common.ok') }]}
       />
     </SafeAreaView>
   );

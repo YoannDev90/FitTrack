@@ -17,6 +17,8 @@
       "bundleIdentifier": "com.spix.app",
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) a besoin de la caméra pour détecter vos mouvements",
+        "NSMotionUsageDescription": "Utilisé pour détecter automatiquement les chutes pendant vos courses / Used to automatically detect falls during your runs",
+        "NSMicrophoneUsageDescription": null,
         "UIBackgroundModes": [
           "location"
         ]
@@ -36,6 +38,10 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.BODY_SENSORS",
+        "android.permission.SEND_SMS",
         "android.permission.health.READ_EXERCISE",
         "android.permission.health.READ_DISTANCE",
         "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
@@ -44,6 +50,9 @@
         "android.permission.health.READ_TOTAL_CALORIES_BURNED",
         "android.permission.health.READ_WEIGHT",
         "android.permission.health.READ_BODY_FAT"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
       ],
       "versionCode": 100100,
       "googleServicesFile": "./google-services.json"

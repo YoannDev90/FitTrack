@@ -48,7 +48,7 @@ interface SafetyCheckState {
   dismissCheck: () => void;
   triggerHelp: () => void;
   startPendingCheck: () => void;
-  triggerFallCheck: () => void;
+  triggerFallCheck: (force?: boolean) => void;
   extendCheck: (newIntervalMinutes: number) => void;
   resetCheck: () => void;
   updatePosition: (pos: LatLng) => void;
@@ -193,12 +193,14 @@ export const useSafetyStore = create<SafetyCheckState>((set, get) => ({
     });
   },
 
-  triggerFallCheck: () => {
+  triggerFallCheck: (force = false) => {
     const state = get();
-    if (!state.isEnabled || !state.fallDetectionEnabled) return;
+    if ((!state.isEnabled || !state.fallDetectionEnabled) && !force) return;
     if (state.checkStatus === 'auto_alerting' || state.checkStatus === 'alert_sent') return;
 
     set({
+      isEnabled: force ? true : state.isEnabled,
+      fallDetectionEnabled: force ? true : state.fallDetectionEnabled,
       checkStatus: 'fall_detected',
       pendingReason: 'fall',
       autoAlertType: null,

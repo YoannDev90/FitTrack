@@ -9,8 +9,6 @@ import {
   StyleSheet, 
   ScrollView,
   TouchableOpacity,
-  Switch,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +17,6 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft,
-  Eye,
   Sparkles,
   Code2,
   AlertTriangle,
@@ -31,8 +28,9 @@ import {
   XCircle,
   RotateCcw,
 } from 'lucide-react-native';
-import { GlassCard } from '../../src/components/ui';
+import { GlassCard, CustomAlertModal, type AlertButton } from '../../src/components/ui';
 import { useAppStore, useGamificationStore } from '../../src/stores';
+import { useSafetyStore } from '../../src/stores/safetyStore';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
 import { getPollinationAccountInfo, PollinationAccountInfo } from '../../src/services/pollination';
 
@@ -86,12 +84,45 @@ function SectionTitle({ title, delay = 0 }: { title: string; delay?: number }) {
 
 export default function DeveloperScreen() {
   const { t } = useTranslation();
-  const { settings, updateSettings, entries, recalculateGamification } = useAppStore();
+  const { updateSettings, entries } = useAppStore();
   const { xp, level, clearHistory, recalculateFromEntries } = useGamificationStore();
+  const triggerFallCheck = useSafetyStore((state) => state.triggerFallCheck);
   
   // Pollination account info
   const [pollinationInfo, setPollinationInfo] = useState<PollinationAccountInfo | null>(null);
   const [loadingPollination, setLoadingPollination] = useState(true);
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    type: 'success' | 'error' | 'warning' | 'info';
+    title: string;
+    message: string;
+    buttons: AlertButton[];
+  }>({
+    visible: false,
+    type: 'info',
+    title: '',
+    message: '',
+    buttons: [],
+  });
+
+  const openModal = (config: {
+    type: 'success' | 'error' | 'warning' | 'info';
+    title: string;
+    message: string;
+    buttons?: AlertButton[];
+  }) => {
+    setModalState({
+      visible: true,
+      type: config.type,
+      title: config.title,
+      message: config.message,
+      buttons: config.buttons ?? [{ text: t('common.ok') }],
+    });
+  };
+
+  const closeModal = () => {
+    setModalState((previous) => ({ ...previous, visible: false }));
+  };
   
   useEffect(() => {
     const loadPollinationInfo = async () => {
@@ -105,61 +136,103 @@ export default function DeveloperScreen() {
 
   // Handle recalculate gamification
   const handleRecalculateGamification = () => {
-    Alert.alert(
-      '🔄 Recalculer la gamification ?',
-      `Cette action va recalculer l'XP et le niveau en fonction de toutes tes séances (${entries.filter(e => ['home', 'run', 'beatsaber', 'custom'].includes(e.type)).length} séances sport).\n\nActuellement: Niveau ${level}, ${xp} XP`,
-      [
+    const sportEntriesCount = entries.filter((entry) => ['home', 'run', 'beatsaber', 'custom'].includes(entry.type)).length;
+
+    openModal({
+      type: 'warning',
+      title: t('settings.developer.recalculateConfirmTitle'),
+      message: t('settings.developer.recalculateConfirmMessage', {
+        count: sportEntriesCount,
+        level,
+        xp,
+      }),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
-        { 
-          text: 'Recalculer', 
+        {
+          text: t('settings.developer.recalculateAction'),
           onPress: () => {
             recalculateFromEntries(entries);
-            Alert.alert('✅ Recalculé', `Niveau ${useGamificationStore.getState().level}, ${useGamificationStore.getState().xp} XP`);
+            setTimeout(() => {
+              const updatedGamification = useGamificationStore.getState();
+              openModal({
+                type: 'success',
+                title: t('settings.developer.recalculateDoneTitle'),
+                message: t('settings.developer.recalculateDoneMessage', {
+                  level: updatedGamification.level,
+                  xp: updatedGamification.xp,
+                }),
+              });
+            }, 0);
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   // Handle clear gamification history
   const handleClearHistory = () => {
-    Alert.alert(
-      '🗑️ Effacer l\'historique ?',
-      'Cela effacera uniquement l\'historique des gains XP, pas ton niveau actuel.',
-      [
+    openModal({
+      type: 'warning',
+      title: t('settings.developer.clearHistoryConfirmTitle'),
+      message: t('settings.developer.clearHistoryConfirmMessage'),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
-        { 
-          text: 'Effacer', 
+        {
+          text: t('settings.developer.clearHistoryAction'),
           style: 'destructive',
           onPress: () => {
             clearHistory();
-            Alert.alert('✅ Historique effacé');
+            setTimeout(() => {
+              openModal({
+                type: 'success',
+                title: t('settings.developer.clearHistoryDoneTitle'),
+                message: t('settings.developer.clearHistoryDoneMessage'),
+              });
+            }, 0);
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   // Handle disable developer mode
   const handleDisableDeveloperMode = () => {
-    Alert.alert(
-      '🔒 Désactiver le mode développeur ?',
-      'Tu pourras le réactiver en cliquant 10 fois sur "À propos".',
-      [
+    openModal({
+      type: 'warning',
+      title: t('settings.developer.disableConfirmTitle'),
+      message: t('settings.developer.disableConfirmMessage'),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
-        { 
-          text: 'Désactiver', 
+        {
+          text: t('settings.developer.disableAction'),
           style: 'destructive',
           onPress: () => {
-            // Also disable debug camera when disabling developer mode
-            updateSettings({ 
+            updateSettings({
               developerMode: false,
             });
             router.back();
           },
         },
-      ]
-    );
+      ],
+    });
+  };
+
+  const handleResetPloppyOnboarding = () => {
+    updateSettings({ ploppyOnboardingShown: false });
+    openModal({
+      type: 'success',
+      title: t('settings.developer.onboardingResetDoneTitle'),
+      message: t('settings.developer.onboardingResetDoneMessage'),
+    });
+  };
+
+  const handleTriggerFallTest = () => {
+    triggerFallCheck(true);
+    openModal({
+      type: 'success',
+      title: t('settings.developer.testFallDoneTitle'),
+      message: t('settings.developer.testFallDoneMessage'),
+    });
   };
 
   return (
@@ -178,7 +251,7 @@ export default function DeveloperScreen() {
             <ArrowLeft size={24} color={Colors.text} />
           </TouchableOpacity>
           <Text style={styles.screenTitle}>
-            {t('settings.developerMode', { defaultValue: 'Mode développeur' })}
+            {t('settings.developerMode')}
           </Text>
           <View style={styles.headerSpacer} />
         </Animated.View>
@@ -188,14 +261,14 @@ export default function DeveloperScreen() {
           <View style={styles.warningBanner}>
             <AlertTriangle size={20} color="#fbbf24" />
             <Text style={styles.warningText}>
-              {t('settings.developerWarning', { defaultValue: 'Ces options sont réservées aux développeurs. Utilise-les avec précaution.' })}
+              {t('settings.developerWarning')}
             </Text>
           </View>
         </Animated.View>
 
 
         {/* Pollination Status */}
-        <SectionTitle title="Pollination AI" delay={130} />
+        <SectionTitle title={t('settings.developer.sections.pollination')} delay={130} />
         <Animated.View entering={FadeInDown.delay(140).springify()}>
           <GlassCard style={styles.pollinationCard}>
             <View style={styles.pollinationHeader}>
@@ -203,18 +276,18 @@ export default function DeveloperScreen() {
                 <Flower2 size={24} color="#8B5CF6" />
               </View>
               <View style={styles.pollinationInfo}>
-                <Text style={styles.pollinationTitle}>Pollen Balance</Text>
+                <Text style={styles.pollinationTitle}>{t('settings.developer.pollination.title')}</Text>
                 {loadingPollination ? (
                   <ActivityIndicator size="small" color={Colors.muted} style={{ marginTop: 4 }} />
                 ) : pollinationInfo?.connected ? (
                   <View style={styles.pollinationStatus}>
                     <CheckCircle size={14} color="#22c55e" />
-                    <Text style={styles.pollinationStatusText}>Connecté</Text>
+                    <Text style={styles.pollinationStatusText}>{t('settings.developer.pollination.connected')}</Text>
                   </View>
                 ) : (
                   <View style={styles.pollinationStatus}>
                     <XCircle size={14} color={Colors.muted} />
-                    <Text style={[styles.pollinationStatusText, { color: Colors.muted }]}>Non connecté</Text>
+                    <Text style={[styles.pollinationStatusText, { color: Colors.muted }]}>{t('settings.developer.pollination.disconnected')}</Text>
                   </View>
                 )}
               </View>
@@ -223,25 +296,25 @@ export default function DeveloperScreen() {
             {!loadingPollination && pollinationInfo?.connected && (
               <View style={styles.pollinationBalanceContainer}>
                 <Coins size={18} color="#fbbf24" />
-                <Text style={styles.pollinationBalanceLabel}>Crédit restant:</Text>
+                <Text style={styles.pollinationBalanceLabel}>{t('settings.developer.pollination.remainingCredit')}</Text>
                 <Text style={styles.pollinationBalanceValue}>
                   {pollinationInfo.balance !== undefined 
-                    ? `${pollinationInfo.balance} pollen` 
-                    : 'N/A'}
+                    ? `${pollinationInfo.balance} ${t('settings.developer.pollination.unit')}` 
+                    : t('settings.developer.pollination.notAvailable')}
                 </Text>
               </View>
             )}
             
             {pollinationInfo?.error && (
               <Text style={styles.pollinationError}>
-                Erreur: {pollinationInfo.error}
+                {t('settings.developer.pollination.errorPrefix')} {pollinationInfo.error}
               </Text>
             )}
           </GlassCard>
         </Animated.View>
 
         {/* Onboarding */}
-        <SectionTitle title="Interface" delay={140} />
+        <SectionTitle title={t('settings.developer.sections.interface')} delay={140} />
         <GlassCard style={styles.settingsCard}>
           <SettingItem
             icon={<Sparkles size={20} color="#a78bfa" />}
@@ -257,48 +330,59 @@ export default function DeveloperScreen() {
           <SettingItem
             icon={<RotateCcw size={20} color="#fbbf24" />}
             iconColor="#fbbf24"
-            title="Réinitialiser onboarding Ploppy"
-            subtitle="Réafficher le modal de bienvenue Ploppy"
-            onPress={() => {
-              updateSettings({ ploppyOnboardingShown: false });
-              Alert.alert(
-                'Onboarding réinitialisé',
-                'Le modal de bienvenue Ploppy réapparaîtra au prochain accès à la page repas.'
-              );
-            }}
+            title={t('settings.developer.onboardingResetTitle')}
+            subtitle={t('settings.developer.onboardingResetSubtitle')}
+            onPress={handleResetPloppyOnboarding}
             delay={180}
           />
         </GlassCard>
 
         {/* Gamification */}
-        <SectionTitle title="Gamification" delay={180} />
+        <SectionTitle title={t('settings.developer.sections.gamification')} delay={180} />
         <GlassCard style={styles.settingsCard}>
           <SettingItem
             icon={<RefreshCw size={20} color={Colors.teal} />}
             iconColor={Colors.teal}
-            title="Recalculer la gamification"
-            subtitle={`XP actuel: ${xp} | Niveau: ${level}`}
+            title={t('settings.developer.recalculateTitle')}
+            subtitle={t('settings.developer.recalculateSubtitle', { xp, level })}
             onPress={handleRecalculateGamification}
             delay={200}
           />
           <SettingItem
             icon={<Trash2 size={20} color="#f97316" />}
             iconColor="#f97316"
-            title="Effacer l'historique XP"
-            subtitle="Supprime l'historique sans toucher aux entrées"
+            title={t('settings.developer.clearHistoryTitle')}
+            subtitle={t('settings.developer.clearHistorySubtitle')}
             onPress={handleClearHistory}
             delay={220}
           />
         </GlassCard>
 
+        {/* Safety Test */}
+        {__DEV__ && (
+          <>
+            <SectionTitle title={t('settings.developer.sections.safety')} delay={220} />
+            <GlassCard style={styles.settingsCard}>
+              <SettingItem
+                icon={<AlertTriangle size={20} color={Colors.warning} />}
+                iconColor={Colors.warning}
+                title={t('settings.developer.testFallTitle')}
+                subtitle={t('settings.developer.testFallSubtitle')}
+                onPress={handleTriggerFallTest}
+                delay={240}
+              />
+            </GlassCard>
+          </>
+        )}
+
         {/* Disable Developer Mode */}
-        <SectionTitle title="Mode développeur" delay={240} />
+        <SectionTitle title={t('settings.developer.sections.developerMode')} delay={240} />
         <GlassCard style={[styles.settingsCard, styles.dangerCard]}>
           <SettingItem
             icon={<Code2 size={20} color={Colors.error} />}
             iconColor={Colors.error}
-            title={t('settings.disableDeveloperMode', { defaultValue: 'Désactiver le mode développeur' })}
-            subtitle={t('settings.disableDeveloperModeDesc', { defaultValue: 'Masquer ces options avancées' })}
+            title={t('settings.disableDeveloperMode')}
+            subtitle={t('settings.disableDeveloperModeDesc')}
             onPress={handleDisableDeveloperMode}
             delay={260}
           />
@@ -307,6 +391,15 @@ export default function DeveloperScreen() {
         {/* Spacer */}
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <CustomAlertModal
+        visible={modalState.visible}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        buttons={modalState.buttons}
+        onClose={closeModal}
+      />
     </SafeAreaView>
   );
 }

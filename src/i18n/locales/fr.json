@@ -673,7 +673,7 @@
       "customError": "Veuillez saisir un nombre entier positif."
     },
     "overlay": {
-      "title": "Contrôle de situation 🛡️",
+      "title": "Contrôle de situation",
       "subtitle": "Êtes-vous en sécurité ?",
       "countdown": "{{seconds}} secondes",
       "upcomingCheck": "Contrôle dans {{seconds}}s",
@@ -691,7 +691,7 @@
     },
     "fall": {
       "title": "Chute détectée !",
-      "subtitle": "Êtes-vous blessé ?",
+      "subtitle": "Il semble que vous ayez chuté. Êtes-vous en sécurité ?",
       "countdown": "Répondez dans {{seconds}} secondes",
       "dismissed": "Contrôle de chute ignoré"
     },
@@ -716,6 +716,13 @@
       "sendFailure": "Impossible d'alerter les contacts",
       "retry": "Réessayer",
       "iosSendPrompt": "Appuyez sur Envoyer pour alerter vos contacts"
+    },
+    "permission": {
+      "motionTitle": "Permission d'activité physique",
+      "motion": "Nécessaire pour détecter automatiquement les chutes pendant vos courses.",
+      "allow": "Autoriser",
+      "smsTitle": "Permission SMS non accordée",
+      "smsManual": "Les SMS d'urgence devront être envoyés manuellement tant que la permission SMS n'est pas accordée dans les réglages Android."
     }
   },
   "settings": {
@@ -944,6 +951,49 @@
     "developerWarning": "Ces options sont réservées aux développeurs. Utilise-les avec précaution.",
     "disableDeveloperMode": "Désactiver le mode développeur",
     "disableDeveloperModeDesc": "Masquer ces options avancées",
+    "developer": {
+      "sections": {
+        "pollination": "Pollination AI",
+        "interface": "Interface",
+        "gamification": "Gamification",
+        "safety": "Sécurité",
+        "developerMode": "Mode développeur"
+      },
+      "pollination": {
+        "title": "Pollen Balance",
+        "connected": "Connecté",
+        "disconnected": "Non connecté",
+        "remainingCredit": "Crédit restant :",
+        "unit": "pollen",
+        "notAvailable": "N/A",
+        "errorPrefix": "Erreur :"
+      },
+      "onboardingResetTitle": "Réinitialiser onboarding Ploppy",
+      "onboardingResetSubtitle": "Réafficher le modal de bienvenue Ploppy",
+      "onboardingResetDoneTitle": "Onboarding réinitialisé",
+      "onboardingResetDoneMessage": "Le modal de bienvenue Ploppy réapparaîtra au prochain accès à la page repas.",
+      "recalculateTitle": "Recalculer la gamification",
+      "recalculateSubtitle": "XP actuel: {{xp}} | Niveau: {{level}}",
+      "recalculateConfirmTitle": "Recalculer la gamification ?",
+      "recalculateConfirmMessage": "Cette action va recalculer l'XP et le niveau en fonction de toutes tes séances ({{count}} séances sport).\n\nActuellement: Niveau {{level}}, {{xp}} XP",
+      "recalculateAction": "Recalculer",
+      "recalculateDoneTitle": "Recalculé",
+      "recalculateDoneMessage": "Niveau {{level}}, {{xp}} XP",
+      "clearHistoryTitle": "Effacer l'historique XP",
+      "clearHistorySubtitle": "Supprime l'historique sans toucher aux entrées",
+      "clearHistoryConfirmTitle": "Effacer l'historique ?",
+      "clearHistoryConfirmMessage": "Cela effacera uniquement l'historique des gains XP, pas ton niveau actuel.",
+      "clearHistoryAction": "Effacer",
+      "clearHistoryDoneTitle": "Historique effacé",
+      "clearHistoryDoneMessage": "L'historique XP a été effacé.",
+      "disableConfirmTitle": "Désactiver le mode développeur ?",
+      "disableConfirmMessage": "Tu pourras le réactiver en cliquant 10 fois sur \"À propos\".",
+      "disableAction": "Désactiver",
+      "testFallTitle": "Test de détection de chute",
+      "testFallSubtitle": "Déclencher l'overlay d'urgence sans chute réelle",
+      "testFallDoneTitle": "Test chute déclenché",
+      "testFallDoneMessage": "L'overlay de sécurité a été déclenché pour test."
+    },
     "cameraPreview": "Aperçu caméra",
     "cameraPreviewDesc": "Voir le flux caméra lors du tracking",
     "skipSensorSelection": "Afficher le mode capteur dans le tracking",

@@ -1,6 +1,5 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, PermissionsAndroid, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
-import * as SMS from 'expo-sms';
 import i18n from '../i18n';
 import type { SafetyContact } from '../types';
 import type { LatLng } from '../stores/runStore';
@@ -33,6 +32,7 @@ const DEFAULT_APP_NAME = 'Spix';
 const DEFAULT_USER_NAME = 'Utilisateur';
 
 interface AndroidDirectSmsModule {
+  hasSmsPermission?: () => Promise<boolean>;
   sendSmsDirect?: (phone: string, message: string) => Promise<boolean>;
 }
 
@@ -74,7 +74,10 @@ function buildAllClearMessage(userName?: string, appName?: string): string {
 }
 
 async function openSmsComposer(phone: string, message: string): Promise<boolean> {
-  const smsUrl = `sms:${phone}?body=${encodeURIComponent(message)}`;
+  const smsUrl = Platform.OS === 'ios'
+    ? `sms:${phone}&body=${encodeURIComponent(message)}`
+    : `sms:${phone}?body=${encodeURIComponent(message)}`;
+
   const canOpenSmsUrl = await Linking.canOpenURL(smsUrl);
   if (!canOpenSmsUrl) {
     return false;
@@ -82,6 +85,44 @@ async function openSmsComposer(phone: string, message: string): Promise<boolean>
 
   await Linking.openURL(smsUrl);
   return true;
+}
+
+async function hasAndroidSmsPermissionNative(): Promise<boolean> {
+  if (Platform.OS !== 'android') return false;
+
+  if (androidDirectSmsModule?.hasSmsPermission) {
+    try {
+      return await androidDirectSmsModule.hasSmsPermission();
+    } catch (error) {
+      serviceLogger.warn('[SafetyAlert] Native SMS permission check failed', error);
+    }
+  }
+
+  try {
+    return await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.SEND_SMS);
+  } catch (error) {
+    serviceLogger.warn('[SafetyAlert] JS SMS permission check failed', error);
+    return false;
+  }
+}
+
+export async function isAndroidSmsPermissionGranted(): Promise<boolean> {
+  return hasAndroidSmsPermissionNative();
+}
+
+async function ensureAndroidSmsPermissionGranted(): Promise<boolean> {
+  if (Platform.OS !== 'android') return false;
+
+  const alreadyGranted = await hasAndroidSmsPermissionNative();
+  if (alreadyGranted) return true;
+
+  try {
+    const requestResult = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.SEND_SMS);
+    return requestResult === PermissionsAndroid.RESULTS.GRANTED;
+  } catch (error) {
+    serviceLogger.warn('[SafetyAlert] SMS permission request failed', error);
+    return false;
+  }
 }
 
 async function trySendAndroidDirectSms(phone: string, message: string): Promise<boolean> {
@@ -104,25 +145,19 @@ async function sendSms(phone: string, message: string): Promise<{ status: 'sent'
   const normalizedPhone = normalizePhone(phone);
 
   if (Platform.OS === 'android') {
+    const hasSmsPermission = await ensureAndroidSmsPermissionGranted();
+    if (!hasSmsPermission) {
+      serviceLogger.warn('[SafetyAlert] SEND_SMS permission is missing on Android');
+      return { status: 'failed', iosRequiresAction: false };
+    }
+
     const sentDirectly = await trySendAndroidDirectSms(normalizedPhone, message);
     if (sentDirectly) {
       return { status: 'sent', iosRequiresAction: false };
     }
 
-    try {
-      const smsAvailable = await SMS.isAvailableAsync();
-      if (smsAvailable) {
-        const response = await SMS.sendSMSAsync([normalizedPhone], message);
-        if (response.result === 'sent') {
-          return { status: 'sent', iosRequiresAction: false };
-        }
-      }
-    } catch (error) {
-      serviceLogger.warn('[SafetyAlert] Android SMS API failed', error);
-    }
-
-    const opened = await openSmsComposer(normalizedPhone, message);
-    return { status: opened ? 'opened' : 'failed', iosRequiresAction: false };
+    serviceLogger.warn('[SafetyAlert] Native Android direct SMS unavailable');
+    return { status: 'failed', iosRequiresAction: false };
   }
 
   const opened = await openSmsComposer(normalizedPhone, message);
