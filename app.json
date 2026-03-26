@@ -87,6 +87,7 @@
         }
       ],
       "./plugins/withMediaPipeModel.js",
+      "./plugins/withSpixSmsManager.js",
       [
         "expo-build-properties",
         {
