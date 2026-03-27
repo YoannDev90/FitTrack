@@ -10,28 +10,39 @@ import { storageHelpers } from '../storage/mmkv';
 
 import fr from './locales/fr.json';
 import en from './locales/en.json';
+import it from './locales/it.json';
+import de from './locales/de.json';
 
 // Available languages
 export const LANGUAGES = {
     fr: { name: 'Français', nativeName: 'Français', flag: '🇫🇷' },
     en: { name: 'English', nativeName: 'English', flag: '🇬🇧' },
+    it: { name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
+    de: { name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
 } as const;
 
 export type LanguageCode = keyof typeof LANGUAGES;
+
+const isLanguageCode = (value: string): value is LanguageCode => {
+    return value in LANGUAGES;
+};
 
 // Get saved language or detect from device
 const getInitialLanguage = (): LanguageCode => {
     // Try to get saved preference
     const saved = storageHelpers.getString('language');
-    if (typeof saved === 'string' && (saved === 'fr' || saved === 'en')) {
+    if (typeof saved === 'string' && isLanguageCode(saved)) {
         return saved;
     }
 
     // No saved preference yet – we're on first launch.  Detect from device locale
     // and then persist the decision so the app doesn't flip languages unexpectedly
     // on every start.
-    const deviceLocale = Localization.getLocales()[0]?.languageCode ?? 'en';
-    const detected: LanguageCode = deviceLocale.startsWith('en') ? 'en' : 'fr';
+    const deviceLocale = (Localization.getLocales()[0]?.languageCode ?? 'en').toLowerCase();
+    let detected: LanguageCode = 'en';
+    if (deviceLocale.startsWith('fr')) detected = 'fr';
+    else if (deviceLocale.startsWith('it')) detected = 'it';
+    else if (deviceLocale.startsWith('de')) detected = 'de';
 
     // Persist the detected language so future launches use it unless changed
     storageHelpers.setString('language', detected);
@@ -45,6 +56,8 @@ i18n
         resources: {
             fr: { translation: fr },
             en: { translation: en },
+            it: { translation: it },
+            de: { translation: de },
         },
         lng: getInitialLanguage(),
         fallbackLng: 'fr',
