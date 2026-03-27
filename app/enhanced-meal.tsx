@@ -64,7 +64,7 @@ import {
     type MealAnalysis,
 } from '../src/services/pollination';
 import { uploadImageToTmpFiles } from '../src/services/imageUpload';
-import { getTodayDateString, formatDisplayDate } from '../src/utils/date';
+import { formatDisplayDate } from '../src/utils/date';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 
@@ -104,13 +104,13 @@ const getScoreGradient = (score: number): [string, string] => {
     return ['#ef4444', '#dc2626'];
 };
 
-// Score label based on value
-const getScoreLabel = (score: number): string => {
-    if (score >= 85) return 'Excellent !';
-    if (score >= 70) return 'Très bien';
-    if (score >= 50) return 'Correct';
-    if (score >= 30) return 'À améliorer';
-    return 'Attention';
+// Score label key based on value
+const getScoreLabelKey = (score: number): string => {
+    if (score >= 85) return 'enhancedMeal.scoreLabels.excellent';
+    if (score >= 70) return 'enhancedMeal.scoreLabels.veryGood';
+    if (score >= 50) return 'enhancedMeal.scoreLabels.good';
+    if (score >= 30) return 'enhancedMeal.scoreLabels.canImprove';
+    return 'enhancedMeal.scoreLabels.warning';
 };
 
 // Get meal time based on hour
@@ -129,13 +129,6 @@ interface MealTimeOption {
     emoji: string;
     time: string;
 }
-
-const mealTimeOptions: MealTimeOption[] = [
-    { value: 'breakfast', label: 'Petit-déj', emoji: '☀️', time: '6h-10h' },
-    { value: 'lunch', label: 'Déjeuner', emoji: '🌤️', time: '11h-14h' },
-    { value: 'dinner', label: 'Dîner', emoji: '🌙', time: '18h-21h' },
-    { value: 'snack', label: 'Collation', emoji: '🍎', time: 'Entre-deux' },
-];
 
 // Alert state interface
 interface AlertState {
@@ -203,6 +196,39 @@ const TimeCard = ({
 export default function EnhancedMealScreen() {
     const { t } = useTranslation();
     const { addMeal, settings } = useAppStore();
+
+    const mealTimeOptions = React.useMemo<MealTimeOption[]>(() => [
+        {
+            value: 'breakfast',
+            label: t('enhancedMeal.timeOptions.breakfast.label'),
+            emoji: '☀️',
+            time: t('enhancedMeal.timeOptions.breakfast.time'),
+        },
+        {
+            value: 'lunch',
+            label: t('enhancedMeal.timeOptions.lunch.label'),
+            emoji: '🌤️',
+            time: t('enhancedMeal.timeOptions.lunch.time'),
+        },
+        {
+            value: 'dinner',
+            label: t('enhancedMeal.timeOptions.dinner.label'),
+            emoji: '🌙',
+            time: t('enhancedMeal.timeOptions.dinner.time'),
+        },
+        {
+            value: 'snack',
+            label: t('enhancedMeal.timeOptions.snack.label'),
+            emoji: '🍎',
+            time: t('enhancedMeal.timeOptions.snack.time'),
+        },
+    ], [t]);
+
+    const detailTags = React.useMemo(() => [
+        { key: 'homemade', emoji: '🏠', label: t('enhancedMeal.detailsTags.homemade') },
+        { key: 'healthy', emoji: '🥗', label: t('enhancedMeal.detailsTags.healthy') },
+        { key: 'proteinRich', emoji: '🍖', label: t('enhancedMeal.detailsTags.proteinRich') },
+    ], [t]);
     
     // Refs
     const settingsSheetRef = useRef<PloppySettingsSheetRef>(null);
@@ -244,30 +270,35 @@ export default function EnhancedMealScreen() {
         opacity: scoreScale.value,
     }));
 
-    // Phrases drôles pour l'analyse
-    const funnyPhrases = [
-        "Patience, Ploppy se réveille...",
-        "Ploppy analyse ton assiette...",
-        "Ploppy compte les calories...",
-        "Ploppy réfléchit très fort...",
-        "Ploppy consulte son encyclopédie...",
-        "Mmh, ça a l'air bon !",
-        "Ploppy prend des notes...",
-        "Un instant, Ploppy goûte virtuellement...",
-        "Ploppy vérifie la recette...",
-        "Ploppy fait ses calculs..."
-    ];
-    const [currentPhrase, setCurrentPhrase] = React.useState(funnyPhrases[0]);
+    const funnyPhrases = React.useMemo(() => [
+        t('enhancedMeal.analysisPhrases.wakingUp'),
+        t('enhancedMeal.analysisPhrases.analyzingPlate'),
+        t('enhancedMeal.analysisPhrases.countingCalories'),
+        t('enhancedMeal.analysisPhrases.thinkingHard'),
+        t('enhancedMeal.analysisPhrases.checkingKnowledge'),
+        t('enhancedMeal.analysisPhrases.looksTasty'),
+        t('enhancedMeal.analysisPhrases.takingNotes'),
+        t('enhancedMeal.analysisPhrases.virtualTaste'),
+        t('enhancedMeal.analysisPhrases.checkingRecipe'),
+        t('enhancedMeal.analysisPhrases.calculating'),
+    ], [t]);
+    const [currentPhrase, setCurrentPhrase] = React.useState(() => funnyPhrases[0]);
 
     // Helper to show alert
     const showAlert = useCallback((
         title: string, 
         message: string, 
         type: AlertState['type'] = 'info',
-        buttons: AlertButton[] = [{ text: 'OK', style: 'default' }]
+        buttons?: AlertButton[]
     ) => {
-        setAlertState({ visible: true, title, message, type, buttons });
-    }, []);
+        setAlertState({
+            visible: true,
+            title,
+            message,
+            type,
+            buttons: buttons ?? [{ text: t('common.ok'), style: 'default' }],
+        });
+    }, [t]);
 
     const hideAlert = useCallback(() => {
         setAlertState(prev => ({ ...prev, visible: false }));
@@ -287,6 +318,10 @@ export default function EnhancedMealScreen() {
 
     // Change funny phrase periodically during upload/analysis
     React.useEffect(() => {
+        setCurrentPhrase(funnyPhrases[0]);
+    }, [funnyPhrases]);
+
+    React.useEffect(() => {
         if (isUploading || isAnalyzing) {
             let index = 0;
             const interval = setInterval(() => {
@@ -295,7 +330,7 @@ export default function EnhancedMealScreen() {
             }, 1500);
             return () => clearInterval(interval);
         }
-    }, [isUploading, isAnalyzing]);
+    }, [isUploading, isAnalyzing, funnyPhrases]);
 
     // Pick image from camera
     const pickFromCamera = useCallback(async () => {
@@ -382,7 +417,7 @@ export default function EnhancedMealScreen() {
             const uploadResult = await uploadImageToTmpFiles(selectedImage);
             
             if (!uploadResult.success || !uploadResult.url) {
-                throw new Error(uploadResult.error || 'Upload failed');
+                throw new Error(uploadResult.error || 'upload_failed');
             }
             
             setIsUploading(false);
@@ -416,10 +451,10 @@ export default function EnhancedMealScreen() {
     // Save meal
     const saveMeal = useCallback(async () => {
         const mealNames: Record<MealTime, string> = {
-            breakfast: '☀️ Petit-déj',
-            lunch: '🌤️ Déjeuner',
-            dinner: '🌙 Dîner',
-            snack: '🍎 Collation',
+            breakfast: `☀️ ${t('enhancedMeal.timeOptions.breakfast.label')}`,
+            lunch: `🌤️ ${t('enhancedMeal.timeOptions.lunch.label')}`,
+            dinner: `🌙 ${t('enhancedMeal.timeOptions.dinner.label')}`,
+            snack: `🍎 ${t('enhancedMeal.timeOptions.snack.label')}`,
         };
         
         const mealTitle = analysis?.title 
@@ -456,7 +491,7 @@ export default function EnhancedMealScreen() {
                 t('enhancedMeal.saved'),
                 t('enhancedMeal.savedMessage'),
                 'success',
-                [{ text: 'OK', onPress: () => router.back() }]
+                [{ text: t('common.ok'), onPress: () => router.back() }]
             );
         } catch (error) {
             showAlert(t('common.error'), t('enhancedMeal.saveError'), 'error');
@@ -503,11 +538,11 @@ export default function EnhancedMealScreen() {
                             <ArrowLeft size={20} color={PREMIUM.white} strokeWidth={2.5} />
                         </TouchableOpacity>
                         <View style={styles.headerCenter}>
-                            <Text style={styles.headerTitle}>Nouveau repas</Text>
+                            <Text style={styles.headerTitle}>{t('enhancedMeal.title')}</Text>
                             {ploppyEnabled && (
                                 <View style={styles.headerBadge}>
                                     <Sparkles size={10} color={PREMIUM.accent} />
-                                    <Text style={styles.headerBadgeText}>IA</Text>
+                                    <Text style={styles.headerBadgeText}>{t('settings.aiTab')}</Text>
                                 </View>
                             )}
                         </View>
@@ -525,7 +560,7 @@ export default function EnhancedMealScreen() {
                     {/* Meal Time Selection - 2x2 Grid */}
                     <Animated.View entering={FadeInDown.delay(100).duration(400)}>
                         <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>Moment du repas</Text>
+                            <Text style={styles.sectionTitle}>{t('enhancedMeal.mealTime')}</Text>
                             <TouchableOpacity 
                                 style={styles.dateButton}
                                 onPress={() => {
@@ -534,7 +569,7 @@ export default function EnhancedMealScreen() {
                                 }}
                             >
                                 <Text style={styles.dateButtonText}>
-                                    {format(selectedDate, 'd MMM yyyy')}
+                                    {formatDisplayDate(format(selectedDate, 'yyyy-MM-dd'))}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -571,7 +606,7 @@ export default function EnhancedMealScreen() {
                     {/* Image Section - Premium Design - Only if Ploppy enabled */}
                     {ploppyEnabled && (
                         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-                            <Text style={styles.sectionTitle}>Photo du repas</Text>
+                            <Text style={styles.sectionTitle}>{t('enhancedMeal.photo')}</Text>
                             
                             {selectedImage ? (
                                 <View style={styles.imageContainer}>
@@ -596,7 +631,7 @@ export default function EnhancedMealScreen() {
                                     {!analysis && (
                                         <View style={styles.imageReadyBadge}>
                                             <Check size={14} color={PREMIUM.accent} strokeWidth={3} />
-                                            <Text style={styles.imageReadyText}>Prête pour analyse</Text>
+                                            <Text style={styles.imageReadyText}>{t('enhancedMeal.readyForAnalysis')}</Text>
                                         </View>
                                     )}
                                 </View>
@@ -610,12 +645,12 @@ export default function EnhancedMealScreen() {
                                         <View style={styles.imagePickerIconContainer}>
                                             <Camera size={28} color={PREMIUM.white} strokeWidth={1.5} />
                                         </View>
-                                        <Text style={styles.imagePickerLabel}>Appareil photo</Text>
+                                        <Text style={styles.imagePickerLabel}>{t('enhancedMeal.camera')}</Text>
                                     </TouchableOpacity>
                                     
                                     <View style={styles.imageDivider}>
                                         <View style={styles.imageDividerLine} />
-                                        <Text style={styles.imageDividerText}>ou</Text>
+                                        <Text style={styles.imageDividerText}>{t('enhancedMeal.or')}</Text>
                                         <View style={styles.imageDividerLine} />
                                     </View>
                                     
@@ -627,7 +662,7 @@ export default function EnhancedMealScreen() {
                                         <View style={styles.imagePickerIconContainer}>
                                             <ImageIcon size={28} color={PREMIUM.white} strokeWidth={1.5} />
                                         </View>
-                                        <Text style={styles.imagePickerLabel}>Galerie</Text>
+                                        <Text style={styles.imagePickerLabel}>{t('enhancedMeal.gallery')}</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -638,40 +673,40 @@ export default function EnhancedMealScreen() {
                     {ploppyEnabled && (
                         <Animated.View entering={FadeInDown.delay(250).duration(400)}>
                             <View style={styles.detailsHeader}>
-                                <Text style={styles.sectionTitle}>Infos pour Ploppy</Text>
+                                <Text style={styles.sectionTitle}>{t('enhancedMeal.detailsTitle')}</Text>
                                 <View style={styles.detailsOptional}>
-                                    <Text style={styles.detailsOptionalText}>Optionnel</Text>
+                                    <Text style={styles.detailsOptionalText}>{t('enhancedMeal.optional')}</Text>
                                 </View>
                             </View>
                             <View style={styles.detailsContainer}>
                                 <View style={styles.detailsIconRow}>
                                     <Info size={16} color={PREMIUM.purple} />
                                     <Text style={styles.detailsHint}>
-                                        Aide Ploppy à mieux évaluer ton repas
+                                        {t('enhancedMeal.detailsHint')}
                                     </Text>
                                 </View>
                                 <TextInput
                                     style={styles.detailsInput}
                                     value={additionalDetails}
                                     onChangeText={setAdditionalDetails}
-                                    placeholder="Ex: Fait maison, régime IG bas, végétarien..."
+                                    placeholder={t('enhancedMeal.detailsPlaceholder')}
                                     placeholderTextColor={PREMIUM.gray600}
                                     multiline
                                     numberOfLines={2}
                                 />
                                 <View style={styles.detailsTags}>
-                                    {['🏠 Fait maison', '🥗 Healthy', '🍖 Protéiné'].map((tag) => (
+                                    {detailTags.map((tag) => (
                                         <TouchableOpacity 
-                                            key={tag}
+                                            key={tag.key}
                                             style={styles.detailsTag}
                                             onPress={() => {
                                                 Haptics.selectionAsync();
                                                 setAdditionalDetails(prev => 
-                                                    prev ? `${prev}, ${tag.slice(2)}` : tag.slice(2)
+                                                    prev ? `${prev}, ${tag.label}` : tag.label
                                                 );
                                             }}
                                         >
-                                            <Text style={styles.detailsTagText}>{tag}</Text>
+                                            <Text style={styles.detailsTagText}>{`${tag.emoji} ${tag.label}`}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </View>
@@ -705,10 +740,10 @@ export default function EnhancedMealScreen() {
                                         </View>
                                         <View style={styles.analyzeButtonTexts}>
                                             <Text style={styles.analyzeButtonText}>
-                                                Analyser avec Ploppy
+                                                {t('enhancedMeal.askPloppy')}
                                             </Text>
                                             <Text style={styles.analyzeButtonSubtext}>
-                                                Score nutritionnel + conseils
+                                                {t('enhancedMeal.askPloppySubtitle')}
                                             </Text>
                                         </View>
                                         <Zap size={18} color={PREMIUM.black} fill={PREMIUM.black} />
@@ -719,7 +754,7 @@ export default function EnhancedMealScreen() {
                             <View style={styles.betaRow}>
                                 <AlertTriangle size={12} color={PREMIUM.gray600} />
                                 <Text style={styles.betaText}>
-                                    Fonctionnalité expérimentale
+                                    {t('enhancedMeal.experimentalFeature')}
                                 </Text>
                             </View>
                         </Animated.View>
@@ -744,7 +779,7 @@ export default function EnhancedMealScreen() {
                                                 styles.scoreBadgeText,
                                                 { color: getScoreColor(analysis.score) }
                                             ]}>
-                                                {getScoreLabel(analysis.score)}
+                                                {t(getScoreLabelKey(analysis.score))}
                                             </Text>
                                         </View>
                                     </View>
@@ -776,7 +811,7 @@ export default function EnhancedMealScreen() {
                                             <Lightbulb size={16} color="#fbbf24" />
                                         </View>
                                         <Text style={styles.suggestionsTitle}>
-                                            Conseils de Ploppy
+                                            {t('enhancedMeal.suggestions')}
                                         </Text>
                                     </View>
                                     
@@ -799,13 +834,13 @@ export default function EnhancedMealScreen() {
 
                     {/* Manual Description - Premium Input */}
                     <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-                        <Text style={styles.sectionTitle}>Description</Text>
+                        <Text style={styles.sectionTitle}>{t('enhancedMeal.description')}</Text>
                         <View style={styles.descriptionContainer}>
                             <TextInput
                                 style={styles.descriptionInput}
                                 value={description}
                                 onChangeText={setDescription}
-                                placeholder="Décris ton repas..."
+                                placeholder={t('enhancedMeal.descriptionPlaceholder')}
                                 placeholderTextColor={PREMIUM.gray600}
                                 multiline
                                 numberOfLines={4}
@@ -831,7 +866,7 @@ export default function EnhancedMealScreen() {
                                 <>
                                     <Save size={18} color={PREMIUM.white} strokeWidth={2.5} />
                                     <Text style={styles.saveButtonText}>
-                                        Enregistrer le repas
+                                        {t('enhancedMeal.save')}
                                     </Text>
                                 </>
                             )}
