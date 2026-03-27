@@ -1,6 +1,6 @@
 // repCounter/types.ts
 
-export type ExerciseType = 'pushups' | 'situps' | 'squats' | 'jumping_jacks' | 'plank' | 'elliptical' | 'run' | 'run_ai';
+export type ExerciseType = 'pushups' | 'pullups' | 'situps' | 'squats' | 'jumping_jacks' | 'plank' | 'elliptical' | 'run' | 'run_ai';
 export type DetectionMode = 'sensor' | 'camera' | 'manual';
 export type CameraFacing = 'front' | 'side';
 export type TutorialStep = 'select' | 'position' | 'ready' | 'counting' | 'done';

@@ -344,6 +344,10 @@
         "default": "Place your phone face down under your chest",
         "camera": "Place your phone to the side for a profile view"
       },
+      "pullups": {
+        "default": "Keep your phone stable in your hand or a tight pocket so motion can be detected",
+        "camera": "Place your phone to the side so your upper body and arms are visible"
+      },
       "situps": {
         "default": "Place your phone on your chest, screen up",
         "camera": "Place your phone to the side for a profile view"
@@ -407,6 +411,32 @@
         {
           "text": "Strong!",
           "emoji": "💪"
+        }
+      ],
+      "pullups": [
+        {
+          "text": "Strong pull!",
+          "emoji": "🧗"
+        },
+        {
+          "text": "Clean rep!",
+          "emoji": "💪"
+        },
+        {
+          "text": "You own the bar!",
+          "emoji": "🔥"
+        },
+        {
+          "text": "Control is on point!",
+          "emoji": "⚡"
+        },
+        {
+          "text": "Excellent!",
+          "emoji": "🏆"
+        },
+        {
+          "text": "Up you go!",
+          "emoji": "🚀"
         }
       ],
       "squats": [
@@ -585,6 +615,7 @@
     },
     "exercises": {
       "pushups": "Push-ups",
+      "pullups": "Pull-ups (Beta)",
       "situps": "Sit-ups",
       "squats": "Squats",
       "jumpingJacks": "Jumping Jacks",

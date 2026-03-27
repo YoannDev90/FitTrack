@@ -5,7 +5,7 @@
 import { KnownPoseLandmarks } from 'react-native-mediapipe-posedetection';
 
 // Types for pose detection
-export type ExerciseType = 'pushups' | 'situps' | 'squats' | 'jumping_jacks' | 'plank' | 'elliptical';
+export type ExerciseType = 'pushups' | 'pullups' | 'situps' | 'squats' | 'jumping_jacks' | 'plank' | 'elliptical';
 
 // MediaPipe landmark structure (from the package)
 export interface Landmark {
@@ -747,6 +747,7 @@ export const countRepsFromPose = (
 
     // Motivational feedbacks for variety
     const pushupFeedbacks = ['Bien joué! 💪', 'Continue! 🔥', 'Parfait! ⚡', 'Excellent! 🎯', 'Tu gères! 💥'];
+    const pullupFeedbacks = ['Traction propre! 🧗', 'Monte fort! 💪', 'Excellent tirage! 🔥', 'Solide! ⚡', 'Tu domines la barre! 🏆'];
     const squatFeedbacks = ['Squat parfait! 🦵', 'Belle forme! 💪', 'Continue! 🔥', 'Top! ⭐', 'Bravo! 🎉'];
     const situpFeedbacks = ['Super! 🔥', 'Les abdos brûlent! 💪', 'Continue! ⚡', 'Excellent! 🎯', 'Tu gères! 💥'];
     const jumpingFeedbacks = ['Jumping Jack! ⭐', 'Excellent! 🌟', 'Continue! 💫', 'Super! ✨', 'Yeah! 🎉'];
@@ -775,6 +776,32 @@ export const countRepsFromPose = (
                 // Arms bent (down position): angle < 100 (relaxed from 90)
                 else if (elbowAngle < 100) {
                     state.stage = 'down';
+                }
+            }
+            break;
+        }
+
+        case 'pullups': {
+            // Pullups: count when transitioning from hanging arms to bent elbows at the top
+            const elbowAngle = getBestAngle(
+                landmarks,
+                KnownPoseLandmarks.leftShoulder, KnownPoseLandmarks.leftElbow, KnownPoseLandmarks.leftWrist,
+                KnownPoseLandmarks.rightShoulder, KnownPoseLandmarks.rightElbow, KnownPoseLandmarks.rightWrist
+            );
+
+            if (elbowAngle > 0) {
+                // Bottom position (hanging): arms mostly extended
+                if (elbowAngle > 150) {
+                    state.stage = 'down';
+                }
+                // Top position (chin over bar): elbows significantly flexed
+                else if (elbowAngle < 95) {
+                    if (state.stage === 'down') {
+                        newCount++;
+                        feedback = getRandomFeedback(pullupFeedbacks);
+                        state.lastUpdate = now;
+                    }
+                    state.stage = 'up';
                 }
             }
             break;

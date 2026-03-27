@@ -344,6 +344,10 @@
         "default": "Lege dein Telefon mit dem Bildschirm nach unten unter deine Brust",
         "camera": "Stelle dein Telefon für eine Profilansicht seitlich auf"
       },
+      "pullups": {
+        "default": "Halte das Telefon stabil in der Hand oder in einer engen Tasche, damit die Bewegung erkannt wird",
+        "camera": "Stelle dein Telefon seitlich auf, sodass Oberkörper und Arme sichtbar sind"
+      },
       "situps": {
         "default": "Lege das Telefon auf deine Brust, Bildschirm nach oben",
         "camera": "Stelle dein Telefon für eine Profilansicht seitlich auf"
@@ -381,6 +385,14 @@
         {"text": "Tolle Form!", "emoji": "⚡"},
         {"text": "Stabil!", "emoji": "🦾"},
         {"text": "Stark!", "emoji": "💪"}
+      ],
+      "pullups": [
+        {"text": "Starker Zug!", "emoji": "🧗"},
+        {"text": "Saubere Wiederholung!", "emoji": "💪"},
+        {"text": "Du ziehst durch!", "emoji": "🔥"},
+        {"text": "Top Kontrolle!", "emoji": "⚡"},
+        {"text": "Beeindruckend!", "emoji": "🏆"},
+        {"text": "Weiter hoch!", "emoji": "🚀"}
       ],
       "squats": [
         {"text": "Beine aus Stahl!", "emoji": "🦵"},
@@ -438,6 +450,7 @@
     },
     "exercises": {
       "pushups": "Liegestütze",
+      "pullups": "Klimmzüge (Beta)",
       "situps": "Sit-ups",
       "squats": "Kniebeugen",
       "jumpingJacks": "Hampelmänner",
