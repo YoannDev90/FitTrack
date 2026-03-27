@@ -18,11 +18,20 @@ import {
   subWeeks,
   subMonths,
 } from 'date-fns';
-import { fr, enUS } from 'date-fns/locale';
+import { fr, enUS, it, de } from 'date-fns/locale';
 import i18n from '../i18n';
 
 const getDateLocale = () => {
-  return i18n.language === 'fr' ? fr : enUS;
+  switch (i18n.language) {
+    case 'fr':
+      return fr;
+    case 'it':
+      return it;
+    case 'de':
+      return de;
+    default:
+      return enUS;
+  }
 }
 
 // Obtenir la date du jour au format YYYY-MM-DD
@@ -79,8 +88,13 @@ export interface DayInfo {
 
 export function getWeekDaysInfo(): DayInfo[] {
   const start = getCurrentWeekStart();
-  const isFr = i18n.language === 'fr';
-  const daysShort = isFr ? ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'] : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  const daysShortByLanguage: Record<string, string[]> = {
+    fr: ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'],
+    it: ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'],
+    de: ['MO', 'DI', 'MI', 'DO', 'FR', 'SA', 'SO'],
+    en: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+  };
+  const daysShort = daysShortByLanguage[i18n.language] ?? daysShortByLanguage.en;
   
   return Array.from({ length: 7 }, (_, i) => {
     const date = addDays(start, i);

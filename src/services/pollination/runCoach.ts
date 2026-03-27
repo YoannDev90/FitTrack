@@ -65,7 +65,7 @@ export async function generateCoachingMessage(
   model: string = 'openai',
   language: string = 'fr',
 ): Promise<string> {
-  const lang = language === 'fr' ? 'français' : 'English';
+  const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[language] ?? 'English';
   const targetPaceStr = context.targetDistanceKm
     ? formatPace(context.avgPaceSecPerKm)
     : 'N/A';
