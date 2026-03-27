@@ -3,13 +3,8 @@
 // ============================================================================
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView,
-  TouchableOpacity,
-  Alert,
+import {
+    View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,595 +12,526 @@ import * as Constants from 'expo-constants';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { 
-  Settings as SettingsIcon,
-  Database,
-  ChevronRight,
-  Sparkles,
-  Bell,
-  Palette,
-  FlaskConical,
-  Shield,
-  HardDrive,
-  Users,
-  Code2,
-  Languages,
-  Dumbbell,
-  Heart,
-  Bot,
-  ShieldAlert,
+import {
+    Settings as SettingsIcon, Database, ChevronRight, Sparkles,
+    Bell, Palette, FlaskConical, Shield, HardDrive, Users,
+    Code2, Languages, Dumbbell, Heart, Bot, ShieldAlert,
 } from 'lucide-react-native';
-import { GlassCard } from '../../src/components/ui';
 import { useAppStore, useSocialStore } from '../../src/stores';
 import { isSocialAvailable } from '../../src/services/supabase';
 import { storageHelpers } from '../../src/storage';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
-import { LANGUAGES, getCurrentLanguage, type LanguageCode } from '../../src/i18n';
+import { LANGUAGES, getCurrentLanguage } from '../../src/i18n';
 
-// ============================================================================
-// COMPONENTS
-// ============================================================================
+// ─── Design Tokens ────────────────────────────────────────────────────────────
+const C = {
+    bg:          '#070709',
+    surface:     '#0e0f14',
+    surfaceUp:   '#13151e',
+    surfaceHigh: '#1a1d28',
+    border:      'rgba(255,255,255,0.07)',
+    borderUp:    'rgba(255,255,255,0.12)',
+    text:        '#f0ece4',
+    textSub:     'rgba(240,236,228,0.55)',
+    textMuted:   'rgba(240,236,228,0.28)',
+    ember:       '#ff5533',
+    emberMid:    '#ff7a55',
+    emberGlow:   'rgba(255,85,51,0.15)',
+    emberBorder: 'rgba(255,85,51,0.25)',
+    gold:        '#e8b84b',
+    goldSoft:    'rgba(232,184,75,0.10)',
+    goldBorder:  'rgba(232,184,75,0.22)',
+    amber:       '#f5a623',
+    blue:        '#5599ff',
+    blueSoft:    'rgba(85,153,255,0.10)',
+    blueBorder:  'rgba(85,153,255,0.22)',
+    teal:        '#2dd4bf',
+    tealSoft:    'rgba(45,212,191,0.10)',
+    tealBorder:  'rgba(45,212,191,0.22)',
+    green:       '#34d370',
+    greenSoft:   'rgba(52,211,112,0.10)',
+    greenBorder: 'rgba(52,211,112,0.22)',
+    violet:      '#a78bfa',
+    violetSoft:  'rgba(167,139,250,0.10)',
+    violetBorder:'rgba(167,139,250,0.22)',
+    error:       '#f87171',
+};
+const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
+const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
+const T = { nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, xxxl: 34 };
+const W: Record<string, any> = { light:'300', reg:'400', med:'500', semi:'600', bold:'700', xbold:'800', black:'900' };
 
-// Category Button Component
-function CategoryButton({
-  icon,
-  iconColor,
-  title,
-  subtitle,
-  onPress,
-  delay = 0,
-  badge,
-}: {
-  icon: React.ReactNode;
-  iconColor: string;
-  title: string;
-  subtitle?: string;
-  onPress: () => void;
-  delay?: number;
-  badge?: string;
-}) {
-  return (
-    <Animated.View entering={FadeInDown.delay(delay).springify()}>
-      <TouchableOpacity 
-        style={styles.categoryButton}
-        onPress={onPress}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.categoryIcon, { backgroundColor: `${iconColor}20` }]}>
-          {icon}
-        </View>
-        <View style={styles.categoryInfo}>
-          <Text style={styles.categoryTitle}>{title}</Text>
-          {subtitle && <Text style={styles.categorySubtitle}>{subtitle}</Text>}
-        </View>
-        {badge && (
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>{badge}</Text>
-          </View>
-        )}
-        <ChevronRight size={20} color={Colors.muted} />
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
-
-// Section Title Component
-function SectionTitle({ title, delay = 0 }: { title: string; delay?: number }) {
-  return (
-    <Animated.View entering={FadeIn.delay(delay)}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </Animated.View>
-  );
-}
-
-// Stats Hero Component
-function StatsHero({ sportCount, mealCount, measureCount, labels }: { 
-  sportCount: number; 
-  mealCount: number; 
-  measureCount: number;
-  labels: { title: string; sessions: string; meals: string; measures: string };
-}) {
-  return (
-    <Animated.View entering={FadeInDown.delay(100).springify()}>
-      <LinearGradient
-        colors={['rgba(215, 150, 134, 0.4)', 'rgba(215, 150, 134, 0.15)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.statsHero}
-      >
-        <View style={styles.statsHeroHeader}>
-          <Database size={20} color={Colors.cta} />
-          <Text style={styles.statsHeroTitle}>{labels.title}</Text>
-        </View>
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{sportCount}</Text>
-            <Text style={styles.statLabel}>{labels.sessions}</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{mealCount}</Text>
-            <Text style={styles.statLabel}>{labels.meals}</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{measureCount}</Text>
-            <Text style={styles.statLabel}>{labels.measures}</Text>
-          </View>
-        </View>
-      </LinearGradient>
-    </Animated.View>
-  );
-}
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-
-export default function SettingsMainScreen() {
-  const { t } = useTranslation();
-  const { entries, settings } = useAppStore();
-  const { socialEnabled } = useSocialStore();
-  
-  // State for developer mode easter egg
-  const [aboutTapCount, setAboutTapCount] = useState(0);
-  
-  const currentLanguage = getCurrentLanguage();
-  
-  // Stats calculées
-  const stats = useMemo(() => ({
-    sport: entries.filter(e => e.type === 'home' || e.type === 'run' || e.type === 'beatsaber').length,
-    meal: entries.filter(e => e.type === 'meal').length,
-    measure: entries.filter(e => e.type === 'measure').length,
-  }), [entries]);
-
-  // Handle about tap for developer mode
-  const handleAboutTap = useCallback(() => {
-    const newCount = aboutTapCount + 1;
-    setAboutTapCount(newCount);
-    
-    if (newCount >= 10 && !settings.developerMode) {
-      // Enable developer mode
-      useAppStore.getState().updateSettings({ developerMode: true });
-      Alert.alert('🔓 Mode développeur', 'Tu as débloqué le mode développeur !');
-      setAboutTapCount(0);
-    }
-    
-    // Reset count after 3 seconds of inactivity
-    setTimeout(() => setAboutTapCount(0), 3000);
-  }, [aboutTapCount, settings.developerMode]);
-
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <Animated.View entering={FadeIn.delay(50)} style={styles.header}>
-          <Text style={styles.screenTitle}>{t('settings.title')}</Text>
-          <View style={styles.headerIcon}>
-            <SettingsIcon size={24} color={Colors.cta} />
-          </View>
+// ─── Section Label ────────────────────────────────────────────────────────────
+function SectionLabel({ title, delay = 0 }: { title: string; delay?: number }) {
+    return (
+        <Animated.View entering={FadeIn.delay(delay)} style={s.sectionLabelRow}>
+            <Text style={s.sectionLabel}>{title}</Text>
+            <View style={s.sectionLabelLine} />
         </Animated.View>
-
-        {/* Stats Hero */}
-        <StatsHero 
-          sportCount={stats.sport} 
-          mealCount={stats.meal} 
-          measureCount={stats.measure}
-          labels={{
-            title: t('settings.yourData'),
-            sessions: t('settings.sessions'),
-            meals: t('settings.meals'),
-            measures: t('settings.measures'),
-          }}
-        />
-
-        {/* PROFILE / PERSONAL INFO */}
-        <SectionTitle title={t('settings.personalInfo')} delay={150} />
-        <GlassCard style={styles.categoryCard}>
-          <CategoryButton
-            icon={<Users size={22} color="#22d3ee" />}
-            iconColor="#22d3ee"
-            title={t('settings.personalInfo')}
-            subtitle={t('settings.personalInfoDesc')}
-            onPress={() => router.push('/settings/personal')}
-            delay={160}
-          />
-        </GlassCard>
-
-        {/* CATÉGORIES PRINCIPALES */}
-        <SectionTitle title={t('settings.preferences')} delay={150} />
-        <GlassCard style={styles.categoryCard}>
-          <CategoryButton
-            icon={<Sparkles size={22} color="#fbbf24" />}
-            iconColor="#fbbf24"
-            title={t('settings.preferences')}
-            subtitle={t('settings.preferencesDesc')}
-            onPress={() => router.push('/settings/preferences')}
-            delay={160}
-          />
-          <View style={styles.divider} />
-          <CategoryButton
-            icon={<Bell size={22} color="#22d3ee" />}
-            iconColor="#22d3ee"
-            title={t('settings.notifications')}
-            subtitle={t('settings.notificationsDesc')}
-            onPress={() => router.push('/settings/notifications')}
-            delay={180}
-          />
-          <View style={styles.divider} />
-          <CategoryButton
-            icon={<Palette size={22} color="#a78bfa" />}
-            iconColor="#a78bfa"
-            title={t('settings.appearance')}
-            subtitle={t('settings.appearanceDesc')}
-            onPress={() => router.push('/settings/appearance')}
-            delay={200}
-          />
-          <View style={styles.divider} />
-          <CategoryButton
-            icon={<Languages size={22} color="#4ade80" />}
-            iconColor="#4ade80"
-            title={t('settings.language')}
-            subtitle={`${LANGUAGES[currentLanguage].flag} ${LANGUAGES[currentLanguage].nativeName}`}
-            onPress={() => router.push('/settings/language')}
-            delay={220}
-          />
-          <View style={styles.divider} />
-          <CategoryButton
-            icon={<Bot size={22} color="#a78bfa" />}
-            iconColor="#a78bfa"
-            title={t('settings.aiTab')}
-            subtitle={t('settings.aiTabDesc')}
-            onPress={() => router.push('/settings/ai')}
-            delay={240}
-            badge="BÊTA"
-          />
-        </GlassCard>
-
-        {/* SPORTS MANAGEMENT */}
-        <SectionTitle title={t('settings.sportsManagement')} delay={230} />
-        <GlassCard style={styles.categoryCard}>
-          <CategoryButton
-            icon={<Dumbbell size={22} color="#8B5CF6" />}
-            iconColor="#8B5CF6"
-            title={t('settings.manageSports')}
-            subtitle={t('settings.manageSportsDesc')}
-            onPress={() => router.push('/settings/sports')}
-            delay={240}
-          />
-        </GlassCard>
-
-        {/* INTÉGRATION */}
-        <SectionTitle title={t('settings.integration')} delay={245} />
-        <GlassCard style={styles.categoryCard}>
-          <CategoryButton
-            icon={<Heart size={22} color="#f43f5e" />}
-            iconColor="#f43f5e"
-            title={t('settings.healthConnect')}
-            subtitle={t('settings.healthConnectDesc')}
-            onPress={() => router.push('/health-connect')}
-            delay={250}
-          />
-        </GlassCard>
-
-        {/* SAFETY */}
-        <SectionTitle title={t('settings.safety.title')} delay={245} />
-        <GlassCard style={styles.categoryCard}>
-          <CategoryButton
-            icon={<ShieldAlert size={22} color="#4ade80" />}
-            iconColor="#4ade80"
-            title={t('settings.safety.title')}
-            subtitle={t('settings.safety.contacts')}
-            onPress={() => router.push('/settings/safety')}
-            delay={250}
-          />
-        </GlassCard>
-
-        {/* SOCIAL */}
-        {isSocialAvailable() && (
-          <>
-            <SectionTitle title={t('settings.social')} delay={240} />
-            <GlassCard style={styles.categoryCard}>
-              <CategoryButton
-                icon={<Users size={22} color="#22d3ee" />}
-                iconColor="#22d3ee"
-                title={t('settings.socialFeatures')}
-                subtitle={socialEnabled ? t('settings.socialEnabled') : t('settings.socialDisabled')}
-                onPress={() => router.push('/settings/social')}
-                delay={260}
-                badge={socialEnabled ? '✓' : undefined}
-              />
-            </GlassCard>
-          </>
-        )}
-
-        {/* DATA & BACKUP */}
-        <SectionTitle title={t('settings.data')} delay={280} />
-        <GlassCard style={styles.categoryCard}>
-          <CategoryButton
-            icon={<HardDrive size={22} color={Colors.cta} />}
-            iconColor={Colors.cta}
-            title={t('settings.data')}
-            subtitle={t('settings.dataDesc')}
-            onPress={() => router.push('/settings/data')}
-            delay={300}
-          />
-        </GlassCard>
-
-
-        {/* LABS */}
-        <SectionTitle title={t('settings.labs')} delay={320} />
-        <GlassCard style={[styles.categoryCard, styles.labsCard]}>
-          <CategoryButton
-            icon={<FlaskConical size={22} color="#a78bfa" />}
-            iconColor="#a78bfa"
-            title={t('settings.labs')}
-            subtitle={t('settings.labsDesc')}
-            onPress={() => router.push('/settings/labs')}
-            delay={340}
-          />
-        </GlassCard>
-
-        {/* LEGAL */}
-        <SectionTitle title={t('settings.legal')} delay={360} />
-        <GlassCard style={styles.categoryCard}>
-          <CategoryButton
-            icon={<Shield size={22} color="#4ade80" />}
-            iconColor="#4ade80"
-            title={t('settings.legal')}
-            subtitle={t('settings.legalDesc')}
-            onPress={() => router.push('/settings/legal')}
-            delay={380}
-          />
-        </GlassCard>
-
-        {/* DEVELOPER MODE (if enabled) */}
-        {settings.developerMode && (
-          <>
-            <SectionTitle title={t('settings.developerMode')} delay={400} />
-            <GlassCard style={[styles.categoryCard, styles.devCard]}>
-              <CategoryButton
-                icon={<Code2 size={22} color="#f97316" />}
-                iconColor="#f97316"
-                title={t('settings.developerMode')}
-                subtitle={t('settings.developerModeDesc')}
-                onPress={() => router.push('/settings/developer')}
-                delay={420}
-              />
-            </GlassCard>
-          </>
-        )}
-
-        {/* ABOUT */}
-        <SectionTitle title={t('settings.about')} delay={440} />
-        <GlassCard style={styles.categoryCard}>
-          <TouchableOpacity 
-            style={styles.aboutSection}
-            onPress={handleAboutTap}
-            activeOpacity={0.8}
-          >
-            <View style={styles.appInfo}>
-              <View style={styles.appIconContainer}>
-                <Sparkles size={28} color={Colors.cta} />
-              </View>
-              <View>
-                <Text style={styles.appName}>Spix</Text>
-                <Text style={styles.appVersion}>
-                  {t('settings.version', { version: Constants.default.expoConfig?.version ?? '3.0.0' })}
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.storageInfo}>
-              <Database size={14} color={Colors.muted} />
-              <Text style={styles.storageText}>
-                {t('settings.storageLabel')} {storageHelpers.getStorageType()}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </GlassCard>
-
-        {/* Spacer pour le bottom nav */}
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
-  );
+    );
 }
 
-// ============================================================================
-// STYLES
-// ============================================================================
+// ─── Category Row ─────────────────────────────────────────────────────────────
+function CategoryRow({
+    icon, iconColor, title, subtitle, onPress, delay = 0, badge, isLast = false,
+}: {
+    icon: React.ReactNode;
+    iconColor: string;
+    title: string;
+    subtitle?: string;
+    onPress: () => void;
+    delay?: number;
+    badge?: string;
+    isLast?: boolean;
+}) {
+    return (
+        <Animated.View entering={FadeInDown.delay(delay)}>
+            <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={s.row}>
+                <View style={[s.rowIcon, { backgroundColor: `${iconColor}18`, borderColor: `${iconColor}28` }]}>
+                    {icon}
+                </View>
+                <View style={s.rowInfo}>
+                    <Text style={s.rowTitle}>{title}</Text>
+                    {subtitle && <Text style={s.rowSub} numberOfLines={1}>{subtitle}</Text>}
+                </View>
+                {badge && (
+                    <View style={s.badge}>
+                        <Text style={s.badgeText}>{badge}</Text>
+                    </View>
+                )}
+                <ChevronRight size={16} color={C.textMuted} strokeWidth={2} />
+            </TouchableOpacity>
+            {!isLast && <View style={s.rowDivider} />}
+        </Animated.View>
+    );
+}
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: Spacing.lg,
-    paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  screenTitle: {
-    fontSize: 32,
-    fontWeight: FontWeight.extrabold,
-    color: Colors.text,
-    letterSpacing: -0.5,
-  },
-  headerIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: 'rgba(215, 150, 134, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+// ─── Settings Group (card) ────────────────────────────────────────────────────
+function SettingsGroup({
+    children, accentColor, delay = 0,
+}: {
+    children: React.ReactNode;
+    accentColor?: string;
+    delay?: number;
+}) {
+    return (
+        <Animated.View
+            entering={FadeInDown.delay(delay)}
+            style={[s.group, accentColor && { borderColor: `${accentColor}28` }]}
+        >
+            <LinearGradient colors={[C.surfaceUp, C.surface]} style={StyleSheet.absoluteFill} />
+            {children}
+        </Animated.View>
+    );
+}
 
-  // Stats Hero
-  statsHero: {
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    marginBottom: Spacing.xl,
-  },
-  statsHeroHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: Spacing.md,
-  },
-  statsHeroTitle: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.text,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-  },
-  statLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.muted,
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-  },
+// ─── Stats Hero ───────────────────────────────────────────────────────────────
+function StatsHero({ sportCount, mealCount, measureCount, labels }: {
+    sportCount: number; mealCount: number; measureCount: number;
+    labels: { title: string; sessions: string; meals: string; measures: string };
+}) {
+    const items = [
+        { value: sportCount,  label: labels.sessions },
+        { value: mealCount,   label: labels.meals },
+        { value: measureCount,label: labels.measures },
+    ];
 
-  // Section Title
-  sectionTitle: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    color: Colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: Spacing.sm,
-    marginLeft: Spacing.xs,
-    marginTop: Spacing.sm,
-  },
+    return (
+        <Animated.View entering={FadeInDown.delay(80).springify()} style={s.statsHero}>
+            <LinearGradient
+                colors={[C.emberGlow, 'transparent']}
+                style={StyleSheet.absoluteFill}
+            />
+            {/* Header */}
+            <View style={s.statsHeader}>
+                <View style={s.statsIconWrap}>
+                    <Database size={14} color={C.ember} strokeWidth={2.2} />
+                </View>
+                <Text style={s.statsTitle}>{labels.title}</Text>
+            </View>
+            {/* Stats */}
+            <View style={s.statsRow}>
+                {items.map((item, i) => (
+                    <React.Fragment key={i}>
+                        <View style={s.statItem}>
+                            <Text style={s.statValue}>{item.value}</Text>
+                            <Text style={s.statLabel}>{item.label}</Text>
+                        </View>
+                        {i < items.length - 1 && <View style={s.statSep} />}
+                    </React.Fragment>
+                ))}
+            </View>
+        </Animated.View>
+    );
+}
 
-  // Category Card
-  categoryCard: {
-    marginBottom: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  labsCard: {
-    borderColor: 'rgba(167, 139, 250, 0.3)',
-  },
-  devCard: {
-    borderColor: 'rgba(249, 115, 22, 0.3)',
-  },
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+export default function SettingsMainScreen() {
+    const { t } = useTranslation();
+    const { entries, settings } = useAppStore();
+    const { socialEnabled } = useSocialStore();
+    const [tapCount, setTapCount] = useState(0);
+    const currentLang = getCurrentLanguage();
 
-  // Category Button
-  categoryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.md,
-  },
-  categoryIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  categoryInfo: {
-    flex: 1,
-  },
-  categoryTitle: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.text,
-  },
-  categorySubtitle: {
-    fontSize: FontSize.xs,
-    color: Colors.muted,
-    marginTop: 2,
-  },
-  categoryBadge: {
-    backgroundColor: 'rgba(74, 222, 128, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.full,
-  },
-  categoryBadgeText: {
-    fontSize: FontSize.xs,
-    color: '#4ade80',
-    fontWeight: FontWeight.bold,
-  },
+    const stats = useMemo(() => ({
+        sport:   entries.filter(e => ['home','run','beatsaber'].includes(e.type)).length,
+        meal:    entries.filter(e => e.type === 'meal').length,
+        measure: entries.filter(e => e.type === 'measure').length,
+    }), [entries]);
 
-  // Divider
-  divider: {
-    height: 1,
-    backgroundColor: Colors.stroke,
-    marginHorizontal: Spacing.md,
-  },
+    const handleAboutTap = useCallback(() => {
+        const n = tapCount + 1;
+        setTapCount(n);
+        if (n >= 10 && !settings.developerMode) {
+            useAppStore.getState().updateSettings({ developerMode: true });
+            Alert.alert('🔓 Mode développeur', 'Tu as débloqué le mode développeur !');
+            setTapCount(0);
+        }
+        setTimeout(() => setTapCount(0), 3000);
+    }, [tapCount, settings.developerMode]);
 
-  // About Section
-  aboutSection: {
-    padding: Spacing.md,
-  },
-  appInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  appIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: 'rgba(215, 150, 134, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  appName: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-  },
-  appVersion: {
-    fontSize: FontSize.sm,
-    color: Colors.muted,
-  },
-  storageInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  storageText: {
-    fontSize: FontSize.xs,
-    color: Colors.muted,
-  },
-  tapHint: {
-    fontSize: FontSize.xs,
-    color: Colors.muted,
-    textAlign: 'center',
-    marginTop: Spacing.sm,
-  },
+    return (
+        <SafeAreaView style={s.root} edges={['top']}>
+            <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+
+                {/* ── Header ── */}
+                <Animated.View entering={FadeIn.delay(40)} style={s.header}>
+                    <View>
+                        <Text style={s.eyebrow}>{t('settings.eyebrow', 'APP')}</Text>
+                        <Text style={s.title}>{t('settings.title')}</Text>
+                    </View>
+                    <View style={s.headerIconWrap}>
+                        <SettingsIcon size={20} color={C.ember} strokeWidth={2} />
+                    </View>
+                </Animated.View>
+
+                {/* ── Stats Hero ── */}
+                <StatsHero
+                    sportCount={stats.sport}
+                    mealCount={stats.meal}
+                    measureCount={stats.measure}
+                    labels={{
+                        title:    t('settings.yourData'),
+                        sessions: t('settings.sessions'),
+                        meals:    t('settings.meals'),
+                        measures: t('settings.measures'),
+                    }}
+                />
+
+                {/* ── Personal ── */}
+                <SectionLabel title={t('settings.personalInfo')} delay={120} />
+                <SettingsGroup delay={130}>
+                    <CategoryRow
+                        icon={<Users size={19} color={C.teal} strokeWidth={2.2} />}
+                        iconColor={C.teal}
+                        title={t('settings.personalInfo')}
+                        subtitle={t('settings.personalInfoDesc')}
+                        onPress={() => router.push('/settings/personal')}
+                        delay={140} isLast
+                    />
+                </SettingsGroup>
+
+                {/* ── Preferences ── */}
+                <SectionLabel title={t('settings.preferences')} delay={150} />
+                <SettingsGroup delay={160}>
+                    <CategoryRow
+                        icon={<Sparkles size={19} color={C.gold} strokeWidth={2.2} />}
+                        iconColor={C.gold}
+                        title={t('settings.preferences')}
+                        subtitle={t('settings.preferencesDesc')}
+                        onPress={() => router.push('/settings/preferences')}
+                        delay={165}
+                    />
+                    <CategoryRow
+                        icon={<Bell size={19} color={C.blue} strokeWidth={2.2} />}
+                        iconColor={C.blue}
+                        title={t('settings.notifications')}
+                        subtitle={t('settings.notificationsDesc')}
+                        onPress={() => router.push('/settings/notifications')}
+                        delay={175}
+                    />
+                    <CategoryRow
+                        icon={<Palette size={19} color={C.violet} strokeWidth={2.2} />}
+                        iconColor={C.violet}
+                        title={t('settings.appearance')}
+                        subtitle={t('settings.appearanceDesc')}
+                        onPress={() => router.push('/settings/appearance')}
+                        delay={185}
+                    />
+                    <CategoryRow
+                        icon={<Languages size={19} color={C.green} strokeWidth={2.2} />}
+                        iconColor={C.green}
+                        title={t('settings.language')}
+                        subtitle={`${LANGUAGES[currentLang].flag} ${LANGUAGES[currentLang].nativeName}`}
+                        onPress={() => router.push('/settings/language')}
+                        delay={195}
+                    />
+                    <CategoryRow
+                        icon={<Bot size={19} color={C.violet} strokeWidth={2.2} />}
+                        iconColor={C.violet}
+                        title={t('settings.aiTab')}
+                        subtitle={t('settings.aiTabDesc')}
+                        onPress={() => router.push('/settings/ai')}
+                        badge="BÊTA"
+                        delay={205} isLast
+                    />
+                </SettingsGroup>
+
+                {/* ── Sports ── */}
+                <SectionLabel title={t('settings.sportsManagement')} delay={210} />
+                <SettingsGroup delay={220}>
+                    <CategoryRow
+                        icon={<Dumbbell size={19} color="#8B5CF6" strokeWidth={2.2} />}
+                        iconColor="#8B5CF6"
+                        title={t('settings.manageSports')}
+                        subtitle={t('settings.manageSportsDesc')}
+                        onPress={() => router.push('/settings/sports')}
+                        delay={225} isLast
+                    />
+                </SettingsGroup>
+
+                {/* ── Integration ── */}
+                <SectionLabel title={t('settings.integration')} delay={230} />
+                <SettingsGroup delay={240}>
+                    <CategoryRow
+                        icon={<Heart size={19} color="#f43f5e" strokeWidth={2.2} />}
+                        iconColor="#f43f5e"
+                        title={t('settings.healthConnect')}
+                        subtitle={t('settings.healthConnectDesc')}
+                        onPress={() => router.push('/health-connect')}
+                        delay={245} isLast
+                    />
+                </SettingsGroup>
+
+                {/* ── Safety ── */}
+                <SectionLabel title={t('settings.safety.title')} delay={250} />
+                <SettingsGroup delay={260}>
+                    <CategoryRow
+                        icon={<ShieldAlert size={19} color={C.green} strokeWidth={2.2} />}
+                        iconColor={C.green}
+                        title={t('settings.safety.title')}
+                        subtitle={t('settings.safety.contacts')}
+                        onPress={() => router.push('/settings/safety')}
+                        delay={265} isLast
+                    />
+                </SettingsGroup>
+
+                {/* ── Social (conditional) ── */}
+                {isSocialAvailable() && (
+                    <>
+                        <SectionLabel title={t('settings.social')} delay={270} />
+                        <SettingsGroup delay={280}>
+                            <CategoryRow
+                                icon={<Users size={19} color={C.teal} strokeWidth={2.2} />}
+                                iconColor={C.teal}
+                                title={t('settings.socialFeatures')}
+                                subtitle={socialEnabled ? t('settings.socialEnabled') : t('settings.socialDisabled')}
+                                onPress={() => router.push('/settings/social')}
+                                badge={socialEnabled ? '✓' : undefined}
+                                delay={285} isLast
+                            />
+                        </SettingsGroup>
+                    </>
+                )}
+
+                {/* ── Data ── */}
+                <SectionLabel title={t('settings.data')} delay={290} />
+                <SettingsGroup delay={300}>
+                    <CategoryRow
+                        icon={<HardDrive size={19} color={C.ember} strokeWidth={2.2} />}
+                        iconColor={C.ember}
+                        title={t('settings.data')}
+                        subtitle={t('settings.dataDesc')}
+                        onPress={() => router.push('/settings/data')}
+                        delay={305} isLast
+                    />
+                </SettingsGroup>
+
+                {/* ── Labs ── */}
+                <SectionLabel title={t('settings.labs')} delay={310} />
+                <SettingsGroup accentColor={C.violet} delay={320}>
+                    <CategoryRow
+                        icon={<FlaskConical size={19} color={C.violet} strokeWidth={2.2} />}
+                        iconColor={C.violet}
+                        title={t('settings.labs')}
+                        subtitle={t('settings.labsDesc')}
+                        onPress={() => router.push('/settings/labs')}
+                        delay={325} isLast
+                    />
+                </SettingsGroup>
+
+                {/* ── Legal ── */}
+                <SectionLabel title={t('settings.legal')} delay={330} />
+                <SettingsGroup delay={340}>
+                    <CategoryRow
+                        icon={<Shield size={19} color={C.green} strokeWidth={2.2} />}
+                        iconColor={C.green}
+                        title={t('settings.legal')}
+                        subtitle={t('settings.legalDesc')}
+                        onPress={() => router.push('/settings/legal')}
+                        delay={345} isLast
+                    />
+                </SettingsGroup>
+
+                {/* ── Developer (conditional) ── */}
+                {settings.developerMode && (
+                    <>
+                        <SectionLabel title={t('settings.developerMode')} delay={350} />
+                        <SettingsGroup accentColor="#f97316" delay={360}>
+                            <CategoryRow
+                                icon={<Code2 size={19} color="#f97316" strokeWidth={2.2} />}
+                                iconColor="#f97316"
+                                title={t('settings.developerMode')}
+                                subtitle={t('settings.developerModeDesc')}
+                                onPress={() => router.push('/settings/developer')}
+                                delay={365} isLast
+                            />
+                        </SettingsGroup>
+                    </>
+                )}
+
+                {/* ── About ── */}
+                <SectionLabel title={t('settings.about')} delay={370} />
+                <Animated.View entering={FadeInDown.delay(380).springify().damping(22)} style={s.aboutCard}>
+                    <LinearGradient colors={[C.surfaceUp, C.surface]} style={StyleSheet.absoluteFill} />
+                    <TouchableOpacity onPress={handleAboutTap} activeOpacity={0.8} style={s.about}>
+                        <View style={s.aboutIconWrap}>
+                            <Sparkles size={24} color={C.ember} strokeWidth={2} />
+                        </View>
+                        <View style={s.aboutInfo}>
+                            <Text style={s.appName}>Spix</Text>
+                            <Text style={s.appVersion}>
+                                {t('settings.version', { version: Constants.default.expoConfig?.version ?? '3.0.0' })}
+                            </Text>
+                        </View>
+                        <View style={s.storageChip}>
+                            <Database size={11} color={C.textMuted} />
+                            <Text style={s.storageText}>{storageHelpers.getStorageType()}</Text>
+                        </View>
+                    </TouchableOpacity>
+                </Animated.View>
+
+                <View style={{ height: 60 }} />
+            </ScrollView>
+        </SafeAreaView>
+    );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+    root:   { flex: 1, backgroundColor: C.bg },
+    scroll: { paddingHorizontal: S.lg, paddingTop: S.lg, paddingBottom: 100 },
+
+    // Header
+    header: {
+        flexDirection: 'row', justifyContent: 'space-between',
+        alignItems: 'flex-start', marginBottom: S.xl,
+    },
+    eyebrow: {
+        fontSize: T.micro, fontWeight: W.black,
+        color: C.ember, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 2,
+    },
+    title: {
+        fontSize: T.xxxl, fontWeight: W.black,
+        color: C.text, letterSpacing: -1.2,
+    },
+    headerIconWrap: {
+        width: 42, height: 42, borderRadius: R.xl,
+        backgroundColor: C.emberGlow, borderWidth: 1, borderColor: C.emberBorder,
+        justifyContent: 'center', alignItems: 'center',
+    },
+
+    // Stats Hero
+    statsHero: {
+        borderRadius: R.xxl, overflow: 'hidden',
+        borderWidth: 1, borderColor: C.emberBorder,
+        padding: S.xl, marginBottom: S.xxl,
+    },
+    statsHeader: { flexDirection: 'row', alignItems: 'center', gap: S.sm, marginBottom: S.lg },
+    statsIconWrap: {
+        width: 26, height: 26, borderRadius: R.sm,
+        backgroundColor: C.emberGlow, borderWidth: 1, borderColor: C.emberBorder,
+        justifyContent: 'center', alignItems: 'center',
+    },
+    statsTitle: { fontSize: T.sm, fontWeight: W.bold, color: C.text },
+    statsRow:   { flexDirection: 'row', alignItems: 'center' },
+    statItem:   { flex: 1, alignItems: 'center' },
+    statValue: {
+        fontSize: T.xxl, fontWeight: W.black,
+        color: C.text, letterSpacing: -0.5,
+    },
+    statLabel: {
+        fontSize: T.xs, fontWeight: W.semi,
+        color: C.textMuted, marginTop: 2,
+        textTransform: 'uppercase', letterSpacing: 0.5,
+    },
+    statSep: { width: 1, height: 36, backgroundColor: C.border },
+
+    // Section label
+    sectionLabelRow: {
+        flexDirection: 'row', alignItems: 'center',
+        gap: S.sm, marginBottom: S.sm, marginTop: S.lg,
+    },
+    sectionLabel: {
+        fontSize: T.nano, fontWeight: W.black,
+        color: C.textMuted, letterSpacing: 2.5, textTransform: 'uppercase',
+    },
+    sectionLabelLine: { flex: 1, height: 1, backgroundColor: C.border },
+
+    // Group (card)
+    group: {
+        borderRadius: R.xxl, overflow: 'hidden',
+        borderWidth: 1, borderColor: C.border,
+        marginBottom: S.xs,
+    },
+
+    // Row
+    row: {
+        flexDirection: 'row', alignItems: 'center',
+        paddingVertical: S.md, paddingHorizontal: S.lg, gap: S.md,
+    },
+    rowIcon: {
+        width: 38, height: 38, borderRadius: R.lg,
+        borderWidth: 1,
+        justifyContent: 'center', alignItems: 'center',
+    },
+    rowInfo: { flex: 1 },
+    rowTitle: { fontSize: T.md, fontWeight: W.xbold, color: C.text },
+    rowSub:   { fontSize: T.xs, color: C.textMuted, marginTop: 1 },
+    rowDivider: { height: 1, backgroundColor: C.border, marginLeft: S.lg + 38 + S.md },
+
+    // Badge
+    badge: {
+        backgroundColor: C.violetSoft, borderRadius: R.full,
+        paddingHorizontal: S.sm, paddingVertical: 3,
+        borderWidth: 1, borderColor: C.violetBorder,
+    },
+    badgeText: { fontSize: T.nano, fontWeight: W.black, color: C.violet, letterSpacing: 0.5 },
+
+    // About
+    aboutCard: {
+        borderRadius: R.xxl, overflow: 'hidden',
+        borderWidth: 1, borderColor: C.border,
+    },
+    about: {
+        flexDirection: 'row', alignItems: 'center',
+        padding: S.lg, gap: S.md,
+    },
+    aboutIconWrap: {
+        width: 48, height: 48, borderRadius: R.xl,
+        backgroundColor: C.emberGlow, borderWidth: 1, borderColor: C.emberBorder,
+        justifyContent: 'center', alignItems: 'center',
+    },
+    aboutInfo: { flex: 1 },
+    appName: {
+        fontSize: T.lg, fontWeight: W.black,
+        color: C.text, letterSpacing: -0.3,
+    },
+    appVersion: { fontSize: T.xs, color: C.textMuted, marginTop: 1 },
+    storageChip: {
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+        backgroundColor: C.surfaceHigh, borderRadius: R.full,
+        paddingHorizontal: S.sm, paddingVertical: S.xs,
+        borderWidth: 1, borderColor: C.border,
+    },
+    storageText: { fontSize: T.nano, color: C.textMuted, fontWeight: W.semi },
 });
