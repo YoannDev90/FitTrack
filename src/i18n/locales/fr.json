@@ -1853,12 +1853,62 @@
     "photo": "PHOTO (OPTIONNEL)",
     "description": "DESCRIPTION",
     "descriptionPlaceholder": "Qu'as-tu mangé ?",
+    "or": "ou",
+    "readyForAnalysis": "Prête pour analyse",
     "camera": "Appareil photo",
     "gallery": "Galerie",
     "askPloppy": "Demander à Ploppy 🐦",
+    "askPloppySubtitle": "Score nutritionnel + conseils",
     "uploading": "Upload en cours...",
     "analyzing": "Analyse en cours...",
     "suggestions": "Suggestions",
+    "experimentalFeature": "Fonctionnalité expérimentale",
+    "detailsTitle": "INFOS POUR PLOPPY",
+    "optional": "Optionnel",
+    "detailsHint": "Aide Ploppy à mieux évaluer ton repas",
+    "detailsPlaceholder": "Ex: Fait maison, régime IG bas, végétarien...",
+    "detailsTags": {
+      "homemade": "Fait maison",
+      "healthy": "Healthy",
+      "proteinRich": "Protéiné"
+    },
+    "timeOptions": {
+      "breakfast": {
+        "label": "Petit-déj",
+        "time": "6h-10h"
+      },
+      "lunch": {
+        "label": "Déjeuner",
+        "time": "11h-14h"
+      },
+      "dinner": {
+        "label": "Dîner",
+        "time": "18h-21h"
+      },
+      "snack": {
+        "label": "Collation",
+        "time": "Entre-deux"
+      }
+    },
+    "scoreLabels": {
+      "excellent": "Excellent !",
+      "veryGood": "Très bien",
+      "good": "Correct",
+      "canImprove": "À améliorer",
+      "warning": "Attention"
+    },
+    "analysisPhrases": {
+      "wakingUp": "Patience, Ploppy se réveille...",
+      "analyzingPlate": "Ploppy analyse ton assiette...",
+      "countingCalories": "Ploppy compte les calories...",
+      "thinkingHard": "Ploppy réfléchit très fort...",
+      "checkingKnowledge": "Ploppy consulte son encyclopédie...",
+      "looksTasty": "Mmh, ça a l'air bon !",
+      "takingNotes": "Ploppy prend des notes...",
+      "virtualTaste": "Un instant, Ploppy goûte virtuellement...",
+      "checkingRecipe": "Ploppy vérifie la recette...",
+      "calculating": "Ploppy fait ses calculs..."
+    },
     "save": "Enregistrer le repas",
     "saved": "Repas enregistré !",
     "savedMessage": "Ton repas a été ajouté à ton historique.",
