@@ -1,0 +1,1969 @@
+{
+  "common": {
+    "save": "Salva",
+    "seeAll": "Vedi tutti →",
+    "cancel": "Annulla",
+    "exit": "Esci",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "confirm": "Conferma",
+    "validate": "Valida",
+    "back": "Indietro",
+    "next": "Avanti",
+    "start": "Inizia",
+    "stop": "Ferma",
+    "pause": "Pausa",
+    "resume": "Riprendi",
+    "finish": "Fine",
+    "reset": "Ripristina",
+    "close": "Chiudi",
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "success": "Successo",
+    "warning": "Attenzione",
+    "yes": "Sì",
+    "no": "No",
+    "ok": "OK",
+    "retry": "Riprova",
+    "days": "giorni",
+    "day": "giorno",
+    "daysShort": "g",
+    "times": "volte",
+    "hours": "ore",
+    "hour": "ora",
+    "minutes": "minuti",
+    "minute": "minuto",
+    "seconds": "secondi",
+    "second": "secondo",
+    "reps": "ripetizioni",
+    "km": "km",
+    "kcal": "kcal",
+    "kg": "kg",
+    "skip": "Salta",
+    "minShort": "min",
+    "continue": "Continua",
+    "sunday": "Domenica",
+    "monday": "Lunedì",
+    "tuesday": "Martedì",
+    "wednesday": "Mercoledì",
+    "thursday": "Giovedì",
+    "friday": "Venerdì",
+    "saturday": "Sabato",
+    "badge": {
+      "beta": "BETA"
+    },
+    "time": "Tempo"
+  },
+  "streak": {
+    "start": "È ora di\niniziare",
+    "keep": "Continua\ncosì!",
+    "momentum": "Non ti\nferma nessuno",
+    "exceptional": "Prestazione\neccezionale",
+    "record": "Record",
+    "ofRecord": "del record",
+    "startToday": "Inizia oggi!"
+  },
+  "stats": {
+    "activity": "ATTIVITÀ",
+    "totalSessions": "sessioni totali",
+    "kmRun": "km percorsi",
+    "minCardio": "min cardio",
+    "weeklyGoal": "obiettivo /sett"
+  },
+  "calendar": {
+    "mon": "L",
+    "tue": "M",
+    "wed": "M",
+    "thu": "G",
+    "fri": "V",
+    "sat": "S",
+    "sun": "D",
+    "activeDays": "giorni attivi"
+  },
+  "chart": {
+    "noData": "Nessun dato"
+  },
+  "weight": {
+    "first": "Primo",
+    "current": "Attuale",
+    "change": "Variazione",
+    "measures": "Misure"
+  },
+  "badge": {
+    "unlocked": "Sbloccato",
+    "locked": "Bloccato",
+    "noDesc": "Completa gli obiettivi per sbloccare questo badge.",
+    "unlockedOn": "Sbloccato il",
+    "close": "Ho capito"
+  },
+  "tabs": {
+    "home": "Home",
+    "progress": "Progressi",
+    "social": "Social",
+    "tools": "Strumenti",
+    "profile": "Profilo"
+  },
+  "badges": {
+    "first_workout": {
+      "name": "Primo Allenamento",
+      "description": "Completa il tuo primo allenamento"
+    },
+    "streak_7": {
+      "name": "Settimana di Fuoco",
+      "description": "7 giorni consecutivi"
+    },
+    "streak_30": {
+      "name": "Mese d'Acciaio",
+      "description": "30 giorni consecutivi"
+    },
+    "workouts_10": {
+      "name": "Costante",
+      "description": "10 allenamenti completati"
+    },
+    "workouts_50": {
+      "name": "Determinato",
+      "description": "50 allenamenti completati"
+    },
+    "workouts_100": {
+      "name": "Leggenda",
+      "description": "100 allenamenti completati"
+    },
+    "runner_10km": {
+      "name": "Corridore",
+      "description": "10 km percorsi in totale"
+    },
+    "runner_50km": {
+      "name": "Maratoneta",
+      "description": "50 km percorsi in totale"
+    },
+    "consistent_month": {
+      "name": "Inarrestabile",
+      "description": "Obiettivo settimanale raggiunto per 4 settimane di fila"
+    },
+    "unlocked": "Sbloccato!",
+    "locked": "Bloccato",
+    "sectionUnlocked": "Sbloccati",
+    "sectionInProgress": "In corso"
+  },
+  "home": {
+    "title": "Oggi",
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "daysAgo": "{{count}} giorni fa",
+    "weeksAgo": "{{count}} sett fa",
+    "greeting": {
+      "morning": "Buongiorno",
+      "afternoon": "Buon pomeriggio",
+      "evening": "Buonasera"
+    },
+    "streak": {
+      "current": "Serie attuale",
+      "days": "{{count}} giorno",
+      "days_plural": "{{count}} giorni"
+    },
+    "quickActions": {
+      "title": "Azioni Rapide",
+      "addWorkout": "Aggiungi",
+      "addRun": "Corsa",
+      "addMeal": "Pasto",
+      "addMeasure": "Misure",
+      "repCounter": "Contatore Ripetizioni"
+    },
+    "sessions": "sessioni",
+    "recentActivity": "Attività Recente",
+    "recentActivitySubtitle": "{{count}} attività registrata",
+    "recentActivitySubtitle_plural": "{{count}} attività registrate",
+    "noActivity": "Ancora nessuna attività",
+    "noActivityHint": "Inizia aggiungendo il tuo primo allenamento!",
+    "weeklyGoal": "Obiettivo Settimanale",
+    "weeklyProgress": "{{current}}/{{goal}} allenamenti",
+    "weeklyProgressRight": "{{current}} di {{goal}}",
+    "thisWeek": "Questa settimana",
+    "goalAchieved": "OBIETTIVO RAGGIUNTO!",
+    "daysActive": "Attivi",
+    "longPressHint": "Tieni premuto per il contatore",
+    "quickCheck": "Controllo Rapido",
+    "motivational": {
+      "morning": "Pronto per un allenamento mattutino?",
+      "afternoon": "Ottimo momento per allenarsi!",
+      "evening": "Pronto per la tua sessione?"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Benvenuto in Spix",
+      "subtitle": "Il tuo compagno di fitness personale per raggiungere i tuoi obiettivi",
+      "button": "Inizia"
+    },
+    "goal": {
+      "label": "Passo 1",
+      "title": "Qual è il tuo obiettivo principale?",
+      "description": "Questo ci aiuterà a personalizzare la tua esperienza",
+      "button": "Continua",
+      "options": {
+        "loseWeight": "Perdere peso",
+        "buildMuscle": "Aumentare la massa muscolare",
+        "improveCardio": "Migliorare il cardio",
+        "stayHealthy": "Rimanere in forma / Salute"
+      }
+    },
+    "level": {
+      "label": "Passo 2",
+      "title": "Qual è il tuo livello attuale?",
+      "description": "Nessuna pressione, tutti iniziamo da qualche parte!",
+      "button": "Continua",
+      "options": {
+        "beginner": "Principiante",
+        "beginnerDesc": "Ho appena iniziato",
+        "intermediate": "Intermedio",
+        "intermediateDesc": "Mi alleno di tanto in tanto",
+        "advanced": "Avanzato",
+        "advancedDesc": "Lo sport è la mia vita"
+      }
+    },
+    "frequency": {
+      "label": "Passo 3",
+      "title": "Quante volte a settimana vuoi allenarti?",
+      "description": "Questo imposterà il tuo obiettivo settimanale",
+      "button": "Fine",
+      "times": "volte a settimana"
+    },
+    "gamification": {
+      "label": "Passo 5",
+      "title": "Hai bisogno di una spinta in più?",
+      "subtitle": "Guadagna XP, sali di livello e completa missioni per restare motivato!",
+      "progress": {
+        "title": "Con progressione",
+        "desc": "XP, livelli, missioni e badge"
+      },
+      "simple": {
+        "title": "Tracciamento semplice",
+        "desc": "Solo i tuoi allenamenti, nessuna gamification"
+      },
+      "note": "Puoi cambiarlo in seguito in Impostazioni -> Aspetto"
+    },
+    "ready": {
+      "title": "Andiamo! 🚀",
+      "subtitle": "Sei pronto per iniziare il tuo percorso fitness. Ogni allenamento conta!",
+      "button": "Inizia l'avventura",
+      "progressEnabled": "Progressione attivata",
+      "simpleMode": "Modalità tracciamento semplice",
+      "socialEnabled": "Funzionalità social attivate",
+      "soloMode": "Modalità privata"
+    },
+    "skip": "Salta"
+  },
+  "progress": {
+    "eyebrow": "DASHBOARD",
+    "title": "Progressi",
+    "currentStreak": "Serie attuale",
+    "exerciseOfMonth": "Esercizio del mese",
+    "monthlyProgress": "Progressi Mensili",
+    "monthlyCount": "{{count}} allenamenti",
+    "streak": {
+      "current": "Serie attuale",
+      "record": "Record",
+      "percentOfRecord": "{{percent}}% del record",
+      "startToday": "Inizia oggi!"
+    },
+    "stats": {
+      "workouts": "Allenamenti",
+      "distance": "km percorsi",
+      "duration": "minuti",
+      "weeklyGoal": "obiettivo / sett"
+    },
+    "activeDays": "{{count}} giorni attivi",
+    "ai": {
+      "title": "Riepilogo settimanale di Ploppy 🤖",
+      "loading": "Ploppy sta pensando...",
+      "error": "Riepilogo non disponibile",
+      "disabled": "Il riepilogo IA è disabilitato",
+      "enableInSettings": "Abilitalo in Impostazioni > IA – Ploppy",
+      "noData": "Non ci sono abbastanza dati per generare un riepilogo",
+      "connectRequired": "Connettiti a Pollination in Impostazioni > Labs per usare l'IA",
+      "regenerate": "Rigenera"
+    },
+    "workoutsPerMonth": "Allenamenti al mese",
+    "weightEvolution": "Evoluzione del peso",
+    "lastWeight": "Ultimo",
+    "weightChange": "Variazione",
+    "topExercise": "Miglior esercizio del mese",
+    "personalRecords": "Record Personali",
+    "badges": "Badge",
+    "noData": "Ancora nessun dato",
+    "noDataHint": "Le tue statistiche appariranno qui"
+  },
+  "repCounter": {
+    "title": "Contatore Esercizi",
+    "selectExercise": "Scegli un esercizio",
+    "selectHint": "Seleziona l'esercizio che vuoi tracciare",
+    "positioning": "Posizionamento",
+    "detectionMode": "Modalità di Rilevamento",
+    "manual": "Manuale",
+    "sensor": "Sensore",
+    "camera": "Fotocamera",
+    "cameraNote": "La fotocamera usa l'IA per rilevare i tuoi movimenti",
+    "cameraOnly": "Solo modalità fotocamera",
+    "cameraPosition": "Posiziona il telefono di lato per una vista di profilo",
+    "cameraSearching": "Ricerca fotocamera...",
+    "cameraPermissionRequired": "Permesso fotocamera richiesto",
+    "allowCamera": "Consenti Fotocamera",
+    "volumeHint": "Alza il volume per l'incoraggiamento! 🔊",
+    "aiActive": "Rilevamento IA attivo",
+    "keepGoing": "Continua così!",
+    "holdOn": "Tieni duro! 💪",
+    "pressPlay": "Premi ▶️ per avviare il timer",
+    "duration": "Durata",
+    "record": "Record",
+    "repPerMin": "rip/min",
+    "newRecord": "Nuovo record personale!",
+    "done": "Fatto!",
+    "newRecordTitle": "Nuovo Record!",
+    "congrats": "Ottimo lavoro! 🎉",
+    "restart": "Riavvia",
+    "whenReady": "Quando sei pronto, premi Inizia",
+    "calibration": {
+      "title": "Calibrazione",
+      "startPedaling": "Inizia a pedalare al tuo ritmo normale...",
+      "keepPedaling": "Continua a pedalare...",
+      "nowStop": "Bene! Ora fermati gradualmente...",
+      "stopping": "Fermati completamente...",
+      "ready": "Calibrazione completata!"
+    },
+    "exitConfirm": {
+      "title": "Uscire dal tracciamento?",
+      "message": "I tuoi progressi non verranno salvati."
+    },
+    "pose": {
+      "detected": "Posa rilevata",
+      "noPose": "Nessuna posa",
+      "detecting": "Rilevamento in corso..."
+    },
+    "instructions": {
+      "pushups": {
+        "default": "Posiziona il telefono a faccia in giù sotto il petto",
+        "camera": "Posiziona il telefono di lato per una vista di profilo"
+      },
+      "situps": {
+        "default": "Posiziona il telefono sul petto, schermo verso l'alto",
+        "camera": "Posiziona il telefono di lato per una vista di profilo"
+      },
+      "squats": {
+        "default": "Tieni il telefono contro il petto",
+        "camera": "Posiziona il telefono davanti a te o di lato"
+      },
+      "jumpingJacks": {
+        "default": "Tieni il telefono in mano",
+        "camera": "Posiziona il telefono davanti a te, rivolto verso di te"
+      },
+      "plank": {
+        "default": "Posiziona il telefono di lato per una vista di profilo",
+        "camera": "Posiziona il telefono di lato per una vista di profilo.\n\n💡 Suggerimento: Alza il volume per sentire i suoni!"
+      },
+      "elliptical": {
+        "default": "Posiziona il telefono in modo che la tua testa sia visibile nella fotocamera",
+        "camera": "L'app rileverà i tuoi movimenti analizzando il movimento della testa.\n\n💡 È necessaria una breve calibrazione prima di iniziare.",
+        "manual": "Premi play per avviare il timer.\n\nUn suono verrà riprodotto ogni 5 min per motivarti!"
+      }
+    },
+    "active": "Attivo",
+    "trackedSession": "Traccia {{exercise}}",
+    "timeBased": "Basato sul tempo",
+    "eyebrow": "CONTATORE RIPETIZIONI",
+    "motivations": {
+      "pushups": [
+        {"text": "Continua così!", "emoji": "💪"},
+        {"text": "Pettorali in fiamme!", "emoji": "🔥"},
+        {"text": "Eccellente!", "emoji": "⭐"},
+        {"text": "Potenza!", "emoji": "💥"},
+        {"text": "Campione!", "emoji": "🏆"},
+        {"text": "Bel lavoro!", "emoji": "👏"},
+        {"text": "Ottima forma!", "emoji": "⚡"},
+        {"text": "Solido!", "emoji": "🦾"},
+        {"text": "Forte!", "emoji": "💪"}
+      ],
+      "squats": [
+        {"text": "Gambe d'acciaio!", "emoji": "🦵"},
+        {"text": "Stai andando alla grande!", "emoji": "🔥"},
+        {"text": "Squat eccellente!", "emoji": "⭐"},
+        {"text": "Potenza!", "emoji": "💥"},
+        {"text": "Incredibile!", "emoji": "🚀"},
+        {"text": "Continua così!", "emoji": "💪"},
+        {"text": "Cosce forti!", "emoji": "⚡"},
+        {"text": "Al top!", "emoji": "🏆"}
+      ],
+      "situps": [
+        {"text": "Addominali in fiamme!", "emoji": "🔥"},
+        {"text": "Tartaruga in arrivo!", "emoji": "💪"},
+        {"text": "Continua così!", "emoji": "⚡"},
+        {"text": "Eccellente!", "emoji": "⭐"},
+        {"text": "Core forte!", "emoji": "💥"},
+        {"text": "Bel lavoro!", "emoji": "👏"},
+        {"text": "Potenza!", "emoji": "🚀"},
+        {"text": "Ce la puoi fare!", "emoji": "🏆"}
+      ],
+      "jumpingJacks": [
+        {"text": "Cardio attivato!", "emoji": "❤️"},
+        {"text": "Continua così!", "emoji": "⚡"},
+        {"text": "Eccellente!", "emoji": "⭐"},
+        {"text": "Energia!", "emoji": "🔋"},
+        {"text": "Sei inarrestabile!", "emoji": "🔥"},
+        {"text": "Dinamico!", "emoji": "💫"},
+        {"text": "Super!", "emoji": "🎉"},
+        {"text": "Esplosivo!", "emoji": "💥"}
+      ],
+      "plank": [
+        {"text": "Tieni duro!", "emoji": "💪"},
+        {"text": "Non mollare!", "emoji": "🔥"},
+        {"text": "Sei una macchina!", "emoji": "🤖"},
+        {"text": "Respira profondamente!", "emoji": "🌬️"},
+        {"text": "Core d'acciaio!", "emoji": "⚡"},
+        {"text": "Ce la puoi fare!", "emoji": "🏆"},
+        {"text": "Mentalità da campione!", "emoji": "🧠"},
+        {"text": "Quasi finito!", "emoji": "💥"}
+      ],
+      "elliptical": [
+        {"text": "Continua a pedalare!", "emoji": "🚴"},
+        {"text": "Ottimo ritmo!", "emoji": "⚡"},
+        {"text": "Gambe d'acciaio!", "emoji": "💪"},
+        {"text": "Sei inarrestabile!", "emoji": "🔥"},
+        {"text": "Resta a ritmo!", "emoji": "🎵"},
+        {"text": "Bestia da cardio!", "emoji": "❤️‍🔥"},
+        {"text": "Continua così!", "emoji": "🏃"},
+        {"text": "Modalità resistenza!", "emoji": "💫"}
+      ],
+      "started": "Andiamo! 💪",
+      "plankSec": "{{seconds}}s - Ben fatto!",
+      "ellipticalPause": "In pausa"
+    },
+    "exercises": {
+      "pushups": "Flessioni",
+      "situps": "Addominali",
+      "squats": "Squat",
+      "jumpingJacks": "Jumping Jacks",
+      "plank": "Plank",
+      "elliptical": "Bici Ellittica",
+      "run": "Corsa Libera",
+      "run_ai": "Corsa con IA"
+    },
+    "activeTime": "Tempo Attivo",
+    "cycling": "PEDALATA",
+    "paused": "IN PAUSA",
+    "ellipticalManualNote": "Premi Play/Pausa per controllare il timer",
+    "ellipticalAutoNote": "Calibrazione richiesta per rilevare automaticamente la pedalata",
+    "fossCameraWarning": {
+      "title": "Limitazione Modalità Fotocamera",
+      "message": "Il rilevamento tramite fotocamera è attualmente limitato nella versione F-Droid a causa di restrizioni tecniche. Stiamo lavorando per risolvere. Nel frattempo, la versione standard funziona perfettamente!",
+      "downloadTitle": "Scarica Versione Standard",
+      "downloadMessage": "La versione standard include il supporto completo della fotocamera con rilevamento posa IA. Vuoi scaricarla dalle Release di GitHub?",
+      "openGitHub": "Apri GitHub",
+      "downloadStandard": "Scarica Versione Standard →"
+    },
+    "elliptical": {
+      "calibrationStart": "Calibrazione Richiesta",
+      "calibrationIntro": "Posiziona il telefono in modo che la fotocamera possa vedere la tua testa. Non preoccuparti, sarà veloce!",
+      "letsGo": "Andiamo!",
+      "calibrationStarting": "Avvio calibrazione",
+      "getReady": "Mettiti in posizione...",
+      "dontMove": "Non ti muovere!",
+      "funnyStillPhrases": [
+        "Modalità semaforo rosso attivata. 🗿",
+        "Resta fermo. Sì, questa è la parte più difficile del tuo allenamento oggi. 😅",
+        "Non ti muovere. È come una foto, ma dura 5 secondi ed è molto fastidiosa. 📸",
+        "Calibrazione in corso. Se ti muovi, i sensori penseranno che ci sia un terremoto. 🌍",
+        "Fai il manichino. Ce la puoi fare. 🤖",
+        "Fermo come una statua greca. Senza la toga. 🏛️"
+      ],
+      "funnyStillDone": [
+        "Congratulazioni! Record mondiale di immobilità: 5 secondi. 🏆",
+        "Calibrato! La tua immobilità era impressionante. 10/10. ⭐",
+        "Perfetto! Saresti un'ottima guardia reale. 💂",
+        "Magnifico! Le statue di cera sono gelose. 🎭"
+      ],
+      "startPedaling": "Inizia a pedalare!",
+      "waitingForMovement": "Aspetto che tu inizi a muoverti...",
+      "analyzingMovement": "Analizzo il tuo movimento...",
+      "calibrationComplete": "Calibrazione completata!",
+      "letsRide": "Si pedala! 🚴",
+      "calibrationMoving": "Inizia a pedalare!",
+      "calibrationMovingHint": "Preparati a pedalare al tuo ritmo normale...",
+      "calibrationKeepMoving": "Continua a pedalare per qualche secondo mentre analizzo il tuo ritmo...",
+      "doneMoving": "Ho finito di pedalare",
+      "calibrationStopping": "Ora rallenta",
+      "calibrationStoppingHint": "Rallenta e fermati gradualmente...",
+      "calibrationKeepStill": "Resta fermo per qualche secondo così posso rilevare la differenza...",
+      "doneStopping": "Sono fermo",
+      "calibrationDone": "Calibrazione completata! 🎉",
+      "calibrationReady": "Sono pronto per rilevare automaticamente quando stai pedalando. Andiamo!",
+      "retryCalibration": "Riprova la calibrazione",
+      "calibrationFailed": "Movimento non rilevato a sufficienza — per favore pedala un po' più velocemente e riprova"
+    },
+    "auto": "Auto",
+    "manualMode": "Modalità manuale",
+    "autoDetection": "Rilevamento automatico"
+  },
+  "safety": {
+    "config": {
+      "title": "Controllo di sicurezza",
+      "subtitle": "I tuoi contatti saranno avvisati se non rispondi",
+      "description": "Riceverai controlli periodici. Se non rispondi, i tuoi contatti di sicurezza verranno avvisati automaticamente.",
+      "intervalLabel": "Controllami ogni...",
+      "autoAlertLabel": "Avvisa se nessuna risposta dopo...",
+      "intervalCaps": "CONTROLLA OGNI",
+      "autoAlertCaps": "AVVISA SE NESSUNA RISPOSTA DOPO",
+      "contactsCaps": "I TUOI CONTATTI DI SICUREZZA",
+      "activate": "Abilita per questa corsa",
+      "activateTooltip": "Aggiungi prima almeno un contatto",
+      "noContacts": "Nessun contatto di sicurezza configurato. Aggiungili nelle impostazioni.",
+      "goToSettings": "Configura",
+      "addContacts": "Aggiungi contatti",
+      "reachable": "Raggiungibile",
+      "unreachable": "Non disponibile",
+      "moreContacts": "e altri {{count}}",
+      "custom": "Personalizzato",
+      "customPlaceholder": "Minuti (es. 20)",
+      "customHint": "Inserisci un intervallo personalizzato in minuti.",
+      "customError": "Per favore inserisci un numero valido maggiore di 0."
+    },
+    "overlay": {
+      "title": "Controllo di sicurezza",
+      "subtitle": "Sei al sicuro?",
+      "countdown": "{{seconds}} secondi",
+      "upcomingCheck": "Controllo tra {{seconds}}s",
+      "imOk": "Sto bene",
+      "needHelp": "Ho bisogno di aiuto",
+      "call112": "Chiama il 112",
+      "slideImOk": "Scorri — Sto bene",
+      "slideNeedHelp": "Scorri — Ho bisogno di aiuto",
+      "slideCall112": "Scorri — Chiama il 112",
+      "addTime": "Aggiungi tempo ⏱️",
+      "addTimeOptions": "Scegli il tempo extra prima del prossimo controllo.",
+      "sending": "Invio in corso...",
+      "alertSent": "⚠️ Allarme inviato — {{count}} contatti avvisati",
+      "allClear": "✅ Segnale di cessato allarme inviato ai tuoi contatti."
+    },
+    "fall": {
+      "title": "Caduta rilevata!",
+      "subtitle": "Sembra che tu sia caduto. Stai bene?",
+      "countdown": "Rispondi entro {{seconds}} secondi",
+      "dismissed": "Controllo caduta annullato"
+    },
+    "alertSent": {
+      "title": "Allarme inviato",
+      "subtitle": "Mantieni la calma, i soccorritori sono stati avvertiti!",
+      "contacts": "Contatti allertati",
+      "callEmergency": "Chiama il 112",
+      "imOkCancel": "Sto bene — Annulla allarme",
+      "followUpSent": "Messaggio di aggiornamento inviato",
+      "timestamp": "Allarme inviato alle {{time}}",
+      "position": "Posizione: {{latitude}}, {{longitude}}",
+      "openMap": "Vedi sulla mappa"
+    },
+    "alert": {
+      "message": "🆘 {{userName}} ha bisogno di aiuto!\n📍 Posizione: {{mapsUrl}}\n🏃 In corsa da {{runDurationMinutes}} min — {{distanceKm}} km percorsi\n⏰ {{timestamp}}\nInviato automaticamente da {{appName}}.",
+      "messageNoResponse": "⚠️ {{userName}} non ha risposto al controllo di sicurezza.\n📍 Posizione: {{mapsUrl}}\n🏃 In corsa da {{runDurationMinutes}} min — {{distanceKm}} km percorsi\n⏰ {{timestamp}}\nInviato automaticamente da {{appName}}.",
+      "fallNoResponse": "⚠️ {{userName}} non ha risposto dopo aver rilevato una caduta.\n📍 Posizione: {{mapsUrl}}\n🏃 In corsa da {{runDurationMinutes}} min — {{distanceKm}} km percorsi\n⏰ {{timestamp}}\nInviato automaticamente da {{appName}}.",
+      "messageAllClear": "✅ {{userName}} ora è al sicuro. Il precedente allarme era un falso allarme.\nInviato automaticamente da {{appName}}.",
+      "sendSuccess": "Allarme inviato",
+      "sendPartialFailure": "Mancato recapito parziale",
+      "sendFailure": "Impossibile allertare i contatti",
+      "retry": "Riprova",
+      "iosSendPrompt": "Tocca Invia per allertare i tuoi contatti"
+    },
+    "permission": {
+      "motionTitle": "Permesso attività fisica",
+      "motion": "Necessario per rilevare automaticamente le cadute durante la corsa.",
+      "allow": "Consenti",
+      "smsTitle": "Permesso SMS non concesso",
+      "smsManual": "I messaggi SMS di emergenza dovranno essere inviati manualmente finché non viene concesso il permesso nelle impostazioni di Android."
+    }
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "profile": "Profilo",
+    "profileSettings": "Gestisci il tuo profilo",
+    "yourData": "I tuoi Dati",
+    "sessions": "Allenamenti",
+    "meals": "Pasti",
+    "measures": "Misure",
+    "preferences": "Preferenze",
+    "weeklyGoal": "Obiettivo Settimanale",
+    "weeklyGoalDesc": "{{count}} allenamenti a settimana",
+    "weeklyGoalSave": "Obiettivo settimanale: {{count}} allenamenti",
+    "weeklyGoalError": "L'obiettivo deve essere compreso tra 1 e 14",
+    "keepGoingInterval": "Intervallo di motivazione",
+    "keepGoingIntervalDesc": "Suono ogni {{count}} min sull'ellittica",
+    "keepGoingEllipticalOnly": "Solo ellittica - altri esercizi suonano ogni 10 ripetizioni",
+    "keepGoingError": "L'intervallo deve essere compreso tra 1 e 60 minuti",
+    "keepGoingSaved": "Intervallo di motivazione: {{interval}} min",
+    "streakReminder": "Promemoria Serie",
+    "streakReminderDesc": "Notifica giornaliera",
+    "reminderTime": "Orario del Promemoria",
+    "reminderTimeDesc": "Alle {{time}}",
+    "notificationsDisabled": "Abilita le notifiche per questa funzione",
+    "language": "Lingua",
+    "languageDesc": "Cambia lingua dell'app",
+    "chooseLanguage": "Scegli la lingua",
+    "visibility": "Visibilità Schede",
+    "toolsTab": "Scheda Strumenti",
+    "toolsTabDesc": "Contatore, generatore...",
+    "historyTab": "Scheda Cronologia",
+    "historyTabDesc": "Diario degli allenamenti",
+    "visible": "Visibile",
+    "hidden": "Nascosto",
+    "labs": "Labs (Beta)",
+    "appearance": "Aspetto",
+    "fullOpacityNavbar": "Barra di navigazione opaca",
+    "fullOpacityNavbarDesc": "Disabilita l'effetto glassmorfismo",
+    "showGamificationTab": "Mostra scheda progressione",
+    "showGamificationTabDesc": "XP, livelli e missioni nella navigazione",
+    "onboarding": "Rivedi l'introduzione",
+    "onboardingDesc": "Mostra di nuovo il tutorial di benvenuto",
+    "notifications": "Notifiche",
+    "comingSoon": "In arrivo",
+    "privacyPolicyDesc": "GDPR e protezione dati",
+    "termsOfServiceDesc": "Regole d'uso dell'app",
+    "restoreSuccess": "{{entries}} voci ripristinate. Livello {{level}} con {{xp}} XP.",
+    "disableSocialConfirm": {
+      "title": "Disabilitare le funzioni social?",
+      "message": "Questo eliminerà permanentemente i tuoi dati online (profilo, classifica, XP, amici, incoraggiamenti). I tuoi dati locali (allenamenti, pasti, misure) verranno conservati."
+    },
+    "disableSocialSuccess": "Dati online eliminati. Modalità locale attiva.",
+    "goalSaved": "Obiettivo settimanale: {{goal}} allenamenti",
+    "shareUnavailable": "La condivisione non è disponibile su questo dispositivo",
+    "backupError": "Impossibile creare il backup",
+    "restoreInvalidFile": "File di backup non valido o corrotto",
+    "restoreError": "Impossibile ripristinare il backup",
+    "restoreConfirmTitle": "Ripristinare un backup?",
+    "restoreConfirmMessage": "Questo sostituirà tutti i tuoi dati attuali con i dati del backup. Questa azione non può essere annullata.",
+    "deleteDataError": "Impossibile eliminare i dati. Riprova più tardi.",
+    "visibilityError": "Impossibile modificare la visibilità.",
+    "streakReminderEnabled": "Riceverai un promemoria giornaliero alle {{time}} se non ti sei ancora allenato.",
+    "reminderSet": "Promemoria impostato per le {{time}}",
+    "personalInfo": "Informazioni Personali",
+    "personalInfoDesc": "Dettagli opzionali (sesso, altezza, peso) utilizzati dalle funzioni di analisi",
+    "gender": "Genere",
+    "genderDesc": "Utilizzato per contestualizzare i modelli IA",
+    "height": "Altezza (cm)",
+    "weight": "Peso (kg)",
+    "privacyNote": "Questi valori possono essere condivisi durante l'analisi dei pasti/immagini se forniti.",
+    "heightError": "Altezza non valida - inserisci un numero",
+    "weightError": "Peso non valido - inserisci un numero",
+    "personalInfoSaved": "Informazioni personali salvate",
+    "genderOptions": {
+      "male": "Maschio",
+      "female": "Femmina",
+      "other": "Altro",
+      "prefer_not_to_say": "Preferisco non dirlo"
+    },
+    "reminderInvalid": "Orario non valido (00-23 : 00-59)",
+    "cameraMode": "Modalità Fotocamera",
+    "cameraModeDesc": "Preferisci il rilevamento della posa",
+    "debugCamera": "Debug Fotocamera",
+    "debugCameraDesc": "Mostra i punti di tracciamento",
+    "social": "Social",
+    "socialFeatures": "Funzionalità Social",
+    "socialEnabled": "Classifica e amici abilitati",
+    "socialDisabled": "Modalità offline",
+    "disable": "Disabilita",
+    "leaderboardVisibility": "Appari in Classifica",
+    "leaderboardPublic": "Visibile pubblicamente",
+    "leaderboardHidden": "Nascosto dalla classifica globale",
+    "myPublicProfile": "Il mio Profilo Pubblico",
+    "data": "Dati",
+    "backup": "Backup Completo",
+    "backupDesc": "Esporta tutti i dati",
+    "restore": "Ripristina",
+    "restoreDesc": "Importa un backup",
+    "exportData": "Esporta Dati",
+    "exportDataDesc": "Scarica i tuoi dati in JSON",
+    "importData": "Importa Dati",
+    "importDataDesc": "Ripristina da un file JSON",
+    "recalculate": "Ricalcola Livello",
+    "recalculateDesc": "Correggi le incongruenze",
+    "recalculateConfirm": {
+      "title": "Ricalcolare il livello?",
+      "message": "Questo ricalcolerà il tuo livello e le tue missioni in base alle tue voci attuali."
+    },
+    "recalculateDone": "Il tuo livello e le tue missioni sono stati aggiornati.",
+    "clearData": "Reimposta Dati",
+    "clearDataDesc": "Elimina permanentemente",
+    "clearDataConfirm": {
+      "title": "Reimpostare tutti i dati?",
+      "message": "Questa azione non può essere annullata. Tutti i tuoi allenamenti, pasti e misure verranno eliminati."
+    },
+    "clearDataDone": "Puoi ricominciare da zero!",
+    "about": "Informazioni",
+    "version": "Versione {{version}}",
+    "privacyPolicy": "Informativa sulla Privacy",
+    "termsOfService": "Termini di Servizio",
+    "legal": "Legale",
+    "dangerZone": "Zona Pericolosa",
+    "sportsManagement": "Gestione Sport",
+    "manageSports": "Gestisci i Miei Sport",
+    "manageSportsDesc": "Aggiungi, nascondi o personalizza",
+    "safety": {
+      "title": "Sicurezza",
+      "contacts": "Contatti di sicurezza",
+      "addContact": "Aggiungi contatto",
+      "editContact": "Nome del contatto",
+      "phonePlaceholder": "+393123456789",
+      "deleteContact": "Elimina contatto",
+      "deleteConfirm": "Eliminare {{name}} dai tuoi contatti di sicurezza?",
+      "maxContacts": "Massimo 5 contatti di sicurezza.",
+      "defaultInterval": "Intervallo di controllo predefinito",
+      "defaultAutoAlert": "Ritardo allarme automatico predefinito",
+      "fallDetection": "Rilevamento automatico cadute",
+      "fallDetectionDesc": "Utilizza l'accelerometro per rilevare una caduta durante la corsa",
+      "fallDetectionWarning": "Può produrre falsi positivi a seconda di come viene trasportato il telefono",
+      "iosNote": "Su iPhone, dovrai confermare l'invio del messaggio",
+      "disclaimer": "Questa funzione è uno strumento di assistenza. In una vera emergenza, chiama il 112. La consegna dei messaggi non può essere garantita.",
+      "methodSMS": "SMS",
+      "methodWhatsApp": "WhatsApp",
+      "whatsappUnavailable": "WhatsApp non è disponibile su questo dispositivo."
+    },
+    "sports": {
+      "default": "Predefiniti",
+      "custom": "Personalizzati",
+      "hidden": "Nascosti",
+      "defaultSports": "Sport Predefiniti",
+      "customSports": "I Miei Sport Personalizzati",
+      "addTitle": "Nuovo Sport",
+      "addSubtitle": "Crea uno sport su misura per te",
+      "addButton": "Aggiungi uno sport",
+      "preview": "Anteprima",
+      "nameLabel": "Nome dello sport",
+      "namePlaceholder": "Es. Nuoto, Yoga, Pugilato...",
+      "emojiLabel": "Emoji",
+      "iconLabel": "Icona cronologia",
+      "colorLabel": "Colore",
+      "fieldsLabel": "Campi da tracciare",
+      "fieldsHint": "Seleziona le informazioni che vuoi registrare",
+      "fields": {
+        "duration": "Durata (minuti)",
+        "distance": "Distanza (km)",
+        "bpmAvg": "BPM Medi",
+        "bpmMax": "BPM Max",
+        "cardiacLoad": "Carico Cardiaco",
+        "calories": "Calorie",
+        "exercises": "Esercizi (testo)",
+        "totalReps": "Ripetizioni Totali"
+      },
+      "save": "Crea Sport",
+      "deleteTitle": "Eliminare questo sport?",
+      "deleteMessage": "Lo sport \"{{name}}\" verrà eliminato definitivamente.",
+      "errorNoName": "Dai un nome al tuo sport",
+      "errorNoFields": "Seleziona almeno un campo da tracciare",
+      "infoText": "Nascondi gli sport che non pratichi, o crea i tuoi sport personalizzati con i campi di tua scelta."
+    },
+    "deleteAccount": "Elimina il Mio Account",
+    "deleteAccountDesc": "Cancella tutti i tuoi dati",
+    "changeTime": {
+      "title": "Cambia Orario",
+      "hour": "Ora",
+      "minute": "Minuto"
+    },
+    "changeTimeDesc": "Scegli l'orario della notifica",
+    "mealReminders": "Promemoria Pasti",
+    "addMealReminder": "Aggiungi un promemoria",
+    "mealReminderTime": "Orario del promemoria",
+    "mealReminderTimeDesc": "Scegli l'orario del promemoria del pasto",
+    "weightReminder": "Promemoria Peso",
+    "weightReminderTitle": "Promemoria Peso",
+    "weightReminderSettings": "Configura promemoria",
+    "weightReminderTime": "Promemoria Peso",
+    "weightReminderTimeDesc": "Scegli quando ricordarti di pesarti",
+    "weightReminderEnabled": "Promemoria peso impostato alle {{time}}",
+    "weightReminderDaily": "Tutti i giorni alle {{time}}",
+    "weightReminderWeekly": "Ogni {{day}} alle {{time}}",
+    "weightReminderMonthly": "Il {{day}} di ogni mese alle {{time}}",
+    "frequencyDaily": "Giornaliero",
+    "frequencyWeekly": "Settimanale",
+    "frequencyMonthly": "Mensile",
+    "dayOfWeek": "Giorno della settimana",
+    "dayOfMonth": "Giorno del mese",
+    "chooseFile": "Scegli un file",
+    "futureFeatures": {
+      "notifications": "Notifiche intelligenti",
+      "multilang": "Traduzioni multilingue"
+    },
+    "storageLabel": "Archiviazione:",
+    "saved": "Salvato!",
+    "healthConnect": "Health Connect",
+    "healthConnectDesc": "Sincronizza i dati sanitari",
+    "preferencesDesc": "Obiettivi, fotocamera, unità di misura",
+    "notificationsDesc": "Promemoria e avvisi",
+    "appearanceDesc": "Tema e interfaccia",
+    "dataDesc": "Backup, esportazione, importazione",
+    "labsDesc": "Funzionalità sperimentali",
+    "labsEmpty": "Nessun esperimento",
+    "labsEmptyDesc": "Le nuove funzionalità sperimentali appariranno qui.",
+    "legalDesc": "Privacy e Termini di Servizio",
+    "developerMode": "Modalità Sviluppatore",
+    "developerModeDesc": "Opzioni avanzate",
+    "developerWarning": "Queste opzioni sono per gli sviluppatori. Usale con cautela.",
+    "disableDeveloperMode": "Disabilita modalità sviluppatore",
+    "disableDeveloperModeDesc": "Nascondi queste opzioni avanzate",
+    "developer": {
+      "sections": {
+        "pollination": "IA Pollination",
+        "interface": "Interfaccia",
+        "gamification": "Gamification",
+        "safety": "Sicurezza",
+        "developerMode": "Modalità sviluppatore"
+      },
+      "pollination": {
+        "title": "Saldo Pollen",
+        "connected": "Connesso",
+        "disconnected": "Non connesso",
+        "remainingCredit": "Credito residuo:",
+        "unit": "pollen",
+        "notAvailable": "N/D",
+        "errorPrefix": "Errore:"
+      },
+      "onboardingResetTitle": "Ripristina onboarding Ploppy",
+      "onboardingResetSubtitle": "Mostra di nuovo il popup di benvenuto di Ploppy",
+      "onboardingResetDoneTitle": "Onboarding ripristinato",
+      "onboardingResetDoneMessage": "Il popup di benvenuto di Ploppy apparirà la prossima volta che aprirai la pagina dei pasti.",
+      "recalculateTitle": "Ricalcola gamification",
+      "recalculateSubtitle": "XP attuali: {{xp}} | Livello: {{level}}",
+      "recalculateConfirmTitle": "Ricalcolare la gamification?",
+      "recalculateConfirmMessage": "Questo ricalcolerà XP e livello da tutte le tue sessioni ({{count}} sessioni sportive).\n\nAttuale: Livello {{level}}, {{xp}} XP",
+      "recalculateAction": "Ricalcola",
+      "recalculateDoneTitle": "Ricalcolato",
+      "recalculateDoneMessage": "Livello {{level}}, {{xp}} XP",
+      "clearHistoryTitle": "Cancella cronologia XP",
+      "clearHistorySubtitle": "Rimuovi la cronologia senza toccare le voci",
+      "clearHistoryConfirmTitle": "Cancellare la cronologia?",
+      "clearHistoryConfirmMessage": "Questo cancella solo la cronologia dei guadagni in XP, non il tuo livello attuale.",
+      "clearHistoryAction": "Cancella",
+      "clearHistoryDoneTitle": "Cronologia cancellata",
+      "clearHistoryDoneMessage": "La cronologia XP è stata cancellata.",
+      "disableConfirmTitle": "Disabilitare la modalità sviluppatore?",
+      "disableConfirmMessage": "Puoi abilitarla di nuovo toccando 'Informazioni' 10 volte.",
+      "disableAction": "Disabilita",
+      "testFallTitle": "Test rilevamento cadute",
+      "testFallSubtitle": "Attiva l'overlay di emergenza senza cadere davvero",
+      "testFallDoneTitle": "Test caduta attivato",
+      "testFallDoneMessage": "L'overlay di sicurezza è stato attivato per il test."
+    },
+    "cameraPreview": "Anteprima fotocamera",
+    "cameraPreviewDesc": "Visualizza la fotocamera durante il tracciamento",
+    "skipSensorSelection": "Mostra modalità sensore nel tracciamento",
+    "skipSensorSelectionDesc": "Disabilita per passare direttamente alla schermata di posizionamento",
+    "enableToolsScreen": "Abilita schermata creazione allenamento (beta)",
+    "enableToolsScreenDesc": "Molto sperimentale! Mostra l'icona Strumenti nella barra di navigazione.",
+    "ai": {
+      "title": "Funzionalità IA",
+      "toggleProgress": "IA nei Progressi",
+      "toggleProgressDesc": "Mostra il riepilogo settimanale IA nella pagina Progressi",
+      "toggleWorkout": "IA nelle Sessioni",
+      "toggleWorkoutDesc": "Mostra l'analisi IA nei dettagli dell'allenamento",
+      "modelLabel": "Modello IA",
+      "modelDesc": "Modello utilizzato per l'analisi IA",
+      "selectModelTitle": "Scegli il modello",
+      "toneLabel": "Stile di risposta",
+      "toneDesc": "Tecnico ↔ Tono caloroso (medio neutrale)",
+      "toneOptions": {
+        "technical": "Tecnico",
+        "neutral": "Neutrale",
+        "warm": "Caloroso"
+      },
+      "pollinationsInfo": "Questa app utilizza Pollinations.ai per alimentare le sue funzioni intelligenti. Pollinations è un servizio IA open-source che ci permette di offrire queste funzioni senza costi aggiuntivi.",
+      "privacyTitle": "Dati condivisi con l'IA",
+      "privacyText": "Quando le funzioni IA sono abilitate, i seguenti dati potrebbero essere inviati a Pollinations.ai:\n• Dati personali: età, peso, altezza (se forniti)\n• Cronologia sport: numero di sessioni, distanze, durate, ritmi\n• Dati della sessione corrente: distanza, durata, ritmo, dislivello\n• Dati nutrizionali: riepiloghi dei pasti (se attivi)\n• Livello di fitness dal tuo profilo",
+      "seePrivacyPolicy": "Vedi l'informativa sulla privacy completa",
+      "consentTitle": "Condivisione Dati IA",
+      "consentMessage": "Abilitando le funzioni IA, accetti che alcuni dati (profilo, cronologia sport, dati della sessione) possano essere inviati a Pollinations.ai per generare consigli personalizzati. Nessun dato viene conservato in modo permanente.",
+      "acceptConsent": "Accetto",
+      "declineConsent": "No grazie",
+      "movedToAiTab": "Le impostazioni dell'IA sono state spostate in Impostazioni > IA"
+    },
+    "pollination": {
+      "sectionTitle": "ANALISI IA",
+      "title": "IA Pollination",
+      "connected": "Connesso",
+      "notConnected": "Non connesso",
+      "connect": "Connetti",
+      "disconnect": "Disconnetti",
+      "disconnectTitle": "Disconnettersi da Pollination?",
+      "disconnectMessage": "Non potrai più utilizzare le funzioni di analisi dei pasti con l'IA.",
+      "warningTitle": "⚠️ Funzionalità Beta",
+      "warningMessage": "Questa funzione utilizza l'API di Pollination.ai per analizzare le foto dei tuoi pasti. Connettendoti, accetti che le immagini dei tuoi pasti vengano elaborate dai servizi Pollination. Questa funzione è sperimentale e potrebbe raccogliere dati di utilizzo.",
+      "continue": "Connetti comunque",
+      "betaWarning": "Funzione beta - Pollination potrebbe raccogliere dati per migliorare il servizio",
+      "successTitle": "Connesso!",
+      "successMessage": "Ora puoi utilizzare l'analisi dei pasti IA con Ploppy.",
+      "errorMessage": "Connessione fallita. Per favore riprova."
+    },
+    "pollinationCallback": {
+      "processing": "Connessione in corso...",
+      "processingMessage": "Attendi mentre colleghiamo il tuo account.",
+      "success": "Connesso!",
+      "successMessage": "Ora puoi utilizzare l'analisi dei pasti IA con Ploppy.",
+      "plopReady": "Ploppy è pronto ad aiutarti!",
+      "error": "Connessione Fallita",
+      "errorMessage": "Qualcosa è andato storto. Per favore riprova dalle Impostazioni."
+    },
+    "enhancedMeal": {
+      "sectionTitle": "FUNZIONALITÀ PASTI",
+      "title": "Pagina Pasti Migliorata",
+      "description": "Una bellissima nuova pagina per i pasti con l'analisi IA di Ploppy",
+      "enabledInfo": "Quando aggiungi un pasto dalla schermata home, si aprirà la nuova pagina migliorata invece del modulo classico."
+    },
+    "openFoodFacts": {
+      "sectionTitle": "SCANNER PRODOTTI",
+      "title": "OpenFoodFacts",
+      "description": "Scansiona i codici a barre per visualizzare le informazioni nutrizionali",
+      "enabledInfo": "Un pulsante \"Controllo Rapido\" apparirà nella schermata home per scansionare i prodotti alimentari.",
+      "attribution": "Dati forniti da OpenFoodFacts (database aperto)"
+    },
+    "ploppy": {
+      "onboarding": {
+        "title": "Benvenuto in Ploppy! 🐦",
+        "subtitle": "Il tuo assistente nutrizionale IA",
+        "feature1": "📸 Analizza le foto dei tuoi pasti",
+        "feature2": "⭐ Punteggio nutrizionale su 100",
+        "feature3": "💡 Consigli personalizzati",
+        "feature4": "🎯 Migliora la tua dieta",
+        "exampleLabel": "Analisi di esempio",
+        "privacyTitle": "🔐 Privacy",
+        "privacyNote": "Le tue foto vengono analizzate e poi eliminate. Nessun dato viene conservato.",
+        "privacy1": "🔒 Le tue foto non vengono mai salvate",
+        "privacy2": "📱 Elaborazione sicura tramite Pollination.ai",
+        "privacy3": "✨ Gratuito e senza pubblicità",
+        "accept": "Abilita Ploppy",
+        "decline": "Più tardi",
+        "fossWarning": "La versione FOSS non supporta Ploppy (niente servizi cloud)"
+      },
+      "settings": {
+        "title": "Impostazioni Ploppy",
+        "enable": "Abilita Ploppy",
+        "enableDesc": "Analisi IA dei tuoi pasti",
+        "connected": "Connesso a Pollination",
+        "notConnected": "Non connesso",
+        "connect": "Connetti",
+        "disconnect": "Disconnetti",
+        "disconnectConfirm": "Disconnetti",
+        "disconnectMessage": "Dovrai riconnetterti per utilizzare Ploppy.",
+        "fossWarning": "⚠️ Non disponibile nella versione FOSS"
+      }
+    },
+    "measurements": "Misure",
+    "sportProfile": "Profilo Sportivo",
+    "fitnessLevel": "Livello di Fitness",
+    "maxHR": "FC Max",
+    "maxHRCalc": "Calcolato: 220 - età",
+    "notSet": "Non impostato",
+    "shareWithPloppy": "Condividi queste info con Ploppy",
+    "shareWithPloppyDesc": "Per sessioni personalizzate",
+    "ageLabel": "Età",
+    "heightLabel": "Altezza",
+    "weightLabel": "Peso",
+    "fitnessLevels": {
+      "beginner": "Principiante",
+      "intermediate": "Intermedio",
+      "advanced": "Avanzato"
+    },
+    "tracking": "Tracciamento",
+    "aiTab": "IA",
+    "aiTabDesc": "Funzionalità di intelligenza artificiale",
+    "integration": "Integrazione",
+    "ageError": "Età non valida (10-120)",
+    "export": {
+      "modalTitle": "Esportazione JSON",
+      "permissionTitle": "Consenti salvataggio file",
+      "permissionMessage": "Spix richiede l'accesso all'archiviazione per salvare l'esportazione in Download.",
+      "iosHint": "Tocca \"Salva su File\" per scaricare l'esportazione.",
+      "successAndroid": "✅ File salvato in Download: {{filename}}",
+      "error": "Impossibile esportare i dati. Controlla i permessi e riprova.",
+      "exporting": "Esportazione in corso...",
+      "downloadButton": "Scarica JSON ({{count}})",
+      "sections": {
+        "period": "📅 Periodo",
+        "categories": "📦 Categorie da esportare",
+        "preview": "👀 Anteprima"
+      },
+      "preview": {
+        "period": "Periodo",
+        "totalEntries": "Voci totali"
+      },
+      "period": {
+        "today": "Oggi",
+        "yesterday": "Ieri",
+        "thisWeek": "Questa settimana",
+        "lastWeek": "La scorsa settimana",
+        "allData": "Tutti i dati"
+      },
+      "categories": {
+        "workouts": "Allenamenti",
+        "meals": "Pasti",
+        "measures": "Misure"
+      }
+    }
+  },
+  "addEntry": {
+    "title": "Cosa vuoi aggiungere?",
+    "subtitle": "Scegli un'attività",
+    "tracking": "Tracciamento in tempo reale",
+    "trackingDesc": "Rilevamento IA tramite fotocamera",
+    "or": "— o aggiungi manualmente —",
+    "addExercise": "+ Aggiungi Esercizio",
+    "importJSON": "📥 Importa JSON",
+    "invalid": "Non valido",
+    "imported": "Importato!",
+    "exercises": "{{count}} esercizi aggiunti",
+    "invalidJSON": "Formato JSON non valido",
+    "save": "Salva",
+    "update": "Aggiorna",
+    "back": "Indietro",
+    "sessionName": "Nome sessione (opzionale)",
+    "duration": "Durata (min)",
+    "meals": "Pasti",
+    "measures": "Misure",
+    "today": "Oggi",
+    "customDate": "Data personalizzata",
+    "date": "Data (GG/MM/AAAA)",
+    "time": "Ora (OO:MM)",
+    "home": "Allenamento Pesi",
+    "run": "Corsa",
+    "beatsaber": "Beat Saber",
+    "meal": "Pasto",
+    "measure": "Misure",
+    "includeAbs": "Includi blocco addominali",
+    "absIncluded": "Blocco addominali incluso",
+    "mealTime": "Momento del pasto",
+    "mealTimes": {
+      "breakfast": "☀️ Colazione",
+      "lunch": "🌤️ Pranzo",
+      "dinner": "🌙 Cena",
+      "snack": "🍎 Spuntino"
+    },
+    "durationErrorPositive": "Durata non valida - inserisci un numero positivo di minuti",
+    "durationError": "Durata non valida",
+    "durationErrorNumber": "Durata non valida - inserisci un numero di minuti",
+    "measureTextError": "Impossibile salvare il testo, per favore inserisci un peso valido (o percentuale di grasso corporeo)",
+    "weightError": "Peso non valido – per favore inserisci un numero",
+    "bodyFatError": "Percentuale di grasso corporeo non valida – per favore inserisci un numero",
+    "waistError": "Misura della vita non valida – per favore inserisci un numero",
+    "armError": "Misura del braccio non valida – per favore inserisci un numero",
+    "hipsError": "Misura dei fianchi non valida – per favore inserisci un numero",
+    "error": {
+      "noExercise": "Aggiungi almeno un esercizio"
+    },
+    "homeSession": "Sessione a casa: {{name}}",
+    "edit": "Modifica",
+    "editSubtitle": "Aggiorna i dati della tua sessione",
+    "absShort": "Add",
+    "selectSport": "Scegli il tuo sport",
+    "selectSportDesc": "Che sport hai fatto?",
+    "exercisesPlaceholder": "Es: Flessioni 4x12",
+    "form": {
+      "distanceKm": "Distanza (km)",
+      "cardiacOptional": "Cardio (opzionale)",
+      "avgBpm": "BPM Medi",
+      "maxBpm": "BPM Max",
+      "cardiacLoad": "Carico cardiaco",
+      "bpmOptional": "BPM (opzionale)",
+      "whatYouAte": "Cosa hai mangiato",
+      "whatYouAtePlaceholder": "Es: pasta, pollo alla griglia, yogurt bianco...",
+      "body": "Corpo",
+      "weightKg": "Peso (kg)",
+      "bodyFatPercent": "% Grasso corporeo",
+      "measurementsCm": "Misure (cm)",
+      "waist": "Vita",
+      "arm": "Braccio",
+      "hipsCm": "Fianchi (cm)"
+    }
+  },
+  "social": {
+    "title": "Social",
+    "leaderboard": "Classifica",
+    "friends": "Amici",
+    "encouragements": "Incoraggiamenti",
+    "addFriend": "Aggiungi Amico",
+    "friendCode": "Codice Amico",
+    "yourCode": "Il tuo Codice",
+    "enterCode": "Inserisci il codice di un amico",
+    "noFriends": "Ancora nessun amico",
+    "noFriendsHint": "Aggiungi amici per confrontare i tuoi progressi!",
+    "weeklyXP": "XP di questa settimana",
+    "rank": "Posizione",
+    "you": "Tu",
+    "sendEncouragement": "Invia un Incoraggiamento",
+    "encouragementSent": "Incoraggiamento inviato!",
+    "authTitle": "Accedi per usare le funzioni social",
+    "authSubtitle": "Confronta le tue prestazioni con gli amici, manda incoraggiamenti e scala la classifica!",
+    "notConfiguredTitle": "Funzioni social non configurate",
+    "notConfiguredSubtitle": "Questo progetto è open-source. Per abilitare le funzioni social, configura Supabase nel file .env",
+    "fossTitle": "Edizione FOSS",
+    "fossSubtitle": "Stai usando l'edizione FOSS di Spix, creata per F-Droid.",
+    "fossInfo": "Questa versione rispetta le linee guida di F-Droid e non include servizi proprietari. Le funzioni social (classifica, amici) non sono disponibili in questa versione.",
+    "fossUpgrade": "Scarica la versione completa",
+    "disabledTitle": "Funzioni social disabilitate",
+    "disabledSubtitle": "Puoi riabilitare le funzioni social nelle Impostazioni.",
+    "syncSuccess": "I tuoi dati locali sono stati inviati alla classifica.",
+    "syncError": "Impossibile sincronizzare",
+    "requestSent": "Richiesta di amicizia inviata!",
+    "requestText": "Vuole essere tuo amico",
+    "searchPlaceholder": "Cerca un utente...",
+    "pendingRequests": "{{count}} richiesta in sospeso",
+    "pendingRequests_plural": "{{count}} richieste in sospeso",
+    "emptyLeaderboardGlobal": "Nessuna classifica questa settimana",
+    "emptyLeaderboardFriends": "Aggiungi amici per vedere la classifica",
+    "syncModalTitle": "Sincronizza i tuoi dati",
+    "syncModalDescription": "I tuoi dati locali verranno inviati alla classifica per permettere ai tuoi amici di vedere i tuoi progressi.",
+    "syncModalConfirm": "Sincronizza",
+    "syncModalStatLabel": "Allenamenti questa settimana",
+    "removeFriendConfirmTitle": "Rimuovere l'amico?",
+    "removeFriendConfirmMessage": "Non vedrai più le sue statistiche e non potrà più mandarti incoraggiamenti.",
+    "friendRemoved": "Amico rimosso",
+    "global": "Globale",
+    "results": "Risultati",
+    "pendingRequestsTitle": "Richieste in sospeso ({{count}})",
+    "myFriends": "I miei amici ({{count}})",
+    "unreadTitle": "Non letti ({{count}})",
+    "recent": "Recenti",
+    "noEncouragements": "Nessun incoraggiamento",
+    "noEncouragementsSubtitle": "I tuoi amici possono mandarti degli incoraggiamenti!",
+    "sync": "Sincronizza",
+    "workouts": "Allenamenti",
+    "streak": "Serie",
+    "notificationsEnableError": "Impossibile abilitare le notifiche",
+    "notificationsNetworkHint": "Una VPN o un ad blocker potrebbe impedirne la consegna"
+  },
+  "auth": {
+    "title": {
+      "login": "Bentornato!",
+      "signup": "Unisciti a noi!"
+    },
+    "subtitle": {
+      "login": "Accedi per visualizzare le tue statistiche social",
+      "signup": "Crea un account per confrontare le tue prestazioni"
+    },
+    "fossNotice": {
+      "title": "Funzioni limitate",
+      "text": "Questa build FOSS è destinata a F-Droid e non include Firebase/FCM. Le notifiche push per gli incoraggiamenti non sono disponibili.",
+      "button": "Scarica la versione completa"
+    },
+    "form": {
+      "usernamePlaceholder": "Nome utente",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "confirmPasswordPlaceholder": "Conferma password"
+    },
+    "buttons": {
+      "login": "Accedi",
+      "signup": "Crea il mio account"
+    },
+    "switch": {
+      "noAccount": "Non hai ancora un account?",
+      "haveAccount": "Hai già un account?",
+      "linkSignup": "Registrati",
+      "linkLogin": "Accedi"
+    },
+    "privacyNote": "Creando un account accetti che le tue statistiche settimanali (XP, allenamenti, serie) possano essere condivise con i tuoi amici.",
+    "signupSuccessTitle": "🚀 Sei pronto a partire!",
+    "signupSuccessMessage": "Benvenuto {{username}}! Il tuo account è stato creato con successo. Pronto a sfidare i tuoi amici?",
+    "errors": {
+      "emptyFields": "Per favore compila tutti i campi",
+      "invalidEmail": "Indirizzo email non valido",
+      "shortPassword": "La password deve avere almeno 6 caratteri",
+      "passwordsNotMatch": "Le password non coincidono",
+      "usernameRequired": "Scegli un nome utente",
+      "invalidUsername": "Il nome utente deve essere lungo tra 3 e 20 caratteri (lettere, numeri, underscore)"
+    }
+  },
+  "privacyPolicy": {
+    "title": "Informativa sulla Privacy",
+    "intro": "Spix rispetta la tua privacy. Questa politica spiega come gestiamo i tuoi dati in conformità con il GDPR (Regolamento Generale sulla Protezione dei Dati).",
+    "lastUpdate": "Ultimo aggiornamento: 22 Gennaio 2026",
+    "localMode": {
+      "title": "Modalità Locale (predefinita)",
+      "description": "Di default, Spix funziona al 100% localmente. I tuoi dati restano solo sul tuo dispositivo.",
+      "storedData": {
+        "sessions": "Sessioni di allenamento (esercizi, durate, ripetizioni)",
+        "runs": "Corse (distanza, tempo, velocità)",
+        "meals": "Pasti e note nutrizionali",
+        "measures": "Misure (peso, vita, ecc.)",
+        "settings": "Obiettivi e impostazioni personalizzate",
+        "badges": "Badge e progressi nella gamification"
+      },
+      "highlight": "✅ Nessun dato viene inviato a un server in modalità locale.",
+      "storedDataTitle": "Dati memorizzati localmente:"
+    },
+    "foss": {
+      "title": "Edizione FOSS (F-Droid)",
+      "description": "Stai usando l'edizione FOSS di Spix, creata per rispettare le linee guida di F-Droid. Funziona in modalità locale al 100%.",
+      "removed": {
+        "fcm": "Firebase Cloud Messaging (FCM)",
+        "google": "Google Services / Google Play Services",
+        "expoPush": "Notifiche Push di Expo"
+      },
+      "unavailable": {
+        "ploppy": "Ploppy (Analisi pasti IA) - richiede Pollination.ai",
+        "social": "Modalità social (classifica, amici) - richiede Supabase",
+        "push": "Notifiche push remote"
+      },
+      "stillWorking": {
+        "localFeatures": "Tutte le funzioni locali",
+        "localNotifications": "Notifiche locali (promemoria serie)",
+        "healthConnect": "Importazione da Health Connect",
+        "openFoodFacts": "Scanner OpenFoodFacts"
+      },
+      "note": "🌿 Questa edizione è priva al 100% di tracker proprietari e servizi cloud.",
+      "removedTitle": "Servizi rimossi:",
+      "unavailableTitle": "Funzioni non disponibili:",
+      "stillWorkingTitle": "Funzioni ancora disponibili:"
+    },
+    "social": {
+      "title": "Modalità Social (opt-in)",
+      "description": "Se attivi le funzioni social, alcuni dati verranno condivisi con il nostro server Supabase per abilitare classifiche e interazioni.",
+      "syncedData": {
+        "nickname": "Nickname pubblico (lo scegli tu)",
+        "xp": "XP totali e livello",
+        "streak": "Serie attuale e migliore serie",
+        "weeklyCount": "Conteggio allenamenti settimanali"
+      },
+      "accountData": {
+        "email": "Email (solo per l'accesso)",
+        "password": "Password (crittografata, mai accessibile)"
+      },
+      "warning": "⚠️ Il contenuto dettagliato delle tue sessioni (esercizi, note, pasti) NON VIENE MAI sincronizzato.",
+      "syncedDataTitle": "Dati sincronizzati:",
+      "accountDataTitle": "Dati dell'account:"
+    },
+    "notifications": {
+      "title": "Notifiche Push",
+      "fossNote": "🌿 Questa versione FOSS non include Firebase Cloud Messaging (FCM).",
+      "fossText": "I promemoria locali funzionano normalmente. Tuttavia, le notifiche push remote (incoraggiamenti degli amici, richieste di amicizia) non sono disponibili in questa build.",
+      "fossInstall": "Per avere notifiche push complete, scarica la build standard dalle Release di GitHub.",
+      "standardText": "Le notifiche push vengono utilizzate per:",
+      "items": {
+        "streakReminders": "Promemoria della serie (configurabile)",
+        "encouragements": "Incoraggiamenti dagli amici (modalità social)",
+        "friendRequests": "Richieste di amicizia (modalità social)"
+      },
+      "technologiesTitle": "Tecnologie utilizzate:",
+      "technologies": {
+        "expo": "Notifiche Push di Expo",
+        "fcm": "Firebase Cloud Messaging (FCM)"
+      },
+      "disable": "Puoi disabilitare le notifiche in qualsiasi momento nelle impostazioni del tuo dispositivo."
+    },
+    "healthConnect": {
+      "title": "Health Connect (Android)",
+      "description": "Spix può importare allenamenti e misure da Google Health Connect su Android. Questa funzione è opzionale.",
+      "data": {
+        "sessions": "Sessioni di allenamento (tipo, durata, data)",
+        "distance": "Distanza percorsa",
+        "calories": "Calorie bruciate",
+        "hr": "Frequenza cardiaca (se disponibile)",
+        "weight": "Peso corporeo"
+      },
+      "usage": {
+        "localImport": "Importazione solo locale - nessun caricamento su server",
+        "convert": "Convertiti in voci locali di Spix",
+        "choose": "Sei tu a scegliere quali sessioni importare"
+      },
+      "highlight": "✅ I dati di Health Connect vengono letti e memorizzati localmente. Spix non scrive mai su Health Connect.",
+      "revoke": "Puoi revocare l'accesso in qualsiasi momento nelle impostazioni di Health Connect del tuo dispositivo.",
+      "dataTitle": "Dati accessibili:",
+      "usageTitle": "Uso dei dati:"
+    },
+    "rights": {
+      "title": "I Tuoi Diritti (GDPR)",
+      "description": "Ai sensi del GDPR hai il diritto di:",
+      "access": "Accesso: Visualizzare tutti i tuoi dati (esportazione JSON in Impostazioni)",
+      "rectification": "Rettifica: Modificare le info del tuo profilo",
+      "deletion": "Cancellazione: Eliminare tutti i tuoi dati con un clic",
+      "portability": "Portabilità: Esportare i tuoi dati in formato JSON",
+      "opposition": "Opposizione: Disattivare le funzioni social",
+      "highlight": "💡 Per eliminare i tuoi dati online, disabilita le funzioni social in Impostazioni → Social."
+    },
+    "pollination": {
+      "title": "Analisi Pasti IA (Beta)",
+      "description": "Spix può opzionalmente analizzare le foto dei tuoi pasti usando l'API di Pollination.ai. Questa funzione è a scelta (opt-in) e richiede una connessione esplicita.",
+      "dataTitle": "Dati elaborati:",
+      "data": {
+        "images": "Foto dei pasti (caricate temporaneamente per l'analisi)",
+        "temporary": "Le immagini vengono caricate su tmpfiles.org ed eliminate automaticamente dopo 1 ora",
+        "apiKey": "Chiave API Pollination (memorizzata localmente, mai inviata ai nostri server)"
+      },
+      "warning": "⚠️ Questa è una funzione beta. Utilizzandola, accetti che Pollination.ai possa elaborare le immagini dei tuoi pasti per fornire un'analisi nutrizionale. Pollination potrebbe raccogliere dati di utilizzo anonimizzati per il miglioramento del servizio.",
+      "optOut": "Puoi disconnetterti da Pollination in qualsiasi momento in Impostazioni → IA per smettere di usare questa funzione."
+    },
+    "aiCoaching": {
+      "title": "Coach di Corsa IA (Beta)",
+      "description": "Spix può generare piani di corsa personalizzati tramite Pollination IA. Questa funzione è a scelta (opt-in) e richiede una connessione esplicita.",
+      "dataTitle": "Dati inviati all'IA:",
+      "data": {
+        "profile": "Dati del profilo: peso, età, altezza, livello di fitness (se forniti)",
+        "history": "Cronologia corsa: distanze, durate, ritmi recenti",
+        "session": "Dati sessione: posizione GPS, distanza, ritmo in tempo reale",
+        "text": "Testo libero in cui descrivi i tuoi obiettivi di corsa"
+      },
+      "sanitization": "🛡️ I messaggi inviati all'IA vengono filtrati per rimuovere contenuti potenzialmente dannosi. Le risposte vengono convalidate prima di essere mostrate.",
+      "optOut": "Puoi disabilitare il coaching IA in Impostazioni → IA. I messaggi motivazionali durante le corse sono predefiniti e non richiedono connessione."
+    },
+    "contact": {
+      "title": "Contatti",
+      "text": "Per domande sui tuoi dati personali, contattaci tramite le impostazioni dell'app."
+    }
+  },
+  "termsOfService": {
+    "title": "Termini di Servizio",
+    "intro": "Benvenuto su Spix! Utilizzando questa applicazione, accetti i seguenti termini.",
+    "lastUpdate": "Ultimo aggiornamento: 1 Gennaio 2026",
+    "license": {
+      "title": "Licenza e Open Source",
+      "description": "Spix è software libero sotto la licenza GNU Affero General Public License versione 3 (AGPLv3). Il codice sorgente è disponibile su GitHub.",
+      "rightsTitle": "I tuoi diritti:",
+      "rights": {
+        "use": "Usare liberamente l'applicazione",
+        "modify": "Modificare il codice sorgente",
+        "distribute": "Ridistribuire il software",
+        "commercial": "Uso commerciale consentito"
+      },
+      "obligationsTitle": "Obblighi (se lo ridistribuisci):",
+      "obligations": {
+        "sameTerms": "Mantenere la stessa licenza AGPLv3",
+        "sourceCode": "Rendere disponibile il codice sorgente",
+        "copyright": "Preservare gli avvisi di copyright"
+      },
+      "viewLicense": "Visualizza Licenza",
+      "viewSource": "Codice Sorgente"
+    },
+    "appNature": {
+      "title": "Natura dell'Applicazione",
+      "description": "Spix è un'app per tracciare il fitness con gamification. Offre:",
+      "features": {
+        "tracking": "Tracciamento allenamenti, corse, pasti e misure",
+        "gamification": "Sistema XP, livelli, badge e missioni",
+        "social": "Funzioni social opzionali (classifiche, amici)",
+        "ai": "Analisi pasti IA tramite Ploppy (opzionale)"
+      },
+      "medicalDisclaimer": "⚠️ Spix non è uno strumento medico. Consulta un professionista sanitario prima di iniziare un qualsiasi programma di esercizi."
+    },
+    "versions": {
+      "title": "Versioni dell'App",
+      "description": "Spix è disponibile in due versioni con diverse funzionalità:",
+      "standard": {
+        "title": "Versione Standard (Google Play / GitHub)",
+        "push": "Notifiche push (incoraggiamenti, promemoria)",
+        "ploppy": "Analisi pasti IA con Ploppy",
+        "social": "Tutte le funzioni social"
+      },
+      "foss": {
+        "title": "Versione FOSS (F-Droid)",
+        "noCloud": "Nessun servizio cloud di Google",
+        "noPush": "Nessuna notifica push remota",
+        "fullLocal": "Funzionante al 100% in modalità locale"
+      },
+      "currentFoss": "🌿 Stai attualmente utilizzando la versione FOSS."
+    },
+    "optionalServices": {
+      "title": "Servizi Opzionali",
+      "description": "Alcune funzioni richiedono un'attivazione esplicita:",
+      "ploppy": {
+        "title": "Ploppy (Analisi IA)",
+        "account": "Richiede un account Pollination",
+        "photos": "Le tue foto vengono inviate per l'analisi",
+        "disable": "Può essere disabilitato in qualsiasi momento"
+      },
+      "social": {
+        "title": "Modalità Social",
+        "account": "Richiede un account Spix",
+        "rules": "Soggetta alle linee guida della community",
+        "delete": "I dati possono essere cancellati su richiesta"
+      },
+      "aiCoaching": {
+        "title": "Coach di Corsa IA (Beta)",
+        "plan": "I piani di corsa sono generati da Pollination.ai",
+        "data": "Dati sportivi trasmessi per la personalizzazione",
+        "sanitized": "Input dell'utente filtrati, risposte IA convalidate",
+        "disable": "Può essere disabilitato in qualsiasi momento in Impostazioni → IA"
+      }
+    },
+    "socialRules": {
+      "title": "Linee Guida della Community",
+      "description": "Utilizzando le funzioni social, accetti di:",
+      "rulesTitle": "Comportamento previsto:",
+      "allowed": {
+        "respect": "Rispettare gli altri utenti",
+        "appropriate": "Usare un nome utente e un avatar appropriati",
+        "positive": "Mantenere un atteggiamento positivo"
+      },
+      "forbidden": {
+        "spam": "Spam o molestie",
+        "impersonate": "Furto d'identità",
+        "offensive": "Contenuti offensivi o illegali"
+      },
+      "warning": "⚠️ Le violazioni possono comportare la sospensione dell'account social."
+    },
+    "liability": {
+      "title": "Limitazione di Responsabilità",
+      "description": "Spix è fornito \"così com'è\" senza garanzie. Non siamo responsabili per:",
+      "items": {
+        "medical": "Decisioni mediche basate sull'app",
+        "injury": "Infortuni durante l'esercizio",
+        "accuracy": "Accuratezza dei dati nutrizionali IA",
+        "dataLoss": "Perdita di dati locali",
+        "thirdParty": "Servizi di terze parti (Pollination, Supabase)"
+      }
+    },
+    "jurisdiction": {
+      "title": "Legge Applicabile",
+      "description": "Questi termini sono regolati dalla legge francese:",
+      "items": {
+        "french": "Si applica il diritto francese",
+        "gdpr": "Conformità GDPR per i dati personali",
+        "disputes": "I tribunali di Parigi hanno giurisdizione"
+      }
+    },
+    "modifications": {
+      "title": "Modifiche",
+      "description": "Possiamo modificare questi termini in qualsiasi momento. I cambiamenti verranno notificati tramite un aggiornamento dell'app.",
+      "continued": "Continuare ad usare Spix dopo una modifica costituisce l'accettazione dei nuovi termini."
+    },
+    "termination": {
+      "title": "Cessazione",
+      "description": "Puoi smettere di usare Spix in qualsiasi momento. Per eliminare i tuoi dati:",
+      "items": {
+        "stop": "Disinstalla l'app (dati locali)",
+        "delete": "Elimina il tuo account nelle Impostazioni (dati cloud)",
+        "export": "Esporta i tuoi dati prima dell'eliminazione"
+      }
+    },
+    "acceptance": {
+      "title": "Accettazione",
+      "text": "Utilizzando Spix, confermi di aver letto e accettato questi termini di servizio e la nostra informativa sulla privacy."
+    }
+  },
+  "profile": {
+    "title": "Profilo",
+    "level": "Livello {{level}}",
+    "xpProgress": "{{current}}/{{max}} XP",
+    "stats": "Statistiche",
+    "totalWorkouts": "Allenamenti Totali",
+    "currentStreak": "Serie Attuale",
+    "bestStreak": "Miglior Serie",
+    "signOut": "Esci",
+    "signIn": "Accedi",
+    "notLoggedIn": "Non hai effettuato l'accesso"
+  },
+  "tools": {
+    "title": "Strumenti",
+    "repCounter": "Contatore Ripetizioni",
+    "repCounterDesc": "Conta le tue ripetizioni automaticamente",
+    "workoutGenerator": "Generatore di Allenamenti",
+    "workoutGeneratorDesc": "Crea un allenamento personalizzato"
+  },
+  "healthConnect": {
+    "title": "Health Connect",
+    "description": "Importa i tuoi dati sanitari da Health Connect",
+    "connect": "Connetti",
+    "connected": "Connesso",
+    "notConnected": "Non connesso",
+    "import": "Importa Dati",
+    "importing": "Importazione in corso...",
+    "imported": "{{count}} voci importate",
+    "noData": "Nessun dato da importare",
+    "error": "Errore durante l'importazione",
+    "lastSync": "Ultima sincronizzazione",
+    "permissions": "Permessi richiesti",
+    "headerTitle": "Sincronizzazione Attività",
+    "checkingStatus": "Connessione ad Health Connect...",
+    "unavailableTitle": "Health Connect non disponibile",
+    "unavailableMessage": "L'app Health Connect non è installata o non è supportata su questo dispositivo Android.",
+    "installButton": "Installa / Aggiorna",
+    "permissionsTitle": "Permessi Richiesti",
+    "permissionsMessage": "Consenti l'accesso ai dati sui tuoi esercizi per importare automaticamente gli allenamenti.",
+    "grantAccessButton": "Consenti Accesso",
+    "sourceLabel": "Fonte:",
+    "importedFrom": "Importato da Health Connect",
+    "importXpLabel": "Importazione Health Connect",
+    "importSuccess": "{{count}} allenamento/i importato/i!",
+    "importError": "Si è verificato un errore di importazione",
+    "workoutsFound": "allenamenti trovati negli ultimi {{days}} giorni",
+    "weightsFound": "misure del peso",
+    "weightsImported": "{{count}} peso/i importato/i",
+    "workoutsSection": "🏋️ Allenamenti",
+    "weightsSection": "⚖️ Peso",
+    "measures": "misura/e",
+    "emptyTitle": "Niente qui",
+    "emptyMessage": "Nessun nuovo allenamento trovato.",
+    "selectedLabel": "Selezionati",
+    "sessions": "allenamento/i",
+    "importButton": "Importa",
+    "settings": {
+      "title": "Impostazioni di Sincronizzazione",
+      "subtitle": "Scegli come Health Connect si sincronizza",
+      "manualTitle": "Manuale",
+      "manualDesc": "Aggiungi sessioni manualmente",
+      "notifyTitle": "Notifica all'avvio",
+      "notifyDesc": "Offri di importare nuove attività quando l'app si avvia",
+      "autoTitle": "Auto-importazione",
+      "autoDesc": "Importa automaticamente le sessioni all'avvio",
+      "nativeSettings": "Impostazioni Health Connect"
+    },
+    "newActivitiesTitle": "Nuove Attività Rilevate",
+    "newActivitiesMessage": "Trovati {{count}} nuovi allenamenti in Health Connect. Vuoi importarli?",
+    "viewActivities": "Vedi attività",
+    "startup": {
+      "title": "Nuove Attività Rilevate",
+      "message": "Sono stati trovati nuovi allenamenti in Health Connect. Vuoi importarli?",
+      "import": "Importa",
+      "skip": "Salta"
+    },
+    "chooseSport": "Scegli uno sport",
+    "other": "Altro"
+  },
+  "notifications": {
+    "defaultChannel": "Predefinito",
+    "encouragementsChannel": "Incoraggiamenti",
+    "encouragementsChannelDesc": "Notifiche di incoraggiamento dai tuoi amici",
+    "friendsChannel": "Amici",
+    "friendsChannelDesc": "Richieste e accettazioni di amicizia",
+    "encouragementTitle": "{{emoji}} {{senderName}} ti sta incoraggiando!",
+    "friendRequestTitle": "👋 Nuova richiesta di amicizia",
+    "friendRequestBody": "{{senderName}} vuole essere tuo amico!",
+    "friendAcceptedTitle": "🎉 Richiesta accettata",
+    "friendAcceptedBody": "{{friendName}} e tu ora siete amici!",
+    "streakReminderTitle": "🔥 Non dimenticare il tuo allenamento!",
+    "streakReminderBody": "Mantieni la tua serie e resta motivato!",
+    "streakReminder": {
+      "title": "Non dimenticare di allenarti! 🏋️",
+      "body": "Continua la tua serie di {{count}} giorni!"
+    },
+    "mealReminder": {
+      "title": "🍽️ È ora di mangiare!",
+      "body": "Buon appetito! Non dimenticare di registrare il tuo pasto."
+    },
+    "weightReminder": {
+      "title": "⚖️ È ora di pesarsi!",
+      "body": "Ricordati di registrare il tuo peso per tenere traccia dei tuoi progressi."
+    },
+    "encouragement": {
+      "title": "Incoraggiamento ricevuto! 💪",
+      "body": "{{friend}} ti sta incoraggiando!"
+    }
+  },
+  "gamification": {
+    "title": "Gamification",
+    "xp": "XP",
+    "level": "Livello",
+    "ranks": {
+      "novice": "Novizio",
+      "apprentice": "Apprendista",
+      "intermediate": "Intermedio",
+      "advanced": "Avanzato",
+      "expert": "Esperto",
+      "master": "Maestro"
+    },
+    "levelUp": "Nuovo Livello!",
+    "questsLabel": "Missioni",
+    "gains": "Guadagni",
+    "dailyQuests": "Missioni giornaliere",
+    "weeklyQuests": "Missioni settimanali",
+    "completed": "Completata",
+    "inProgress": "In corso",
+    "claimed": "Riscosso",
+    "claim": "Riscuoti",
+    "questProgress": "{{current}}/{{target}}",
+    "noActiveQuests": "Nessuna missione attiva",
+    "noActiveQuestsDesc": "Le missioni vengono generate automaticamente",
+    "recentGains": "Guadagni recenti",
+    "noRecentActivity": "Nessuna attività recente",
+    "noRecentActivityDesc": "I tuoi guadagni di XP appariranno qui",
+    "history": {
+      "entry": {
+        "home": "Sessione di allenamento pesi",
+        "run": "Sessione di corsa",
+        "beatsaber": "Sessione di Beat Saber",
+        "custom": "Sessione sportiva",
+        "generic": "Attività"
+      },
+      "levelUp": "Raggiunto il livello {{level}}!",
+      "levelDown": "Tornato al livello {{level}}",
+      "entryDeleted": "Sessione eliminata",
+      "questCompleted": "Missione completata: {{description}}"
+    },
+    "quests": {
+      "exercises": {
+        "50": "Raggiungi 50 ripetizioni",
+        "100": "Raggiungi 100 ripetizioni",
+        "150": "Raggiungi 150 ripetizioni"
+      },
+      "workouts": {
+        "2": "Completa 2 sessioni",
+        "3": "Completa 3 sessioni",
+        "4": "Completa 4 sessioni"
+      },
+      "duration": {
+        "30": "30 minuti di sport",
+        "60": "60 minuti di sport",
+        "90": "90 minuti di sport"
+      },
+      "distance": {
+        "3": "Corri 3 km",
+        "5": "Corri 5 km",
+        "10": "Corri 10 km"
+      }
+    }
+  },
+  "workout": {
+    "homeLabel": "Allenamento Pesi",
+    "defaultHomeName": "Allenamento Pesi",
+    "historyTitle": "Cronologia",
+    "entriesCount": "{{count}} voce",
+    "entriesCount_plural": "{{count}} voci",
+    "stats": {
+      "sport": "Sport",
+      "today": "Oggi"
+    },
+    "historySubtitle": "{{total}} voci • {{sport}} allenamenti • {{today}} oggi",
+    "noEntriesTitle": "Nessuna voce",
+    "noEntriesAll": "Inizia a tracciare le tue attività!",
+    "noEntriesType": "Nessuna voce di questo tipo",
+    "filters": {
+      "all": "Tutti",
+      "home": "Allenamento Pesi",
+      "run": "Corsa",
+      "beatsaber": "Beat Saber",
+      "meal": "Pasti",
+      "measure": "Misure"
+    },
+    "detail": {
+      "title": "Dettagli Sessione",
+      "duration": "Durata",
+      "distance": "Distanza",
+      "speed": "Velocità Media",
+      "reps": "Ripetizioni Totali",
+      "bpmAvg": "BPM Medi",
+      "bpmMax": "BPM Max",
+      "cardiacLoad": "Carico Cardiaco",
+      "calories": "Calorie",
+      "exercises": "Esercizi",
+      "absBlock": "Blocco Addominali",
+      "weight": "Peso",
+      "waist": "Vita",
+      "arm": "Braccio",
+      "hips": "Fianchi",
+      "bodyFat": "Grasso Corporeo",
+      "mealName": "Pasto",
+      "description": "Descrizione",
+      "score": "Punteggio",
+      "suggestions": "Suggerimenti",
+      "noData": "Nessun dato",
+      "date": "Data",
+      "type": "Tipo"
+    },
+    "ai": {
+      "title": "Analisi di Ploppy 🤖",
+      "loading": "Ploppy sta pensando...",
+      "error": "Analisi non disponibile",
+      "disabled": "L'analisi IA è disabilitata",
+      "enableInSettings": "Abilitala in Impostazioni > IA – Ploppy",
+      "bestSession": "🏆 Questa è la tua migliore sessione di sempre per questa attività!",
+      "improvement": "Rispetto all'ultima volta",
+      "connectRequired": "Connettiti a Pollination in Impostazioni > IA – Ploppy per usare l'IA",
+      "regenerate": "Rigenera"
+    }
+  },
+  "entries": {
+    "workout": "Allenamento",
+    "run": "Corsa",
+    "beatsaber": "Beat Saber",
+    "meal": "Pasto",
+    "measure": "Misure",
+    "custom": "Sport Personalizzato",
+    "noData": "Nessun dato",
+    "addEntry": "Aggiungi Voce",
+    "editEntry": "Modifica Voce",
+    "deleteEntry": "Elimina Voce",
+    "deleteConfirm": {
+      "title": "Eliminare questa voce?",
+      "message": "Questa azione non può essere annullata."
+    }
+  },
+  "forms": {
+    "workoutName": "Nome Allenamento",
+    "exercises": "Esercizi",
+    "exercisesPlaceholder": "Es: Flessioni: 20 rip\nSquat: 15 rip",
+    "duration": "Durata (minuti)",
+    "distance": "Distanza (km)",
+    "calories": "Calorie",
+    "avgSpeed": "Velocità Media",
+    "weight": "Peso (kg)",
+    "notes": "Note",
+    "date": "Data",
+    "time": "Ora"
+  },
+  "enhancedMeal": {
+    "title": "Aggiungi un Pasto",
+    "mealTime": "MOMENTO DEL PASTO",
+    "photo": "FOTO (OPZIONALE)",
+    "description": "DESCRIZIONE",
+    "descriptionPlaceholder": "Cosa hai mangiato?",
+    "or": "oppure",
+    "readyForAnalysis": "Pronta per l'analisi",
+    "camera": "Fotocamera",
+    "gallery": "Galleria",
+    "askPloppy": "Chiedi a Ploppy 🐦",
+    "askPloppySubtitle": "Punteggio nutrizionale + consigli",
+    "uploading": "Caricamento...",
+    "analyzing": "Analisi in corso...",
+    "suggestions": "Suggerimenti",
+    "experimentalFeature": "Funzionalità sperimentale",
+    "detailsTitle": "DETTAGLI PER PLOPPY",
+    "optional": "Opzionale",
+    "detailsHint": "Aiuta Ploppy a valutare meglio il tuo pasto",
+    "detailsPlaceholder": "Esempio: Fatto in casa, a basso indice glicemico, vegetariano...",
+    "detailsTags": {
+      "homemade": "Fatto in casa",
+      "healthy": "Salutare",
+      "proteinRich": "Ricco di proteine"
+    },
+    "timeOptions": {
+      "breakfast": {
+        "label": "Colazione",
+        "time": "06:00-10:00"
+      },
+      "lunch": {
+        "label": "Pranzo",
+        "time": "11:00-14:00"
+      },
+      "dinner": {
+        "label": "Cena",
+        "time": "18:00-21:00"
+      },
+      "snack": {
+        "label": "Spuntino",
+        "time": "Tra i pasti"
+      }
+    },
+    "scoreLabels": {
+      "excellent": "Eccellente!",
+      "veryGood": "Molto buono",
+      "good": "Buono",
+      "canImprove": "Da migliorare",
+      "warning": "Attenzione"
+    },
+    "analysisPhrases": {
+      "wakingUp": "Un attimo, Ploppy si sta svegliando...",
+      "analyzingPlate": "Ploppy sta analizzando il tuo piatto...",
+      "countingCalories": "Ploppy sta contando le calorie...",
+      "thinkingHard": "Ploppy sta riflettendo intensamente...",
+      "checkingKnowledge": "Ploppy consulta l'enciclopedia...",
+      "looksTasty": "Mmm, sembra delizioso!",
+      "takingNotes": "Ploppy sta prendendo appunti...",
+      "virtualTaste": "Un secondo, Ploppy assaggia virtualmente...",
+      "checkingRecipe": "Ploppy sta controllando la ricetta...",
+      "calculating": "Ploppy sta facendo i calcoli..."
+    },
+    "save": "Salva Pasto",
+    "saved": "Pasto salvato!",
+    "savedMessage": "Il tuo pasto è stato aggiunto alla cronologia.",
+    "saveError": "Impossibile salvare il pasto",
+    "noImage": "Nessuna immagine",
+    "selectImageFirst": "Seleziona prima un'immagine",
+    "notConnected": "Non connesso",
+    "connectPollinationFirst": "Devi connetterti a Pollination in Impostazioni > IA – Ploppy per usare questa funzionalità.",
+    "analysisError": "Errore di analisi",
+    "analysisErrorMessage": "Impossibile analizzare l'immagine. Riprova.",
+    "noDescription": "Nessuna descrizione",
+    "addDescriptionFirst": "Aggiungi una descrizione del tuo pasto.",
+    "betaWarning": "Funzionalità beta - L'immagine viene caricata temporaneamente per l'analisi",
+    "permissionRequired": "Permesso richiesto",
+    "cameraPermissionMessage": "Consenti l'accesso alla fotocamera per scattare una foto.",
+    "galleryPermissionMessage": "Consenti l'accesso alla galleria per selezionare una foto.",
+    "chooseSource": "Scegli origine",
+    "chooseSourceMessage": "Da dove vuoi prendere l'immagine?"
+  },
+  "barcodeScanner": {
+    "title": "Scansiona un Prodotto",
+    "hint": "Posiziona il codice a barre nel riquadro",
+    "searching": "Ricerca in corso...",
+    "notFound": "Prodotto non trovato",
+    "viewDetails": "Vedi dettagli",
+    "scanAgain": "Scansiona di nuovo",
+    "scanAnother": "Scansiona un altro prodotto",
+    "noPermission": "Permesso fotocamera negato",
+    "noPermissionDesc": "Consenti l'accesso alla fotocamera per scansionare i codici a barre.",
+    "scores": "Punteggi",
+    "nutrition": "Valori Nutrizionali",
+    "per100g": "Per 100g",
+    "energy": "Energia",
+    "fat": "Grassi",
+    "saturatedFat": "di cui saturi",
+    "carbs": "Carboidrati",
+    "sugars": "di cui zuccheri",
+    "proteins": "Proteine",
+    "salt": "Sale",
+    "fiber": "Fibre",
+    "allergens": "Allergeni",
+    "viewOnOpenFoodFacts": "Vedi su OpenFoodFacts",
+    "attribution": "Dati forniti da OpenFoodFacts - database aperto"
+  },
+  "errors": {
+    "generic": "Si è verificato un errore",
+    "network": "Errore di connessione",
+    "notFound": "Non trovato",
+    "unauthorized": "Non autorizzato",
+    "validation": "Dati non validi"
+  },
+  "ploppy": {
+    "fossWarning": {
+      "title": "Non Disponibile",
+      "message": "Ploppy non è disponibile nella versione FOSS perché richiede servizi cloud esterni."
+    },
+    "connectRequired": {
+      "title": "Connessione Richiesta",
+      "message": "Per utilizzare Ploppy, devi connetterti a Pollination.ai.",
+      "connect": "Connetti"
+    },
+    "disconnect": {
+      "title": "Disconnetti",
+      "message": "Dovrai riconnetterti per utilizzare di nuovo Ploppy.",
+      "confirm": "Disconnetti"
+    },
+    "settings": {
+      "title": "Ploppy",
+      "subtitle": "Assistente Nutrizionale IA",
+      "enableTitle": "Abilita Ploppy",
+      "enableDesc": "Analizza i tuoi pasti tramite foto",
+      "connected": "Connesso a Pollination",
+      "notConnected": "Non connesso",
+      "disconnect": "Disconnetti",
+      "info": "Ploppy analizza le foto dei tuoi pasti per darti un punteggio nutrizionale e consigli personalizzati. Le foto vengono eliminate dopo 1 ora.",
+      "fossNote": "Ploppy non è disponibile nella versione FOSS (niente servizi cloud)."
+    }
+  },
+  "run": {
+    "distance": "Distanza",
+    "duration": "Durata",
+    "pace": "Ritmo",
+    "avgPace": "Ritmo medio",
+    "elevation": "Dislivello",
+    "calories": "Calorie",
+    "currentSpeed": "Velocità",
+    "remainingKm": "Km rimanenti",
+    "remainingTime": "Tempo rimasto",
+    "progress": "Progresso",
+    "start": "Inizia",
+    "pause": "In pausa",
+    "resume": "Riprendi",
+    "stop": "Ferma",
+    "confirmStop": "Fermare la corsa?",
+    "permissionDenied": "La posizione GPS è richiesta per tracciare la tua corsa.",
+    "permissionButton": "Consenti posizione",
+    "exportGPX": "Esporta GPX",
+    "shareGPX": "Condividi GPX",
+    "tracking": "Tracciamento in corso",
+    "objectiveReached": "Obiettivo raggiunto!",
+    "objectiveMissed": "Obiettivo mancato",
+    "summary": {
+      "title": "Riepilogo corsa",
+      "personalBest": "Record personale!",
+      "vsObjective": "vs Obiettivo",
+      "vsLastRun": "vs Ultima corsa",
+      "aiSummary": "Analisi IA",
+      "save": "Salva",
+      "discard": "Scarta"
+    },
+    "ai": {
+      "inputTitle": "Coach IA",
+      "inputPlaceholder": "Descrivi il tuo obiettivo...",
+      "notConnected": "Connettiti a Pollination in Impostazioni > IA per usare il coaching IA.",
+      "generating": "Ploppy sta pensando...",
+      "planReady": "Piano pronto!",
+      "goButton": "Andiamo!",
+      "restart": "Ricomincia",
+      "generatingPlan": "Preparo il tuo piano...",
+      "step1Title": "Cosa facciamo oggi?",
+      "step1Hint": "Dimmi cosa hai in mente, Ploppy penserà al resto.",
+      "step1Placeholder": "Es: Corsa leggera di 5K, o qualche ripetuta...",
+      "sendButton": "Invia",
+      "suggestion1": "Corsa leggera di 30 min",
+      "suggestion2": "Ripetute sui 5K",
+      "suggestion3": "Corsa lunga",
+      "step3Title": "Il tuo piano di corsa"
+    },
+    "ready": "Pronto",
+    "motivation": {
+      "interval": {
+        "startRun": [
+          "Corri! Dai tutto 🏃",
+          "Andiamo, aumenta il ritmo! 💨",
+          "Si parte! 🔥"
+        ],
+        "startWalk": [
+          "Recupera bene 🚶",
+          "Riprendi fiato, te lo sei meritato!",
+          "Camminata di recupero 👍"
+        ],
+        "startRest": [
+          "Pausa meritata 😮‍💨",
+          "Riposati, il prossimo sforzo sta arrivando!"
+        ],
+        "halfway": [
+          "Siamo a metà! Stai spaccando 💪",
+          "Metà andata, continua così!"
+        ],
+        "lastSegment": [
+          "Ultimo sforzo! Dai tutto 🔥",
+          "Manca un solo segmento, vai!"
+        ]
+      },
+      "longRun": {
+        "quarter": [
+          "25%! Ottima partenza 👏",
+          "Primo quarto completato!"
+        ],
+        "half": [
+          "Metà strada! Mantieni il ritmo 💪",
+          "Il 50% è in tasca!"
+        ],
+        "threeQuarters": [
+          "75%! Ci siamo quasi 🎯",
+          "Manca solo l'ultimo quarto!"
+        ],
+        "almostDone": [
+          "Quasi finito! Dai tutto 🔥",
+          "Ancora pochi metri!"
+        ]
+      },
+      "tooSlow": [
+        "Cerca di aumentare il ritmo! ⚡",
+        "Un po' più veloce, ce la puoi fare! 💨",
+        "Ritmo target superato, accelera!"
+      ],
+      "tooFast": [
+        "Attenzione, stai andando troppo veloce!",
+        "Rallenta, gestisci lo sforzo."
+      ],
+      "intervalGeneric": [
+        "Tieni duro! 💪",
+        "Stai andando alla grande!",
+        "Continua così!"
+      ]
+    },
+    "segment": {
+      "warmup": "Riscaldamento",
+      "run": "Corri!",
+      "walk": "Cammina",
+      "rest": "Riposo",
+      "cooldown": "Defaticamento",
+      "segmentChange": "Nuovo segmento",
+      "title": "Segmenti"
+    }
+  },
+  "sessionRecovery": {
+    "title": "Ops!",
+    "message": "Non hai terminato la tua ultima sessione di {{exercise}}.",
+    "question": "Vuoi riprenderla?",
+    "discard": "No, scarta",
+    "resume": "Sì, riprendi"
+  }
+}
