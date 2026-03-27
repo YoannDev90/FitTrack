@@ -1149,7 +1149,7 @@ function PloppyWeeklySummary({ entries, settings }: {
         setLoading(true);
         setError(false);
         try {
-            const lang = i18n.language === 'fr' ? 'français' : 'English';
+            const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
             const toneDesc = settings.aiTone === 'technical'
                 ? 'Use a precise, technical tone.'
                 : settings.aiTone === 'warm'
