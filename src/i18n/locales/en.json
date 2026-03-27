@@ -172,6 +172,7 @@
     "sessions": "sessions",
     "recentActivity": "Recent Activity",
     "recentActivitySubtitle": "{{count}} activities logged",
+    "recentActivitySubtitle_plural": "{{count}} activities logged",
     "noActivity": "No activity yet",
     "noActivityHint": "Start by adding your first workout!",
     "weeklyGoal": "Weekly Goal",
@@ -227,10 +228,28 @@
       "button": "Finish",
       "times": "times per week"
     },
+    "gamification": {
+      "label": "Step 5",
+      "title": "Need a little boost?",
+      "subtitle": "Earn XP, level up, and complete quests to stay motivated!",
+      "progress": {
+        "title": "With progression",
+        "desc": "XP, levels, quests and badges"
+      },
+      "simple": {
+        "title": "Simple tracking",
+        "desc": "Just your workouts, no extra gamification"
+      },
+      "note": "You can change this later in Settings -> Appearance"
+    },
     "ready": {
       "title": "Let's go! 🚀",
       "subtitle": "You're ready to start your fitness journey. Every workout counts!",
-      "button": "Start the adventure"
+      "button": "Start the adventure",
+      "progressEnabled": "Progression enabled",
+      "simpleMode": "Simple tracking mode",
+      "socialEnabled": "Social enabled",
+      "soloMode": "Private solo mode"
     },
     "skip": "Skip"
   },
@@ -762,6 +781,8 @@
     "backupError": "Unable to create backup",
     "restoreInvalidFile": "Invalid or corrupted backup file",
     "restoreError": "Unable to restore backup",
+    "restoreConfirmTitle": "Restore a backup?",
+    "restoreConfirmMessage": "This will replace all your current data with backup data. This action cannot be undone.",
     "deleteDataError": "Unable to delete data. Try again later.",
     "visibilityError": "Unable to change visibility.",
     "streakReminderEnabled": "You'll get a daily reminder at {{time}} if you haven't worked out yet.",
@@ -1742,6 +1763,12 @@
     "homeLabel": "Weight Training",
     "defaultHomeName": "Weight Training",
     "historyTitle": "History",
+    "entriesCount": "{{count}} entry",
+    "entriesCount_plural": "{{count}} entries",
+    "stats": {
+      "sport": "Sport",
+      "today": "Today"
+    },
     "historySubtitle": "{{total}} entries • {{sport}} workouts • {{today}} today",
     "noEntriesTitle": "No entries",
     "noEntriesAll": "Start tracking your activities!",
@@ -1826,12 +1853,62 @@
     "photo": "PHOTO (OPTIONAL)",
     "description": "DESCRIPTION",
     "descriptionPlaceholder": "What did you eat?",
+    "or": "or",
+    "readyForAnalysis": "Ready for analysis",
     "camera": "Camera",
     "gallery": "Gallery",
     "askPloppy": "Ask Ploppy 🐦",
+    "askPloppySubtitle": "Nutritional score + tips",
     "uploading": "Uploading...",
     "analyzing": "Analyzing...",
     "suggestions": "Suggestions",
+    "experimentalFeature": "Experimental feature",
+    "detailsTitle": "DETAILS FOR PLOPPY",
+    "optional": "Optional",
+    "detailsHint": "Help Ploppy evaluate your meal better",
+    "detailsPlaceholder": "Example: Homemade, low GI, vegetarian...",
+    "detailsTags": {
+      "homemade": "Homemade",
+      "healthy": "Healthy",
+      "proteinRich": "Protein-rich"
+    },
+    "timeOptions": {
+      "breakfast": {
+        "label": "Breakfast",
+        "time": "6am-10am"
+      },
+      "lunch": {
+        "label": "Lunch",
+        "time": "11am-2pm"
+      },
+      "dinner": {
+        "label": "Dinner",
+        "time": "6pm-9pm"
+      },
+      "snack": {
+        "label": "Snack",
+        "time": "Between meals"
+      }
+    },
+    "scoreLabels": {
+      "excellent": "Excellent!",
+      "veryGood": "Very good",
+      "good": "Good",
+      "canImprove": "Can improve",
+      "warning": "Warning"
+    },
+    "analysisPhrases": {
+      "wakingUp": "Hang on, Ploppy is waking up...",
+      "analyzingPlate": "Ploppy is analyzing your plate...",
+      "countingCalories": "Ploppy is counting calories...",
+      "thinkingHard": "Ploppy is thinking really hard...",
+      "checkingKnowledge": "Ploppy is checking the encyclopedia...",
+      "looksTasty": "Hmm, that looks tasty!",
+      "takingNotes": "Ploppy is taking notes...",
+      "virtualTaste": "One second, Ploppy is tasting virtually...",
+      "checkingRecipe": "Ploppy is checking the recipe...",
+      "calculating": "Ploppy is doing the math..."
+    },
     "save": "Save Meal",
     "saved": "Meal saved!",
     "savedMessage": "Your meal has been added to your history.",
