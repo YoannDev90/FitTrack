@@ -272,7 +272,7 @@ export default function WorkoutDetailScreen() {
     setAiLoading(true);
     setAiError(false);
     try {
-      const lang = i18n.language === 'fr' ? 'français' : 'English';
+      const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
       const typeLabel = getTypeLabel(entry.type, t);
 
       const toneDesc = settings.aiTone === 'technical'

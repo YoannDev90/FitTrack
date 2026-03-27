@@ -129,7 +129,7 @@ export default function AiRunConfigScreen() {
   }, [entries, settings]);
 
   const aiModel = (settings as any).runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai';
-  const lang = i18n.language === 'fr' ? 'français' : 'English';
+  const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
 
   /** Sanitize user input to prevent prompt injection */
   const sanitizeInput = (text: string): string => {
