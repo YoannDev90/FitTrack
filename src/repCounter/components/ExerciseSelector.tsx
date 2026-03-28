@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import {
     Check,
     ChevronRight,
@@ -13,7 +14,7 @@ import { BuildConfig } from '@/config/buildConfig';
 import { useTranslation } from 'react-i18next';
 import * as Linking from 'expo-linking';
 import { useAppStore, useSportsConfig } from '../../stores';
-import type { CustomSportEntry, SportConfig } from '../../types';
+import type { CustomSportEntry, HomeWorkoutEntry, SportConfig } from '../../types';
 import { RC, SP, RAD, FONT, W, EXERCISES } from '../constants';
 import type { ExerciseConfig, DetectionMode } from '../types';
 
@@ -27,10 +28,49 @@ interface ExerciseSelectorProps {
 
 interface RecentSportCard {
     id: string;
+    key: string;
     label: string;
     emoji: string;
     color: string;
     subtitle: string;
+    targetExerciseId?: ExerciseConfig['id'];
+    targetRoute?: '/run/simple' | '/run/ai';
+}
+
+function normalizeLabel(value: string): string {
+    return value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+function mapActivityToExerciseId(activityName: string): ExerciseConfig['id'] | null {
+    const v = normalizeLabel(activityName);
+
+    if (/course|run|jog|sprint/.test(v)) return 'run';
+    if (/traction|pull\s?up|climb|grimpe|escalade/.test(v)) return 'pullups';
+    if (/pompe|push\s?up/.test(v)) return 'pushups';
+    if (/abdo|sit\s?up|crunch/.test(v)) return 'situps';
+    if (/squat/.test(v)) return 'squats';
+    if (/jumping|jack/.test(v)) return 'jumping_jacks';
+    if (/planche|plank/.test(v)) return 'plank';
+    if (/ellipt|velo|bike/.test(v)) return 'elliptical';
+
+    return null;
+}
+
+function extractHomeActivityName(entry: HomeWorkoutEntry): string {
+    const firstExerciseLine = entry.exercises
+        ?.split('\n')
+        .map((line) => line.trim())
+        .find((line) => line.length > 0);
+
+    if (firstExerciseLine) {
+        return firstExerciseLine.split(':')[0].trim();
+    }
+
+    return entry.name || '';
 }
 
 function ExerciseListItem({
@@ -198,53 +238,128 @@ export function ExerciseSelector({
     onNext,
 }: ExerciseSelectorProps) {
     const { t } = useTranslation();
+    const router = useRouter();
     const entries = useAppStore(s => s.entries);
+    const settings = useAppStore(s => s.settings);
     const sportsConfig = useSportsConfig();
 
     const recentSportCards = useMemo<RecentSportCard[]>(() => {
-        const sportEntries = entries.filter((e) => ['home', 'run', 'beatsaber', 'custom'].includes(e.type)).slice(0, 3);
+        const cards: RecentSportCard[] = [];
+        const seenKeys = new Set<string>();
 
-        return sportEntries.map((entry) => {
+        for (const entry of entries) {
+            if (cards.length >= 3) break;
+
+            if (!['home', 'run', 'beatsaber', 'custom'].includes(entry.type)) {
+                continue;
+            }
+
             if (entry.type === 'run') {
-                return {
+                const key = 'run';
+                if (seenKeys.has(key)) continue;
+                seenKeys.add(key);
+
+                cards.push({
                     id: entry.id,
+                    key,
                     label: t('entries.run', 'Course'),
                     emoji: '🏃',
                     color: '#5599ff',
-                    subtitle: entry.date,
-                };
+                    subtitle: t('repCounter.quickTrack', 'Lancer le tracking'),
+                    targetRoute: '/run/simple',
+                });
+                continue;
             }
 
-            if (entry.type === 'beatsaber') {
-                return {
+            if (entry.type === 'home') {
+                const homeEntry = entry as HomeWorkoutEntry;
+                const activityName = extractHomeActivityName(homeEntry);
+                const mappedExerciseId = mapActivityToExerciseId(activityName);
+
+                if (!mappedExerciseId || mappedExerciseId === 'run' || mappedExerciseId === 'run_ai') {
+                    continue;
+                }
+
+                const key = `exercise:${mappedExerciseId}`;
+                if (seenKeys.has(key)) continue;
+                seenKeys.add(key);
+
+                const targetExercise = EXERCISES.find((exercise) => exercise.id === mappedExerciseId);
+                if (!targetExercise) continue;
+
+                cards.push({
                     id: entry.id,
-                    label: t('entries.beatsaber', 'Beat Saber'),
-                    emoji: '🎮',
-                    color: '#a78bfa',
-                    subtitle: entry.date,
-                };
+                    key,
+                    label: t(`repCounter.exercises.${mappedExerciseId === 'jumping_jacks' ? 'jumpingJacks' : mappedExerciseId}`),
+                    emoji: targetExercise.icon,
+                    color: targetExercise.color,
+                    subtitle: t('repCounter.quickTrack', 'Lancer le tracking'),
+                    targetExerciseId: mappedExerciseId,
+                });
+                continue;
             }
 
             if (entry.type === 'custom') {
                 const sportConfig = sportsConfig.find((s: SportConfig) => s.id === (entry as CustomSportEntry).sportId);
-                return {
+                if (!sportConfig) continue;
+
+                const mappedExerciseId = mapActivityToExerciseId(sportConfig.name);
+                if (!mappedExerciseId || mappedExerciseId === 'run_ai') {
+                    continue;
+                }
+
+                const key = `sport:${sportConfig.id}`;
+                if (seenKeys.has(key)) continue;
+                seenKeys.add(key);
+
+                cards.push({
                     id: entry.id,
+                    key,
                     label: sportConfig?.name || t('entries.custom', 'Sport custom'),
                     emoji: sportConfig?.emoji || '⚡',
                     color: sportConfig?.color || '#ff5533',
-                    subtitle: entry.date,
-                };
+                    subtitle: t('repCounter.quickTrack', 'Lancer le tracking'),
+                    targetRoute: mappedExerciseId === 'run' ? '/run/simple' : undefined,
+                    targetExerciseId: mappedExerciseId !== 'run' ? mappedExerciseId : undefined,
+                });
+                continue;
             }
 
-            return {
-                id: entry.id,
-                label: t('entries.workout', 'Musculation'),
-                emoji: '💪',
-                color: '#34d370',
-                subtitle: entry.date,
-            };
-        });
+            if (entry.type === 'beatsaber') {
+                const key = 'beatsaber';
+                if (seenKeys.has(key)) continue;
+                seenKeys.add(key);
+
+                cards.push({
+                    id: entry.id,
+                    key,
+                    label: t('entries.beatsaber', 'Beat Saber'),
+                    emoji: '🎮',
+                    color: '#a78bfa',
+                    subtitle: t('repCounter.quickTrack', 'Lancer le tracking'),
+                    targetExerciseId: 'jumping_jacks',
+                });
+            }
+        }
+
+        return cards;
     }, [entries, sportsConfig, t]);
+
+    const showDetectionModeSelector = selectedExercise ? !(settings.skipSensorSelection ?? false) : false;
+
+    const handleRecentCardPress = (card: RecentSportCard) => {
+        if (card.targetRoute) {
+            router.push(card.targetRoute as any);
+            return;
+        }
+
+        if (!card.targetExerciseId) return;
+
+        const exercise = EXERCISES.find((ex) => ex.id === card.targetExerciseId);
+        if (exercise) {
+            onSelect(exercise);
+        }
+    };
 
     return (
         <View style={s.container}>
@@ -261,12 +376,17 @@ export function ExerciseSelector({
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.recentRow}>
                     {recentSportCards.length > 0 ? recentSportCards.map((card) => (
-                        <View key={card.id} style={[s.recentCard, { borderColor: `${card.color}55` }]}> 
+                        <TouchableOpacity
+                            key={card.key}
+                            style={[s.recentCard, { borderColor: `${card.color}55` }]}
+                            activeOpacity={0.8}
+                            onPress={() => handleRecentCardPress(card)}
+                        >
                             <View style={[s.recentCardGlow, { backgroundColor: `${card.color}1c` }]} />
                             <Text style={s.recentEmoji}>{card.emoji}</Text>
                             <Text style={s.recentLabel} numberOfLines={1}>{card.label}</Text>
                             <Text style={s.recentSubtitle}>{card.subtitle}</Text>
-                        </View>
+                        </TouchableOpacity>
                     )) : (
                         <View style={s.recentCardEmpty}>
                             <Text style={s.recentEmptyText}>{t('repCounter.noRecentSports', 'Aucune seance recente')}</Text>
@@ -289,11 +409,13 @@ export function ExerciseSelector({
 
             {selectedExercise && (
                 <Animated.View entering={FadeInDown.delay(260).springify()}>
-                    <DetectionModeSelector
-                        exercise={selectedExercise}
-                        detectionMode={detectionMode}
-                        onDetectionModeChange={onDetectionModeChange}
-                    />
+                    {showDetectionModeSelector && (
+                        <DetectionModeSelector
+                            exercise={selectedExercise}
+                            detectionMode={detectionMode}
+                            onDetectionModeChange={onDetectionModeChange}
+                        />
+                    )}
 
                     {detectionMode === 'camera' && BuildConfig.isFoss && (
                         <Animated.View entering={FadeInDown.delay(80)} style={s.fossCard}>
