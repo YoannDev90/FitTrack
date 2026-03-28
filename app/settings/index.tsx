@@ -196,7 +196,7 @@ export default function SettingsMainScreen() {
                 {/* ── Header ── */}
                 <Animated.View entering={FadeIn.delay(40)} style={s.header}>
                     <View>
-                        <Text style={s.eyebrow}>{t('settings.eyebrow', 'APP')}</Text>
+                        <Text style={s.eyebrow}>{t('settings.eyebrow', 'SPIX')}</Text>
                         <Text style={s.title}>{t('settings.title')}</Text>
                     </View>
                     <View style={s.headerIconWrap}>
