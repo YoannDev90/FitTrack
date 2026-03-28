@@ -26,8 +26,7 @@ import {
     EntryDetailModal,
     HealthConnectPromptModal,
 } from '../src/components/ui';
-import { AddEntryBottomSheet, AddEntryBottomSheetRef } from '../src/components/sheets';
-import { useAppStore, useEditorStore } from '../src/stores';
+import { useAppStore } from '../src/stores';
 import { getWeekDaysInfo } from '../src/utils/date';
 import {
     checkHealthConnectOnStartup,
@@ -110,7 +109,6 @@ const Chip: React.FC<{
 export default function TodayScreen() {
     const { t } = useTranslation();
     const router = useRouter();
-    const bottomSheetRef = useRef<AddEntryBottomSheetRef>(null);
     const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [healthConnectModalVisible, setHealthConnectModalVisible] = useState(false);
@@ -135,7 +133,6 @@ export default function TodayScreen() {
 
     // Stores
     const { settings, deleteEntry, getStreak, getWeekWorkoutsCount, getSportEntries } = useAppStore();
-    const { entryToEdit, setEntryToEdit } = useEditorStore();
 
     useEffect(() => {
         setHealthConnectModalCallback((count: number) => {
@@ -145,10 +142,6 @@ export default function TodayScreen() {
         const timer = setTimeout(checkHealthConnectOnStartup, 1000);
         return () => { clearTimeout(timer); setHealthConnectModalCallback(null); };
     }, []);
-
-    useEffect(() => {
-        if (entryToEdit) { bottomSheetRef.current?.edit(entryToEdit); setEntryToEdit(null); }
-    }, [entryToEdit, setEntryToEdit]);
 
     const streak            = getStreak();
     const weekWorkoutsCount = getWeekWorkoutsCount();
@@ -166,14 +159,13 @@ export default function TodayScreen() {
     const recentWorkouts = sportEntries.slice(0, 5);
 
     // Handlers
-    const handleOpenModal    = useCallback(() => bottomSheetRef.current?.present(), []);
-    const handleLongPressAdd = useCallback(() => router.push('/repCounter'), [router]);
+    const handleStartTracking = useCallback(() => router.push('/repCounter'), [router]);
     const handleEntryPress   = useCallback((e: Entry) => { setSelectedEntry(e); setDetailModalVisible(true); }, []);
     const handleDeleteEntry  = useCallback((id: string) => deleteEntry(id), [deleteEntry]);
     const handleEditEntry    = useCallback((e: Entry) => {
         setDetailModalVisible(false);
-        setTimeout(() => bottomSheetRef.current?.edit(e), 100);
-    }, []);
+        setTimeout(() => router.push(`/workout/${e.id}`), 100);
+    }, [router]);
 
     // Render
     return (
@@ -290,9 +282,7 @@ export default function TodayScreen() {
                 ══════════════════════════════════════════════════════ */}
                 <Animated.View style={slide(aCta)}>
                     <Pressable
-                        onPress={handleOpenModal}
-                        onLongPress={handleLongPressAdd}
-                        delayLongPress={400}
+                        onPress={handleStartTracking}
                     >
                         {({ pressed }) => (
                             <View style={[st.ctaOuter, pressed && st.ctaPressed]}>
@@ -304,9 +294,9 @@ export default function TodayScreen() {
                                     <View style={st.ctaInnerGlow} pointerEvents="none" />
                                     <View style={st.ctaContent}>
                                         <View style={st.ctaPlusCircle}>
-                                            <Text style={st.ctaPlusIcon}>+</Text>
+                                            <Text style={st.ctaPlusIcon}>▶</Text>
                                         </View>
-                                        <Text style={st.ctaText}>{t('home.quickActions.addWorkout')}</Text>
+                                        <Text style={st.ctaText}>{t('home.quickActions.startTracking', 'Demarrer le tracking')}</Text>
                                     </View>
                                     <ChevronRight size={20} color="rgba(26,8,0,0.45)" strokeWidth={2.5} />
                                 </LinearGradient>
@@ -394,7 +384,6 @@ export default function TodayScreen() {
                 onViewActivities={() => { setHealthConnectModalVisible(false); navigateToHealthConnect(); }}
                 onSkip={() => setHealthConnectModalVisible(false)}
             />
-            <AddEntryBottomSheet ref={bottomSheetRef} />
         </SafeAreaView>
     );
 }
