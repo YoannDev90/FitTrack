@@ -229,11 +229,6 @@ export default function TodayScreen() {
                                 <Text style={st.goalUnit}>{t('home.sessions')}</Text>
                                 <Text style={st.goalUnit}>{t('home.thisWeek')}</Text>
                             </View>
-                            {!goalAchieved && (
-                                <View style={st.goalRingFloat}>
-                                    <ProgressRing current={weekWorkoutsCount} goal={weeklyGoal} size={54} strokeWidth={4} />
-                                </View>
-                            )}
                         </View>
 
                         {/* Segments */}
