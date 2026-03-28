@@ -23,7 +23,6 @@ import {
     ProgressRing,
     DayBadge,
     WorkoutCard,
-    EntryDetailModal,
     HealthConnectPromptModal,
 } from '../src/components/ui';
 import { useAppStore } from '../src/stores';
@@ -33,7 +32,6 @@ import {
     setHealthConnectModalCallback,
     navigateToHealthConnect,
 } from '../src/services/healthConnectStartup';
-import type { Entry } from '../src/types';
 
 // ─── Design System ────────────────────────────────────────────────────────────
 
@@ -109,8 +107,6 @@ const Chip: React.FC<{
 export default function TodayScreen() {
     const { t } = useTranslation();
     const router = useRouter();
-    const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
-    const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [healthConnectModalVisible, setHealthConnectModalVisible] = useState(false);
     const [healthConnectWorkoutCount, setHealthConnectWorkoutCount] = useState(0);
 
@@ -132,7 +128,7 @@ export default function TodayScreen() {
     });
 
     // Stores
-    const { settings, deleteEntry, getStreak, getWeekWorkoutsCount, getSportEntries } = useAppStore();
+    const { settings, getStreak, getWeekWorkoutsCount, getSportEntries } = useAppStore();
 
     useEffect(() => {
         setHealthConnectModalCallback((count: number) => {
@@ -156,15 +152,12 @@ export default function TodayScreen() {
         return s;
     }, [sportEntries, weekDays]);
 
-    const recentWorkouts = sportEntries.slice(0, 5);
+    const recentWorkouts = sportEntries.slice(0, 3);
 
     // Handlers
     const handleStartTracking = useCallback(() => router.push('/repCounter'), [router]);
-    const handleEntryPress   = useCallback((e: Entry) => { setSelectedEntry(e); setDetailModalVisible(true); }, []);
-    const handleDeleteEntry  = useCallback((id: string) => deleteEntry(id), [deleteEntry]);
-    const handleEditEntry    = useCallback((e: Entry) => {
-        setDetailModalVisible(false);
-        setTimeout(() => router.push(`/workout/${e.id}`), 100);
+    const handleEntryPress   = useCallback((entryId: string) => {
+        router.push(`/workout/${entryId}`);
     }, [router]);
 
     // Render
@@ -326,9 +319,9 @@ export default function TodayScreen() {
                                 {t('home.recentActivitySubtitle', { count: sportEntries.length })}
                             </Text>
                         </View>
-                        {sportEntries.length > 5 && (
+                        {sportEntries.length > 3 && (
                             <TouchableOpacity
-                                onPress={() => router.push('/progress')}
+                                onPress={() => router.push('/workout')}
                                 style={st.seeAllBtn}
                                 activeOpacity={0.7}
                             >
@@ -348,7 +341,7 @@ export default function TodayScreen() {
                                 <WorkoutCard
                                     key={workout.id}
                                     entry={workout}
-                                    onPress={() => handleEntryPress(workout)}
+                                    onPress={() => handleEntryPress(workout.id)}
                                 />
                             ))}
                         </ScrollView>
@@ -365,14 +358,6 @@ export default function TodayScreen() {
 
                 <View style={{ height: 24 }} />
             </ScrollView>
-
-            <EntryDetailModal
-                entry={selectedEntry}
-                visible={detailModalVisible}
-                onClose={() => setDetailModalVisible(false)}
-                onEdit={handleEditEntry}
-                onDelete={handleDeleteEntry}
-            />
             <HealthConnectPromptModal
                 visible={healthConnectModalVisible}
                 workoutCount={healthConnectWorkoutCount}
@@ -593,7 +578,7 @@ const st = StyleSheet.create({
     // ── CTA
     ctaOuter: {
         borderRadius: R.xxl,
-        marginBottom: S.sm,
+        marginBottom: S.xl,
         overflow: 'hidden',
         shadowColor: C.coral,
         shadowOffset: { width: 0, height: 12 },
