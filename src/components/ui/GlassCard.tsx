@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
     ...Shadows.card,
   },
   tealCard: {
-    backgroundColor: 'rgba(31, 106, 102, 0.55)',
-    borderColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: Colors.tealLight,
+    borderColor: Colors.stroke,
   },
   solidCard: {
     backgroundColor: Colors.cardSolid,
