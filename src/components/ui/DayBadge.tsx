@@ -51,30 +51,30 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.md,
         paddingVertical: 12,
         paddingHorizontal: 6,
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        backgroundColor: Colors.overlay,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        borderColor: Colors.stroke,
         alignItems: 'center',
         minWidth: 40,
     },
     dayDone: {
-        backgroundColor: 'rgba(227, 160, 144, 0.40)',
-        borderColor: 'rgba(227, 160, 144, 0.60)',
+        backgroundColor: Colors.overlaySuccess20,
+        borderColor: Colors.success,
     },
     dayToday: {
-        borderColor: 'rgba(255, 255, 255, 0.35)',
-        backgroundColor: 'rgba(255, 255, 255, 0.12)',
+        borderColor: Colors.overlayWhite30,
+        backgroundColor: Colors.overlayWhite10,
     },
     dow: {
         fontSize: FontSize.xs,
-        color: 'rgba(255, 255, 255, 0.72)',  // Improved contrast
+        color: Colors.textSecondary,
         marginBottom: 6,
         fontWeight: FontWeight.medium,
     },
     date: {
         fontSize: FontSize.lg,
         fontWeight: FontWeight.semibold,
-        color: 'rgba(255, 255, 255, 0.88)',  // Improved contrast
+        color: Colors.text,
     },
     dateToday: {
         color: Colors.text,
