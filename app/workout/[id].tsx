@@ -405,7 +405,7 @@ export default function WorkoutDetailScreen() {
       case 'run': {
         const e = entry as RunEntry;
         const hasRoute = e.route && e.route.length >= 2;
-        const routeGeoJSON: GeoJSON.FeatureCollection = hasRoute ? {
+        const routeGeoJSON: { type: 'FeatureCollection'; features: any[] } = hasRoute ? {
           type: 'FeatureCollection',
           features: [{
             type: 'Feature',
@@ -682,7 +682,7 @@ export default function WorkoutDetailScreen() {
         </Animated.View>
 
         {/* AI Analysis Section */}
-        {isSport && (
+        {isSport && settings.aiWorkoutEnabled && (
           <Animated.View entering={FadeInDown.delay(350)} style={styles.aiSection}>
             <View style={[styles.aiHeader, { justifyContent: 'space-between' }]}>  
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.sm }}>
@@ -700,12 +700,7 @@ export default function WorkoutDetailScreen() {
               )}
             </View>
 
-            {!settings.aiWorkoutEnabled ? (
-              <View style={styles.aiDisabled}>
-                <Text style={styles.aiDisabledText}>{t('workout.ai.disabled')}</Text>
-                <Text style={styles.aiDisabledHint}>{t('workout.ai.enableInSettings')}</Text>
-              </View>
-            ) : !isConnected ? (
+            {!isConnected ? (
               <View style={styles.aiDisabled}>
                 <Text style={styles.aiDisabledText}>{t('workout.ai.connectRequired')}</Text>
               </View>
