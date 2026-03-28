@@ -43,7 +43,7 @@ export function useRepCounter() {
     const [repCount, setRepCount] = useState(0);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [detectionMode, setDetectionMode] = useState<DetectionMode>(
-        settings.preferCameraDetection ? 'camera' : 'sensor'
+        settings.preferCameraDetection === false ? 'sensor' : 'camera'
     );
     const [motivationalMessage, setMotivationalMessage] = useState<{ text: string; emoji: string } | null>(null);
     const [aiFeedback, setAiFeedback] = useState<string | null>(null);
@@ -519,12 +519,23 @@ export function useRepCounter() {
             else if (exercise.id === 'run_ai') router.push('/run/ai' as any);
             return;
         }
+
+        const prefersCamera = settings.preferCameraDetection !== false;
+        const shouldSkipSelection = settings.skipSensorSelection !== false;
+
         setSelectedExercise(exercise);
-        if (exercise.isTimeBased && exercise.id !== 'elliptical') setDetectionMode('camera');
-        else if (exercise.id === 'elliptical') setDetectionMode('manual');
+
+        if (exercise.id === 'elliptical') {
+            setDetectionMode(prefersCamera ? 'camera' : 'manual');
+        } else if (exercise.isTimeBased) {
+            setDetectionMode('camera');
+        } else {
+            setDetectionMode(prefersCamera ? 'camera' : 'sensor');
+        }
+
         resetEllipticalState(); setEllipticalCalibrationPhase('none');
-        if (settings.skipSensorSelection && !exercise.isTimeBased && exercise.id !== 'elliptical') {
-            setDetectionMode(settings.preferCameraDetection ? 'camera' : 'sensor');
+
+        if (shouldSkipSelection) {
             setTimeout(() => setStep('position'), 100);
         }
     }, [settings.skipSensorSelection, settings.preferCameraDetection]);
