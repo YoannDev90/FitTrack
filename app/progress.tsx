@@ -59,17 +59,17 @@ const C = {
     goldSoft:    'rgba(232,184,75,0.10)',
     goldBorder:  'rgba(232,184,75,0.22)',
     amber:       '#f5a623',
-    // Semantic
-    blue:        '#5599ff',
-    blueSoft:    'rgba(85,153,255,0.10)',
-    blueBorder:  'rgba(85,153,255,0.22)',
-    teal:        '#2dd4bf',
-    tealSoft:    'rgba(45,212,191,0.10)',
-    tealBorder:  'rgba(45,212,191,0.22)',
+    // Reduced accent set (primary accent family)
+    blue:        '#ff7a55',
+    blueSoft:    'rgba(255,122,85,0.10)',
+    blueBorder:  'rgba(255,122,85,0.22)',
+    teal:        '#ff8c5a',
+    tealSoft:    'rgba(255,140,90,0.10)',
+    tealBorder:  'rgba(255,140,90,0.22)',
     green:       '#34d370',
     greenSoft:   'rgba(52,211,112,0.10)',
     greenBorder: 'rgba(52,211,112,0.22)',
-    violet:      '#a78bfa',
+    violet:      '#e8b84b',
     error:       '#f87171',
 };
 
@@ -1192,19 +1192,7 @@ function PloppyWeeklySummary({ entries, settings }: {
     }, [fetchSummary]);
 
 
-    if (!settings.aiProgressEnabled) {
-        return (
-            <CardWrap delay={180} accent={C.violet + '35'}>
-                <CardTitle
-                    icon={<Bot size={14} color={C.violet} strokeWidth={2} />}
-                    label={t('progress.ai.title')}
-                    color={C.violet}
-                />
-                <Text style={ploppyStyles.disabledText}>{t('progress.ai.disabled')}</Text>
-                <Text style={ploppyStyles.hintText}>{t('progress.ai.enableInSettings')}</Text>
-            </CardWrap>
-        );
-    }
+    if (!settings.aiProgressEnabled) return null;
 
     if (!connected) {
         return (
