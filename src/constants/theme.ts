@@ -588,6 +588,9 @@ const createDynamicColors = (theme: ThemeCustomColors): MutableColorMap => {
 
         if (token.includes('Black')) return alpha('#000000', value);
         if (token.includes('White')) return alpha('#ffffff', value);
+        if (token.includes('Panel')) return alpha(theme.surface, value);
+        if (token.includes('Modal')) return alpha(mixHex(theme.bg, theme.surface, 0.7), value);
+        if (token.includes('WarmDark')) return alpha(darken(theme.bg, 0.35), value);
         if (token.includes('Connected') || token.includes('Success') || token.includes('SportGreen')) return alpha(theme.success, value);
         if (token.includes('Warning')) return alpha(theme.warning, value);
         if (token.includes('Error')) return alpha(theme.error, value);
