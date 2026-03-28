@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -237,6 +238,13 @@ export default function DeveloperScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <LinearGradient
+        colors={['rgba(249,115,22,0.16)', 'transparent']}
+        start={{ x: 0.15, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={styles.topGlow}
+        pointerEvents="none"
+      />
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -250,10 +258,15 @@ export default function DeveloperScreen() {
           >
             <ArrowLeft size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.screenTitle}>
-            {t('settings.developerMode')}
-          </Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerTitleWrap}>
+            <Text style={styles.eyebrow}>{t('settings.eyebrow', 'SPIX')}</Text>
+            <Text style={styles.screenTitle}>
+              {t('settings.developerMode')}
+            </Text>
+          </View>
+          <View style={styles.headerIconWrap}>
+            <Code2 size={18} color="#f97316" />
+          </View>
         </Animated.View>
 
         {/* Warning Banner */}
@@ -409,12 +422,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bg,
   },
+  topGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 260,
+    zIndex: 0,
+  },
   scrollView: {
     flex: 1,
   },
   content: {
     padding: Spacing.lg,
     paddingBottom: 100,
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -430,14 +452,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
+  headerTitleWrap: {
     flex: 1,
   },
-  headerSpacer: {
-    width: 44,
+  eyebrow: {
+    fontSize: FontSize.xs,
+    color: Colors.muted,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  screenTitle: {
+    fontSize: 26,
+    fontWeight: FontWeight.bold,
+    color: Colors.text,
+  },
+  headerIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(249,115,22,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(249,115,22,0.24)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Warning Banner

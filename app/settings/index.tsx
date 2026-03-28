@@ -217,7 +217,7 @@ export default function SettingsMainScreen() {
                     }}
                 />
 
-                {/* ── Personal ── */}
+                {/* ── Profile & Account ── */}
                 <SectionLabel title={t('settings.personalInfo')} delay={120} />
                 <SettingsGroup delay={130}>
                     <CategoryRow
@@ -226,8 +226,20 @@ export default function SettingsMainScreen() {
                         title={t('settings.personalInfo')}
                         subtitle={t('settings.personalInfoDesc')}
                         onPress={() => router.push('/settings/personal')}
-                        delay={140} isLast
+                        delay={140}
+                        isLast={!isSocialAvailable()}
                     />
+                    {isSocialAvailable() && (
+                        <CategoryRow
+                            icon={<Users size={19} color={C.teal} strokeWidth={2.2} />}
+                            iconColor={C.teal}
+                            title={t('settings.socialFeatures')}
+                            subtitle={socialEnabled ? t('settings.socialEnabled') : t('settings.socialDisabled')}
+                            onPress={() => router.push('/settings/social')}
+                            badge={socialEnabled ? '✓' : undefined}
+                            delay={150} isLast
+                        />
+                    )}
                 </SettingsGroup>
 
                 {/* ── Preferences ── */}
@@ -276,118 +288,74 @@ export default function SettingsMainScreen() {
                     />
                 </SettingsGroup>
 
-                {/* ── Sports ── */}
-                <SectionLabel title={t('settings.sportsManagement')} delay={210} />
+                {/* ── Activity & Health ── */}
+                <SectionLabel title={t('settings.integration')} delay={210} />
                 <SettingsGroup delay={220}>
                     <CategoryRow
-                        icon={<Dumbbell size={19} color="#8B5CF6" strokeWidth={2.2} />}
-                        iconColor="#8B5CF6"
+                        icon={<Dumbbell size={19} color={C.violet} strokeWidth={2.2} />}
+                        iconColor={C.violet}
                         title={t('settings.manageSports')}
                         subtitle={t('settings.manageSportsDesc')}
                         onPress={() => router.push('/settings/sports')}
-                        delay={225} isLast
+                        delay={225}
                     />
-                </SettingsGroup>
-
-                {/* ── Integration ── */}
-                <SectionLabel title={t('settings.integration')} delay={230} />
-                <SettingsGroup delay={240}>
                     <CategoryRow
-                        icon={<Heart size={19} color="#f43f5e" strokeWidth={2.2} />}
-                        iconColor="#f43f5e"
+                        icon={<Heart size={19} color={C.emberMid} strokeWidth={2.2} />}
+                        iconColor={C.emberMid}
                         title={t('settings.healthConnect')}
                         subtitle={t('settings.healthConnectDesc')}
                         onPress={() => router.push('/health-connect')}
-                        delay={245} isLast
+                        delay={235}
                     />
-                </SettingsGroup>
-
-                {/* ── Safety ── */}
-                <SectionLabel title={t('settings.safety.title')} delay={250} />
-                <SettingsGroup delay={260}>
                     <CategoryRow
                         icon={<ShieldAlert size={19} color={C.green} strokeWidth={2.2} />}
                         iconColor={C.green}
                         title={t('settings.safety.title')}
                         subtitle={t('settings.safety.contacts')}
                         onPress={() => router.push('/settings/safety')}
-                        delay={265} isLast
+                        delay={245} isLast
                     />
                 </SettingsGroup>
 
-                {/* ── Social (conditional) ── */}
-                {isSocialAvailable() && (
-                    <>
-                        <SectionLabel title={t('settings.social')} delay={270} />
-                        <SettingsGroup delay={280}>
-                            <CategoryRow
-                                icon={<Users size={19} color={C.teal} strokeWidth={2.2} />}
-                                iconColor={C.teal}
-                                title={t('settings.socialFeatures')}
-                                subtitle={socialEnabled ? t('settings.socialEnabled') : t('settings.socialDisabled')}
-                                onPress={() => router.push('/settings/social')}
-                                badge={socialEnabled ? '✓' : undefined}
-                                delay={285} isLast
-                            />
-                        </SettingsGroup>
-                    </>
-                )}
-
-                {/* ── Data ── */}
-                <SectionLabel title={t('settings.data')} delay={290} />
-                <SettingsGroup delay={300}>
+                {/* ── Data & System ── */}
+                <SectionLabel title={t('settings.data')} delay={260} />
+                <SettingsGroup delay={270}>
                     <CategoryRow
                         icon={<HardDrive size={19} color={C.ember} strokeWidth={2.2} />}
                         iconColor={C.ember}
                         title={t('settings.data')}
                         subtitle={t('settings.dataDesc')}
                         onPress={() => router.push('/settings/data')}
-                        delay={305} isLast
+                        delay={275}
                     />
-                </SettingsGroup>
-
-                {/* ── Labs ── */}
-                <SectionLabel title={t('settings.labs')} delay={310} />
-                <SettingsGroup accentColor={C.violet} delay={320}>
                     <CategoryRow
                         icon={<FlaskConical size={19} color={C.violet} strokeWidth={2.2} />}
                         iconColor={C.violet}
                         title={t('settings.labs')}
                         subtitle={t('settings.labsDesc')}
                         onPress={() => router.push('/settings/labs')}
-                        delay={325} isLast
+                        delay={285}
                     />
-                </SettingsGroup>
-
-                {/* ── Legal ── */}
-                <SectionLabel title={t('settings.legal')} delay={330} />
-                <SettingsGroup delay={340}>
                     <CategoryRow
                         icon={<Shield size={19} color={C.green} strokeWidth={2.2} />}
                         iconColor={C.green}
                         title={t('settings.legal')}
                         subtitle={t('settings.legalDesc')}
                         onPress={() => router.push('/settings/legal')}
-                        delay={345} isLast
+                        delay={295}
+                        isLast={!settings.developerMode}
                     />
+                    {settings.developerMode && (
+                        <CategoryRow
+                            icon={<Code2 size={19} color="#f97316" strokeWidth={2.2} />}
+                            iconColor="#f97316"
+                            title={t('settings.developerMode')}
+                            subtitle={t('settings.developerModeDesc')}
+                            onPress={() => router.push('/settings/developer')}
+                            delay={305} isLast
+                        />
+                    )}
                 </SettingsGroup>
-
-                {/* ── Developer (conditional) ── */}
-                {settings.developerMode && (
-                    <>
-                        <SectionLabel title={t('settings.developerMode')} delay={350} />
-                        <SettingsGroup accentColor="#f97316" delay={360}>
-                            <CategoryRow
-                                icon={<Code2 size={19} color="#f97316" strokeWidth={2.2} />}
-                                iconColor="#f97316"
-                                title={t('settings.developerMode')}
-                                subtitle={t('settings.developerModeDesc')}
-                                onPress={() => router.push('/settings/developer')}
-                                delay={365} isLast
-                            />
-                        </SettingsGroup>
-                    </>
-                )}
 
                 {/* ── About ── */}
                 <SectionLabel title={t('settings.about')} delay={370} />
