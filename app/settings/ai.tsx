@@ -137,7 +137,7 @@ export default function AISettingsScreen() {
         <Animated.View entering={FadeInDown.delay(80).springify()}>
           <GlassCard style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Info size={18} color="#a78bfa" />
+              <Info size={18} color={Colors.violet} />
               <Text style={styles.infoText}>
                 {t('settings.ai.pollinationsInfo')}
               </Text>
@@ -154,13 +154,13 @@ export default function AISettingsScreen() {
               <View style={[
                 styles.settingIconContainer, 
                 { backgroundColor: pollinationStatus === 'connected' 
-                  ? 'rgba(34, 197, 94, 0.15)' 
-                  : 'rgba(139, 92, 246, 0.15)' 
+                  ? Colors.overlayConnected15
+                  : Colors.overlayViolet15
                 }
               ]}> 
                 <Sparkles 
                   size={20} 
-                  color={pollinationStatus === 'connected' ? '#22c55e' : '#8B5CF6'} 
+                  color={pollinationStatus === 'connected' ? Colors.successStrong : Colors.violetStrong} 
                 />
               </View>
               <View style={styles.settingInfo}>
@@ -168,8 +168,8 @@ export default function AISettingsScreen() {
                 <View style={styles.statusRow}>
                   {pollinationStatus === 'connected' ? (
                     <>
-                      <CheckCircle size={14} color="#22c55e" />
-                      <Text style={[styles.statusText, { color: '#22c55e' }]}>
+                      <CheckCircle size={14} color={Colors.successStrong} />
+                      <Text style={[styles.statusText, { color: Colors.successStrong }]}> 
                         {t('settings.pollination.connected')}
                       </Text>
                     </>
@@ -199,7 +199,7 @@ export default function AISettingsScreen() {
                   </Text>
                 ) : (
                   <>
-                    <ExternalLink size={14} color="#fff" />
+                    <ExternalLink size={14} color={Colors.white} />
                     <Text style={styles.connectButtonText}>
                       {t('settings.pollination.connect')}
                     </Text>
@@ -209,7 +209,7 @@ export default function AISettingsScreen() {
             </View>
 
             <View style={styles.warningBox}>
-              <AlertTriangle size={16} color="#fbbf24" />
+              <AlertTriangle size={16} color={Colors.warning} />
               <Text style={styles.warningText}>
                 {t('settings.pollination.betaWarning')}
               </Text>
@@ -224,8 +224,8 @@ export default function AISettingsScreen() {
           <Animated.View entering={FadeInDown.delay(120).springify()}>
             {/* Toggle: AI Progress */}
             <View style={styles.settingItem}>
-              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
-                <Bot size={20} color="#a78bfa" />
+              <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlayViolet15 }]}> 
+                <Bot size={20} color={Colors.violet} />
               </View>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingTitle}>{t('settings.ai.toggleProgress')}</Text>
@@ -234,16 +234,16 @@ export default function AISettingsScreen() {
               <Switch
                 value={settings.aiProgressEnabled ?? false}
                 onValueChange={(value) => updateSettings({ aiProgressEnabled: value })}
-                trackColor={{ false: Colors.card, true: '#a78bfa' }}
-                thumbColor="#fff"
+                trackColor={{ false: Colors.card, true: Colors.violet }}
+                thumbColor={Colors.white}
                 disabled={pollinationStatus !== 'connected'}
               />
             </View>
 
             {/* Toggle: AI Workout */}
             <View style={styles.settingItem}>
-              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
-                <Sparkles size={20} color="#a78bfa" />
+              <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlayViolet15 }]}> 
+                <Sparkles size={20} color={Colors.violet} />
               </View>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingTitle}>{t('settings.ai.toggleWorkout')}</Text>
@@ -252,16 +252,16 @@ export default function AISettingsScreen() {
               <Switch
                 value={settings.aiWorkoutEnabled ?? false}
                 onValueChange={(value) => updateSettings({ aiWorkoutEnabled: value })}
-                trackColor={{ false: Colors.card, true: '#a78bfa' }}
-                thumbColor="#fff"
+                trackColor={{ false: Colors.card, true: Colors.violet }}
+                thumbColor={Colors.white}
                 disabled={pollinationStatus !== 'connected'}
               />
             </View>
 
             {/* Model Selector */}
             <View style={styles.settingItem}>
-              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
-                <ChevronDown size={20} color="#a78bfa" />
+              <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlayViolet15 }]}> 
+                <ChevronDown size={20} color={Colors.violet} />
               </View>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingTitle}>{t('settings.ai.modelLabel')}</Text>
@@ -280,8 +280,8 @@ export default function AISettingsScreen() {
 
             {/* Tone selector */}
             <View style={styles.settingItem}>
-              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
-                <Activity size={20} color="#a78bfa" />
+              <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlayViolet15 }]}> 
+                <Activity size={20} color={Colors.violet} />
               </View>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingTitle}>{t('settings.ai.toneLabel')}</Text>
@@ -316,7 +316,7 @@ export default function AISettingsScreen() {
         <GlassCard style={styles.settingsCard}>
           <Animated.View entering={FadeInDown.delay(140).springify()}>
             <View style={styles.privacyBox}>
-              <Shield size={18} color="#4ade80" />
+              <Shield size={18} color={Colors.success} />
               <Text style={styles.privacyText}>
                 {t('settings.ai.privacyText')}
               </Text>
@@ -416,13 +416,13 @@ const styles = StyleSheet.create({
     color: Colors.text, flex: 1,
   },
   betaBadge: {
-    backgroundColor: 'rgba(245,166,35,0.15)',
+    backgroundColor: Colors.overlayWarning15,
     paddingHorizontal: Spacing.sm, paddingVertical: 4,
     borderRadius: BorderRadius.md,
   },
   betaBadgeText: {
     fontSize: 10, fontWeight: '800' as any,
-    color: '#f5a623', letterSpacing: 1.5,
+    color: Colors.warningDeep, letterSpacing: 1.5,
   },
   sectionTitle: {
     fontSize: FontSize.sm, fontWeight: FontWeight.semibold,
@@ -466,33 +466,33 @@ const styles = StyleSheet.create({
   statusText: { fontSize: FontSize.xs, color: Colors.muted },
   connectButton: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: Colors.violetStrong,
     paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.lg,
   },
   connectButtonText: {
-    fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: '#fff',
+    fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.white,
   },
   disconnectButton: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: Colors.overlayError15,
+    borderWidth: 1, borderColor: Colors.overlayError30,
   },
   disconnectButtonText: {
-    fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: '#ef4444',
+    fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.errorStrong,
   },
   warningBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
-    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+    backgroundColor: Colors.overlayWarning10,
     paddingVertical: Spacing.md, paddingHorizontal: Spacing.md,
     marginHorizontal: Spacing.sm, marginBottom: Spacing.sm,
     borderRadius: BorderRadius.lg,
-    borderWidth: 1, borderColor: 'rgba(251, 191, 36, 0.2)',
+    borderWidth: 1, borderColor: Colors.overlayWarning20,
   },
   warningText: {
-    flex: 1, fontSize: FontSize.xs, color: '#fbbf24', lineHeight: 18,
+    flex: 1, fontSize: FontSize.xs, color: Colors.warning, lineHeight: 18,
   },
   featureInfo: {
-    backgroundColor: 'rgba(45, 212, 191, 0.1)',
+    backgroundColor: Colors.overlayTeal10,
     paddingVertical: Spacing.md, paddingHorizontal: Spacing.md,
     marginHorizontal: Spacing.sm, marginBottom: Spacing.sm,
     borderRadius: BorderRadius.lg,
@@ -501,34 +501,34 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs, color: Colors.teal, lineHeight: 18,
   },
   modelPicker: {
-    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    backgroundColor: Colors.overlayViolet12,
     paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.lg,
-    borderWidth: 1, borderColor: 'rgba(167, 139, 250, 0.25)',
+    borderWidth: 1, borderColor: Colors.overlayViolet25,
   },
   modelPickerText: {
-    fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: '#a78bfa',
+    fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.violet,
   },
   privacyBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
-    backgroundColor: 'rgba(74, 222, 128, 0.08)',
+    backgroundColor: Colors.overlaySuccess08,
     padding: Spacing.md, marginHorizontal: Spacing.sm,
     marginBottom: Spacing.sm, borderRadius: BorderRadius.lg,
-    borderWidth: 1, borderColor: 'rgba(74, 222, 128, 0.15)',
+    borderWidth: 1, borderColor: Colors.overlaySuccess15,
   },
   privacyText: {
-    flex: 1, fontSize: FontSize.xs, color: '#4ade80', lineHeight: 18,
+    flex: 1, fontSize: FontSize.xs, color: Colors.success, lineHeight: 18,
   },
   privacyLink: {
     paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
     marginHorizontal: Spacing.sm, marginBottom: Spacing.sm,
   },
   privacyLinkText: {
-    fontSize: FontSize.sm, color: '#a78bfa',
+    fontSize: FontSize.sm, color: Colors.violet,
     textDecorationLine: 'underline',
   },
   modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    flex: 1, backgroundColor: Colors.overlayBlack50,
     justifyContent: 'center', alignItems: 'center',
   },
   modalContent: {
@@ -544,12 +544,12 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
   },
   modelOptionSelected: {
-    backgroundColor: 'rgba(167,139,250,0.2)',
+    backgroundColor: Colors.overlayViolet20,
     paddingVertical: Spacing.md, paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.lg,
   },
   modelOptionText: { fontSize: FontSize.md, color: Colors.text },
   modelOptionTextSelected: {
-    fontSize: FontSize.md, color: '#a78bfa', fontWeight: FontWeight.bold,
+    fontSize: FontSize.md, color: Colors.violet, fontWeight: FontWeight.bold,
   },
 });

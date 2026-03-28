@@ -7,7 +7,7 @@ import { BlurView } from 'expo-blur';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { LayoutDashboard, Dumbbell, ChartBar, Wrench, Settings, Trophy, Users } from 'lucide-react-native';
-import { Colors, Spacing } from '../src/constants';
+import { Colors, Spacing, applyThemeFromUserSettings } from '../src/constants';
 import { ErrorBoundary } from '../src/components';
 
 // Initialize i18n
@@ -52,8 +52,8 @@ const NavButton = ({ screenName, isFocused, router, config }: any) => {
         transform: [{ scale: scale.value }, { translateY: translateY.value }],
     }));
 
-    const activeColor = '#E3A090'; // Accent saumon
-    const inactiveColor = '#FFFFFF'; // Blanc (l'opacité gère le gris)
+    const activeColor = Colors.cta2;
+    const inactiveColor = Colors.white;
 
     const onPress = () => {
         if (!isFocused) {
@@ -119,7 +119,7 @@ function CustomNavBar() {
                     <>
                         <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
                         {/* Fallback background semi-transparent pour Android si BlurView bug */}
-                        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(26, 27, 34, 0.85)' }]} />
+                        <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.card }]} />
                     </>
                 )}
 
@@ -144,6 +144,10 @@ export default function Layout() {
     const router = useRouter();
     const segments = useSegments();
     const rootNavigationState = useRootNavigationState();
+
+    useEffect(() => {
+        applyThemeFromUserSettings(settings);
+    }, [settings.themePreset, settings.customThemeColors]);
 
     // Redirect to onboarding if not completed
     useEffect(() => {
@@ -196,8 +200,8 @@ const styles = StyleSheet.create({
         borderRadius: 32,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-        shadowColor: '#000',
+        borderColor: Colors.overlay,
+        shadowColor: Colors.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.4,
         shadowRadius: 16,

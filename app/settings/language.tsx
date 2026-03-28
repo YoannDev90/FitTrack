@@ -32,7 +32,7 @@ export default function LanguageScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={['rgba(52,211,153,0.16)', 'transparent']}
+        colors={[Colors.overlayMint16, Colors.transparent]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={styles.topGlow}
@@ -57,7 +57,7 @@ export default function LanguageScreen() {
             <Text style={styles.screenTitle}>{t('settings.language')}</Text>
           </View>
           <View style={styles.headerIconWrap}>
-            <Languages size={18} color="#34d399" />
+            <Languages size={18} color={Colors.mint} />
           </View>
         </Animated.View>
 
@@ -84,7 +84,7 @@ export default function LanguageScreen() {
                 </Text>
                 {currentLanguage === code && (
                   <View style={styles.languageCheck}>
-                    <Check size={16} color="#fff" strokeWidth={3} />
+                    <Check size={16} color={Colors.white} strokeWidth={3} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -158,8 +158,8 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(52,211,153,0.28)',
-    backgroundColor: 'rgba(52,211,153,0.12)',
+    borderColor: Colors.overlayMint28,
+    backgroundColor: Colors.overlayMint12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
   languageCard: {
     paddingVertical: Spacing.xs,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(14,19,30,0.82)',
+    borderColor: Colors.overlayWhite10,
+    backgroundColor: Colors.overlayPanel82,
   },
 
   // Language Option

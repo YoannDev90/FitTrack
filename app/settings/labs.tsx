@@ -141,7 +141,7 @@ export default function LabsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={['rgba(167,139,250,0.18)', 'transparent']}
+        colors={[Colors.overlayViolet18, Colors.transparent]}
         start={{ x: 0.15, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={styles.topGlow}
@@ -165,7 +165,7 @@ export default function LabsScreen() {
             <Text style={styles.screenTitle}>{t('settings.labs')}</Text>
           </View>
           <View style={styles.headerIconWrap}>
-            <FlaskConical size={18} color="#a78bfa" />
+            <FlaskConical size={18} color={Colors.violet} />
           </View>
         </Animated.View>
 
@@ -173,8 +173,8 @@ export default function LabsScreen() {
         <GlassCard style={styles.settingsCard}>
           <Animated.View entering={FadeInDown.delay(80).springify()}>
             <View style={styles.settingItem}>
-              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
-                <FlaskConical size={20} color="#a78bfa" />
+              <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlayViolet15 }]}> 
+                <FlaskConical size={20} color={Colors.violet} />
               </View>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingTitle}>{t('settings.enableToolsScreen')}</Text>
@@ -185,7 +185,7 @@ export default function LabsScreen() {
                   value={!(settings.hiddenTabs?.tools ?? true)}
                   onValueChange={(value) => updateSettings({ hiddenTabs: { ...(settings.hiddenTabs ?? {}), tools: !value } })}
                   trackColor={{ false: Colors.card, true: Colors.teal }}
-                  thumbColor="#fff"
+                  thumbColor={Colors.white}
                 />
               </View>
             </View>
@@ -202,13 +202,13 @@ export default function LabsScreen() {
               <View style={[
                 styles.settingIconContainer, 
                 { backgroundColor: pollinationStatus === 'connected' 
-                  ? 'rgba(34, 197, 94, 0.15)' 
-                  : 'rgba(139, 92, 246, 0.15)' 
+                  ? Colors.overlayConnected15
+                  : Colors.overlayViolet15
                 }
               ]}> 
                 <Sparkles 
                   size={20} 
-                  color={pollinationStatus === 'connected' ? '#22c55e' : '#8B5CF6'} 
+                  color={pollinationStatus === 'connected' ? Colors.successStrong : Colors.violetStrong} 
                 />
               </View>
               <View style={styles.settingInfo}>
@@ -216,8 +216,8 @@ export default function LabsScreen() {
                 <View style={styles.statusRow}>
                   {pollinationStatus === 'connected' ? (
                     <>
-                      <CheckCircle size={14} color="#22c55e" />
-                      <Text style={[styles.statusText, { color: '#22c55e' }]}>
+                      <CheckCircle size={14} color={Colors.successStrong} />
+                      <Text style={[styles.statusText, { color: Colors.successStrong }]}> 
                         {t('settings.pollination.connected')}
                       </Text>
                     </>
@@ -247,7 +247,7 @@ export default function LabsScreen() {
                   </Text>
                 ) : (
                   <>
-                    <ExternalLink size={14} color="#fff" />
+                    <ExternalLink size={14} color={Colors.white} />
                     <Text style={styles.connectButtonText}>
                       {t('settings.pollination.connect')}
                     </Text>
@@ -258,7 +258,7 @@ export default function LabsScreen() {
 
             {/* Beta Warning */}
             <View style={styles.warningBox}>
-              <AlertTriangle size={16} color="#fbbf24" />
+              <AlertTriangle size={16} color={Colors.warning} />
               <Text style={styles.warningText}>
                 {t('settings.pollination.betaWarning')}
               </Text>
@@ -276,8 +276,8 @@ export default function LabsScreen() {
               onPress={() => router.push('/settings/ai')}
               activeOpacity={0.7}
             >
-              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}> 
-                <Bot size={20} color="#a78bfa" />
+              <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlayViolet15 }]}> 
+                <Bot size={20} color={Colors.violet} />
               </View>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingTitle}>{t('settings.aiTab')}</Text>
@@ -293,8 +293,8 @@ export default function LabsScreen() {
         <GlassCard style={styles.settingsCard}>
           <Animated.View entering={FadeInDown.delay(160).springify()}>
             <View style={styles.settingItem}>
-              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}> 
-                <ScanBarcode size={20} color="#22c55e" />
+              <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlayConnected15 }]}> 
+                <ScanBarcode size={20} color={Colors.successStrong} />
               </View>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingTitle}>{t('settings.openFoodFacts.title')}</Text>
@@ -305,7 +305,7 @@ export default function LabsScreen() {
                   value={settings.openFoodFactsEnabled ?? false}
                   onValueChange={(value) => updateSettings({ openFoodFactsEnabled: value })}
                   trackColor={{ false: Colors.card, true: Colors.teal }}
-                  thumbColor="#fff"
+                  thumbColor={Colors.white}
                 />
               </View>
             </View>
@@ -387,9 +387,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: 'rgba(167,139,250,0.14)',
+    backgroundColor: Colors.overlayViolet14,
     borderWidth: 1,
-    borderColor: 'rgba(167,139,250,0.24)',
+    borderColor: Colors.overlayViolet24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: Colors.violetStrong,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.lg,
@@ -467,17 +467,17 @@ const styles = StyleSheet.create({
   connectButtonText: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.semibold,
-    color: '#fff',
+    color: Colors.white,
   },
   disconnectButton: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: Colors.overlayError15,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: Colors.overlayError30,
   },
   disconnectButtonText: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.semibold,
-    color: '#ef4444',
+    color: Colors.errorStrong,
   },
 
   // Warning Box
@@ -485,25 +485,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
-    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+    backgroundColor: Colors.overlayWarning10,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     marginHorizontal: Spacing.sm,
     marginBottom: Spacing.sm,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.2)',
+    borderColor: Colors.overlayWarning20,
   },
   warningText: {
     flex: 1,
     fontSize: FontSize.xs,
-    color: '#fbbf24',
+    color: Colors.warning,
     lineHeight: 18,
   },
 
   // Feature Info
   featureInfo: {
-    backgroundColor: 'rgba(45, 212, 191, 0.1)',
+    backgroundColor: Colors.overlayTeal10,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     marginHorizontal: Spacing.sm,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   
   // Attribution Box
   attributionBox: {
-    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+    backgroundColor: Colors.overlayGray10,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     marginHorizontal: Spacing.sm,
@@ -535,23 +535,23 @@ const styles = StyleSheet.create({
 
   // Model Picker
   modelPicker: {
-    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    backgroundColor: Colors.overlayViolet12,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.25)',
+    borderColor: Colors.overlayViolet25,
   },
   modelPickerText: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.semibold,
-    color: '#a78bfa',
+    color: Colors.violet,
   },
 
   // model picker modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: Colors.overlayBlack50,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
   },
   modelOptionSelected: {
-    backgroundColor: 'rgba(167,139,250,0.2)',
+    backgroundColor: Colors.overlayViolet20,
   },
   modelOptionText: {
     fontSize: FontSize.md,
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   },
   modelOptionTextSelected: {
     fontSize: FontSize.md,
-    color: '#a78bfa',
+    color: Colors.violet,
     fontWeight: FontWeight.bold,
   },
   modalTitle: {

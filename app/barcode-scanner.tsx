@@ -50,11 +50,11 @@ import {
 
 // Premium colors
 const PREMIUM = {
-  white: '#FFFFFF',
-  bg: '#0A0A0F',
-  card: 'rgba(255, 255, 255, 0.05)',
-  accent: '#22c55e',
-  muted: 'rgba(255, 255, 255, 0.5)',
+  white: Colors.white,
+  bg: Colors.bg,
+  card: Colors.overlayWhite05,
+  accent: Colors.successStrong,
+  muted: Colors.textWhite80,
 };
 
 export default function BarcodeScannerScreen() {
@@ -162,7 +162,7 @@ export default function BarcodeScannerScreen() {
     
     return (
       <View style={[styles.scoreBadge, { backgroundColor: getEcoScoreColor(grade) }]}>
-        <Leaf size={12} color="#fff" />
+        <Leaf size={12} color={Colors.white} />
         <Text style={styles.scoreBadgeText}>Eco-Score {grade.toUpperCase()}</Text>
       </View>
     );
@@ -389,14 +389,14 @@ export default function BarcodeScannerScreen() {
                     
                     {scannedProduct.nutriments.energyKcal100g !== undefined && (
                       <NutrimentRow 
-                        icon={<Flame size={16} color="#f97316" />}
+                        icon={<Flame size={16} color={Colors.orange} />}
                         label={t('barcodeScanner.energy')}
                         value={`${Math.round(scannedProduct.nutriments.energyKcal100g)} kcal`}
                       />
                     )}
                     {scannedProduct.nutriments.fat100g !== undefined && (
                       <NutrimentRow 
-                        icon={<Droplets size={16} color="#eab308" />}
+                        icon={<Droplets size={16} color={Colors.amberStrong} />}
                         label={t('barcodeScanner.fat')}
                         value={`${scannedProduct.nutriments.fat100g.toFixed(1)} g`}
                         level={scannedProduct.nutrientLevels?.fat}
@@ -412,14 +412,14 @@ export default function BarcodeScannerScreen() {
                     )}
                     {scannedProduct.nutriments.carbohydrates100g !== undefined && (
                       <NutrimentRow 
-                        icon={<Wheat size={16} color="#a3e635" />}
+                        icon={<Wheat size={16} color={Colors.lime} />}
                         label={t('barcodeScanner.carbs')}
                         value={`${scannedProduct.nutriments.carbohydrates100g.toFixed(1)} g`}
                       />
                     )}
                     {scannedProduct.nutriments.sugars100g !== undefined && (
                       <NutrimentRow 
-                        icon={<Cookie size={16} color="#f472b6" />}
+                        icon={<Cookie size={16} color={Colors.pink} />}
                         label={`  ${t('barcodeScanner.sugars')}`}
                         value={`${scannedProduct.nutriments.sugars100g.toFixed(1)} g`}
                         level={scannedProduct.nutrientLevels?.sugars}
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   backButtonLargeText: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
-    color: '#fff',
+    color: Colors.white,
   },
 
   // Product Preview
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   productPreviewDragHandle: {
     width: 40,
     height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: Colors.overlayWhite30,
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: Spacing.md,
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: BorderRadius.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.overlayWhite10,
   },
   productPreviewInfo: {
     flex: 1,
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.overlayWhite10,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.lg,
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   scoreBadgeText: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
-    color: '#fff',
+    color: Colors.white,
   },
 
   // Product Details Modal
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.overlayWhite10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -811,7 +811,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: BorderRadius.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: Colors.overlayWhite10,
     marginBottom: Spacing.md,
   },
   productDetailsName: {
@@ -884,7 +884,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: Colors.overlayWhite05,
   },
   nutrimentRowIndented: {
     paddingLeft: Spacing.md,

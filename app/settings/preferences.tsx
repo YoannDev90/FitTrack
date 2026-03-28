@@ -102,7 +102,7 @@ export default function PreferencesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={['rgba(232,184,75,0.14)', 'transparent']}
+        colors={['rgba(232,184,75,0.14)', Colors.transparent]}
         start={{ x: 0.15, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={styles.topGlow}
@@ -126,7 +126,7 @@ export default function PreferencesScreen() {
             <Text style={styles.screenTitle}>{t('settings.preferences')}</Text>
           </View>
           <View style={styles.headerIconWrap}>
-            <SlidersHorizontal size={18} color="#e8b84b" />
+            <SlidersHorizontal size={18} color={Colors.gold} />
           </View>
         </Animated.View>
 
@@ -134,8 +134,8 @@ export default function PreferencesScreen() {
         <GlassCard style={styles.settingsCard}>
           <View style={styles.goalSection}>
             <View style={styles.goalHeader}>
-              <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(74, 222, 128, 0.2)' }]}>
-                <Target size={20} color="#4ade80" />
+              <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlaySuccess20 }]}>
+                <Target size={20} color={Colors.success} />
               </View>
               <View style={styles.goalInfo}>
                 <Text style={styles.settingTitle}>{t('settings.weeklyGoal')}</Text>
@@ -168,7 +168,7 @@ export default function PreferencesScreen() {
           <View style={styles.goalSection}>
             <View style={styles.goalHeader}>
               <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
-                <Zap size={20} color="#10b981" />
+                <Zap size={20} color={Colors.emerald} />
               </View>
               <View style={styles.goalInfo}>
                 <Text style={styles.settingTitle}>{t('settings.keepGoingInterval')}</Text>
@@ -202,8 +202,8 @@ export default function PreferencesScreen() {
         {/* Camera Preview */}
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Camera size={20} color="#60a5fa" />}
-            iconColor="#60a5fa"
+            icon={<Camera size={20} color={Colors.blue} />}
+            iconColor={Colors.blue}
             title={t('settings.cameraPreview', { defaultValue: 'Aperçu caméra' })}
             subtitle={t('settings.cameraPreviewDesc', { defaultValue: 'Voir le flux caméra lors du tracking' })}
             rightElement={
@@ -211,7 +211,7 @@ export default function PreferencesScreen() {
                 value={settings.preferCameraDetection ?? false}
                 onValueChange={(value) => updateSettings({ preferCameraDetection: value })}
                 trackColor={{ false: Colors.card, true: Colors.teal }}
-                thumbColor="#fff"
+                thumbColor={Colors.white}
               />
             }
             delay={200}
@@ -221,8 +221,8 @@ export default function PreferencesScreen() {
         {/* Camera debug points (formerly in dev tab) */}
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Camera size={20} color="#fbbf24" />}
-            iconColor="#fbbf24"
+            icon={<Camera size={20} color={Colors.warning} />}
+            iconColor={Colors.warning}
             title={t('settings.debugCamera')}
             subtitle={t('settings.debugCameraDesc')}
             rightElement={
@@ -230,7 +230,7 @@ export default function PreferencesScreen() {
                 value={settings.debugCamera ?? false}
                 onValueChange={(value) => updateSettings({ debugCamera: value })}
                 trackColor={{ false: Colors.card, true: Colors.teal }}
-                thumbColor="#fff"
+                thumbColor={Colors.white}
               />
             }
             delay={210}
@@ -240,8 +240,8 @@ export default function PreferencesScreen() {
         {/* Skip Sensor Selection */}
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Sparkles size={20} color="#a78bfa" />}
-            iconColor="#a78bfa"
+            icon={<Sparkles size={20} color={Colors.violet} />}
+            iconColor={Colors.violet}
             title={t('settings.skipSensorSelection', { defaultValue: 'Afficher le mode capteur dans le tracking' })}
             subtitle={t('settings.skipSensorSelectionDesc', { defaultValue: 'Désactiver pour passer directement à l\'écran de positionnement' })}
             rightElement={
@@ -249,7 +249,7 @@ export default function PreferencesScreen() {
                 value={!(settings.skipSensorSelection ?? false)}
                 onValueChange={(value) => updateSettings({ skipSensorSelection: !value })}
                 trackColor={{ false: Colors.card, true: Colors.teal }}
-                thumbColor="#fff"
+                thumbColor={Colors.white}
               />
             }
             delay={250}
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: Colors.overlayWhite10,
     backgroundColor: 'rgba(14,19,30,0.82)',
   },
 

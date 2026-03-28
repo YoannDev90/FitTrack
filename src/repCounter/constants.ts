@@ -1,10 +1,16 @@
 // repCounter/constants.ts
 import { Dimensions } from 'react-native';
+import type { ThemeCustomColors } from '../types';
 
 export const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 export const RC = {
+    // Core
+    white:       '#fff',
+    black:       '#000',
+    transparent: 'transparent',
+
     // Backgrounds
     bg:          '#06070c',
     surface:     '#0b0d14',
@@ -26,6 +32,9 @@ export const RC = {
     emberMid:    '#ff7a55',
     emberGlow:   'rgba(255,85,51,0.16)',
     emberBorder: 'rgba(255,85,51,0.28)',
+    emberSoft:   'rgba(255,122,85,0.10)',
+    emberSoftStrong: 'rgba(255,122,85,0.18)',
+    emberSoftBorder: 'rgba(255,122,85,0.24)',
 
     // CTA gradient (aligned with primary accent family)
     cta1:        '#ff5533',
@@ -33,12 +42,32 @@ export const RC = {
 
     // Status
     success:     '#22d36b',
+    successSoft: 'rgba(34,211,107,0.12)',
+    successSoftAlt: 'rgba(34,197,94,0.12)',
     warning:     '#f59e0b',
     error:       '#f87171',
+    errorStrong: '#ef4444',
+    errorSoft:   'rgba(239,68,68,0.15)',
+    errorBorder: 'rgba(239,68,68,0.35)',
+    errorSoftAlt: 'rgba(248,113,113,0.12)',
+    errorBorderAlt: 'rgba(248,113,113,0.3)',
+
+    // Utility overlays
+    blackOverlay25: 'rgba(0,0,0,0.25)',
+    blackOverlay30: 'rgba(0,0,0,0.3)',
+    blackOverlay75: 'rgba(0,0,0,0.75)',
+    blackOverlay85: 'rgba(0,0,0,0.85)',
+    whiteOverlay06: 'rgba(255,255,255,0.06)',
+    whiteOverlay07: 'rgba(255,255,255,0.07)',
+    whiteOverlay10: 'rgba(255,255,255,0.10)',
+    whiteOverlay12: 'rgba(255,255,255,0.12)',
+    whiteOverlay18: 'rgba(255,255,255,0.18)',
 
     // Misc
     gold:        '#e8b84b',
     goldSoft:    'rgba(232,184,75,0.12)',
+    goldSoftStrong: 'rgba(232,184,75,0.14)',
+    goldBorder:  'rgba(232,184,75,0.35)',
 };
 
 export const SP = {
@@ -190,3 +219,120 @@ export const EXERCISES: ExerciseConfig[] = [
         experimental: true,
     }
 ];
+
+const DEFAULT_RC_SNAPSHOT: Record<string, string> = {
+    ...(RC as Record<string, string>),
+};
+
+const DEFAULT_EXERCISE_COLORS = Object.fromEntries(
+    EXERCISES.map((exercise) => [exercise.id, exercise.color])
+) as Record<string, string>;
+
+const clamp = (value: number, min = 0, max = 1): number => Math.min(max, Math.max(min, value));
+
+const normalizeHex = (value: string): string => {
+    const normalized = value.startsWith('#') ? value : `#${value}`;
+    if (!/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(normalized)) {
+        return '#000000';
+    }
+
+    if (normalized.length === 4) {
+        const [, r, g, b] = normalized;
+        return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+    }
+
+    return normalized.toLowerCase();
+};
+
+const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
+    const safeHex = normalizeHex(hex);
+    const int = parseInt(safeHex.slice(1), 16);
+    return {
+        r: (int >> 16) & 255,
+        g: (int >> 8) & 255,
+        b: int & 255,
+    };
+};
+
+const rgbToHex = (r: number, g: number, b: number): string => {
+    const to = (n: number) => Math.round(clamp(n / 255) * 255).toString(16).padStart(2, '0');
+    return `#${to(r)}${to(g)}${to(b)}`;
+};
+
+const mixHex = (from: string, to: string, ratio: number): string => {
+    const w = clamp(ratio);
+    const a = hexToRgb(from);
+    const b = hexToRgb(to);
+    return rgbToHex(
+        a.r + (b.r - a.r) * w,
+        a.g + (b.g - a.g) * w,
+        a.b + (b.b - a.b) * w
+    );
+};
+
+const lighten = (color: string, amount: number): string => mixHex(color, '#ffffff', amount);
+
+const alpha = (color: string, opacity: number): string => {
+    const { r, g, b } = hexToRgb(color);
+    return `rgba(${r},${g},${b},${clamp(opacity)})`;
+};
+
+export const applyRepCounterTheme = (theme: ThemeCustomColors): void => {
+    RC.bg = mixHex(theme.bg, '#000000', 0.2);
+    RC.surface = theme.surface;
+    RC.surfaceUp = lighten(theme.surface, 0.08);
+    RC.overlay = alpha(theme.text, 0.05);
+    RC.overlayUp = alpha(theme.text, 0.09);
+
+    RC.border = alpha(theme.text, 0.07);
+    RC.borderUp = alpha(theme.text, 0.13);
+
+    RC.text = theme.text;
+    RC.textSub = alpha(theme.text, 0.55);
+    RC.textMuted = alpha(theme.text, 0.3);
+
+    RC.ember = theme.primary;
+    RC.emberMid = lighten(theme.primary, 0.12);
+    RC.emberGlow = alpha(theme.primary, 0.16);
+    RC.emberBorder = alpha(theme.primary, 0.28);
+    RC.emberSoft = alpha(theme.primary, 0.1);
+    RC.emberSoftStrong = alpha(theme.primary, 0.18);
+    RC.emberSoftBorder = alpha(theme.primary, 0.24);
+
+    RC.cta1 = theme.primary;
+    RC.cta2 = theme.secondary;
+
+    RC.success = theme.success;
+    RC.successSoft = alpha(theme.success, 0.12);
+    RC.successSoftAlt = alpha(theme.success, 0.12);
+    RC.warning = theme.warning;
+    RC.error = lighten(theme.error, 0.08);
+    RC.errorStrong = theme.error;
+    RC.errorSoft = alpha(theme.error, 0.15);
+    RC.errorBorder = alpha(theme.error, 0.35);
+    RC.errorSoftAlt = alpha(lighten(theme.error, 0.08), 0.12);
+    RC.errorBorderAlt = alpha(lighten(theme.error, 0.08), 0.3);
+
+    RC.gold = theme.gold;
+    RC.goldSoft = alpha(theme.gold, 0.12);
+    RC.goldSoftStrong = alpha(theme.gold, 0.14);
+    RC.goldBorder = alpha(theme.gold, 0.35);
+
+    EXERCISES.forEach((exercise) => {
+        if (exercise.id === 'situps' || exercise.id === 'jumping_jacks' || exercise.id === 'elliptical' || exercise.id === 'run_ai') {
+            exercise.color = RC.emberMid;
+        } else {
+            exercise.color = RC.ember;
+        }
+    });
+};
+
+export const resetRepCounterTheme = (): void => {
+    Object.keys(DEFAULT_RC_SNAPSHOT).forEach((token) => {
+        (RC as Record<string, string>)[token] = DEFAULT_RC_SNAPSHOT[token];
+    });
+
+    EXERCISES.forEach((exercise) => {
+        exercise.color = DEFAULT_EXERCISE_COLORS[exercise.id] ?? exercise.color;
+    });
+};

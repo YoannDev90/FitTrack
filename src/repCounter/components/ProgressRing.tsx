@@ -36,9 +36,9 @@ export function ProgressRing({
                 {/* Track */}
                 <Circle
                     cx={size / 2} cy={size / 2} r={radius}
-                    stroke="rgba(255,255,255,0.06)"
+                    stroke={RC.whiteOverlay06}
                     strokeWidth={strokeWidth}
-                    fill="transparent"
+                    fill={RC.transparent}
                 />
                 {/* Progress */}
                 {progress > 0 && (
@@ -46,7 +46,7 @@ export function ProgressRing({
                         cx={size / 2} cy={size / 2} r={radius}
                         stroke="url(#ringGrad)"
                         strokeWidth={strokeWidth}
-                        fill="transparent"
+                        fill={RC.transparent}
                         strokeDasharray={`${circumference}`}
                         strokeDashoffset={strokeDashoffset}
                         strokeLinecap="round"

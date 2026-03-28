@@ -32,36 +32,11 @@ import {
     setHealthConnectModalCallback,
     navigateToHealthConnect,
 } from '../src/services/healthConnectStartup';
+import { Colors, ScreenPalettes } from '../src/constants';
 
 // ─── Design System ────────────────────────────────────────────────────────────
 
-const C = {
-    bg:           '#08080b',
-    surface:      '#0f1015',
-    surfaceUp:    '#141620',
-
-    border:       'rgba(255,255,255,0.06)',
-    borderMid:    'rgba(255,255,255,0.10)',
-    borderGlow:   'rgba(255,100,60,0.30)',
-
-    text:         '#f2efe9',
-    textSub:      'rgba(242,239,233,0.55)',
-    textMuted:    'rgba(242,239,233,0.30)',
-
-    coral:        '#ff6340',
-    coralMid:     '#ff8c5a',
-    amber:        '#ffb040',
-    coralSoft:    'rgba(255,99,64,0.12)',
-    coralGlow:    'rgba(255,99,64,0.18)',
-
-    green:        '#3dd68c',
-    greenSoft:    'rgba(61,214,140,0.10)',
-    greenBorder:  'rgba(61,214,140,0.22)',
-
-    gold:         '#f0c040',
-    goldSoft:     'rgba(240,192,64,0.12)',
-    goldBorder:   'rgba(240,192,64,0.28)',
-};
+const C = ScreenPalettes.today;
 
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 40 };
 const R = { sm: 10, md: 14, lg: 18, xl: 22, xxl: 26, pill: 999 };
@@ -94,7 +69,7 @@ const Chip: React.FC<{
     color?: string;
     bg?: string;
     border?: string;
-}> = ({ label, color = C.textMuted, bg = 'transparent', border = C.border }) => (
+}> = ({ label, color = C.textMuted, bg = Colors.transparent, border = C.border }) => (
     <View style={{ backgroundColor: bg, borderWidth: 1, borderColor: border, borderRadius: R.pill, paddingHorizontal: 10, paddingVertical: 3 }}>
         <Text style={{ fontSize: T.micro, fontWeight: W.black, color, letterSpacing: 1.8, textTransform: 'uppercase' }}>
             {label}
@@ -185,7 +160,7 @@ export default function TodayScreen() {
                                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                                 style={st.streakGrad}
                             >
-                                <Flame size={15} color="#1a0800" strokeWidth={2.5} />
+                                <Flame size={15} color={Colors.warmDarkText} strokeWidth={2.5} />
                                 <Text style={st.streakNum}>{streak.current}</Text>
                             </LinearGradient>
                         </View>
@@ -208,7 +183,7 @@ export default function TodayScreen() {
                             <Chip
                                 label={goalAchieved ? t('home.goalAchieved') : t('home.weeklyGoal')}
                                 color={goalAchieved ? C.gold : C.textSub}
-                                bg={goalAchieved ? C.goldSoft : 'transparent'}
+                                bg={goalAchieved ? C.goldSoft : Colors.transparent}
                                 border={goalAchieved ? C.goldBorder : C.border}
                             />
                             {goalAchieved && <Text style={{ fontSize: 20 }}>🏆</Text>}
@@ -286,7 +261,7 @@ export default function TodayScreen() {
                                         </View>
                                         <Text style={st.ctaText}>{t('home.quickActions.startTracking', 'Demarrer le tracking')}</Text>
                                     </View>
-                                    <ChevronRight size={20} color="rgba(26,8,0,0.45)" strokeWidth={2.5} />
+                                    <ChevronRight size={20} color={Colors.overlayWarmDark45} strokeWidth={2.5} />
                                 </LinearGradient>
                             </View>
                         )}
@@ -387,7 +362,7 @@ const st = StyleSheet.create({
         top: -40, right: -60,
         width: 220, height: 220,
         borderRadius: 110,
-        backgroundColor: 'rgba(255,99,64,0.055)',
+        backgroundColor: Colors.overlayCoral055,
     },
     heroTopRow: {
         flexDirection: 'row',
@@ -420,7 +395,7 @@ const st = StyleSheet.create({
     streakNum: {
         fontSize: T.xl,
         fontWeight: W.black,
-        color: '#1a0800',
+        color: Colors.warmDarkText,
         letterSpacing: -0.5,
     },
     heroGreeting: {
@@ -458,7 +433,7 @@ const st = StyleSheet.create({
         padding: S.xl,
         marginBottom: S.md,
         overflow: 'hidden',
-        shadowColor: '#000',
+        shadowColor: Colors.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.5,
         shadowRadius: 20,
@@ -469,7 +444,7 @@ const st = StyleSheet.create({
         top: -40, right: -40,
         width: 140, height: 140,
         borderRadius: 70,
-        backgroundColor: 'rgba(255,99,64,0.07)',
+        backgroundColor: Colors.overlayCoral07,
     },
     goalCardHeader: {
         flexDirection: 'row',
@@ -528,7 +503,7 @@ const st = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
-    segmentEmpty:   { backgroundColor: 'rgba(255,255,255,0.08)' },
+    segmentEmpty:   { backgroundColor: Colors.overlayWhite08 },
 
     // ── Week card
     weekCard: {
@@ -538,7 +513,7 @@ const st = StyleSheet.create({
         borderColor: C.border,
         padding: S.xl,
         marginBottom: S.md,
-        shadowColor: '#000',
+        shadowColor: Colors.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.35,
         shadowRadius: 12,
@@ -602,7 +577,7 @@ const st = StyleSheet.create({
         left: -20, top: -20,
         width: 100, height: 100,
         borderRadius: 50,
-        backgroundColor: 'rgba(255,255,255,0.10)',
+        backgroundColor: Colors.overlayWhite10,
     },
     ctaContent: {
         flex: 1,
@@ -613,21 +588,21 @@ const st = StyleSheet.create({
     ctaPlusCircle: {
         width: 32, height: 32,
         borderRadius: 16,
-        backgroundColor: 'rgba(26,8,0,0.20)',
+        backgroundColor: Colors.overlayWarmDark20,
         alignItems: 'center',
         justifyContent: 'center',
     },
     ctaPlusIcon: {
         fontSize: 20,
         fontWeight: W.black,
-        color: '#1a0800',
+        color: Colors.warmDarkText,
         lineHeight: 22,
         includeFontPadding: false,
     },
     ctaText: {
         fontSize: T.lg,
         fontWeight: W.black,
-        color: '#1a0800',
+        color: Colors.warmDarkText,
         letterSpacing: -0.3,
     },
 
@@ -647,7 +622,7 @@ const st = StyleSheet.create({
     scanIconWrap: {
         width: 30, height: 30,
         borderRadius: 15,
-        backgroundColor: 'rgba(61,214,140,0.12)',
+        backgroundColor: Colors.overlaySportGreen12,
         alignItems: 'center',
         justifyContent: 'center',
     },

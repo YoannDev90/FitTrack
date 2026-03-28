@@ -188,6 +188,7 @@ export type HealthConnectSyncMode = 'manual' | 'notify' | 'auto';
 
 // Weight reminder frequency
 export type WeightReminderFrequency = 'daily' | 'weekly' | 'monthly';
+export type ThemePreset = 'default' | 'ocean' | 'sunset' | 'forest' | 'midnight' | 'custom';
 
 // Onboarding responses
 export type FitnessGoal = 'loseWeight' | 'buildMuscle' | 'improveCardio' | 'stayHealthy';
@@ -205,6 +206,22 @@ export interface SafetySettings {
   defaultIntervalMinutes: number;
   defaultAutoAlertDelaySeconds: number;
   fallDetectionEnabled: boolean;
+}
+
+export interface ThemeCustomColors {
+  bg: string;
+  surface: string;
+  text: string;
+  muted: string;
+  primary: string;
+  secondary: string;
+  success: string;
+  warning: string;
+  error: string;
+  info: string;
+  violet: string;
+  rose: string;
+  gold: string;
 }
 
 export interface UserSettings {
@@ -241,6 +258,9 @@ export interface UserSettings {
   weightReminderDayOfMonth?: number; // Day of month (1-31) for monthly
   // Navigation bar opacity
   fullOpacityNavbar?: boolean; // Navbar avec opacité complète (sans glassmorphism)
+  // Appearance theme preset and full custom palette
+  themePreset?: ThemePreset;
+  customThemeColors?: ThemeCustomColors;
   // Health Connect sync settings
   healthConnectSyncMode?: HealthConnectSyncMode; // 'manual' (default), 'notify', or 'auto'
   // Onboarding

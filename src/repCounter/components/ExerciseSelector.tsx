@@ -120,7 +120,7 @@ function ExerciseListItem({
                     <View style={s.exerciseRowRight}>
                         {selected ? (
                             <View style={[s.checkBadge, { backgroundColor: exercise.color }]}> 
-                                <Check size={12} color="#fff" strokeWidth={3} />
+                                <Check size={12} color={RC.white} strokeWidth={3} />
                             </View>
                         ) : (
                             <ChevronRight size={18} color={RC.textMuted} strokeWidth={2.3} />
@@ -159,8 +159,8 @@ function DetectionModeSelector({
 
     if (exercise.id === 'elliptical') {
         const options: { mode: DetectionMode; icon: React.ReactNode; label: string }[] = [
-            { mode: 'manual', icon: <Activity size={16} color={detectionMode === 'manual' ? '#fff' : RC.textMuted} />, label: t('repCounter.manual') },
-            { mode: 'camera', icon: <Camera size={16} color={detectionMode === 'camera' ? '#fff' : RC.textMuted} />, label: t('repCounter.auto') },
+            { mode: 'manual', icon: <Activity size={16} color={detectionMode === 'manual' ? RC.white : RC.textMuted} />, label: t('repCounter.manual') },
+            { mode: 'camera', icon: <Camera size={16} color={detectionMode === 'camera' ? RC.white : RC.textMuted} />, label: t('repCounter.auto') },
         ];
 
         return (
@@ -173,11 +173,11 @@ function DetectionModeSelector({
                             onPress={() => onDetectionModeChange(opt.mode)}
                             style={[
                                 s.modeBtn,
-                                detectionMode === opt.mode && { backgroundColor: exercise.color, borderColor: 'transparent' },
+                                detectionMode === opt.mode && { backgroundColor: exercise.color, borderColor: RC.transparent },
                             ]}
                         >
                             {opt.icon}
-                            <Text style={[s.modeBtnText, detectionMode === opt.mode && { color: '#fff' }]}>
+                            <Text style={[s.modeBtnText, detectionMode === opt.mode && { color: RC.white }]}>
                                 {opt.label}
                             </Text>
                         </TouchableOpacity>
@@ -193,11 +193,11 @@ function DetectionModeSelector({
     }
 
     const options: { mode: DetectionMode; icon: React.ReactNode; label: string }[] = [
-        { mode: 'sensor', icon: <Activity size={16} color={detectionMode === 'sensor' ? '#fff' : RC.textMuted} />, label: t('repCounter.sensor') },
+        { mode: 'sensor', icon: <Activity size={16} color={detectionMode === 'sensor' ? RC.white : RC.textMuted} />, label: t('repCounter.sensor') },
     ];
 
     if (exercise.supportsCameraMode) {
-        options.push({ mode: 'camera', icon: <Camera size={16} color={detectionMode === 'camera' ? '#fff' : RC.textMuted} />, label: t('repCounter.camera') });
+        options.push({ mode: 'camera', icon: <Camera size={16} color={detectionMode === 'camera' ? RC.white : RC.textMuted} />, label: t('repCounter.camera') });
     }
 
     return (
@@ -212,12 +212,12 @@ function DetectionModeSelector({
                             s.modeBtn,
                             detectionMode === opt.mode && {
                                 backgroundColor: opt.mode === 'camera' ? exercise.color : RC.cta1,
-                                borderColor: 'transparent',
+                                borderColor: RC.transparent,
                             },
                         ]}
                     >
                         {opt.icon}
-                        <Text style={[s.modeBtnText, detectionMode === opt.mode && { color: '#fff' }]}>
+                        <Text style={[s.modeBtnText, detectionMode === opt.mode && { color: RC.white }]}> 
                             {opt.label}
                         </Text>
                     </TouchableOpacity>
@@ -416,7 +416,7 @@ export function ExerciseSelector({
                             style={s.ctaGrad}
                         >
                             <Text style={s.ctaText}>{t('common.next')}</Text>
-                            <ChevronRight size={20} color="#fff" />
+                            <ChevronRight size={20} color={RC.white} />
                         </LinearGradient>
                     </TouchableOpacity>
                 </Animated.View>
@@ -626,7 +626,7 @@ const s = StyleSheet.create({
         width: 28,
         height: 28,
         borderRadius: RAD.sm,
-        backgroundColor: 'rgba(255,122,85,0.18)',
+        backgroundColor: RC.emberSoftStrong,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -638,14 +638,14 @@ const s = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: SP.sm,
         paddingHorizontal: SP.md,
-        backgroundColor: 'rgba(255,122,85,0.10)',
+        backgroundColor: RC.emberSoft,
         borderRadius: RAD.md,
         borderWidth: 1,
-        borderColor: 'rgba(255,122,85,0.24)',
+        borderColor: RC.emberSoftBorder,
     },
     fossBtnText: { fontSize: FONT.xs, fontWeight: W.semi, color: RC.emberMid },
 
     cta: { alignSelf: 'center', borderRadius: RAD.full, overflow: 'hidden' },
     ctaGrad: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 36, gap: 8 },
-    ctaText: { fontSize: FONT.lg, fontWeight: W.bold, color: '#fff' },
+    ctaText: { fontSize: FONT.lg, fontWeight: W.bold, color: RC.white },
 });

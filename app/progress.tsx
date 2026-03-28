@@ -34,44 +34,13 @@ import { generateTextAnalysis } from '../src/services/pollination/textAnalysis';
 import { isPollinationConnected } from '../src/services/pollination';
 import i18n from '../src/i18n';
 import type { MeasureEntry, HomeWorkoutEntry, RunEntry, Entry } from '../src/types';
+import { Colors, ScreenPalettes } from '../src/constants';
 
 const { width: SW } = Dimensions.get('window');
 const PAD = 18;
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-const C = {
-    bg:          '#070709',
-    surface:     '#0e0f14',
-    surfaceUp:   '#13151e',
-    surfaceHigh: '#1a1d28',
-    border:      'rgba(255,255,255,0.07)',
-    borderUp:    'rgba(255,255,255,0.12)',
-    text:        '#f0ece4',
-    textSub:     'rgba(240,236,228,0.55)',
-    textMuted:   'rgba(240,236,228,0.28)',
-    // Primary accent — warm coral-ember
-    ember:       '#ff5533',
-    emberMid:    '#ff7a55',
-    emberGlow:   'rgba(255,85,51,0.15)',
-    emberBorder: 'rgba(255,85,51,0.25)',
-    // Secondary
-    gold:        '#e8b84b',
-    goldSoft:    'rgba(232,184,75,0.10)',
-    goldBorder:  'rgba(232,184,75,0.22)',
-    amber:       '#f5a623',
-    // Reduced accent set (primary accent family)
-    blue:        '#ff7a55',
-    blueSoft:    'rgba(255,122,85,0.10)',
-    blueBorder:  'rgba(255,122,85,0.22)',
-    teal:        '#ff8c5a',
-    tealSoft:    'rgba(255,140,90,0.10)',
-    tealBorder:  'rgba(255,140,90,0.22)',
-    green:       '#34d370',
-    greenSoft:   'rgba(52,211,112,0.10)',
-    greenBorder: 'rgba(52,211,112,0.22)',
-    violet:      '#e8b84b',
-    error:       '#f87171',
-};
+const C = ScreenPalettes.warm;
 
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
@@ -147,7 +116,7 @@ function StreakCover({ current, best }: { current: number; best: number }) {
     return (
         <Animated.View entering={FadeInDown.delay(60).springify()} style={sc.outer}>
             <LinearGradient
-                colors={['#160c06', '#0c0a09', '#070709']}
+                colors={[Colors.warmDarkText, Colors.bgLayer, C.bg]}
                 style={sc.bg}
             >
                 {/* Grain texture overlay */}
@@ -161,11 +130,11 @@ function StreakCover({ current, best }: { current: number; best: number }) {
                                 <SvgLinearGradient id="arcFill" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <Stop offset="0%" stopColor={C.amber} />
                                     <Stop offset="60%" stopColor={C.ember} />
-                                    <Stop offset="100%" stopColor="#cc2200" />
+                                    <Stop offset="100%" stopColor={Colors.errorStrong} />
                                 </SvgLinearGradient>
                             </Defs>
                             {/* Track */}
-                            <Path d={trackPath} fill="rgba(255,255,255,0.05)" />
+                            <Path d={trackPath} fill={Colors.overlayWhite05} />
                             {/* Fill */}
                             {fillPath && <Path d={fillPath} fill="url(#arcFill)" />}
                         </Svg>
@@ -231,7 +200,7 @@ function StreakCover({ current, best }: { current: number; best: number }) {
 const sc = StyleSheet.create({
     outer: {
         borderRadius: R.xxxl, overflow: 'hidden', marginBottom: S.sm,
-        borderWidth: 1, borderColor: 'rgba(255,130,60,0.20)',
+        borderWidth: 1, borderColor: Colors.overlayCozyWarm40,
         shadowColor: C.ember, shadowOffset: { width: 0, height: 12 },
         shadowOpacity: 0.18, shadowRadius: 28, elevation: 10,
     },
@@ -239,7 +208,7 @@ const sc = StyleSheet.create({
     grain: {
         ...StyleSheet.absoluteFillObject,
         opacity: 0.04,
-        backgroundColor: '#fff',
+        backgroundColor: Colors.white,
     },
     content:    { flexDirection: 'row', alignItems: 'center', gap: S.lg },
     ringWrap:   { width: 160, height: 160, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
@@ -262,7 +231,7 @@ const sc = StyleSheet.create({
     },
     recordText: { fontSize: T.xs, fontWeight: W.bold, color: C.gold },
     pctWrap:    { gap: S.xs },
-    pctTrack:   { height: 2, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: R.full, overflow: 'hidden' },
+    pctTrack:   { height: 2, backgroundColor: Colors.overlayWhite08, borderRadius: R.full, overflow: 'hidden' },
     pctFill:    { height: '100%', borderRadius: R.full },
     pctLabel:   { fontSize: T.micro, color: C.textMuted, fontWeight: W.med },
 });
@@ -300,7 +269,7 @@ function StatsSection({ workouts, distance, duration, goal }: {
         <Animated.View entering={FadeInDown.delay(130).springify()} style={sts.row}>
             {/* Big card */}
             <View style={[sts.bigCard, { borderColor: big.border }]}>
-                <LinearGradient colors={[big.bg, 'transparent']} style={StyleSheet.absoluteFill} />
+                <LinearGradient colors={[big.bg, Colors.transparent]} style={StyleSheet.absoluteFill} />
                 <View style={[sts.bigIcon, { backgroundColor: big.bg }]}>{big.icon}</View>
                 <EyebrowLabel text={big.label} color={big.color} />
                 <Text style={[sts.bigVal, { color: big.color }]}>{big.val}</Text>
@@ -329,7 +298,7 @@ const sts = StyleSheet.create({
     bigCard: {
         flex: 1.15, backgroundColor: C.surface, borderRadius: R.xxxl,
         borderWidth: 1, padding: S.xl, gap: S.sm, overflow: 'hidden',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 6 },
+        shadowColor: Colors.black, shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.25, shadowRadius: 14, elevation: 6,
     },
     bigIcon:  { width: 34, height: 34, borderRadius: R.md, alignItems: 'center', justifyContent: 'center', marginBottom: S.xs },
@@ -340,7 +309,7 @@ const sts = StyleSheet.create({
         flex: 1, backgroundColor: C.surface, borderRadius: R.xl,
         borderWidth: 1, paddingHorizontal: S.md, paddingVertical: S.md,
         flexDirection: 'row', alignItems: 'center', gap: S.sm, overflow: 'hidden',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.18, shadowRadius: 6, elevation: 3,
     },
     smallIcon: { width: 28, height: 28, borderRadius: R.sm, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
@@ -438,7 +407,7 @@ const cal = StyleSheet.create({
         backgroundColor: C.surface, borderRadius: R.xxxl,
         borderWidth: 1, borderColor: C.border,
         padding: S.xl, marginBottom: S.sm,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+        shadowColor: Colors.black, shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2, shadowRadius: 12, elevation: 5,
     },
     header: {
@@ -522,15 +491,15 @@ function WorkoutBarChart({ data, maxValue }: { data: { label: string; value: num
                         <Stop offset="100%" stopColor={C.amber} stopOpacity="0.6" />
                     </SvgLinearGradient>
                     <SvgLinearGradient id="barInactive" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
-                        <Stop offset="100%" stopColor="rgba(255,255,255,0.03)" />
+                        <Stop offset="0%" stopColor={Colors.overlayWhite12} />
+                        <Stop offset="100%" stopColor={Colors.overlayWhite03} />
                     </SvgLinearGradient>
                 </Defs>
 
                 {/* Baseline */}
                 <Line
                     x1={0} y1={cH} x2={cW} y2={cH}
-                    stroke="rgba(255,255,255,0.06)" strokeWidth={1}
+                    stroke={Colors.overlayWhite06} strokeWidth={1}
                 />
 
                 {data.map((item, i) => {
@@ -688,7 +657,7 @@ function TopExCard({ name, count }: { name: string; count: number }) {
     return (
         <Animated.View entering={FadeInLeft.delay(360).springify()} style={txc.card}>
             <LinearGradient
-                colors={['rgba(232,184,75,0.09)', 'transparent']}
+                colors={[Colors.overlayGold10, Colors.transparent]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFill}
             />
@@ -742,7 +711,7 @@ function PersonalRecords({ records }: { records: { id: string; name: string; ico
                 {records.map((rec, i) => (
                     <Animated.View key={rec.id} entering={FadeInRight.delay(420 + i * 60).springify()}>
                         <LinearGradient
-                            colors={['rgba(232,184,75,0.10)', C.surface]}
+                            colors={[Colors.overlayGold10, C.surface]}
                             start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
                             style={prc.card}
                         >
@@ -789,7 +758,7 @@ function BadgeModal({ badge, onClose }: { badge: any | null; onClose: () => void
                 <Pressable style={bmo.sheet} onPress={e => e.stopPropagation()}>
                     <LinearGradient
                         colors={isUnlocked
-                            ? ['rgba(232,184,75,0.12)', C.surface, C.surface]
+                            ? [Colors.overlayGold12, C.surface, C.surface]
                             : [C.surface, C.surface]}
                         style={bmo.grad}
                     >
@@ -804,7 +773,7 @@ function BadgeModal({ badge, onClose }: { badge: any | null; onClose: () => void
                         {/* Status pill */}
                         <View style={[
                             bmo.statusPill,
-                            { backgroundColor: isUnlocked ? C.goldSoft : 'rgba(255,255,255,0.05)',
+                            { backgroundColor: isUnlocked ? C.goldSoft : Colors.overlayWhite05,
                               borderColor: isUnlocked ? C.goldBorder : C.border }
                         ]}>
                             {isUnlocked
@@ -857,20 +826,20 @@ function BadgeModal({ badge, onClose }: { badge: any | null; onClose: () => void
 
 const bmo = StyleSheet.create({
     backdrop: {
-        flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
+        flex: 1, backgroundColor: Colors.overlayBlack75,
         alignItems: 'center', justifyContent: 'center', padding: PAD,
     },
     sheet: {
         width: '100%', maxWidth: 340, borderRadius: R.xxxl,
         borderWidth: 1, borderColor: C.borderUp, overflow: 'hidden',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 20 },
+        shadowColor: Colors.black, shadowOffset: { width: 0, height: 20 },
         shadowOpacity: 0.5, shadowRadius: 40, elevation: 20,
     },
     grad: { padding: S.xxl, alignItems: 'center', gap: S.md },
     closeBtn: {
         alignSelf: 'flex-end',
         width: 30, height: 30, borderRadius: R.full,
-        backgroundColor: 'rgba(255,255,255,0.06)',
+        backgroundColor: Colors.overlayWhite06,
         alignItems: 'center', justifyContent: 'center',
         marginBottom: S.sm,
     },
@@ -951,7 +920,7 @@ function BadgesGrid({ badges, badgeProgress }: {
                                     onPress={() => setSelectedBadge(badge)}
                                 >
                                     <LinearGradient
-                                        colors={['rgba(232,184,75,0.13)', C.surface]}
+                                        colors={[Colors.overlayGold14, C.surface]}
                                         style={bdg.tile}
                                     >
                                         <Text style={bdg.tileEmoji}>{badge.emoji || '🏅'}</Text>
@@ -1035,7 +1004,7 @@ const bdg = StyleSheet.create({
         minWidth: 80,
     },
     pctTrack: {
-        width: 60, height: 2, backgroundColor: 'rgba(255,255,255,0.08)',
+        width: 60, height: 2, backgroundColor: Colors.overlayWhite08,
         borderRadius: R.full, overflow: 'hidden',
     },
     pctFill: { height: '100%', borderRadius: R.full },
@@ -1067,7 +1036,7 @@ const bdg = StyleSheet.create({
     lockedLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: S.md },
     lockIcon: {
         width: 26, height: 26, borderRadius: R.sm,
-        backgroundColor: 'rgba(255,255,255,0.04)',
+        backgroundColor: Colors.overlay,
         borderWidth: 1, borderColor: C.border,
         alignItems: 'center', justifyContent: 'center',
     },
@@ -1075,7 +1044,7 @@ const bdg = StyleSheet.create({
     lockedName:     { fontSize: T.sm, fontWeight: W.bold, color: C.textSub },
     lockedProgress: { fontSize: T.micro, color: C.textMuted, fontWeight: W.med },
     lockedBar: {
-        width: 52, height: 3, backgroundColor: 'rgba(255,255,255,0.06)',
+        width: 52, height: 3, backgroundColor: Colors.overlayWhite06,
         borderRadius: R.full, overflow: 'hidden',
     },
     lockedBarFill: {
@@ -1291,7 +1260,7 @@ const crd = StyleSheet.create({
         backgroundColor: C.surface, borderRadius: R.xxxl,
         borderWidth: 1, borderColor: C.border,
         padding: S.xl, marginBottom: S.sm, overflow: 'hidden',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+        shadowColor: Colors.black, shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.22, shadowRadius: 12, elevation: 6,
     },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, marginBottom: S.lg },

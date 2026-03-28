@@ -69,7 +69,7 @@ const AVAILABLE_ICONS = [
 
 // Available colors for custom sports
 const AVAILABLE_COLORS = [
-    '#8B5CF6', // Purple
+    Colors.violetStrong, // Purple
     '#22C55E', // Green
     '#EF4444', // Red
     '#3B82F6', // Blue
@@ -192,7 +192,7 @@ const AddSportSheet = React.forwardRef<AddSportSheetRef, { onSave: (sport: Omit<
         const [name, setName] = useState('');
         const [emoji, setEmoji] = useState('💪');
         const [icon, setIcon] = useState('Dumbbell');
-        const [color, setColor] = useState('#8B5CF6');
+        const [color, setColor] = useState<string>(Colors.violetStrong);
         const [trackingFields, setTrackingFields] = useState<SportTrackingField[]>(['duration']);
         
         React.useImperativeHandle(ref, () => ({
@@ -231,7 +231,7 @@ const AddSportSheet = React.forwardRef<AddSportSheetRef, { onSave: (sport: Omit<
             setName('');
             setEmoji('💪');
             setIcon('Dumbbell');
-            setColor('#8B5CF6');
+            setColor(Colors.violetStrong);
             setTrackingFields(['duration']);
             sheetRef.current?.dismiss();
         };
@@ -341,7 +341,7 @@ const AddSportSheet = React.forwardRef<AddSportSheetRef, { onSave: (sport: Omit<
                                     ]}
                                     onPress={() => setColor(c)}
                                 >
-                                    {color === c && <Check size={16} color="#fff" />}
+                                    {color === c && <Check size={16} color={Colors.white} />}
                                 </TouchableOpacity>
                             ))}
                         </View>
@@ -464,7 +464,7 @@ export default function SportsManagementScreen() {
                         colors={['rgba(139, 92, 246, 0.2)', 'rgba(139, 92, 246, 0.05)']}
                         style={styles.infoCard}
                     >
-                        <Dumbbell size={20} color="#8B5CF6" />
+                        <Dumbbell size={20} color={Colors.violetStrong} />
                         <Text style={styles.infoText}>
                             {t('settings.sports.infoText')}
                         </Text>
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
         fontSize: FontSize.md,
         color: Colors.text,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: Colors.overlayWhite10,
     },
     emojiRow: {
         flexDirection: 'row',
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: 'transparent',
+        borderColor: Colors.transparent,
     },
     emojiText: {
         fontSize: 24,
@@ -798,7 +798,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: 'transparent',
+        borderColor: Colors.transparent,
     },
     colorRow: {
         flexDirection: 'row',
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
     },
     colorButtonSelected: {
         borderWidth: 3,
-        borderColor: '#fff',
+        borderColor: Colors.white,
     },
     fieldsGrid: {
         gap: Spacing.xs,
@@ -827,7 +827,7 @@ const styles = StyleSheet.create({
         padding: Spacing.md,
         gap: Spacing.sm,
         borderWidth: 1,
-        borderColor: 'transparent',
+        borderColor: Colors.transparent,
     },
     fieldLabel: {
         flex: 1,

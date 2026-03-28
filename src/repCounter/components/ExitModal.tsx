@@ -38,7 +38,7 @@ export function ExitModal({ visible, onCancel, onConfirm }: ExitModalProps) {
 
 const s = StyleSheet.create({
     overlay: {
-        flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
+        flex: 1, backgroundColor: RC.blackOverlay75,
         justifyContent: 'center', alignItems: 'center', padding: SP.xl,
     },
     sheet: {
@@ -68,8 +68,8 @@ const s = StyleSheet.create({
     cancelText: { fontSize: FONT.md, fontWeight: W.semi, color: RC.text },
     confirmBtn: {
         flex: 1, paddingVertical: SP.lg, borderRadius: RAD.lg,
-        backgroundColor: 'rgba(239,68,68,0.15)', alignItems: 'center',
-        borderWidth: 1, borderColor: 'rgba(239,68,68,0.35)',
+        backgroundColor: RC.errorSoft, alignItems: 'center',
+        borderWidth: 1, borderColor: RC.errorBorder,
     },
     confirmText: { fontSize: FONT.md, fontWeight: W.bold, color: RC.error },
 });

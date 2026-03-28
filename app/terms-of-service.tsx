@@ -65,8 +65,8 @@ function TermsSection({
 function BulletPoint({ children, type = 'default' }: { children: React.ReactNode; type?: 'default' | 'allowed' | 'forbidden' }) {
     const colors = {
         default: Colors.cta,
-        allowed: '#4ade80',
-        forbidden: '#f87171',
+        allowed: Colors.success,
+        forbidden: Colors.error,
     };
     const icons = {
         default: '•',
@@ -124,8 +124,8 @@ export default function TermsOfServiceScreen() {
                 {/* License & Open Source */}
                 <TermsSection 
                     title={t('termsOfService.license.title')} 
-                    icon={<Code size={20} color="#a78bfa" />}
-                    iconColor="#a78bfa"
+                    icon={<Code size={20} color={Colors.violet} />}
+                    iconColor={Colors.violet}
                     delay={150}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.license.description')}</Text>
@@ -156,8 +156,8 @@ export default function TermsOfServiceScreen() {
                 {/* Nature of the App */}
                 <TermsSection 
                     title={t('termsOfService.appNature.title')} 
-                    icon={<Smartphone size={20} color="#4ade80" />}
-                    iconColor="#4ade80"
+                    icon={<Smartphone size={20} color={Colors.success} />}
+                    iconColor={Colors.success}
                     delay={200}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.appNature.description')}</Text>
@@ -175,8 +175,8 @@ export default function TermsOfServiceScreen() {
                 {/* App Versions */}
                 <TermsSection 
                     title={t('termsOfService.versions.title')} 
-                    icon={<Smartphone size={20} color="#22d3ee" />}
-                    iconColor="#22d3ee"
+                    icon={<Smartphone size={20} color={Colors.info} />}
+                    iconColor={Colors.info}
                     delay={250}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.versions.description')}</Text>
@@ -201,8 +201,8 @@ export default function TermsOfServiceScreen() {
                 {/* Optional Services */}
                 <TermsSection 
                     title={t('termsOfService.optionalServices.title')} 
-                    icon={<Sparkles size={20} color="#fbbf24" />}
-                    iconColor="#fbbf24"
+                    icon={<Sparkles size={20} color={Colors.warning} />}
+                    iconColor={Colors.warning}
                     delay={300}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.optionalServices.description')}</Text>
@@ -227,8 +227,8 @@ export default function TermsOfServiceScreen() {
                 {/* Social Features */}
                 <TermsSection 
                     title={t('termsOfService.socialRules.title')} 
-                    icon={<Users size={20} color="#22d3ee" />}
-                    iconColor="#22d3ee"
+                    icon={<Users size={20} color={Colors.info} />}
+                    iconColor={Colors.info}
                     delay={350}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.socialRules.description')}</Text>
@@ -250,8 +250,8 @@ export default function TermsOfServiceScreen() {
                 {/* Liability */}
                 <TermsSection 
                     title={t('termsOfService.liability.title')} 
-                    icon={<AlertTriangle size={20} color="#f87171" />}
-                    iconColor="#f87171"
+                    icon={<AlertTriangle size={20} color={Colors.error} />}
+                    iconColor={Colors.error}
                     delay={400}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.liability.description')}</Text>
@@ -265,8 +265,8 @@ export default function TermsOfServiceScreen() {
                 {/* Jurisdiction */}
                 <TermsSection 
                     title={t('termsOfService.jurisdiction.title')} 
-                    icon={<Scale size={20} color="#a78bfa" />}
-                    iconColor="#a78bfa"
+                    icon={<Scale size={20} color={Colors.violet} />}
+                    iconColor={Colors.violet}
                     delay={450}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.jurisdiction.description')}</Text>
@@ -278,8 +278,8 @@ export default function TermsOfServiceScreen() {
                 {/* Modifications */}
                 <TermsSection 
                     title={t('termsOfService.modifications.title')} 
-                    icon={<FileText size={20} color="#fbbf24" />}
-                    iconColor="#fbbf24"
+                    icon={<FileText size={20} color={Colors.warning} />}
+                    iconColor={Colors.warning}
                     delay={500}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.modifications.description')}</Text>
@@ -289,8 +289,8 @@ export default function TermsOfServiceScreen() {
                 {/* Termination */}
                 <TermsSection 
                     title={t('termsOfService.termination.title')} 
-                    icon={<AlertTriangle size={20} color="#f87171" />}
-                    iconColor="#f87171"
+                    icon={<AlertTriangle size={20} color={Colors.error} />}
+                    iconColor={Colors.error}
                     delay={550}
                 >
                     <Text style={styles.paragraph}>{t('termsOfService.termination.description')}</Text>
@@ -302,7 +302,7 @@ export default function TermsOfServiceScreen() {
                 {/* Acceptance */}
                 <Animated.View entering={FadeInDown.delay(600).springify()}>
                     <GlassCard style={styles.acceptCard}>
-                        <CheckCircle size={32} color="#4ade80" />
+                        <CheckCircle size={32} color={Colors.success} />
                         <Text style={styles.acceptTitle}>{t('termsOfService.acceptance.title')}</Text>
                         <Text style={styles.acceptText}>{t('termsOfService.acceptance.text')}</Text>
                     </GlassCard>
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 14,
-        backgroundColor: 'rgba(215, 150, 134, 0.15)',
+        backgroundColor: Colors.overlayCozyWarm15,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -422,13 +422,13 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
     warning: {
-        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+        backgroundColor: Colors.overlayWarning10,
         padding: Spacing.sm,
         borderRadius: BorderRadius.md,
         marginTop: Spacing.sm,
     },
     highlight: {
-        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+        backgroundColor: Colors.overlaySuccess10,
         padding: Spacing.sm,
         borderRadius: BorderRadius.md,
         marginTop: Spacing.sm,
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: Spacing.xs,
-        backgroundColor: 'rgba(215, 150, 134, 0.1)',
+        backgroundColor: Colors.overlayWarm10,
         paddingHorizontal: Spacing.md,
         paddingVertical: Spacing.sm,
         borderRadius: BorderRadius.md,

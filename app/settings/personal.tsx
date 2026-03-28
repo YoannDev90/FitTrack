@@ -97,8 +97,8 @@ export default function PersonalInfoScreen() {
         <Animated.View entering={FadeInDown.delay(80).springify()}>
           <GlassCard style={styles.card}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(34, 211, 238, 0.15)' }]}>
-                <User size={20} color="#22d3ee" />
+              <View style={[styles.iconCircle, { backgroundColor: Colors.overlayInfo15 }]}> 
+                <User size={20} color={Colors.info} />
               </View>
               <Text style={styles.sectionLabel}>{t('settings.personalInfo')}</Text>
             </View>
@@ -134,7 +134,7 @@ export default function PersonalInfoScreen() {
             {/* Max HR computed */}
             {computedMaxHR && (
               <View style={styles.hrRow}>
-                <Heart size={14} color="#f43f5e" />
+                <Heart size={14} color={Colors.rose} />
                 <Text style={styles.hrText}>
                   {t('settings.maxHRCalc')}: {computedMaxHR} bpm
                 </Text>
@@ -147,8 +147,8 @@ export default function PersonalInfoScreen() {
         <Animated.View entering={FadeInDown.delay(120).springify()}>
           <GlassCard style={styles.card}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(74, 222, 128, 0.15)' }]}>
-                <Ruler size={20} color="#4ade80" />
+              <View style={[styles.iconCircle, { backgroundColor: Colors.overlaySuccess15 }]}>
+                <Ruler size={20} color={Colors.success} />
               </View>
               <Text style={styles.sectionLabel}>{t('settings.measurements')}</Text>
             </View>
@@ -180,8 +180,8 @@ export default function PersonalInfoScreen() {
         <Animated.View entering={FadeInDown.delay(160).springify()}>
           <GlassCard style={styles.card}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}>
-                <Activity size={20} color="#a78bfa" />
+              <View style={[styles.iconCircle, { backgroundColor: Colors.overlayViolet15 }]}>
+                <Activity size={20} color={Colors.violet} />
               </View>
               <Text style={styles.sectionLabel}>{t('settings.sportProfile')}</Text>
             </View>
@@ -207,8 +207,8 @@ export default function PersonalInfoScreen() {
         <Animated.View entering={FadeInDown.delay(200).springify()}>
           <GlassCard style={styles.card}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(74, 222, 128, 0.15)' }]}>
-                <Shield size={20} color="#4ade80" />
+              <View style={[styles.iconCircle, { backgroundColor: Colors.overlaySuccess15 }]}>
+                <Shield size={20} color={Colors.success} />
               </View>
               <Text style={styles.sectionLabel}>{t('settings.ai.privacyTitle')}</Text>
             </View>
@@ -225,8 +225,8 @@ export default function PersonalInfoScreen() {
               <Switch
                 value={shareWithAI}
                 onValueChange={setShareWithAI}
-                trackColor={{ false: Colors.card, true: '#4ade80' }}
-                thumbColor="#fff"
+                trackColor={{ false: Colors.card, true: Colors.success }}
+                thumbColor={Colors.white}
               />
             </View>
 
@@ -296,41 +296,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.lg,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: Colors.overlayWhite05,
+    borderWidth: 1, borderColor: Colors.overlayWhite08,
   },
   genderChipActive: {
-    backgroundColor: 'rgba(34, 211, 238, 0.12)',
-    borderColor: 'rgba(34, 211, 238, 0.35)',
+    backgroundColor: Colors.overlayInfo12,
+    borderColor: Colors.overlayInfo35,
   },
   genderEmoji: { fontSize: 16 },
   genderText: { fontSize: FontSize.sm, color: Colors.muted },
-  genderTextActive: { color: '#22d3ee', fontWeight: FontWeight.semibold },
+  genderTextActive: { color: Colors.info, fontWeight: FontWeight.semibold },
 
   // HR
   hrRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     marginTop: Spacing.sm,
     paddingVertical: Spacing.xs, paddingHorizontal: Spacing.sm,
-    backgroundColor: 'rgba(244, 63, 94, 0.08)',
+    backgroundColor: Colors.overlayRose08,
     borderRadius: BorderRadius.md,
   },
-  hrText: { fontSize: FontSize.xs, color: '#f43f5e' },
+  hrText: { fontSize: FontSize.xs, color: Colors.rose },
 
   // Level chips
   levelRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
   levelChip: {
     paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.lg,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: Colors.overlayWhite05,
+    borderWidth: 1, borderColor: Colors.overlayWhite08,
   },
   levelChipActive: {
-    backgroundColor: 'rgba(167, 139, 250, 0.12)',
-    borderColor: 'rgba(167, 139, 250, 0.35)',
+    backgroundColor: Colors.overlayViolet12,
+    borderColor: Colors.overlayViolet35,
   },
   levelText: { fontSize: FontSize.sm, color: Colors.muted },
-  levelTextActive: { color: '#a78bfa', fontWeight: FontWeight.semibold },
+  levelTextActive: { color: Colors.violet, fontWeight: FontWeight.semibold },
 
   // Toggle row
   toggleRow: {

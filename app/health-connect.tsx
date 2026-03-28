@@ -81,7 +81,7 @@ function getLucideIcon(iconName: string): React.ComponentType<{ size: number; co
 // ============================================================================
 
 // Static skip option
-const SKIP_OPTION = { type: 'skip' as const, label: 'common.skip', icon: Trash2, color: '#9CA3AF' };
+const SKIP_OPTION = { type: 'skip' as const, label: 'common.skip', icon: Trash2, color: Colors.gray400 };
 
 function WorkoutTypePill({
     sportConfig,
@@ -102,14 +102,14 @@ function WorkoutTypePill({
             <TouchableOpacity
                 style={[
                     styles.typePill,
-                    selected && { backgroundColor: '#374151', borderColor: '#9CA3AF' },
+                    selected && { backgroundColor: Colors.gray700, borderColor: Colors.gray400 },
                     !selected && styles.typePillInactive,
                 ]}
                 onPress={onPress}
                 activeOpacity={0.7}
             >
-                <Trash2 size={14} color={selected ? '#9CA3AF' : Colors.muted} strokeWidth={2.5} />
-                <Text style={[styles.typePillLabel, selected ? { color: '#9CA3AF', fontWeight: '700' } : { color: Colors.muted }]}>
+                <Trash2 size={14} color={selected ? Colors.gray400 : Colors.muted} strokeWidth={2.5} />
+                <Text style={[styles.typePillLabel, selected ? { color: Colors.gray400, fontWeight: '700' } : { color: Colors.muted }]}> 
                     {t('common.skip')}
                 </Text>
             </TouchableOpacity>
@@ -167,7 +167,7 @@ function WorkoutImportCard({
     
     // Get active sport config for color
     const getActiveColor = (): string => {
-        if (isSkipped) return '#374151';
+        if (isSkipped) return Colors.gray700;
         if (workout.spixType === 'custom' && workout.customSportId) {
             const customSport = sportsConfig.find(s => s.id === workout.customSportId);
             return customSport?.color || Colors.cta;
@@ -229,11 +229,11 @@ function WorkoutImportCard({
                         </View>
                         
                         {/* Duration Badge */}
-                        <View style={[styles.durationBadge, isSkipped && { backgroundColor: '#374151' }]}>
-                            <Text style={[styles.durationText, isSkipped && { color: '#9CA3AF' }]}>
+                        <View style={[styles.durationBadge, isSkipped && { backgroundColor: Colors.gray700 }]}> 
+                            <Text style={[styles.durationText, isSkipped && { color: Colors.gray400 }]}> 
                                 {workout.durationMinutes}
                             </Text>
-                            <Text style={[styles.minText, isSkipped && { color: '#6B7280' }]}>
+                            <Text style={[styles.minText, isSkipped && { color: Colors.gray500 }]}> 
                                 {t('common.minShort')}
                             </Text>
                         </View>
@@ -334,14 +334,14 @@ function WeightImportCard({
                 {/* Left Accent Bar */}
                 <View style={[
                     styles.accentBar, 
-                    { backgroundColor: weight.selected ? '#10B981' : '#374151' }
+                    { backgroundColor: weight.selected ? Colors.emerald : Colors.gray700 }
                 ]} />
 
                 <View style={styles.cardContent}>
                     <View style={styles.cardHeader}>
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
-                            <View style={[styles.weightIconCircle, !weight.selected && { backgroundColor: '#374151' }]}>
-                                <Scale size={18} color={weight.selected ? '#10B981' : '#9CA3AF'} />
+                            <View style={[styles.weightIconCircle, !weight.selected && { backgroundColor: Colors.gray700 }]}> 
+                                <Scale size={18} color={weight.selected ? Colors.emerald : Colors.gray400} />
                             </View>
                             <View>
                                 <Text style={[styles.cardTitle, !weight.selected && styles.textSkipped]}>
@@ -369,7 +369,7 @@ function WeightImportCard({
                             styles.selectionIndicator, 
                             weight.selected && styles.selectionIndicatorActive
                         ]}>
-                            {weight.selected && <Check size={14} color="#fff" strokeWidth={3} />}
+                            {weight.selected && <Check size={14} color={Colors.white} strokeWidth={3} />}
                         </View>
                     </View>
                 </View>
@@ -672,7 +672,7 @@ export default function HealthConnectScreen() {
     const Header = () => (
         <View style={styles.headerContainer}>
             <LinearGradient
-                colors={[Colors.overlay, 'transparent']}
+                colors={[Colors.overlay, Colors.transparent]}
                 style={styles.headerGradient}
             />
             <View style={styles.headerContent}>
@@ -717,7 +717,7 @@ export default function HealthConnectScreen() {
             return (
                 <View style={styles.centerContainer}>
                     <View style={styles.iconCircle}>
-                        <AlertCircle size={40} color="#EF4444" />
+                        <AlertCircle size={40} color={Colors.errorStrong} />
                     </View>
                     <Text style={styles.errorTitle}>{t('healthConnect.unavailableTitle')}</Text>
                     <Text style={styles.errorText}>
@@ -767,7 +767,7 @@ export default function HealthConnectScreen() {
                     {(workouts.length > 0 || weights.length > 0) && (
                         <Animated.View entering={FadeInDown.delay(100)}>
                             <LinearGradient
-                                colors={[Colors.cta + '20', 'transparent']}
+                                colors={[Colors.cta + '20', Colors.transparent]}
                                 style={styles.summaryCard}
                             >
                                 <Zap size={20} color={Colors.cta} fill={Colors.cta} />
@@ -979,7 +979,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#fee2e2', // red-100
+        backgroundColor: Colors.red100,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: Spacing.lg,
@@ -1024,8 +1024,8 @@ const styles = StyleSheet.create({
         borderColor: Colors.stroke,
     },
     cardSkipped: {
-        backgroundColor: '#1F2937', // Darker gray
-        borderColor: '#374151',
+        backgroundColor: Colors.gray800,
+        borderColor: Colors.gray700,
         opacity: 0.8,
     },
     accentBar: {
@@ -1113,7 +1113,7 @@ const styles = StyleSheet.create({
         borderColor: Colors.stroke,
     },
     typePillInactive: {
-        backgroundColor: 'transparent',
+        backgroundColor: Colors.transparent,
         borderColor: Colors.stroke,
     },
     typePillLabel: {
@@ -1150,7 +1150,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderRadius: BorderRadius.xl,
-        backgroundColor: 'rgba(20,20,30,0.95)',
+        backgroundColor: Colors.overlayModal95,
         borderWidth: 1,
         borderColor: Colors.stroke,
     },
@@ -1181,7 +1181,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#10B981' + '20',
+        backgroundColor: `${Colors.emerald}20`,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1195,8 +1195,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     selectionIndicatorActive: {
-        backgroundColor: '#10B981',
-        borderColor: '#10B981',
+        backgroundColor: Colors.emerald,
+        borderColor: Colors.emerald,
     },
     
     // Sport Picker Sheet

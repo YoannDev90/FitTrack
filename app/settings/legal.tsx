@@ -61,7 +61,7 @@ export default function LegalScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={['rgba(74,222,128,0.15)', 'transparent']}
+        colors={[Colors.overlaySuccess15, Colors.transparent]}
         start={{ x: 0.15, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={styles.topGlow}
@@ -85,15 +85,15 @@ export default function LegalScreen() {
             <Text style={styles.screenTitle}>{t('settings.legal')}</Text>
           </View>
           <View style={styles.headerIconWrap}>
-            <Shield size={18} color="#4ade80" />
+            <Shield size={18} color={Colors.success} />
           </View>
         </Animated.View>
 
         {/* Legal Options */}
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Shield size={20} color="#4ade80" />}
-            iconColor="#4ade80"
+            icon={<Shield size={20} color={Colors.success} />}
+            iconColor={Colors.success}
             title={t('settings.privacyPolicy')}
             subtitle={t('settings.privacyPolicyDesc')}
             onPress={() => router.push('/privacy-policy')}
@@ -101,8 +101,8 @@ export default function LegalScreen() {
           />
           <View style={styles.divider} />
           <SettingItem
-            icon={<FileText size={20} color="#60a5fa" />}
-            iconColor="#60a5fa"
+            icon={<FileText size={20} color={Colors.blue} />}
+            iconColor={Colors.blue}
             title={t('settings.termsOfService')}
             subtitle={t('settings.termsOfServiceDesc')}
             onPress={() => router.push('/terms-of-service')}
@@ -170,9 +170,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: 'rgba(74,222,128,0.12)',
+    backgroundColor: Colors.overlaySuccess12,
     borderWidth: 1,
-    borderColor: 'rgba(74,222,128,0.24)',
+    borderColor: Colors.overlaySuccess24,
     justifyContent: 'center',
     alignItems: 'center',
   },

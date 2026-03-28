@@ -457,8 +457,8 @@ export default function DataScreen() {
         <SectionTitle title={t('settings.backup')} delay={80} />
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Save size={20} color="#22d3ee" />}
-            iconColor="#22d3ee"
+            icon={<Save size={20} color={Colors.info} />}
+            iconColor={Colors.info}
             title={t('settings.backup')}
             subtitle={t('settings.backupDesc')}
             onPress={handleFullBackup}
@@ -466,8 +466,8 @@ export default function DataScreen() {
           />
           <View style={styles.divider} />
           <SettingItem
-            icon={<Upload size={20} color="#fbbf24" />}
-            iconColor="#fbbf24"
+            icon={<Upload size={20} color={Colors.warning} />}
+            iconColor={Colors.warning}
             title={t('settings.restore')}
             subtitle={t('settings.restoreDesc')}
             onPress={handleRestore}
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   dangerCard: {
-    borderColor: 'rgba(248, 113, 113, 0.3)',
+    borderColor: Colors.overlayErrorSoft30,
   },
 
   // Setting Item

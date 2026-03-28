@@ -93,8 +93,8 @@ export default function PrivacyPolicyScreen() {
                 {/* Mode Local */}
                 <PolicySection 
                     title={t('privacyPolicy.localMode.title')} 
-                    icon={<Lock size={20} color="#4ade80" />}
-                    iconColor="#4ade80"
+                    icon={<Lock size={20} color={Colors.success} />}
+                    iconColor={Colors.success}
                     delay={200}
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.localMode.description')}</Text>
@@ -115,8 +115,8 @@ export default function PrivacyPolicyScreen() {
                 {BuildConfig.isFoss && (
                     <PolicySection 
                         title={t('privacyPolicy.foss.title')} 
-                        icon={<Leaf size={20} color="#4ade80" />}
-                        iconColor="#4ade80"
+                        icon={<Leaf size={20} color={Colors.success} />}
+                        iconColor={Colors.success}
                         delay={250}
                     >
                         <Text style={styles.paragraph}>{t('privacyPolicy.foss.description')}</Text>
@@ -145,8 +145,8 @@ export default function PrivacyPolicyScreen() {
                 {/* Mode Social */}
                 <PolicySection 
                     title={t('privacyPolicy.social.title')} 
-                    icon={<Server size={20} color="#22d3ee" />}
-                    iconColor="#22d3ee"
+                    icon={<Server size={20} color={Colors.info} />}
+                    iconColor={Colors.info}
                     delay={300}
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.social.description')}</Text>
@@ -169,8 +169,8 @@ export default function PrivacyPolicyScreen() {
                 {/* Notifications */}
                 <PolicySection 
                     title={t('privacyPolicy.notifications.title')} 
-                    icon={<Bell size={20} color="#fbbf24" />}
-                    iconColor="#fbbf24"
+                    icon={<Bell size={20} color={Colors.warning} />}
+                    iconColor={Colors.warning}
                     delay={400}
                 >
                     {BuildConfig.isFoss ? (
@@ -208,8 +208,8 @@ export default function PrivacyPolicyScreen() {
                 {/* Health Connect */}
                 <PolicySection 
                     title={t('privacyPolicy.healthConnect.title')} 
-                    icon={<Heart size={20} color="#f43f5e" />}
-                    iconColor="#f43f5e"
+                    icon={<Heart size={20} color={Colors.rose} />}
+                    iconColor={Colors.rose}
                     delay={450}
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.healthConnect.description')}</Text>
@@ -238,8 +238,8 @@ export default function PrivacyPolicyScreen() {
                 {/* Tes droits RGPD */}
                 <PolicySection 
                     title={t('privacyPolicy.rights.title')} 
-                    icon={<Trash2 size={20} color="#f87171" />}
-                    iconColor="#f87171"
+                    icon={<Trash2 size={20} color={Colors.error} />}
+                    iconColor={Colors.error}
                     delay={550}
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.rights.description')}</Text>
@@ -257,8 +257,8 @@ export default function PrivacyPolicyScreen() {
                 {/* Pollination AI Section */}
                 <PolicySection 
                     title={t('privacyPolicy.pollination.title')} 
-                    icon={<Sparkles size={20} color="#8B5CF6" />}
-                    iconColor="#8B5CF6"
+                    icon={<Sparkles size={20} color={Colors.violetStrong} />}
+                    iconColor={Colors.violetStrong}
                     delay={600}
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.pollination.description')}</Text>
@@ -278,8 +278,8 @@ export default function PrivacyPolicyScreen() {
                 {/* AI Run Coaching Section */}
                 <PolicySection 
                     title={t('privacyPolicy.aiCoaching.title')} 
-                    icon={<Sparkles size={20} color="#34d370" />}
-                    iconColor="#34d370"
+                    icon={<Sparkles size={20} color={Colors.sportGreen} />}
+                    iconColor={Colors.sportGreen}
                     delay={650}
                 >
                     <Text style={styles.paragraph}>{t('privacyPolicy.aiCoaching.description')}</Text>
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 14,
-        backgroundColor: 'rgba(215, 150, 134, 0.15)',
+        backgroundColor: Colors.overlayCozyWarm15,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -418,13 +418,13 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
     highlight: {
-        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+        backgroundColor: Colors.overlaySuccess10,
         padding: Spacing.sm,
         borderRadius: BorderRadius.md,
         marginTop: Spacing.sm,
     },
     warning: {
-        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+        backgroundColor: Colors.overlayWarning10,
         padding: Spacing.sm,
         borderRadius: BorderRadius.md,
         marginTop: Spacing.sm,

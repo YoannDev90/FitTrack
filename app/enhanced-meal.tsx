@@ -67,42 +67,14 @@ import { uploadImageToTmpFiles } from '../src/services/imageUpload';
 import { formatDisplayDate } from '../src/utils/date';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
+import {
+    Colors,
+    EnhancedMealPalette as PREMIUM,
+    getEnhancedMealScoreColor as getScoreColor,
+    getEnhancedMealScoreGradient as getScoreGradient,
+} from '../src/constants';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-// Premium Design Colors
-const PREMIUM = {
-    black: '#000000',
-    white: '#FFFFFF',
-    offWhite: '#F8F8F8',
-    gray100: '#E5E5E5',
-    gray200: '#CCCCCC',
-    gray400: '#888888',
-    gray600: '#555555',
-    gray800: '#222222',
-    gray900: '#111111',
-    accent: '#CEFF00', // Vert acide pour accents
-    teal: '#2DD4BF',
-    purple: '#A78BFA',
-};
-
-// Score color based on value
-const getScoreColor = (score: number): string => {
-    if (score >= 85) return '#22c55e';
-    if (score >= 70) return '#84cc16';
-    if (score >= 50) return '#eab308';
-    if (score >= 30) return '#f97316';
-    return '#ef4444';
-};
-
-// Score gradient based on value
-const getScoreGradient = (score: number): [string, string] => {
-    if (score >= 85) return ['#22c55e', '#16a34a'];
-    if (score >= 70) return ['#84cc16', '#65a30d'];
-    if (score >= 50) return ['#eab308', '#ca8a04'];
-    if (score >= 30) return ['#f97316', '#ea580c'];
-    return ['#ef4444', '#dc2626'];
-};
 
 // Score label key based on value
 const getScoreLabelKey = (score: number): string => {
@@ -616,7 +588,7 @@ export default function EnhancedMealScreen() {
                                         resizeMode="cover"
                                     />
                                     <LinearGradient
-                                        colors={['transparent', 'rgba(0,0,0,0.8)']}
+                                        colors={[Colors.transparent, Colors.overlayBlack80]}
                                         style={styles.imageOverlay}
                                     />
                                     <TouchableOpacity 
@@ -768,7 +740,7 @@ export default function EnhancedMealScreen() {
                                 <View style={styles.scoreCardInner}>
                                     <View style={styles.scoreHeader}>
                                         <View style={styles.scoreTitleRow}>
-                                            <Star size={18} color="#fbbf24" fill="#fbbf24" />
+                                            <Star size={18} color={Colors.warning} fill={Colors.warning} />
                                             <Text style={styles.scoreTitle}>{analysis.title}</Text>
                                         </View>
                                         <View style={[
@@ -808,7 +780,7 @@ export default function EnhancedMealScreen() {
                                 >
                                     <View style={styles.suggestionsHeader}>
                                         <View style={styles.suggestionsIconWrap}>
-                                            <Lightbulb size={16} color="#fbbf24" />
+                                            <Lightbulb size={16} color={Colors.warning} />
                                         </View>
                                         <Text style={styles.suggestionsTitle}>
                                             {t('enhancedMeal.suggestions')}
@@ -1099,7 +1071,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: Colors.overlayBlack70,
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 12,
@@ -1237,7 +1209,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.1)',
+        backgroundColor: Colors.overlayBlack10,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1254,7 +1226,7 @@ const styles = StyleSheet.create({
     },
     analyzeButtonSubtext: {
         fontSize: 12,
-        color: 'rgba(0,0,0,0.6)',
+        color: Colors.overlayBlack60,
         marginTop: 1,
     },
     betaRow: {
@@ -1357,7 +1329,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 10,
-        backgroundColor: 'rgba(251, 191, 36, 0.15)',
+        backgroundColor: Colors.overlayWarning15,
         justifyContent: 'center',
         alignItems: 'center',
     },

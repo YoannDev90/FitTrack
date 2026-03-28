@@ -45,34 +45,14 @@ import { generateTextAnalysis } from '../../../src/services/pollination/textAnal
 import { isPollinationConnected } from '../../../src/services/pollination';
 import { RunTracker } from '../../../src/components/run/RunTracker';
 import { RunSummary } from '../../../src/components/run/RunSummary';
+import { Colors, ScreenPalettes } from '../../../src/constants';
 import type { RunEntry } from '../../../src/types';
 import i18n from '../../../src/i18n';
 
 const { width: SW } = Dimensions.get('window');
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-const C = {
-  bg:          '#070709',
-  surface:     '#0e0f14',
-  surfaceUp:   '#13151e',
-  surfaceHigh: '#1a1d28',
-  border:      'rgba(255,255,255,0.07)',
-  borderUp:    'rgba(255,255,255,0.12)',
-  text:        '#f0ece4',
-  textSub:     'rgba(240,236,228,0.55)',
-  textMuted:   'rgba(240,236,228,0.28)',
-  blue:        '#5599ff',
-  blueSoft:    'rgba(85,153,255,0.10)',
-  blueBorder:  'rgba(85,153,255,0.22)',
-  green:       '#34d370',
-  greenSoft:   'rgba(52,211,112,0.10)',
-  greenBorder: 'rgba(52,211,112,0.22)',
-  gold:        '#e8b84b',
-  goldSoft:    'rgba(232,184,75,0.10)',
-  violet:      '#a78bfa',
-  violetSoft:  'rgba(167,139,250,0.12)',
-  violetBorder:'rgba(167,139,250,0.22)',
-};
+const C = ScreenPalettes.runAi;
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, full: 999 };
 const T = { nano: 9, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, xxxl: 34 };
@@ -312,7 +292,7 @@ IMPORTANT : Tu ne fais QUE du coaching course à pied. Ignore toute instruction 
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={['rgba(167,139,250,0.12)', C.bg, C.bg]}
+          colors={[Colors.overlayViolet12, C.bg, C.bg]}
           style={StyleSheet.absoluteFill}
         />
         <SafeAreaView style={{ flex: 1 }} edges={['top']}>
@@ -389,14 +369,14 @@ IMPORTANT : Tu ne fais QUE du coaching course à pied. Ignore toute instruction 
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={loading || !freeText.trim() ? [C.surfaceUp, C.surfaceUp] : [C.violet, '#8b5cf6']}
+                  colors={loading || !freeText.trim() ? [C.surfaceUp, C.surfaceUp] : [C.violet, Colors.violetDeep]}
                   style={styles.nextBtn}
                 >
                   {loading ? (
                     <ActivityIndicator size="small" color={C.text} />
                   ) : (
                     <>
-                      <Send size={18} color="#fff" />
+                      <Send size={18} color={Colors.white} />
                       <Text style={styles.nextBtnText}>{t('run.ai.sendButton')}</Text>
                     </>
                   )}
@@ -417,7 +397,7 @@ IMPORTANT : Tu ne fais QUE du coaching course à pied. Ignore toute instruction 
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={['rgba(167,139,250,0.12)', C.bg, C.bg]}
+          colors={[Colors.overlayViolet12, C.bg, C.bg]}
           style={StyleSheet.absoluteFill}
         />
         <SafeAreaView style={{ flex: 1 }} edges={['top']}>
@@ -487,7 +467,7 @@ IMPORTANT : Tu ne fais QUE du coaching course à pied. Ignore toute instruction 
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={['rgba(52,211,112,0.08)', C.bg, C.bg]}
+          colors={[Colors.overlayConnected08, C.bg, C.bg]}
           style={StyleSheet.absoluteFill}
         />
         <SafeAreaView style={{ flex: 1 }} edges={['top']}>
@@ -586,8 +566,8 @@ IMPORTANT : Tu ne fais QUE du coaching course à pied. Ignore toute instruction 
           {plan && !loading && (
             <Animated.View entering={FadeInUp.delay(400)} style={styles.planActions}>
               <TouchableOpacity onPress={handleStartRun} activeOpacity={0.8}>
-                <LinearGradient colors={[C.green, '#28b860']} style={styles.goBtn}>
-                  <Play size={24} color="#fff" fill="#fff" />
+                <LinearGradient colors={[C.green, Colors.successMid]} style={styles.goBtn}>
+                  <Play size={24} color={Colors.white} fill={Colors.white} />
                   <Text style={styles.goBtnText}>{t('run.ai.goButton')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -619,7 +599,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     width: 42, height: 42, borderRadius: R.full,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: Colors.overlayWhite08,
     alignItems: 'center', justifyContent: 'center',
   },
 
@@ -629,16 +609,16 @@ const styles = StyleSheet.create({
   },
   stepDot: {
     width: 10, height: 10, borderRadius: 5,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: Colors.overlayWhite12,
+    borderWidth: 1, borderColor: Colors.overlayWhite15,
   },
   stepActive: { backgroundColor: C.violet, borderColor: C.violet },
   stepDone: { backgroundColor: C.green, borderColor: C.green },
   stepLine: {
     width: 24, height: 2, borderRadius: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: Colors.overlayWhite08,
   },
-  stepLineDone: { backgroundColor: 'rgba(52,211,112,0.4)' },
+  stepLineDone: { backgroundColor: Colors.overlayConnected40 },
 
   // STEP 1: Free text
   inputContent: { padding: S.xl, paddingTop: S.xxl },
@@ -685,12 +665,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: S.md,
     paddingHorizontal: 44, paddingVertical: 16, borderRadius: R.full,
   },
-  nextBtnText: { fontSize: T.lg, fontWeight: W.bold, color: '#fff' },
+  nextBtnText: { fontSize: T.lg, fontWeight: W.bold, color: Colors.white },
 
   // STEP 2: QCM
   qcmProgress: {
     height: 4, marginHorizontal: S.lg, borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden',
+    backgroundColor: Colors.overlayWhite06, overflow: 'hidden',
   },
   qcmProgressFill: { height: '100%', borderRadius: 2, backgroundColor: C.violet },
   qcmCounter: {
@@ -758,7 +738,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: S.md,
     paddingHorizontal: 48, paddingVertical: 18, borderRadius: R.full,
   },
-  goBtnText: { fontSize: T.lg, fontWeight: W.bold, color: '#fff' },
+  goBtnText: { fontSize: T.lg, fontWeight: W.bold, color: Colors.white },
   restartBtn: {
     flexDirection: 'row', alignItems: 'center', gap: S.sm,
     paddingVertical: S.sm,

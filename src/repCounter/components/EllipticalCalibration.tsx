@@ -61,7 +61,7 @@ export function EllipticalCalibration({
                     <TouchableOpacity onPress={onBegin} activeOpacity={0.88} style={s.btn}>
                         <LinearGradient colors={[RC.cta1, RC.cta2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.btnGrad}>
                             <Text style={s.btnText}>{t('repCounter.elliptical.letsGo')}</Text>
-                            <ChevronRight size={20} color="#fff" />
+                            <ChevronRight size={20} color={RC.white} />
                         </LinearGradient>
                     </TouchableOpacity>
                 </Animated.View>
@@ -99,7 +99,7 @@ export function EllipticalCalibration({
             {/* STILL DONE */}
             {phase === 'still_done' && (
                 <Animated.View entering={ZoomIn.springify()} style={s.phaseWrap}>
-                    <View style={[s.iconBox, { backgroundColor: 'rgba(34,197,94,0.12)' }]}>
+                    <View style={[s.iconBox, { backgroundColor: RC.successSoftAlt }]}> 
                         <Text style={s.phaseIcon}>✅</Text>
                     </View>
                     <Text style={s.funnyPhrase}>{funnyPhrase}</Text>
@@ -133,7 +133,7 @@ export function EllipticalCalibration({
             {/* COMPLETE */}
             {phase === 'complete' && (
                 <Animated.View entering={ZoomIn.springify()} style={s.phaseWrap}>
-                    <View style={[s.iconBox, { backgroundColor: 'rgba(34,197,94,0.12)' }]}>
+                    <View style={[s.iconBox, { backgroundColor: RC.successSoftAlt }]}> 
                         <Text style={s.phaseIcon}>🎉</Text>
                     </View>
                     <Text style={s.phaseTitle}>{t('repCounter.elliptical.calibrationComplete')}</Text>
@@ -169,13 +169,13 @@ const s = StyleSheet.create({
         paddingHorizontal: SP.xl,
     },
     errorBox: {
-        backgroundColor: 'rgba(248,113,113,0.12)', borderRadius: RAD.lg,
-        padding: SP.md, borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)',
+        backgroundColor: RC.errorSoftAlt, borderRadius: RAD.lg,
+        padding: SP.md, borderWidth: 1, borderColor: RC.errorBorderAlt,
     },
     errorText: { color: RC.error, fontSize: FONT.md, textAlign: 'center' },
     btn:      { borderRadius: RAD.full, overflow: 'hidden' },
     btnGrad:  { flexDirection: 'row', alignItems: 'center', gap: SP.md, paddingVertical: 16, paddingHorizontal: 32 },
-    btnText:  { fontSize: FONT.lg, fontWeight: W.bold, color: '#fff' },
+    btnText:  { fontSize: FONT.lg, fontWeight: W.bold, color: RC.white },
 
     countdownCircle: {
         width: 100, height: 100, borderRadius: 50,
@@ -192,7 +192,7 @@ const s = StyleSheet.create({
     pedalBox: { alignItems: 'center' },
     pedalRing: {
         width: 90, height: 90, borderRadius: 45,
-        backgroundColor: 'rgba(34,211,107,0.12)',
+        backgroundColor: RC.successSoft,
         borderWidth: 3,
         justifyContent: 'center', alignItems: 'center',
     },

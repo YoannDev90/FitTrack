@@ -109,9 +109,9 @@ function LeaderboardItem({
     onBlock?: () => void;
 }) {
     const getRankIcon = () => {
-        if (rank === 1) return <Crown size={20} color="#fbbf24" fill="#fbbf24" />;
-        if (rank === 2) return <Medal size={20} color="#94a3b8" />;
-        if (rank === 3) return <Medal size={20} color="#cd7f32" />;
+        if (rank === 1) return <Crown size={20} color={Colors.warning} fill={Colors.warning} />;
+        if (rank === 2) return <Medal size={20} color={Colors.silver} />;
+        if (rank === 3) return <Medal size={20} color={Colors.bronze} />;
         return <Text style={styles.rankNumber}>{rank}</Text>;
     };
 
@@ -196,13 +196,13 @@ function FriendRequestItem({
                     style={[styles.requestBtn, styles.acceptBtn]} 
                     onPress={onAccept}
                 >
-                    <Check size={18} color="#fff" />
+                    <Check size={18} color={Colors.white} />
                 </TouchableOpacity>
                 <TouchableOpacity 
                     style={[styles.requestBtn, styles.rejectBtn]} 
                     onPress={onReject}
                 >
-                    <X size={18} color="#fff" />
+                    <X size={18} color={Colors.white} />
                 </TouchableOpacity>
             </View>
         </GlassCard>
@@ -244,7 +244,7 @@ function AuthPrompt({ onSignIn }: { onSignIn: () => void }) {
             <Text style={styles.authTitle}>{t('social.authTitle')}</Text>
             <Text style={styles.authSubtitle}>{t('social.authSubtitle')}</Text>
             <TouchableOpacity style={styles.authButton} onPress={onSignIn}>
-                <LogIn size={20} color="#fff" />
+                <LogIn size={20} color={Colors.white} />
                 <Text style={styles.authButtonText}>{t('profile.signIn')}</Text>
             </TouchableOpacity>
         </View>
@@ -277,7 +277,7 @@ function NotConfiguredPrompt() {
                     style={styles.fossUpgradeButton}
                     onPress={() => Linking.openURL(BuildConfig.githubReleasesUrl)}
                 >
-                    <ExternalLink size={18} color="#fff" />
+                    <ExternalLink size={18} color={Colors.white} />
                     <Text style={styles.fossUpgradeButtonText}>{t('social.fossUpgrade')}</Text>
                 </TouchableOpacity>
             </View>
@@ -656,7 +656,7 @@ export default function SocialScreen() {
                             style={styles.authButton} 
                             onPress={() => router.push('/settings')}
                         >
-                            <Settings size={20} color="#fff" />
+                            <Settings size={20} color={Colors.white} />
                             <Text style={styles.authButtonText}>{t('settings.title')}</Text>
                         </TouchableOpacity> 
                     </View>
@@ -705,7 +705,7 @@ export default function SocialScreen() {
                 {profile && (
                     <Animated.View entering={FadeInDown.delay(100).springify()}>
                         <LinearGradient
-                            colors={['rgba(215, 150, 134, 0.4)', 'rgba(215, 150, 134, 0.15)']}
+                            colors={[Colors.overlayCozyWarm40, Colors.overlayCozyWarm15]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={styles.myStatsCard}
@@ -746,7 +746,7 @@ export default function SocialScreen() {
                 {notificationStatus === 'network_error' && (
                     <Animated.View entering={FadeInDown.delay(120).springify()}>
                         <TouchableOpacity 
-                            style={[styles.notificationWarning, { backgroundColor: 'rgba(251, 191, 36, 0.15)' }]}
+                            style={[styles.notificationWarning, { backgroundColor: Colors.overlayWarning15 }]}
                             onPress={async () => {
                                 const result = await NotificationService.registerForPushNotifications();
                                 if (result.success) {
@@ -755,16 +755,16 @@ export default function SocialScreen() {
                                 }
                             }}
                         >
-                            <Bell size={18} color="#fbbf24" />
+                            <Bell size={18} color={Colors.warning} />
                             <View style={{ flex: 1 }}>
-                                <Text style={[styles.notificationWarningText, { color: '#fbbf24' }]}>
+                                <Text style={[styles.notificationWarningText, { color: Colors.warning }]}> 
                                     {t('social.notificationsEnableError')}
                                 </Text>
-                                <Text style={[styles.notificationWarningText, { fontSize: 11, opacity: 0.8, color: '#fbbf24' }]}>
+                                <Text style={[styles.notificationWarningText, { fontSize: 11, opacity: 0.8, color: Colors.warning }]}> 
                                     {t('social.notificationsNetworkHint')}
                                 </Text>
                             </View>
-                            <ChevronRight size={18} color="#fbbf24" />
+                            <ChevronRight size={18} color={Colors.warning} />
                         </TouchableOpacity>
                     </Animated.View>
                 )}
@@ -778,11 +778,11 @@ export default function SocialScreen() {
                         style={styles.pendingBadge}
                         onPress={() => setActiveTab('friends')}
                     >
-                        <UserPlus size={16} color="#fff" />
+                        <UserPlus size={16} color={Colors.white} />
                         <Text style={styles.pendingBadgeText}>
                             {t('social.pendingRequests', { count: pendingRequests.length })}
                         </Text>
-                        <ChevronRight size={16} color="#fff" />
+                        <ChevronRight size={16} color={Colors.white} />
                     </TouchableOpacity>
                 )}
 
@@ -896,7 +896,7 @@ export default function SocialScreen() {
                                         </View>
                                         {user.friendship_status === 'accepted' ? (
                                             <View style={styles.friendBadge}>
-                                                <Check size={14} color="#4ade80" />
+                                                <Check size={14} color={Colors.success} />
                                                 <Text style={styles.friendBadgeText}>Ami</Text>
                                             </View>
                                         ) : user.friendship_status === 'pending' ? (
@@ -1161,7 +1161,7 @@ export default function SocialScreen() {
                                         style={styles.blockModalConfirmBtn}
                                         onPress={() => handleBlockUser(selectedUserForBlock.id)}
                                     >
-                                        <UserX size={18} color="#fff" />
+                                        <UserX size={18} color={Colors.white} />
                                         <Text style={styles.blockModalConfirmText}>Bloquer</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1207,17 +1207,17 @@ const styles = StyleSheet.create({
         letterSpacing: -0.5,
     },
     fossBadge: {
-        backgroundColor: 'rgba(74, 222, 128, 0.2)',
+        backgroundColor: Colors.overlaySuccess20,
         paddingHorizontal: Spacing.sm,
         paddingVertical: 4,
         borderRadius: BorderRadius.sm,
         borderWidth: 1,
-        borderColor: 'rgba(74, 222, 128, 0.4)',
+        borderColor: Colors.overlayConnected40,
     },
     fossBadgeText: {
         fontSize: FontSize.xs,
         fontWeight: FontWeight.bold,
-        color: '#4ade80',
+        color: Colors.success,
         letterSpacing: 1,
     },
     profileButton: {
@@ -1290,7 +1290,7 @@ const styles = StyleSheet.create({
     myStatDivider: {
         width: 1,
         height: 32,
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        backgroundColor: Colors.overlayWhite15,
     },
     streakRow: {
         flexDirection: 'row',
@@ -1303,7 +1303,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: Spacing.sm,
-        backgroundColor: 'rgba(251, 191, 36, 0.15)',
+        backgroundColor: Colors.overlayWarning15,
         borderRadius: BorderRadius.lg,
         padding: Spacing.md,
         marginBottom: Spacing.md,
@@ -1443,7 +1443,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: 'rgba(215, 150, 134, 0.15)',
+        backgroundColor: Colors.overlayCozyWarm15,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1451,7 +1451,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        backgroundColor: Colors.overlayError15,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1485,7 +1485,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: 'rgba(215, 150, 134, 0.15)',
+        backgroundColor: Colors.overlayCozyWarm15,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1493,18 +1493,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: 'rgba(74, 222, 128, 0.15)',
+        backgroundColor: Colors.overlaySuccess15,
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: BorderRadius.full,
     },
     friendBadgeText: {
         fontSize: FontSize.xs,
-        color: '#4ade80',
+        color: Colors.success,
         fontWeight: FontWeight.semibold,
     },
     pendingBadgeSmall: {
-        backgroundColor: 'rgba(251, 191, 36, 0.15)',
+        backgroundColor: Colors.overlayWarning15,
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: BorderRadius.full,
@@ -1539,7 +1539,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     acceptBtn: {
-        backgroundColor: '#4ade80',
+        backgroundColor: Colors.success,
     },
     rejectBtn: {
         backgroundColor: Colors.error,
@@ -1629,7 +1629,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
-        color: '#fff',
+        color: Colors.white,
     },
 
     // Auth Prompt
@@ -1664,7 +1664,7 @@ const styles = StyleSheet.create({
     authButtonText: {
         fontSize: FontSize.md,
         fontWeight: FontWeight.bold,
-        color: '#fff',
+        color: Colors.white,
     },
 
     // FOSS Build Prompt
@@ -1672,19 +1672,19 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: 'rgba(45, 212, 191, 0.15)',
+        backgroundColor: Colors.overlayTeal15,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: Spacing.md,
     },
     fossInfoBox: {
-        backgroundColor: 'rgba(45, 212, 191, 0.1)',
+        backgroundColor: Colors.overlayTeal10,
         borderRadius: BorderRadius.lg,
         padding: Spacing.md,
         marginTop: Spacing.md,
         marginHorizontal: Spacing.lg,
         borderWidth: 1,
-        borderColor: 'rgba(45, 212, 191, 0.2)',
+        borderColor: Colors.overlayTeal20,
     },
     fossInfoText: {
         fontSize: FontSize.sm,
@@ -1705,13 +1705,13 @@ const styles = StyleSheet.create({
     fossUpgradeButtonText: {
         fontSize: FontSize.md,
         fontWeight: FontWeight.bold,
-        color: '#fff',
+        color: Colors.white,
     },
 
     // Modal Overlay
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: Colors.overlayBlack70,
         justifyContent: 'center',
         alignItems: 'center',
         padding: Spacing.lg,
@@ -1805,10 +1805,10 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
         paddingVertical: Spacing.md,
         borderRadius: BorderRadius.lg,
-        backgroundColor: 'rgba(215, 150, 134, 0.15)',
+        backgroundColor: Colors.overlayCozyWarm15,
     },
     friendModalActionDanger: {
-        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        backgroundColor: Colors.overlayError15,
     },
     friendModalActionText: {
         fontSize: FontSize.sm,
@@ -1882,6 +1882,6 @@ const styles = StyleSheet.create({
     blockModalConfirmText: {
         fontSize: FontSize.md,
         fontWeight: FontWeight.bold,
-        color: '#fff',
+        color: Colors.white,
     },
 });

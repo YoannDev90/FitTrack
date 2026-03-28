@@ -159,7 +159,7 @@ export default function AuthScreen() {
                             colors={[Colors.cta, Colors.teal]}
                             style={styles.logoContainer}
                         >
-                            <Dumbbell size={40} color="#fff" />
+                            <Dumbbell size={40} color={Colors.white} />
                         </LinearGradient>
                             <Text style={styles.title}>
                             {mode === 'login' ? t('auth.title.login') : t('auth.title.signup')}
@@ -174,7 +174,7 @@ export default function AuthScreen() {
                         <Animated.View entering={FadeInDown.delay(150).springify()}>
                             <GlassCard style={styles.fossNotice}>
                                 <View style={styles.fossNoticeHeader}>
-                                    <AlertTriangle size={20} color="#fbbf24" />
+                                    <AlertTriangle size={20} color={Colors.warning} />
                                     <Text style={styles.fossNoticeTitle}>
                                         {t('auth.fossNotice.title')}
                                     </Text>
@@ -275,7 +275,7 @@ export default function AuthScreen() {
                             disabled={isLoading}
                         >
                             {isLoading ? (
-                                <ActivityIndicator color="#fff" />
+                                <ActivityIndicator color={Colors.white} />
                             ) : (
                                 <Text style={styles.submitButtonText}>
                                     {mode === 'login' ? t('auth.buttons.login') : t('auth.buttons.signup')}
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.card,
         borderRadius: BorderRadius.lg,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: Colors.overlayWhite10,
         paddingHorizontal: Spacing.md,
     },
     inputIcon: {
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: FontSize.md,
         fontWeight: FontWeight.bold,
-        color: '#fff',
+        color: Colors.white,
     },
     switchContainer: {
         flexDirection: 'row',
@@ -418,8 +418,8 @@ const styles = StyleSheet.create({
     },
     // FOSS Notice styles
     fossNotice: {
-        backgroundColor: 'rgba(251, 191, 36, 0.1)',
-        borderColor: 'rgba(251, 191, 36, 0.3)',
+        backgroundColor: Colors.overlayWarning10,
+        borderColor: Colors.overlayWarning30,
         padding: Spacing.md,
         marginBottom: Spacing.lg,
     },
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     fossNoticeTitle: {
         fontSize: FontSize.md,
         fontWeight: FontWeight.semibold,
-        color: '#fbbf24',
+        color: Colors.warning,
     },
     fossNoticeText: {
         fontSize: FontSize.sm,
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: Spacing.xs,
-        backgroundColor: 'rgba(215, 150, 134, 0.15)',
+        backgroundColor: Colors.overlayCozyWarm15,
         paddingVertical: Spacing.sm,
         paddingHorizontal: Spacing.md,
         borderRadius: BorderRadius.md,

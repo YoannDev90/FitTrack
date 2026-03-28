@@ -114,6 +114,7 @@ const defaultSettings: UserSettings = {
         workout: false,
         gamification: false,
     },
+    themePreset: 'default',
     debugCamera: false,
     preferCameraDetection: true,
     debugPlank: false,

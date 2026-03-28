@@ -160,7 +160,7 @@ export default function OnboardingScreen() {
       
       {/* Background global pour la continuité */}
       <LinearGradient
-        colors={[Colors.bg, '#1a1f25', '#000000']}
+        colors={[Colors.bg, Colors.bgLayer, Colors.black]}
         style={StyleSheet.absoluteFill}
       />
 
@@ -208,7 +208,7 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => (
       resizeMode="cover"
     />
     <LinearGradient
-      colors={['transparent', 'rgba(0,0,0,0.6)', Colors.bg]}
+      colors={[Colors.transparent, Colors.overlayBlack60, Colors.bg]}
       locations={[0, 0.4, 1]}
       style={StyleSheet.absoluteFillObject}
     />
@@ -383,7 +383,7 @@ const GamificationStep = ({ enabled, onToggle }: { enabled: boolean, onToggle: (
   return (
     <View style={styles.centerContent}>
     <Animated.View entering={ZoomIn.delay(200).springify()} style={styles.featureIconContainer}>
-      <Trophy size={60} color={enabled ? '#FFD700' : Colors.muted} strokeWidth={1.5} />
+      <Trophy size={60} color={enabled ? Colors.goldStrong : Colors.muted} strokeWidth={1.5} />
     </Animated.View>
     
     <Animated.View entering={FadeInDown.delay(300)}>
@@ -398,7 +398,7 @@ const GamificationStep = ({ enabled, onToggle }: { enabled: boolean, onToggle: (
         onPress={() => onToggle(true)}
         style={[styles.toggleOption, enabled && styles.toggleOptionActive]}
       >
-        <View style={[styles.toggleIconBg, enabled && { backgroundColor: 'rgba(255, 215, 0, 0.2)' }]}>
+        <View style={[styles.toggleIconBg, enabled && { backgroundColor: Colors.overlayGold20 }]}> 
           <Text style={{ fontSize: 24 }}>⭐</Text>
         </View>
         <Text style={[styles.toggleTitle, enabled && styles.toggleTitleActive]}>
@@ -407,7 +407,7 @@ const GamificationStep = ({ enabled, onToggle }: { enabled: boolean, onToggle: (
         <Text style={styles.toggleDesc}>
           {t('onboarding.gamification.progress.desc')}
         </Text>
-        {enabled && <View style={[styles.toggleCheck, { backgroundColor: '#FFD700' }]}><Text style={{ fontSize: 12, color: '#000' }}>✓</Text></View>}
+        {enabled && <View style={[styles.toggleCheck, { backgroundColor: Colors.goldStrong }]}><Text style={{ fontSize: 12, color: Colors.black }}>✓</Text></View>}
       </Pressable>
       
       <Pressable
@@ -456,8 +456,8 @@ const ReadyStep = ({ onComplete, wantsSocial, wantsGamification }: { onComplete:
 
       <Animated.View entering={FadeInDown.delay(600)} style={styles.readySummary}>
         <View style={styles.readySummaryItem}>
-          <View style={[styles.readySummaryIcon, wantsGamification && { backgroundColor: 'rgba(255, 215, 0, 0.2)' }]}>
-            {wantsGamification ? <Trophy size={20} color="#FFD700" /> : <CheckCircle2 size={20} color={Colors.muted} />}
+          <View style={[styles.readySummaryIcon, wantsGamification && { backgroundColor: Colors.overlayGold20 }]}> 
+            {wantsGamification ? <Trophy size={20} color={Colors.goldStrong} /> : <CheckCircle2 size={20} color={Colors.muted} />}
           </View>
           <Text style={styles.readySummaryText}>
             {wantsGamification ? t('onboarding.ready.progressEnabled') : t('onboarding.ready.simpleMode')}
@@ -465,8 +465,8 @@ const ReadyStep = ({ onComplete, wantsSocial, wantsGamification }: { onComplete:
         </View>
         
         <View style={styles.readySummaryItem}>
-          <View style={[styles.readySummaryIcon, wantsSocial && { backgroundColor: 'rgba(34, 197, 94, 0.2)' }]}>
-            {wantsSocial ? <Users size={20} color="#22C55E" /> : <CheckCircle2 size={20} color={Colors.muted} />}
+          <View style={[styles.readySummaryIcon, wantsSocial && { backgroundColor: Colors.overlayConnected20 }]}> 
+            {wantsSocial ? <Users size={20} color={Colors.successStrong} /> : <CheckCircle2 size={20} color={Colors.muted} />}
           </View>
           <Text style={styles.readySummaryText}>
             {wantsSocial ? t('onboarding.ready.socialEnabled') : t('onboarding.ready.soloMode')}
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   
   // Progress
   progressContainer: { flexDirection: 'row', alignItems: 'center', flex: 1, marginHorizontal: Spacing.lg },
-  progressTrack: { flex: 1, height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, marginRight: 8 },
+  progressTrack: { flex: 1, height: 4, backgroundColor: Colors.overlayWhite10, borderRadius: 2, marginRight: 8 },
   progressBar: { height: '100%', backgroundColor: Colors.cta, borderRadius: 2 },
   stepIndicator: { color: Colors.muted, fontSize: 12, fontWeight: FontWeight.bold },
 
@@ -556,35 +556,35 @@ const styles = StyleSheet.create({
   // Welcome Step
   welcomeContent: { flex: 1, padding: Spacing.xxl, justifyContent: 'flex-end' },
   welcomeTag: { 
-    backgroundColor: 'rgba(255,255,255,0.15)', 
+    backgroundColor: Colors.overlayWhite15,
     paddingHorizontal: 12, 
     paddingVertical: 6, 
     borderRadius: 8, 
     alignSelf: 'flex-start', 
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)'
+    borderColor: Colors.overlayWhite20,
   },
-  welcomeTagText: { color: '#fff', fontWeight: 'bold', fontSize: 10, letterSpacing: 1 },
-  welcomeTitle: { fontSize: 48, fontWeight: '900', color: '#fff', lineHeight: 52, marginBottom: Spacing.md },
-  welcomeSubtitle: { fontSize: FontSize.md, color: 'rgba(255,255,255,0.8)', lineHeight: 24, marginBottom: Spacing.xxl },
+  welcomeTagText: { color: Colors.white, fontWeight: 'bold', fontSize: 10, letterSpacing: 1 },
+  welcomeTitle: { fontSize: 48, fontWeight: '900', color: Colors.white, lineHeight: 52, marginBottom: Spacing.md },
+  welcomeSubtitle: { fontSize: FontSize.md, color: Colors.textWhite80, lineHeight: 24, marginBottom: Spacing.xxl },
   welcomeAction: { marginBottom: Spacing.lg },
 
   // Cards & Grid (Goals)
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   gridItemWrapper: { width: (SCREEN_WIDTH - (Spacing.xl * 2) - 12) / 2 },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Colors.overlayWhite05,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
     height: 160,
     justifyContent: 'space-between',
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: Colors.transparent,
   },
   cardSelected: {
     borderColor: Colors.cta,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: Colors.overlayWhite08,
   },
   cardEmoji: { fontSize: 32 },
   cardTitle: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.text },
@@ -594,22 +594,22 @@ const styles = StyleSheet.create({
     width: 20, height: 20, borderRadius: 10, 
     backgroundColor: Colors.cta, justifyContent: 'center', alignItems: 'center' 
   },
-  checkIcon: { color: '#000', fontSize: 10, fontWeight: 'bold' },
+  checkIcon: { color: Colors.black, fontSize: 10, fontWeight: 'bold' },
 
   // List (Levels)
   listContainer: { gap: 12 },
   listCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Colors.overlayWhite05,
     padding: Spacing.lg,
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: Colors.overlayWhite05,
   },
   listIconBg: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Colors.overlayWhite05,
     justifyContent: 'center', alignItems: 'center',
     marginRight: Spacing.md,
   },
@@ -634,46 +634,46 @@ const styles = StyleSheet.create({
   frequencyRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: Spacing.lg },
   freqBtn: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Colors.overlayWhite05,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: 'transparent',
+    borderWidth: 1, borderColor: Colors.transparent,
   },
   freqBtnSelected: { backgroundColor: Colors.cta },
   freqBtnText: { color: Colors.muted, fontWeight: FontWeight.bold, fontSize: FontSize.md },
-  freqBtnTextSelected: { color: '#1b0f0c' },
+  freqBtnTextSelected: { color: Colors.cozyWarmDarkText },
   frequencyHint: { color: Colors.cta, fontSize: FontSize.sm, fontWeight: FontWeight.medium },
 
   // Feature Steps (Social & Gamification)
   featureIconContainer: {
     width: 120, height: 120, borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Colors.overlayWhite05,
     justifyContent: 'center', alignItems: 'center',
     marginBottom: Spacing.xl,
     alignSelf: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1, borderColor: Colors.overlayWhite10,
   },
   toggleContainer: { gap: 12, marginTop: Spacing.md },
   toggleOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: Colors.overlayWhite03,
     padding: Spacing.lg,
     borderRadius: BorderRadius.xl,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: Colors.transparent,
     gap: Spacing.md,
   },
   toggleOptionActive: {
     borderColor: Colors.cta,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: Colors.overlayWhite06,
   },
   toggleIconBg: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Colors.overlayWhite05,
     justifyContent: 'center', alignItems: 'center',
   },
   toggleIconBgActive: {
-    backgroundColor: 'rgba(227, 160, 144, 0.2)',
+    backgroundColor: Colors.overlayCozyWarm40,
   },
   toggleTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.text },
   toggleTitleActive: { color: Colors.cta },
@@ -686,10 +686,10 @@ const styles = StyleSheet.create({
   featureNote: {
     marginTop: Spacing.xl,
     padding: Spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: Colors.overlayWhite03,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: Colors.overlayWhite05,
   },
   featureNoteText: { fontSize: FontSize.sm, color: Colors.muted, textAlign: 'center' },
 
@@ -698,10 +698,10 @@ const styles = StyleSheet.create({
   readyContent: { alignItems: 'center', width: '100%', flex: 1, justifyContent: 'center' },
   successIcon: { 
     width: 120, height: 120, borderRadius: 60, 
-    backgroundColor: 'rgba(255,255,255,0.05)', 
+    backgroundColor: Colors.overlayWhite05,
     justifyContent: 'center', alignItems: 'center',
     marginBottom: Spacing.xl,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)'
+    borderWidth: 1, borderColor: Colors.overlayWhite10,
   },
   readyTitle: { fontSize: 36, fontWeight: 'bold', color: Colors.text, marginBottom: Spacing.md, textAlign: 'center' },
   readyDesc: { fontSize: FontSize.md, color: Colors.muted, textAlign: 'center', lineHeight: 24, marginBottom: Spacing.xl },
@@ -709,14 +709,14 @@ const styles = StyleSheet.create({
   readySummaryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: Colors.overlayWhite03,
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     gap: Spacing.md,
   },
   readySummaryIcon: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Colors.overlayWhite05,
     justifyContent: 'center', alignItems: 'center',
   },
   readySummaryText: { fontSize: FontSize.md, color: Colors.text, fontWeight: FontWeight.medium },
@@ -729,8 +729,8 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
   },
-  primaryButtonText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: '#1b0f0c', marginRight: 8 },
-  buttonIcon: { fontSize: 18, color: '#1b0f0c' },
+  primaryButtonText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.cozyWarmDarkText, marginRight: 8 },
+  buttonIcon: { fontSize: 18, color: Colors.cozyWarmDarkText },
   buttonDisabled: { opacity: 0.5 },
-  buttonTextDisabled: { color: 'rgba(255,255,255,0.3)' },
+  buttonTextDisabled: { color: Colors.overlayWhite30 },
 });

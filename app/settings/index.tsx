@@ -21,40 +21,10 @@ import { useAppStore, useSocialStore } from '../../src/stores';
 import { isSocialAvailable } from '../../src/services/supabase';
 import { storageHelpers } from '../../src/storage';
 import { LANGUAGES, getCurrentLanguage } from '../../src/i18n';
+import { Colors, ScreenPalettes } from '../../src/constants';
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-const C = {
-    bg:          '#070709',
-    surface:     '#0e0f14',
-    surfaceUp:   '#13151e',
-    surfaceHigh: '#1a1d28',
-    border:      'rgba(255,255,255,0.07)',
-    borderUp:    'rgba(255,255,255,0.12)',
-    text:        '#f0ece4',
-    textSub:     'rgba(240,236,228,0.55)',
-    textMuted:   'rgba(240,236,228,0.28)',
-    ember:       '#ff5533',
-    emberMid:    '#ff7a55',
-    emberGlow:   'rgba(255,85,51,0.15)',
-    emberBorder: 'rgba(255,85,51,0.25)',
-    gold:        '#e8b84b',
-    goldSoft:    'rgba(232,184,75,0.10)',
-    goldBorder:  'rgba(232,184,75,0.22)',
-    amber:       '#f5a623',
-    blue:        '#5599ff',
-    blueSoft:    'rgba(85,153,255,0.10)',
-    blueBorder:  'rgba(85,153,255,0.22)',
-    teal:        '#2dd4bf',
-    tealSoft:    'rgba(45,212,191,0.10)',
-    tealBorder:  'rgba(45,212,191,0.22)',
-    green:       '#34d370',
-    greenSoft:   'rgba(52,211,112,0.10)',
-    greenBorder: 'rgba(52,211,112,0.22)',
-    violet:      '#a78bfa',
-    violetSoft:  'rgba(167,139,250,0.10)',
-    violetBorder:'rgba(167,139,250,0.22)',
-    error:       '#f87171',
-};
+const C = ScreenPalettes.cool;
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
 const T = { nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, xxxl: 34 };
@@ -138,7 +108,7 @@ function StatsHero({ sportCount, mealCount, measureCount, labels }: {
     return (
         <Animated.View entering={FadeInDown.delay(80).springify()} style={s.statsHero}>
             <LinearGradient
-                colors={[C.emberGlow, 'transparent']}
+                colors={[C.emberGlow, Colors.transparent]}
                 style={StyleSheet.absoluteFill}
             />
             {/* Header */}
@@ -347,8 +317,8 @@ export default function SettingsMainScreen() {
                     />
                     {settings.developerMode && (
                         <CategoryRow
-                            icon={<Code2 size={19} color="#f97316" strokeWidth={2.2} />}
-                            iconColor="#f97316"
+                            icon={<Code2 size={19} color={Colors.orange} strokeWidth={2.2} />}
+                            iconColor={Colors.orange}
                             title={t('settings.developerMode')}
                             subtitle={t('settings.developerModeDesc')}
                             onPress={() => router.push('/settings/developer')}

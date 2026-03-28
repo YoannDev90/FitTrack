@@ -77,7 +77,7 @@ export default function PollinationCallbackScreen() {
                 {status === 'processing' && (
                     <Animated.View entering={FadeIn} style={styles.statusContainer}>
                         <View style={styles.iconContainer}>
-                            <ActivityIndicator size="large" color="#8B5CF6" />
+                            <ActivityIndicator size="large" color={Colors.violetStrong} />
                         </View>
                         <Text style={styles.title}>{t('settings.pollinationCallback.processing')}</Text>
                         <Text style={styles.message}>{t('settings.pollinationCallback.processingMessage')}</Text>
@@ -87,16 +87,16 @@ export default function PollinationCallbackScreen() {
                 {status === 'success' && (
                     <Animated.View entering={ZoomIn.springify()} style={styles.statusContainer}>
                         <LinearGradient
-                            colors={['rgba(34, 197, 94, 0.2)', 'rgba(34, 197, 94, 0.05)']}
+                            colors={[Colors.overlayConnected20, Colors.overlayConnected05]}
                             style={styles.iconGradient}
                         >
-                            <CheckCircle size={48} color="#22c55e" />
+                            <CheckCircle size={48} color={Colors.successStrong} />
                         </LinearGradient>
                         <Text style={styles.title}>{t('settings.pollinationCallback.success')}</Text>
                         <Text style={styles.message}>{t('settings.pollinationCallback.successMessage')}</Text>
                         
                         <View style={styles.mascotContainer}>
-                            <Sparkles size={20} color="#8B5CF6" />
+                            <Sparkles size={20} color={Colors.violetStrong} />
                             <Text style={styles.mascotText}>{t('settings.pollinationCallback.plopReady')}</Text>
                         </View>
                     </Animated.View>
@@ -105,10 +105,10 @@ export default function PollinationCallbackScreen() {
                 {status === 'error' && (
                     <Animated.View entering={ZoomIn.springify()} style={styles.statusContainer}>
                         <LinearGradient
-                            colors={['rgba(239, 68, 68, 0.2)', 'rgba(239, 68, 68, 0.05)']}
+                            colors={[Colors.overlayErrorStrong20, Colors.overlayErrorStrong05]}
                             style={styles.iconGradient}
                         >
-                            <XCircle size={48} color="#ef4444" />
+                            <XCircle size={48} color={Colors.errorStrong} />
                         </LinearGradient>
                         <Text style={styles.title}>{t('settings.pollinationCallback.error')}</Text>
                         <Text style={styles.message}>{t('settings.pollinationCallback.errorMessage')}</Text>
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: 'rgba(139, 92, 246, 0.15)',
+        backgroundColor: Colors.overlayVioletStrong15,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: Spacing.xl,
@@ -171,12 +171,12 @@ const styles = StyleSheet.create({
         marginTop: Spacing.xl,
         paddingHorizontal: Spacing.lg,
         paddingVertical: Spacing.md,
-        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+        backgroundColor: Colors.overlayVioletStrong10,
         borderRadius: BorderRadius.lg,
     },
     mascotText: {
         fontSize: FontSize.sm,
         fontWeight: FontWeight.medium,
-        color: '#A78BFA',
+        color: Colors.violet,
     },
 });

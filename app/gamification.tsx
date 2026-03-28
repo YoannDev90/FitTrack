@@ -21,42 +21,14 @@ import {
 } from 'lucide-react-native';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { useFocusEffect } from 'expo-router';
+import { Colors, ScreenPalettes } from '../src/constants';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const { width: SW } = Dimensions.get('window');
 const PLOPPY_IMAGE = require('../assets/ploppy.png');
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-const C = {
-    bg:          '#070709',
-    surface:     '#0e0f14',
-    surfaceUp:   '#13151e',
-    surfaceHigh: '#1a1d28',
-    border:      'rgba(255,255,255,0.07)',
-    borderUp:    'rgba(255,255,255,0.12)',
-    text:        '#f0ece4',
-    textSub:     'rgba(240,236,228,0.55)',
-    textMuted:   'rgba(240,236,228,0.28)',
-    ember:       '#ff5533',
-    emberMid:    '#ff7a55',
-    emberGlow:   'rgba(255,85,51,0.15)',
-    emberBorder: 'rgba(255,85,51,0.25)',
-    gold:        '#e8b84b',
-    goldSoft:    'rgba(232,184,75,0.10)',
-    goldBorder:  'rgba(232,184,75,0.22)',
-    amber:       '#f5a623',
-    blue:        '#ff7a55',
-    blueSoft:    'rgba(255,122,85,0.10)',
-    blueBorder:  'rgba(255,122,85,0.22)',
-    teal:        '#ff8c5a',
-    tealSoft:    'rgba(255,140,90,0.10)',
-    tealBorder:  'rgba(255,140,90,0.22)',
-    green:       '#34d370',
-    greenSoft:   'rgba(52,211,112,0.10)',
-    greenBorder: 'rgba(52,211,112,0.22)',
-    violet:      '#e8b84b',
-    error:       '#f87171',
-};
+const C = ScreenPalettes.warm;
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
 const T = { nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, xxxl: 34, display: 48 };
@@ -82,10 +54,10 @@ function XPRing({ animatedProgress, size = 190 }: { animatedProgress: { value: n
                     </SvgLinearGradient>
                 </Defs>
                 <Circle cx={size/2} cy={size/2} r={r}
-                    stroke={C.border} strokeWidth={sw} fill="transparent" />
+                    stroke={C.border} strokeWidth={sw} fill={Colors.transparent} />
                 <AnimatedCircle
                     cx={size/2} cy={size/2} r={r}
-                    stroke="url(#xpGrad)" strokeWidth={sw} fill="transparent"
+                    stroke="url(#xpGrad)" strokeWidth={sw} fill={Colors.transparent}
                     strokeDasharray={`${circ}`} strokeLinecap="round"
                     transform={`rotate(-90 ${size/2} ${size/2})`}
                     animatedProps={animatedProps}
@@ -119,7 +91,7 @@ function QuestCard({ quest, index }: { quest: any; index: number }) {
             <View style={[s.questCard, done && s.questCardDone]}>
                 <LinearGradient
                     colors={done
-                        ? ['rgba(52,211,112,0.07)', 'rgba(52,211,112,0.02)']
+                        ? [Colors.overlaySportGreen07, Colors.overlaySportGreen02]
                         : [C.surfaceUp, C.surface]}
                     style={StyleSheet.absoluteFill}
                 />
@@ -217,7 +189,7 @@ function StatCard({ value, label, accent }: { value: string | number; label: str
         <View style={[s.statCard, accent && s.statCardAccent]}>
             {accent && (
                 <LinearGradient
-                    colors={[C.emberGlow, 'transparent']}
+                    colors={[C.emberGlow, Colors.transparent]}
                     style={StyleSheet.absoluteFill}
                 />
             )}
@@ -310,16 +282,16 @@ export default function GamificationScreen() {
             {showLevelUp && (
                 <Animated.View entering={FadeInDown.springify().damping(14)} style={s.lvlUpToast}>
                     <LinearGradient
-                        colors={['rgba(232,184,75,0.95)', 'rgba(245,166,35,0.95)']}
+                        colors={[Colors.overlayGold95, Colors.overlayWarningDeep95]}
                         style={s.lvlUpGrad}
                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     >
-                        <Trophy size={24} color="#fff" />
+                        <Trophy size={24} color={Colors.white} />
                         <View style={{ flex: 1 }}>
                             <Text style={s.lvlUpTitle}>{t('gamification.levelUp')}</Text>
                             <Text style={s.lvlUpSub}>{t('gamification.level')} {level} — {rank}</Text>
                         </View>
-                        <Sparkles size={20} color="#fff" />
+                        <Sparkles size={20} color={Colors.white} />
                     </LinearGradient>
                 </Animated.View>
             )}
@@ -347,7 +319,7 @@ export default function GamificationScreen() {
                         {/* Level badge */}
                         <View style={s.lvlBadge}>
                             <LinearGradient
-                                colors={[C.ember, '#cc3318']}
+                                colors={[C.ember, Colors.errorStrong]}
                                 style={s.lvlBadgeGrad}
                                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                             >
@@ -445,7 +417,7 @@ const s = StyleSheet.create({
         width: 38, height: 38, borderRadius: 19,
         justifyContent: 'center', alignItems: 'center',
     },
-    lvlNum: { fontSize: T.lg, fontWeight: W.black, color: '#fff' },
+    lvlNum: { fontSize: T.lg, fontWeight: W.black, color: Colors.white },
 
     rankText: {
         fontSize: T.xxl, fontWeight: W.black,
@@ -569,7 +541,7 @@ const s = StyleSheet.create({
         paddingHorizontal: S.sm, paddingVertical: 3,
         borderWidth: 1, borderColor: C.greenBorder,
     },
-    amountPillNeg: { backgroundColor: 'rgba(248,113,113,0.09)', borderColor: 'rgba(248,113,113,0.2)' },
+    amountPillNeg: { backgroundColor: Colors.overlayError09, borderColor: Colors.overlayError20 },
     amountText:    { fontSize: T.xs, fontWeight: W.bold, color: C.green },
     amountTextNeg: { color: C.error },
     trophyBadge: {
@@ -590,6 +562,6 @@ const s = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center',
         padding: S.lg, gap: S.md,
     },
-    lvlUpTitle: { fontSize: T.md, fontWeight: W.black, color: '#fff' },
-    lvlUpSub:   { fontSize: T.xs, fontWeight: W.semi, color: 'rgba(255,255,255,0.85)', marginTop: 1 },
+    lvlUpTitle: { fontSize: T.md, fontWeight: W.black, color: Colors.white },
+    lvlUpSub:   { fontSize: T.xs, fontWeight: W.semi, color: Colors.textSecondary, marginTop: 1 },
 });

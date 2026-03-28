@@ -239,7 +239,7 @@ export default function DeveloperScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={['rgba(249,115,22,0.16)', 'transparent']}
+        colors={[Colors.overlayOrange16, Colors.transparent]}
         start={{ x: 0.15, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={styles.topGlow}
@@ -265,14 +265,14 @@ export default function DeveloperScreen() {
             </Text>
           </View>
           <View style={styles.headerIconWrap}>
-            <Code2 size={18} color="#f97316" />
+            <Code2 size={18} color={Colors.orange} />
           </View>
         </Animated.View>
 
         {/* Warning Banner */}
         <Animated.View entering={FadeInDown.delay(80).springify()}>
           <View style={styles.warningBanner}>
-            <AlertTriangle size={20} color="#fbbf24" />
+            <AlertTriangle size={20} color={Colors.warning} />
             <Text style={styles.warningText}>
               {t('settings.developerWarning')}
             </Text>
@@ -286,7 +286,7 @@ export default function DeveloperScreen() {
           <GlassCard style={styles.pollinationCard}>
             <View style={styles.pollinationHeader}>
               <View style={styles.pollinationIconContainer}>
-                <Flower2 size={24} color="#8B5CF6" />
+                <Flower2 size={24} color={Colors.violetStrong} />
               </View>
               <View style={styles.pollinationInfo}>
                 <Text style={styles.pollinationTitle}>{t('settings.developer.pollination.title')}</Text>
@@ -294,7 +294,7 @@ export default function DeveloperScreen() {
                   <ActivityIndicator size="small" color={Colors.muted} style={{ marginTop: 4 }} />
                 ) : pollinationInfo?.connected ? (
                   <View style={styles.pollinationStatus}>
-                    <CheckCircle size={14} color="#22c55e" />
+                    <CheckCircle size={14} color={Colors.successStrong} />
                     <Text style={styles.pollinationStatusText}>{t('settings.developer.pollination.connected')}</Text>
                   </View>
                 ) : (
@@ -308,7 +308,7 @@ export default function DeveloperScreen() {
             
             {!loadingPollination && pollinationInfo?.connected && (
               <View style={styles.pollinationBalanceContainer}>
-                <Coins size={18} color="#fbbf24" />
+                <Coins size={18} color={Colors.warning} />
                 <Text style={styles.pollinationBalanceLabel}>{t('settings.developer.pollination.remainingCredit')}</Text>
                 <Text style={styles.pollinationBalanceValue}>
                   {pollinationInfo.balance !== undefined 
@@ -330,8 +330,8 @@ export default function DeveloperScreen() {
         <SectionTitle title={t('settings.developer.sections.interface')} delay={140} />
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Sparkles size={20} color="#a78bfa" />}
-            iconColor="#a78bfa"
+            icon={<Sparkles size={20} color={Colors.violet} />}
+            iconColor={Colors.violet}
             title={t('settings.onboarding')}
             subtitle={t('settings.onboardingDesc')}
             onPress={() => {
@@ -341,8 +341,8 @@ export default function DeveloperScreen() {
             delay={160}
           />
           <SettingItem
-            icon={<RotateCcw size={20} color="#fbbf24" />}
-            iconColor="#fbbf24"
+            icon={<RotateCcw size={20} color={Colors.warning} />}
+            iconColor={Colors.warning}
             title={t('settings.developer.onboardingResetTitle')}
             subtitle={t('settings.developer.onboardingResetSubtitle')}
             onPress={handleResetPloppyOnboarding}
@@ -362,8 +362,8 @@ export default function DeveloperScreen() {
             delay={200}
           />
           <SettingItem
-            icon={<Trash2 size={20} color="#f97316" />}
-            iconColor="#f97316"
+            icon={<Trash2 size={20} color={Colors.orange} />}
+            iconColor={Colors.orange}
             title={t('settings.developer.clearHistoryTitle')}
             subtitle={t('settings.developer.clearHistorySubtitle')}
             onPress={handleClearHistory}
@@ -470,9 +470,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: 'rgba(249,115,22,0.14)',
+    backgroundColor: Colors.overlayOrange14,
     borderWidth: 1,
-    borderColor: 'rgba(249,115,22,0.24)',
+    borderColor: Colors.overlayOrange24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -482,17 +482,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    backgroundColor: Colors.overlayWarning15,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.3)',
+    borderColor: Colors.overlayWarning30,
   },
   warningText: {
     flex: 1,
     fontSize: FontSize.sm,
-    color: '#fbbf24',
+    color: Colors.warning,
     lineHeight: 18,
   },
 
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   dangerCard: {
-    borderColor: 'rgba(248, 113, 113, 0.3)',
+    borderColor: Colors.overlayErrorSoft30,
   },
 
   // Setting Item
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    backgroundColor: Colors.overlayVioletStrong15,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   },
   pollinationStatusText: {
     fontSize: FontSize.sm,
-    color: '#22c55e',
+    color: Colors.successStrong,
   },
   pollinationBalanceContainer: {
     flexDirection: 'row',
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: Colors.overlayWhite10,
   },
   pollinationBalanceLabel: {
     fontSize: FontSize.sm,
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   pollinationBalanceValue: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
-    color: '#fbbf24',
+    color: Colors.warning,
   },
   pollinationError: {
     fontSize: FontSize.xs,

@@ -52,6 +52,7 @@ import { formatDisplayDate, getRelativeTime, isInCurrentWeek } from '../../src/u
 import { generateTextAnalysis } from '../../src/services/pollination/textAnalysis';
 import { isPollinationConnected } from '../../src/services/pollination';
 import i18n from '../../src/i18n';
+import { Colors, ScreenPalettes } from '../../src/constants';
 import type {
   Entry,
   HomeWorkoutEntry,
@@ -67,37 +68,7 @@ const { width: SW } = Dimensions.get('window');
 const MapLibreRN = getMapLibreModule();
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-const C = {
-  bg:          '#070709',
-  surface:     '#0e0f14',
-  surfaceUp:   '#13151e',
-  surfaceHigh: '#1a1d28',
-  border:      'rgba(255,255,255,0.07)',
-  borderUp:    'rgba(255,255,255,0.12)',
-  text:        '#f0ece4',
-  textSub:     'rgba(240,236,228,0.55)',
-  textMuted:   'rgba(240,236,228,0.28)',
-  ember:       '#ff5533',
-  emberMid:    '#ff7a55',
-  emberGlow:   'rgba(255,85,51,0.15)',
-  emberBorder: 'rgba(255,85,51,0.25)',
-  gold:        '#e8b84b',
-  goldSoft:    'rgba(232,184,75,0.10)',
-  goldBorder:  'rgba(232,184,75,0.22)',
-  blue:        '#5599ff',
-  blueSoft:    'rgba(85,153,255,0.10)',
-  blueBorder:  'rgba(85,153,255,0.22)',
-  teal:        '#2dd4bf',
-  tealSoft:    'rgba(45,212,191,0.10)',
-  tealBorder:  'rgba(45,212,191,0.22)',
-  green:       '#34d370',
-  greenSoft:   'rgba(52,211,112,0.10)',
-  greenBorder: 'rgba(52,211,112,0.22)',
-  violet:      '#a78bfa',
-  violetSoft:  'rgba(167,139,250,0.10)',
-  violetBorder:'rgba(167,139,250,0.22)',
-  error:       '#f87171',
-};
+const C = ScreenPalettes.cool;
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
 const T = {
@@ -666,7 +637,7 @@ export default function WorkoutDetailScreen() {
         {sessionStats?.isBestSession && isSport && (
           <Animated.View entering={FadeInRight.delay(250)} style={styles.bestBadge}>
             <LinearGradient
-              colors={['rgba(232,184,75,0.15)', 'rgba(232,184,75,0.05)']}
+              colors={[Colors.overlayGold15, Colors.overlayWhite05]}
               style={styles.bestBadgeGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -763,7 +734,7 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     width: 44, height: 44, borderRadius: R.lg,
-    backgroundColor: 'rgba(248,113,113,0.1)', borderWidth: 1, borderColor: 'rgba(248,113,113,0.2)',
+    backgroundColor: Colors.overlayError10, borderWidth: 1, borderColor: Colors.overlayError20,
     justifyContent: 'center', alignItems: 'center',
   },
 
@@ -858,7 +829,7 @@ const styles = StyleSheet.create({
   // Delete confirm modal
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, zIndex: 100,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: Colors.overlayBlack60,
     justifyContent: 'center' as const, alignItems: 'center' as const,
   },
   modalCard: {
@@ -872,14 +843,14 @@ const styles = StyleSheet.create({
   modalBtns: { flexDirection: 'row' as const, gap: S.md, width: '100%' as const },
   modalCancelBtn: {
     flex: 1, paddingVertical: 14, borderRadius: R.lg,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: Colors.overlayWhite06,
     alignItems: 'center' as const, borderWidth: 1, borderColor: C.border,
   },
   modalCancelText: { fontSize: T.md, fontWeight: W.semi, color: C.textSub },
   modalConfirmBtn: {
     flex: 1, paddingVertical: 14, borderRadius: R.lg,
-    backgroundColor: 'rgba(248,113,113,0.15)',
-    alignItems: 'center' as const, borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)',
+    backgroundColor: Colors.overlayError15,
+    alignItems: 'center' as const, borderWidth: 1, borderColor: Colors.overlayError30,
   },
   modalConfirmText: { fontSize: T.md, fontWeight: W.bold, color: C.error },
 });

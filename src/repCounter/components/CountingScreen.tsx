@@ -261,12 +261,12 @@ export function CountingScreen({
 
                 <TouchableOpacity onPress={onToggleTracking} activeOpacity={0.88} style={s.mainBtn}>
                     <LinearGradient
-                        colors={isTracking ? ['#f87171', '#ef4444'] : [exercise.color, `${exercise.color}cc`]}
+                        colors={isTracking ? [RC.error, RC.errorStrong] : [exercise.color, `${exercise.color}cc`]}
                         style={s.mainBtnGrad}
                     >
                         {isTracking
-                            ? <Pause size={32} color="#fff" fill="#fff" />
-                            : <Play  size={32} color="#fff" fill="#fff" />
+                            ? <Pause size={32} color={RC.white} fill={RC.white} />
+                            : <Play  size={32} color={RC.white} fill={RC.white} />
                         }
                     </LinearGradient>
                 </TouchableOpacity>
@@ -316,15 +316,15 @@ const s = StyleSheet.create({
         marginTop: SP.sm, paddingHorizontal: SP.md, paddingVertical: 3,
         borderRadius: RAD.full,
     },
-    statusText: { fontSize: FONT.xs, fontWeight: W.bold, color: '#fff', letterSpacing: 0.8 },
+    statusText: { fontSize: FONT.xs, fontWeight: W.bold, color: RC.white, letterSpacing: 0.8 },
 
     // Record
     recordBanner: {
         flexDirection: 'row', alignItems: 'center', gap: SP.sm,
-        backgroundColor: 'rgba(232,184,75,0.14)',
+        backgroundColor: RC.goldSoftStrong,
         paddingVertical: SP.md, paddingHorizontal: SP.xl,
         borderRadius: RAD.full, marginBottom: SP.lg,
-        borderWidth: 1, borderColor: 'rgba(232,184,75,0.35)',
+        borderWidth: 1, borderColor: RC.goldBorder,
     },
     recordEmoji: { fontSize: 18 },
     recordText:  { fontSize: FONT.md, fontWeight: W.bold, color: RC.gold },
@@ -344,7 +344,7 @@ const s = StyleSheet.create({
     // Mode
     modeIndicator: {
         flexDirection: 'row', alignItems: 'center', gap: SP.xs,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: RC.blackOverlay30,
         paddingVertical: SP.sm, paddingHorizontal: SP.lg,
         borderRadius: RAD.full, borderWidth: 1, marginBottom: SP.lg,
     },
@@ -357,13 +357,13 @@ const s = StyleSheet.create({
         borderRadius: RAD.xxl, overflow: 'hidden',
         marginBottom: SP.xl,
         borderWidth: 1, borderColor: RC.border,
-        backgroundColor: '#000',
+        backgroundColor: RC.black,
     },
     hiddenCam: { position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' },
 
     // Debug
     debugBox: {
-        backgroundColor: 'rgba(0,0,0,0.85)', borderRadius: RAD.lg,
+        backgroundColor: RC.blackOverlay85, borderRadius: RAD.lg,
         padding: SP.md, marginHorizontal: SP.md, marginBottom: SP.sm, width: '100%',
     },
     debugTitle: { fontSize: FONT.sm, fontWeight: W.bold, color: RC.text, marginBottom: SP.xs },
@@ -384,17 +384,17 @@ const s = StyleSheet.create({
     motivWrap: {
         position: 'absolute', bottom: 120, left: SP.xl, right: SP.xl,
         borderRadius: RAD.xxl, overflow: 'hidden',
-        borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+        borderWidth: 1, borderColor: RC.whiteOverlay12,
         minHeight: 100,
     },
     motivInner: {
         alignItems: 'center', padding: SP.xl, gap: SP.sm,
-        backgroundColor: 'rgba(0,0,0,0.25)',
+        backgroundColor: RC.blackOverlay25,
     },
     motivEmojiBox: {
         width: 52, height: 52, borderRadius: 26,
-        backgroundColor: 'rgba(255,255,255,0.10)',
-        borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.18)',
+        backgroundColor: RC.whiteOverlay10,
+        borderWidth: 1.5, borderColor: RC.whiteOverlay18,
         justifyContent: 'center', alignItems: 'center',
     },
     motivEmoji: { fontSize: 28 },

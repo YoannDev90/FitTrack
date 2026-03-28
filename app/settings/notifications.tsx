@@ -302,7 +302,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={['rgba(96,165,250,0.16)', 'transparent']}
+        colors={[Colors.overlaySky16, Colors.transparent]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={styles.topGlow}
@@ -327,15 +327,15 @@ export default function NotificationsScreen() {
             <Text style={styles.screenTitle}>{t('settings.notifications')}</Text>
           </View>
           <View style={styles.headerIconWrap}>
-            <Bell size={18} color="#60a5fa" />
+            <Bell size={18} color={Colors.blue} />
           </View>
         </Animated.View>
 
         {/* Streak Reminder Toggle */}
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Bell size={20} color="#fbbf24" />}
-            iconColor="#fbbf24"
+            icon={<Bell size={20} color={Colors.warning} />}
+            iconColor={Colors.warning}
             title={t('settings.streakReminder')}
             subtitle={settings.streakReminderEnabled 
               ? t('settings.reminderTimeDesc', { 
@@ -348,7 +348,7 @@ export default function NotificationsScreen() {
                 value={settings.streakReminderEnabled ?? false}
                 onValueChange={handleToggleReminder}
                 trackColor={{ false: Colors.card, true: Colors.teal }}
-                thumbColor="#fff"
+                thumbColor={Colors.white}
               />
             }
             delay={100}
@@ -357,8 +357,8 @@ export default function NotificationsScreen() {
           {/* Time Picker (only if enabled) */}
           {settings.streakReminderEnabled && (
             <SettingItem
-              icon={<Clock size={20} color="#60a5fa" />}
-              iconColor="#60a5fa"
+              icon={<Clock size={20} color={Colors.blue} />}
+              iconColor={Colors.blue}
               title={t('settings.reminderTime')}
               subtitle={`${String(settings.streakReminderHour ?? 20).padStart(2, '0')}:${String(settings.streakReminderMinute ?? 0).padStart(2, '0')}`}
               onPress={() => {
@@ -385,8 +385,8 @@ export default function NotificationsScreen() {
               style={styles.mealReminderRow}
             >
               <View style={styles.mealReminderLeft}>
-                <View style={[styles.settingIconContainer, { backgroundColor: '#fbbf2420' }]}>
-                  <UtensilsCrossed size={20} color="#fbbf24" />
+                <View style={[styles.settingIconContainer, { backgroundColor: Colors.overlayWarning20 }]}> 
+                  <UtensilsCrossed size={20} color={Colors.warning} />
                 </View>
                 <TouchableOpacity
                   onPress={() => {
@@ -406,7 +406,7 @@ export default function NotificationsScreen() {
                   value={reminder.enabled}
                   onValueChange={(value) => handleToggleMealReminder(index, value)}
                   trackColor={{ false: Colors.card, true: Colors.teal }}
-                  thumbColor="#fff"
+                  thumbColor={Colors.white}
                 />
                 <TouchableOpacity
                   style={styles.deleteMealButton}
@@ -439,8 +439,8 @@ export default function NotificationsScreen() {
         
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Scale size={20} color="#a78bfa" />}
-            iconColor="#a78bfa"
+            icon={<Scale size={20} color={Colors.violet} />}
+            iconColor={Colors.violet}
             title={t('settings.weightReminderTitle', { defaultValue: 'Rappel de pesée' })}
             subtitle={getWeightReminderDescription()}
             rightElement={
@@ -448,7 +448,7 @@ export default function NotificationsScreen() {
                 value={settings.weightReminderEnabled ?? false}
                 onValueChange={handleToggleWeightReminder}
                 trackColor={{ false: Colors.card, true: Colors.teal }}
-                thumbColor="#fff"
+                thumbColor={Colors.white}
               />
             }
             delay={400}
@@ -457,8 +457,8 @@ export default function NotificationsScreen() {
           {/* Time and frequency settings (only if enabled) */}
           {settings.weightReminderEnabled && (
             <SettingItem
-              icon={<Clock size={20} color="#60a5fa" />}
-              iconColor="#60a5fa"
+              icon={<Clock size={20} color={Colors.blue} />}
+              iconColor={Colors.blue}
               title={t('settings.weightReminderSettings', { defaultValue: 'Configurer' })}
               subtitle={getWeightReminderDescription()}
               onPress={() => {
@@ -788,8 +788,8 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(96,165,250,0.3)',
-    backgroundColor: 'rgba(96,165,250,0.12)',
+    borderColor: Colors.overlaySky30,
+    backgroundColor: Colors.overlaySky12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -800,8 +800,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(14,19,30,0.82)',
+    borderColor: Colors.overlayWhite10,
+    backgroundColor: Colors.overlayPanel82,
   },
 
   // Setting Item
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
   // Time Picker Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: Colors.overlayBlack70,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.lg,
@@ -914,7 +914,7 @@ const styles = StyleSheet.create({
   timePickerConfirmText: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
-    color: '#fff',
+    color: Colors.white,
   },
   sectionTitle: {
     fontSize: FontSize.lg,
@@ -979,8 +979,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.stroke,
   },
   frequencyButtonActive: {
-    backgroundColor: 'rgba(167, 139, 250, 0.2)',
-    borderColor: '#a78bfa',
+    backgroundColor: Colors.overlayViolet20,
+    borderColor: Colors.violet,
   },
   frequencyButtonText: {
     fontSize: FontSize.sm,
@@ -988,7 +988,7 @@ const styles = StyleSheet.create({
     color: Colors.muted,
   },
   frequencyButtonTextActive: {
-    color: '#a78bfa',
+    color: Colors.violet,
     fontWeight: FontWeight.bold,
   },
   daySelector: {
@@ -1016,8 +1016,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.stroke,
   },
   dayButtonActive: {
-    backgroundColor: 'rgba(167, 139, 250, 0.2)',
-    borderColor: '#a78bfa',
+    backgroundColor: Colors.overlayViolet20,
+    borderColor: Colors.violet,
   },
   dayButtonText: {
     fontSize: FontSize.sm,
@@ -1025,7 +1025,7 @@ const styles = StyleSheet.create({
     color: Colors.muted,
   },
   dayButtonTextActive: {
-    color: '#a78bfa',
+    color: Colors.violet,
     fontWeight: FontWeight.bold,
   },
   dayOfMonthInput: {

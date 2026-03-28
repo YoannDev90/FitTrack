@@ -293,7 +293,7 @@ export default function SafetySettingsScreen() {
                 value={Boolean(safetySettings.fallDetectionEnabled)}
                 onValueChange={(value) => updateSafetySettings({ fallDetectionEnabled: value })}
                 trackColor={{ true: Colors.success, false: Colors.cardSolid }}
-                thumbColor="#fff"
+                thumbColor={Colors.white}
               />
             </View>
             <Text style={styles.warningNote}>{t('settings.safety.fallDetectionWarning')}</Text>
@@ -345,7 +345,7 @@ export default function SafetySettingsScreen() {
                 onValueChange={(value) => setMethod(value ? 'whatsapp' : 'sms')}
                 disabled={!whatsAppAvailable}
                 trackColor={{ true: Colors.success, false: Colors.cardSolid }}
-                thumbColor="#fff"
+                thumbColor={Colors.white}
               />
               <Text style={styles.fieldLabel}>{t('settings.safety.methodWhatsApp')}</Text>
             </View>
@@ -468,15 +468,15 @@ const styles = StyleSheet.create({
   customHintText: { color: Colors.muted, fontSize: FontSize.xs },
   errorText: { color: Colors.error, fontSize: FontSize.xs, marginTop: 4 },
   disclaimerCard: {
-    borderColor: 'rgba(245,166,35,0.45)',
-    backgroundColor: 'rgba(245,166,35,0.12)',
+    borderColor: Colors.overlayWarningDeep45,
+    backgroundColor: Colors.overlayWarningDeep12,
   },
   disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.xs },
   disclaimerTitle: { color: Colors.warning, fontSize: FontSize.md, fontWeight: FontWeight.semibold },
   disclaimerText: { color: Colors.text, fontSize: FontSize.sm, lineHeight: 18 },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: Colors.overlayBlack70,
     justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
   },

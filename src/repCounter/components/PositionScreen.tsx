@@ -84,7 +84,7 @@ export function PositionScreen({ exercise, detectionMode, onReady }: PositionScr
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={s.btnGrad}
                 >
-                    <Play size={22} color="#fff" fill="#fff" />
+                    <Play size={22} color={RC.white} fill={RC.white} />
                     <Text style={s.btnText}>{t('common.start')}</Text>
                 </LinearGradient>
             </TouchableOpacity>
@@ -128,5 +128,5 @@ const s = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center', gap: SP.md,
         paddingVertical: 18, paddingHorizontal: 44,
     },
-    btnText:  { fontSize: FONT.xl, fontWeight: W.bold, color: '#fff', letterSpacing: -0.2 },
+    btnText:  { fontSize: FONT.xl, fontWeight: W.bold, color: RC.white, letterSpacing: -0.2 },
 });

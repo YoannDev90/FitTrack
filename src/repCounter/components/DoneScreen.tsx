@@ -84,7 +84,7 @@ export function DoneScreen({
 
                         {/* Duration */}
                         <View style={s.summaryItem}>
-                            <View style={[s.statIcon, { backgroundColor: 'rgba(255,255,255,0.07)' }]}>
+                            <View style={[s.statIcon, { backgroundColor: RC.whiteOverlay07 }]}> 
                                 <Timer size={18} color={RC.textMuted} strokeWidth={2} />
                             </View>
                             <Text style={s.summaryVal}>
@@ -124,7 +124,7 @@ export function DoneScreen({
                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                         style={s.primaryBtnGrad}
                     >
-                        <Check size={18} color="#fff" />
+                        <Check size={18} color={RC.white} />
                         <Text style={s.primaryBtnText}>{t('common.finish')}</Text>
                     </LinearGradient>
                 </TouchableOpacity>
@@ -179,5 +179,5 @@ const s = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center', gap: SP.sm,
         paddingVertical: 16, paddingHorizontal: SP.xl,
     },
-    primaryBtnText: { fontSize: FONT.md, fontWeight: W.bold, color: '#fff' },
+    primaryBtnText: { fontSize: FONT.md, fontWeight: W.bold, color: RC.white },
 });

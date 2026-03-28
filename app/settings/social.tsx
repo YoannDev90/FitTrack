@@ -151,8 +151,8 @@ export default function SocialSettingsScreen() {
         {/* Social Features Toggle */}
         <GlassCard style={styles.settingsCard}>
           <SettingItem
-            icon={<Users size={20} color="#22d3ee" />}
-            iconColor="#22d3ee"
+            icon={<Users size={20} color={Colors.info} />}
+            iconColor={Colors.info}
             title={t('settings.socialFeatures')}
             subtitle={socialEnabled ? t('settings.socialEnabled') : t('settings.socialDisabled')}
             rightElement={
@@ -178,7 +178,7 @@ export default function SocialSettingsScreen() {
                     }
                   }}
                   trackColor={{ false: Colors.card, true: Colors.teal }}
-                  thumbColor="#fff"
+                  thumbColor={Colors.white}
                 />
               )
             }
@@ -191,8 +191,8 @@ export default function SocialSettingsScreen() {
           <GlassCard style={styles.settingsCard}>
             {/* Leaderboard Visibility */}
             <SettingItem
-              icon={<Globe size={20} color="#a78bfa" />}
-              iconColor="#a78bfa"
+              icon={<Globe size={20} color={Colors.violet} />}
+              iconColor={Colors.violet}
               title={t('settings.leaderboardVisibility')}
               subtitle={profile?.is_public !== false ? t('settings.leaderboardPublic') : t('settings.leaderboardHidden')}
               rightElement={
@@ -200,7 +200,7 @@ export default function SocialSettingsScreen() {
                   value={profile?.is_public !== false}
                   onValueChange={handleToggleLeaderboardVisibility}
                   trackColor={{ false: Colors.card, true: Colors.teal }}
-                  thumbColor="#fff"
+                  thumbColor={Colors.white}
                 />
               }
               delay={150}
@@ -208,8 +208,8 @@ export default function SocialSettingsScreen() {
             
             {/* View Profile */}
             <SettingItem
-              icon={<Eye size={20} color="#4ade80" />}
-              iconColor="#4ade80"
+              icon={<Eye size={20} color={Colors.success} />}
+              iconColor={Colors.success}
               title={t('settings.myPublicProfile')}
               subtitle={`@${profile?.username || t('profile.notLoggedIn')}`}
               onPress={() => router.push('/social')}
@@ -306,9 +306,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: BorderRadius.md,
-    backgroundColor: 'rgba(248, 113, 113, 0.15)',
+    backgroundColor: Colors.overlayErrorSoft15,
     borderWidth: 1,
-    borderColor: 'rgba(248, 113, 113, 0.3)',
+    borderColor: Colors.overlayErrorSoft30,
   },
   disableButtonText: {
     fontSize: FontSize.xs,

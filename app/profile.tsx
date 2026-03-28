@@ -195,10 +195,10 @@ export default function ProfileScreen() {
                             disabled={isSaving}
                         >
                             {isSaving ? (
-                                <ActivityIndicator color="#fff" />
+                                <ActivityIndicator color={Colors.white} />
                             ) : (
                                 <>
-                                    <Save size={20} color="#fff" />
+                                    <Save size={20} color={Colors.white} />
                                     <Text style={styles.saveButtonText}>
                                         Sauvegarder
                                     </Text>
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.card,
         borderRadius: BorderRadius.lg,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: Colors.overlayWhite10,
         paddingHorizontal: Spacing.md,
     },
     inputIcon: {
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     saveButtonText: {
         fontSize: FontSize.md,
         fontWeight: FontWeight.bold,
-        color: '#fff',
+        color: Colors.white,
     },
     statsCard: {
         padding: Spacing.lg,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: Spacing.sm,
-        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        backgroundColor: Colors.overlayError15,
         borderRadius: BorderRadius.lg,
         paddingVertical: Spacing.md,
     },

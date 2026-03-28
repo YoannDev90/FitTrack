@@ -49,6 +49,7 @@ import { router } from 'expo-router';
 import { AddEntryBottomSheet, AddEntryBottomSheetRef } from '../../src/components/sheets';
 import { useAppStore, useSportsConfig } from '../../src/stores';
 import { formatDisplayDate, getRelativeTime } from '../../src/utils/date';
+import { Colors, ScreenPalettes } from '../../src/constants';
 import type {
   Entry,
   HomeWorkoutEntry,
@@ -64,36 +65,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_HEIGHT = 160;
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-const C = {
-  bg:          '#070709',
-  surface:     '#0e0f14',
-  surfaceUp:   '#13151e',
-  surfaceHigh: '#1a1d28',
-  border:      'rgba(255,255,255,0.07)',
-  borderUp:    'rgba(255,255,255,0.12)',
-  text:        '#f0ece4',
-  textSub:     'rgba(240,236,228,0.55)',
-  textMuted:   'rgba(240,236,228,0.28)',
-  ember:       '#ff5533',
-  emberMid:    '#ff7a55',
-  emberGlow:   'rgba(255,85,51,0.15)',
-  emberBorder: 'rgba(255,85,51,0.25)',
-  gold:        '#e8b84b',
-  goldSoft:    'rgba(232,184,75,0.10)',
-  goldBorder:  'rgba(232,184,75,0.22)',
-  amber:       '#f5a623',
-  blue:        '#5599ff',
-  blueSoft:    'rgba(85,153,255,0.10)',
-  blueBorder:  'rgba(85,153,255,0.22)',
-  teal:        '#2dd4bf',
-  tealSoft:    'rgba(45,212,191,0.10)',
-  tealBorder:  'rgba(45,212,191,0.22)',
-  green:       '#34d370',
-  greenSoft:   'rgba(52,211,112,0.10)',
-  greenBorder: 'rgba(52,211,112,0.22)',
-  violet:      '#a78bfa',
-  error:       '#f87171',
-};
+const C = ScreenPalettes.cool;
 
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
@@ -121,7 +93,7 @@ const FILTER_DEFINITIONS = [
   { value: 'all',       icon: null,                                             color: C.ember,  glow: C.emberGlow  },
   { value: 'home',      icon: <Home      size={14} color={C.green}  />,        color: C.green,  glow: C.greenSoft  },
   { value: 'run',       icon: <Footprints size={14} color={C.blue}  />,        color: C.blue,   glow: C.blueSoft   },
-  { value: 'beatsaber', icon: <Gamepad2  size={14} color={C.violet} />,        color: C.violet, glow: 'rgba(167,139,250,0.12)' },
+  { value: 'beatsaber', icon: <Gamepad2  size={14} color={C.violet} />,        color: C.violet, glow: Colors.overlayViolet12 },
   { value: 'meal',      icon: <UtensilsCrossed size={14} color={C.gold}  />,   color: C.gold,   glow: C.goldSoft   },
   { value: 'measure',   icon: <Ruler     size={14} color={C.teal}  />,         color: C.teal,   glow: C.tealSoft   },
 ];
@@ -130,7 +102,7 @@ const getEntryStyle = (type: string, sportConfig?: any) => {
   switch (type) {
     case 'home':      return { icon: <Home size={18} color={C.green}  />, color: C.green,  bg: C.greenSoft,  border: C.greenBorder  };
     case 'run':       return { icon: <Footprints size={18} color={C.blue}  />, color: C.blue,   bg: C.blueSoft,  border: C.blueBorder   };
-    case 'beatsaber': return { icon: <Gamepad2 size={18} color={C.violet} />, color: C.violet, bg: 'rgba(167,139,250,0.10)', border: 'rgba(167,139,250,0.22)' };
+    case 'beatsaber': return { icon: <Gamepad2 size={18} color={C.violet} />, color: C.violet, bg: C.violetSoft, border: C.violetBorder };
     case 'meal':      return { icon: <UtensilsCrossed size={18} color={C.gold}  />, color: C.gold,   bg: C.goldSoft,  border: C.goldBorder   };
     case 'measure':   return { icon: <Ruler size={18} color={C.teal}  />, color: C.teal,   bg: C.tealSoft,  border: C.tealBorder   };
     case 'custom':
@@ -445,7 +417,7 @@ export default function WorkoutScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Background radial glow */}
       <LinearGradient
-        colors={['rgba(255,85,51,0.06)', 'transparent']}
+        colors={[Colors.overlayEmber06, Colors.transparent]}
         style={styles.bgGlow}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0.6 }}
@@ -913,7 +885,7 @@ const styles = StyleSheet.create({
   // Delete confirm modal
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, zIndex: 100,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: Colors.overlayBlack60,
     justifyContent: 'center' as const, alignItems: 'center' as const,
   },
   modalCard: {
@@ -927,14 +899,14 @@ const styles = StyleSheet.create({
   modalBtns: { flexDirection: 'row' as const, gap: S.md, width: '100%' as const },
   modalCancelBtn: {
     flex: 1, paddingVertical: 14, borderRadius: R.lg,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: Colors.overlayWhite06,
     alignItems: 'center' as const, borderWidth: 1, borderColor: C.border,
   },
   modalCancelText: { fontSize: T.md, fontWeight: W.semi, color: C.textSub },
   modalConfirmBtn: {
     flex: 1, paddingVertical: 14, borderRadius: R.lg,
-    backgroundColor: 'rgba(248,113,113,0.15)',
-    alignItems: 'center' as const, borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)',
+    backgroundColor: Colors.overlayError15,
+    alignItems: 'center' as const, borderWidth: 1, borderColor: Colors.overlayError30,
   },
-  modalConfirmText: { fontSize: T.md, fontWeight: W.bold, color: '#f87171' },
+  modalConfirmText: { fontSize: T.md, fontWeight: W.bold, color: C.error },
 });
