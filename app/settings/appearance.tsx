@@ -12,10 +12,11 @@ import {
   Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Eye, Trophy } from 'lucide-react-native';
+import { ArrowLeft, Eye, Trophy, Palette } from 'lucide-react-native';
 import { GlassCard } from '../../src/components/ui';
 import { useAppStore } from '../../src/stores';
 import { Colors, Spacing, FontSize, FontWeight } from '../../src/constants';
@@ -58,6 +59,21 @@ export default function AppearanceScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <LinearGradient
+        colors={['rgba(167,139,250,0.22)', 'transparent']}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={styles.topGlow}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={['transparent', 'rgba(14,18,32,0.95)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.bottomGlow}
+        pointerEvents="none"
+      />
+
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -71,8 +87,13 @@ export default function AppearanceScreen() {
           >
             <ArrowLeft size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.screenTitle}>{t('settings.appearance')}</Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerTitleWrap}>
+            <Text style={styles.eyebrow}>{t('settings.eyebrow', 'SPIX')}</Text>
+            <Text style={styles.screenTitle}>{t('settings.appearance')}</Text>
+          </View>
+          <View style={styles.headerIconWrap}>
+            <Palette size={18} color="#a78bfa" />
+          </View>
         </Animated.View>
 
         {/* Full Opacity Navbar */}
@@ -130,12 +151,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bg,
   },
+  topGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 260,
+    zIndex: 0,
+  },
+  bottomGlow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 300,
+    zIndex: 0,
+  },
   scrollView: {
     flex: 1,
   },
   content: {
     padding: Spacing.lg,
     paddingBottom: 100,
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -150,22 +188,41 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.stroke,
   },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
+  headerTitleWrap: {
     flex: 1,
   },
-  headerSpacer: {
-    width: 44,
+  eyebrow: {
+    fontSize: FontSize.xs,
+    color: Colors.muted,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
-
+  screenTitle: {
+    fontSize: 26,
+    fontWeight: FontWeight.bold,
+    color: Colors.text,
+  },
+  headerIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.35)',
+    backgroundColor: 'rgba(167,139,250,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   // Settings Card
   settingsCard: {
     marginBottom: Spacing.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(15,19,30,0.8)',
   },
 
   // Setting Item
@@ -175,6 +232,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
     gap: Spacing.md,
+    borderRadius: 14,
   },
   settingIconContainer: {
     width: 40,

@@ -11,10 +11,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Check } from 'lucide-react-native';
+import { ArrowLeft, Check, Languages } from 'lucide-react-native';
 import { GlassCard } from '../../src/components/ui';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
 import { LANGUAGES, changeLanguage, getCurrentLanguage, type LanguageCode } from '../../src/i18n';
@@ -30,6 +31,14 @@ export default function LanguageScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <LinearGradient
+        colors={['rgba(52,211,153,0.16)', 'transparent']}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={styles.topGlow}
+        pointerEvents="none"
+      />
+
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -43,8 +52,13 @@ export default function LanguageScreen() {
           >
             <ArrowLeft size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.screenTitle}>{t('settings.language')}</Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerTitleWrap}>
+            <Text style={styles.eyebrow}>{t('settings.eyebrow', 'SPIX')}</Text>
+            <Text style={styles.screenTitle}>{t('settings.language')}</Text>
+          </View>
+          <View style={styles.headerIconWrap}>
+            <Languages size={18} color="#34d399" />
+          </View>
         </Animated.View>
 
         {/* Language Options */}
@@ -93,12 +107,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bg,
   },
+  topGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 260,
+    zIndex: 0,
+  },
   scrollView: {
     flex: 1,
   },
   content: {
     padding: Spacing.lg,
     paddingBottom: 100,
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -113,20 +136,40 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.stroke,
   },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
+  headerTitleWrap: {
     flex: 1,
   },
-  headerSpacer: {
-    width: 44,
+  eyebrow: {
+    fontSize: FontSize.xs,
+    color: Colors.muted,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  screenTitle: {
+    fontSize: 26,
+    fontWeight: FontWeight.bold,
+    color: Colors.text,
+  },
+  headerIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(52,211,153,0.28)',
+    backgroundColor: 'rgba(52,211,153,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Language Card
   languageCard: {
     paddingVertical: Spacing.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(14,19,30,0.82)',
   },
 
   // Language Option
@@ -136,6 +179,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     gap: Spacing.md,
+    borderRadius: BorderRadius.lg,
   },
   languageOptionActive: {
     backgroundColor: `${Colors.teal}15`,
