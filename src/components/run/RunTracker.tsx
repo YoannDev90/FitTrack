@@ -34,6 +34,7 @@ import {
   Square,
   ArrowLeft,
   Navigation,
+  Clock3,
   MapPin,
   Shield,
   CheckCircle2,
@@ -994,6 +995,21 @@ export function RunTracker({ mode }: RunTrackerProps) {
         />
       )}
 
+      <LinearGradient
+        pointerEvents="none"
+        colors={['rgba(8,12,24,0.72)', 'transparent']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.topAmbientGlow}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={['transparent', 'rgba(9,13,22,0.9)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.bottomAmbientGlow}
+      />
+
       {/* Top bar */}
       <SafeAreaView edges={['top']} style={styles.topBar}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
@@ -1067,16 +1083,36 @@ export function RunTracker({ mode }: RunTrackerProps) {
 
       {/* Bottom metric sheet */}
       <View style={styles.bottomSheet}>
+        <LinearGradient
+          colors={['rgba(85,153,255,0.10)', 'rgba(14,15,20,0.96)', 'rgba(14,15,20,0.98)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.bottomSheetGradient}
+          pointerEvents="none"
+        />
+        <View style={styles.bottomSheetHandle} />
+
         {/* Big distance + time */}
         <View style={styles.bigRow}>
           <View style={styles.bigMetric}>
-            <Navigation size={14} color={C.blue} />
-            <Text style={styles.bigValue}>{store.distanceKm.toFixed(2)}</Text>
-            <Text style={styles.bigUnit}>km</Text>
+            <View style={styles.bigMetricLabelRow}>
+              <Navigation size={13} color={C.blue} />
+              <Text style={styles.bigMetricLabel}>{t('run.distance', { defaultValue: 'Distance' })}</Text>
+            </View>
+            <View style={styles.bigMetricValueRow}>
+              <Text style={styles.bigValue}>{store.distanceKm.toFixed(2)}</Text>
+              <Text style={styles.bigUnit}>km</Text>
+            </View>
           </View>
           <View style={styles.bigDivider} />
           <View style={styles.bigMetric}>
-            <Text style={styles.bigValue}>{formatDuration(store.elapsedSeconds)}</Text>
+            <View style={styles.bigMetricLabelRow}>
+              <Clock3 size={13} color={C.gold} />
+              <Text style={styles.bigMetricLabel}>{t('common.duration', { defaultValue: 'Durée' })}</Text>
+            </View>
+            <View style={styles.bigMetricValueRow}>
+              <Text style={styles.bigValue}>{formatDuration(store.elapsedSeconds)}</Text>
+            </View>
           </View>
         </View>
 
@@ -1289,6 +1325,22 @@ export function RunTracker({ mode }: RunTrackerProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
+  topAmbientGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: SH * 0.42,
+    zIndex: 10,
+  },
+  bottomAmbientGlow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: SH * 0.5,
+    zIndex: 10,
+  },
 
   // Top bar
   topBar: {
@@ -1401,16 +1453,45 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: C.border,
     paddingHorizontal: S.lg, paddingTop: S.xl,
     paddingBottom: Platform.OS === 'ios' ? 44 : S.xxl,
+    overflow: 'hidden',
+  },
+  bottomSheetGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  bottomSheetHandle: {
+    width: 44,
+    height: 4,
+    borderRadius: R.full,
+    backgroundColor: 'rgba(255,255,255,0.24)',
+    alignSelf: 'center',
+    marginBottom: S.md,
   },
   bigRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     marginBottom: S.lg,
   },
-  bigMetric: { flexDirection: 'row', alignItems: 'baseline', gap: S.xs },
+  bigMetric: { flex: 1, alignItems: 'center', gap: S.xs },
+  bigMetricLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.xs,
+  },
+  bigMetricLabel: {
+    fontSize: T.nano,
+    fontWeight: W.bold,
+    color: C.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.3,
+  },
+  bigMetricValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: S.xs,
+  },
   bigValue: { fontSize: 38, fontWeight: W.black, color: C.text, letterSpacing: -1 },
   bigUnit: { fontSize: T.lg, fontWeight: W.semi, color: C.textSub },
   bigDivider: {
-    width: 1, height: 32, backgroundColor: C.border, marginHorizontal: S.xl,
+    width: 1, height: 52, backgroundColor: C.border, marginHorizontal: S.lg,
   },
 
   // Metrics
@@ -1420,7 +1501,7 @@ const styles = StyleSheet.create({
   metricCard: {
     flex: 1, minWidth: (SW - S.lg * 2 - S.sm) / 2 - 1,
     padding: S.md,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: R.lg, borderWidth: 1, borderColor: C.border,
   },
   metricLabel: { fontSize: T.nano, fontWeight: W.bold, color: C.textMuted, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: S.xs },
