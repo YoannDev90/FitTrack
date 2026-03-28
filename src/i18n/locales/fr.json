@@ -163,6 +163,7 @@
     },
     "quickActions": {
       "title": "Actions rapides",
+      "startTracking": "Démarrer le tracking",
       "addWorkout": "Ajouter",
       "addRun": "Ajouter course",
       "addMeal": "Ajouter repas",
@@ -294,6 +295,7 @@
     "noDataHint": "Tes stats apparaîtront ici"
   },
   "repCounter": {
+    "recentSports": "3 derniers sports",
     "title": "Compteur d'exercices",
     "selectExercise": "Choisir un exercice",
     "selectHint": "Sélectionne l'exercice que tu veux tracker",

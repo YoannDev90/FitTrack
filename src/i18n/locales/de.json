@@ -163,6 +163,7 @@
     },
     "quickActions": {
       "title": "Schnellaktionen",
+      "startTracking": "Tracking starten",
       "addWorkout": "Workout",
       "addRun": "Lauf",
       "addMeal": "Mahlzeit",
@@ -294,6 +295,7 @@
     "noDataHint": "Deine Statistiken werden hier erscheinen"
   },
   "repCounter": {
+    "recentSports": "Letzte 3 Sportarten",
     "title": "Übungszähler",
     "selectExercise": "Wähle eine Übung",
     "selectHint": "Wähle die Übung, die du tracken möchtest",
