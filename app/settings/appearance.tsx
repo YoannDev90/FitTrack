@@ -61,74 +61,74 @@ import type { ThemeCustomColors, ThemePreset } from '../../src/types';
 
 const THEME_CARDS: Array<{
   id: Exclude<ThemePreset, 'custom'>;
-  label: string;
+  labelKey: string;
   emoji: string;
   gradient: [string, string, string];
   accentA: string;
   accentB: string;
-  description: string;
+  descriptionKey: string;
 }> = [
   {
     id: 'default',
-    label: 'Default',
+    labelKey: 'settings.appearanceThemeDefaultLabel',
     emoji: '▲',
     gradient: ['#0a0a0a', '#1a0800', '#2a0e00'],
     accentA: '#ff5533',
     accentB: '#ff7a55',
-    description: 'Ember on black',
+    descriptionKey: 'settings.appearanceThemeDefaultDesc',
   },
   {
     id: 'ocean',
-    label: 'Ocean',
+    labelKey: 'settings.appearanceThemeOceanLabel',
     emoji: '◎',
     gradient: ['#0d1b2a', '#1b4332', '#0077b6'],
     accentA: '#00b4d8',
     accentB: '#48cae4',
-    description: 'Abyssal waters',
+    descriptionKey: 'settings.appearanceThemeOceanDesc',
   },
   {
     id: 'sunset',
-    label: 'Sunset',
+    labelKey: 'settings.appearanceThemeSunsetLabel',
     emoji: '◈',
     gradient: ['#2d1b00', '#7c3f00', '#c0392b'],
     accentA: '#ff6b35',
     accentB: '#ffd700',
-    description: 'Ember & gold',
+    descriptionKey: 'settings.appearanceThemeSunsetDesc',
   },
   {
     id: 'forest',
-    label: 'Forest',
+    labelKey: 'settings.appearanceThemeForestLabel',
     emoji: '⬡',
     gradient: ['#0a1a0e', '#1a3a1f', '#2d5a27'],
     accentA: '#52b788',
     accentB: '#b7e4c7',
-    description: 'Ancient canopy',
+    descriptionKey: 'settings.appearanceThemeForestDesc',
   },
   {
     id: 'midnight',
-    label: 'Midnight',
+    labelKey: 'settings.appearanceThemeMidnightLabel',
     emoji: '◇',
     gradient: ['#0a0a0f', '#12121a', '#1a1a2e'],
     accentA: '#9b59b6',
     accentB: '#e056fd',
-    description: 'Pure darkness',
+    descriptionKey: 'settings.appearanceThemeMidnightDesc',
   },
 ];
 
-const CUSTOM_FIELDS: Array<{ key: keyof ThemeCustomColors; label: string; group: string }> = [
-  { key: 'bg', label: 'Background', group: 'Base' },
-  { key: 'surface', label: 'Surface', group: 'Base' },
-  { key: 'text', label: 'Text', group: 'Base' },
-  { key: 'muted', label: 'Muted text', group: 'Base' },
-  { key: 'primary', label: 'Primary', group: 'Actions' },
-  { key: 'secondary', label: 'Secondary', group: 'Actions' },
-  { key: 'success', label: 'Success', group: 'States' },
-  { key: 'warning', label: 'Warning', group: 'States' },
-  { key: 'error', label: 'Error', group: 'States' },
-  { key: 'info', label: 'Info', group: 'States' },
-  { key: 'violet', label: 'Violet', group: 'Accents' },
-  { key: 'rose', label: 'Rose', group: 'Accents' },
-  { key: 'gold', label: 'Gold', group: 'Accents' },
+const CUSTOM_FIELDS: Array<{ key: keyof ThemeCustomColors; labelKey: string; groupKey: string }> = [
+  { key: 'bg', labelKey: 'settings.appearanceFieldBg', groupKey: 'settings.appearanceGroupBase' },
+  { key: 'surface', labelKey: 'settings.appearanceFieldSurface', groupKey: 'settings.appearanceGroupBase' },
+  { key: 'text', labelKey: 'settings.appearanceFieldText', groupKey: 'settings.appearanceGroupBase' },
+  { key: 'muted', labelKey: 'settings.appearanceFieldMuted', groupKey: 'settings.appearanceGroupBase' },
+  { key: 'primary', labelKey: 'settings.appearanceFieldPrimary', groupKey: 'settings.appearanceGroupActions' },
+  { key: 'secondary', labelKey: 'settings.appearanceFieldSecondary', groupKey: 'settings.appearanceGroupActions' },
+  { key: 'success', labelKey: 'settings.appearanceFieldSuccess', groupKey: 'settings.appearanceGroupStates' },
+  { key: 'warning', labelKey: 'settings.appearanceFieldWarning', groupKey: 'settings.appearanceGroupStates' },
+  { key: 'error', labelKey: 'settings.appearanceFieldError', groupKey: 'settings.appearanceGroupStates' },
+  { key: 'info', labelKey: 'settings.appearanceFieldInfo', groupKey: 'settings.appearanceGroupStates' },
+  { key: 'violet', labelKey: 'settings.appearanceFieldViolet', groupKey: 'settings.appearanceGroupAccents' },
+  { key: 'rose', labelKey: 'settings.appearanceFieldRose', groupKey: 'settings.appearanceGroupAccents' },
+  { key: 'gold', labelKey: 'settings.appearanceFieldGold', groupKey: 'settings.appearanceGroupAccents' },
 ];
 
 // ─── Animated Theme Card ──────────────────────────────────────────────────────
@@ -144,6 +144,7 @@ function ThemeCard({
   onPress: () => void;
   delay: number;
 }) {
+  const { t } = useTranslation();
   const scale = useSharedValue(1);
   const glow = useSharedValue(isActive ? 1 : 0);
 
@@ -202,8 +203,8 @@ function ThemeCard({
             </View>
 
             {/* Labels */}
-            <Text style={styles.themeCardLabel}>{theme.label}</Text>
-            <Text style={styles.themeCardDesc}>{theme.description}</Text>
+            <Text style={styles.themeCardLabel}>{t(theme.labelKey)}</Text>
+            <Text style={styles.themeCardDesc}>{t(theme.descriptionKey)}</Text>
 
             {/* Check badge */}
             {isActive && (
@@ -278,15 +279,17 @@ function ColorRow({
   onChangeText,
   onEndEditing,
 }: {
-  field: { key: keyof ThemeCustomColors; label: string };
+  field: { key: keyof ThemeCustomColors; labelKey: string };
   value: string;
   onChangeText: (v: string) => void;
   onEndEditing: (v: string) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.colorRow}>
       <View style={[styles.colorDot, { backgroundColor: value }]} />
-      <Text style={styles.colorLabel}>{field.label}</Text>
+      <Text style={styles.colorLabel}>{t(field.labelKey)}</Text>
       <View style={styles.hexInputWrap}>
         <TextInput
           value={value}
@@ -339,8 +342,8 @@ export default function AppearanceScreen() {
     const normalized = normalizeThemeHexColor(value);
     if (!normalized) {
       Alert.alert(
-        t('settings.appearance.invalidColorTitle', 'Couleur invalide'),
-        t('settings.appearance.invalidColorMessage', 'Utilise le format hex comme #1f6a66 ou #abc.')
+        t('settings.appearanceInvalidColorTitle'),
+        t('settings.appearanceInvalidColorMessage')
       );
       return;
     }
@@ -353,8 +356,8 @@ export default function AppearanceScreen() {
       const parsed = normalizeThemeHexColor(normalized[field.key]);
       if (!parsed) {
         Alert.alert(
-          t('settings.appearance.invalidColorTitle', 'Couleur invalide'),
-          t('settings.appearance.invalidColorMessage', 'Utilise le format hex comme #1f6a66 ou #abc.')
+          t('settings.appearanceInvalidColorTitle'),
+          t('settings.appearanceInvalidColorMessage')
         );
         return;
       }
@@ -383,11 +386,8 @@ export default function AppearanceScreen() {
       return;
     }
     Alert.alert(
-      t('settings.appearance.restartTitle', 'Redémarrage conseillé'),
-      t(
-        'settings.appearance.restartMessage',
-        'Le thème est appliqué. Si certains écrans gardent l\'ancien style, relance l\'app.'
-      )
+      t('settings.appearanceRestartTitle'),
+      t('settings.appearanceRestartMessage')
     );
   };
 
@@ -395,8 +395,8 @@ export default function AppearanceScreen() {
   const groupedFields = useMemo(() => {
     const groups: Record<string, typeof CUSTOM_FIELDS> = {};
     for (const f of CUSTOM_FIELDS) {
-      if (!groups[f.group]) groups[f.group] = [];
-      groups[f.group].push(f);
+      if (!groups[f.groupKey]) groups[f.groupKey] = [];
+      groups[f.groupKey].push(f);
     }
     return groups;
   }, []);
@@ -430,7 +430,7 @@ export default function AppearanceScreen() {
             <ArrowLeft size={22} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.eyebrow}>{t('settings.eyebrow', 'SPIX')}</Text>
+            <Text style={styles.eyebrow}>{t('settings.eyebrow')}</Text>
             <Text style={styles.screenTitle}>{t('settings.appearance')}</Text>
           </View>
           <View style={styles.headerIcon}>
@@ -466,7 +466,7 @@ export default function AppearanceScreen() {
 
         {/* ── Theme presets ── */}
         <SectionHeader
-          title={t('settings.appearance.presetsTitle', 'Thèmes prédéfinis')}
+          title={t('settings.appearancePresetsTitle')}
           delay={150}
         />
 
@@ -510,8 +510,8 @@ export default function AppearanceScreen() {
                       <View key={i} style={[styles.themeSwatchDot, { backgroundColor: c }]} />
                     ))}
                   </View>
-                  <Text style={styles.themeCardLabel}>Custom</Text>
-                  <Text style={styles.themeCardDesc}>Ta palette perso</Text>
+                  <Text style={styles.themeCardLabel}>{t('settings.appearanceCustomCardLabel')}</Text>
+                  <Text style={styles.themeCardDesc}>{t('settings.appearanceCustomCardDesc')}</Text>
                 </View>
               </View>
             </Pressable>
@@ -527,17 +527,17 @@ export default function AppearanceScreen() {
             <View style={styles.customEditorHeader}>
               <Sparkles size={14} color="#c084fc" />
               <Text style={styles.customEditorTitle}>
-                {t('settings.appearance.customTitle', 'Thème personnalisé')}
+                {t('settings.appearanceCustomTitle')}
               </Text>
             </View>
             <Text style={styles.customEditorSub}>
-              {t('settings.appearance.customSubtitle', 'Toutes les couleurs de l\'interface découlent de ces valeurs.')}
+              {t('settings.appearanceCustomSubtitle')}
             </Text>
 
             {/* Color groups */}
-            {Object.entries(groupedFields).map(([group, fields]) => (
-              <View key={group} style={styles.colorGroup}>
-                <Text style={styles.colorGroupLabel}>{group}</Text>
+            {Object.entries(groupedFields).map(([groupKey, fields]) => (
+              <View key={groupKey} style={styles.colorGroup}>
+                <Text style={styles.colorGroupLabel}>{t(groupKey)}</Text>
                 {fields.map((field) => (
                   <ColorRow
                     key={field.key}
@@ -555,13 +555,13 @@ export default function AppearanceScreen() {
               <TouchableOpacity style={styles.btnSecondary} onPress={resetCustomTheme}>
                 <RotateCcw size={14} color={Colors.muted} />
                 <Text style={styles.btnSecondaryText}>
-                  {t('settings.appearance.resetDefault', 'Réinitialiser')}
+                  {t('settings.appearanceResetDefault')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnPrimary} onPress={applyCustomTheme}>
                 <Check size={14} color="#fff" strokeWidth={2.5} />
                 <Text style={styles.btnPrimaryText}>
-                  {t('settings.appearance.applyCustomTheme', 'Appliquer')}
+                  {t('settings.appearanceApplyCustomTheme')}
                 </Text>
               </TouchableOpacity>
             </View>
