@@ -10,17 +10,15 @@ import {
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, Check } from 'lucide-react-native';
+import { ChevronLeft, Check, ChevronDown, Settings, Activity } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { nanoid } from 'nanoid/non-secure';
 
 import { useAppStore, useSportsConfig } from '../../stores';
-import type { EntryType, Entry, HomeWorkoutEntry, RunEntry, BeatSaberEntry, MealEntry, MeasureEntry, SportConfig } from '../../types';
+import type { EntryType, Entry, HomeWorkoutEntry, RunEntry, BeatSaberEntry, MealEntry, MeasureEntry, SportConfig, CustomSportEntry } from '../../types';
 
 import { CategoryScreen }    from './CategoryScreen';
-import { SportPickerScreen } from './SportPickerScreen';
 import { WorkoutForm }       from './WorkoutForm';
 import { RunForm, BeatSaberForm, MealForm, MeasureForm, CustomSportForm } from './SportForms';
 import { DateTimeSelector }  from './DateTimeSelector';
@@ -95,10 +93,19 @@ export function AddEntryForm({
     const sportsConfig = useSportsConfig();
     const visibleSports = useMemo(() => sportsConfig.filter((s: SportConfig) => !s.isHidden), [sportsConfig]);
 
+    const initialCategory = useMemo<CategoryType | null>(() => {
+        if (!editEntry) return null;
+        if (['home', 'run', 'beatsaber', 'custom'].includes(editEntry.type)) return 'sport';
+        if (editEntry.type === 'meal') return 'meal';
+        if (editEntry.type === 'measure') return 'measure';
+        return null;
+    }, [editEntry]);
+
     // ── Navigation flow ─────────────────────────────────────────────────────
     const [hasStarted, setHasStarted]               = useState(isEdit);
-    const [selectedCategory, setSelectedCategory]   = useState<CategoryType | null>(null);
+    const [selectedCategory, setSelectedCategory]   = useState<CategoryType | null>(initialCategory);
     const [activeTab, setActiveTab]                 = useState<EntryType>(editEntry?.type || initialTab);
+    const [sportMenuOpen, setSportMenuOpen]         = useState(false);
 
     // ── Import modal ────────────────────────────────────────────────────────
     const [importModalVisible, setImportModalVisible] = useState(false);
@@ -169,7 +176,15 @@ export function AddEntryForm({
     });
 
     // ── Formulaire Custom Sport ─────────────────────────────────────────────
-    const [selectedSportId, setSelectedSportId]   = useState<string | null>(null);
+    const [selectedSportId, setSelectedSportId]   = useState<string | null>(() => {
+        if (isEdit && editEntry?.type === 'custom') {
+            return (editEntry as CustomSportEntry).sportId;
+        }
+        if (isEdit && editEntry && ['home', 'run', 'beatsaber'].includes(editEntry.type)) {
+            return editEntry.type;
+        }
+        return null;
+    });
     const [customFields, setCustomFields]         = useState({ name: '', duration: '', distance: '', bpmAvg: '', bpmMax: '', cardiacLoad: '', calories: '', exercises: '', totalReps: '' });
 
     // ── Stores ──────────────────────────────────────────────────────────────
@@ -205,34 +220,51 @@ export function AddEntryForm({
         Alert.alert('Copié !', 'Exemple JSON copié dans le presse-papiers');
     }, []);
 
-    // ── Navigation flow handlers ─────────────────────────────────────────────
-    const handleSelectCategory = useCallback((cat: CategoryType) => {
-        if (cat === 'meal' && !isEdit) {
-            onDismiss?.();
-            router.push('/enhanced-meal');
-        } else if (cat === 'measure') {
-            setActiveTab('measure');
-            setHasStarted(true);
-        } else {
-            setSelectedCategory('sport');
-        }
-    }, [isEdit, onDismiss]);
-
-    const handleSelectSport = useCallback((sportId: string) => {
+    const applySportSelection = useCallback((sportId: string) => {
         const map: Record<string, EntryType> = { home: 'home', run: 'run', beatsaber: 'beatsaber' };
+        setSelectedSportId(sportId);
         if (map[sportId]) {
             setActiveTab(map[sportId]);
         } else {
-            setSelectedSportId(sportId);
             setActiveTab('custom');
         }
-        setHasStarted(true);
-        setSelectedCategory(null);
     }, []);
+
+    const selectedSportLabel = useMemo(() => {
+        const selected = sportsConfig.find((s: SportConfig) => s.id === selectedSportId);
+        return selected?.name || t('addEntry.home', 'Musculation');
+    }, [sportsConfig, selectedSportId, t]);
+
+    // ── Navigation flow handlers ─────────────────────────────────────────────
+    const handleSelectCategory = useCallback((cat: CategoryType) => {
+        if (cat === 'sport') {
+            const fallbackSportId = selectedSportId || visibleSports[0]?.id || 'home';
+            applySportSelection(fallbackSportId);
+            setSelectedCategory('sport');
+            setHasStarted(true);
+            return;
+        }
+
+        if (cat === 'measure') {
+            setSelectedCategory('measure');
+            setActiveTab('measure');
+            setHasStarted(true);
+            return;
+        }
+
+        setSelectedCategory('meal');
+        setActiveTab('meal');
+        setHasStarted(true);
+    }, [applySportSelection, selectedSportId, visibleSports]);
 
     const handleRealTimeTracking = useCallback(() => {
         onDismiss?.();
         router.push('/repCounter');
+    }, [onDismiss]);
+
+    const handleOpenSportsSettings = useCallback(() => {
+        onDismiss?.();
+        router.push('/settings/sports');
     }, [onDismiss]);
 
     // ── Submit ───────────────────────────────────────────────────────────────
@@ -319,6 +351,7 @@ export function AddEntryForm({
             setUseCustomDateTime(false);
             setCustomDate(format(new Date(), 'yyyy-MM-dd'));
             setCustomTime(format(new Date(), 'HH:mm'));
+            setSportMenuOpen(false);
             setHasStarted(false);
             setSelectedCategory(null);
 
@@ -346,20 +379,6 @@ export function AddEntryForm({
         );
     }
 
-    // ── Render : sélection sport ──────────────────────────────────────────────
-    if (!hasStarted && selectedCategory === 'sport') {
-        return (
-            <View style={st.flowContainer}>
-                <SportPickerScreen
-                    visibleSports={visibleSports}
-                    onSelectSport={handleSelectSport}
-                    onRealTimeTracking={handleRealTimeTracking}
-                    onBack={() => setSelectedCategory(null)}
-                />
-            </View>
-        );
-    }
-
     // ── Render : formulaire ───────────────────────────────────────────────────
     const tabEmoji = TAB_EMOJI[activeTab] || '📝';
     const tabLabel = activeTab === 'custom' && selectedSportId
@@ -381,7 +400,15 @@ export function AddEntryForm({
             ]}>
                 {/* Header */}
                 <View style={st.header}>
-                    <TouchableOpacity style={st.backBtn} onPress={() => setHasStarted(false)} activeOpacity={0.7}>
+                    <TouchableOpacity
+                        style={st.backBtn}
+                        onPress={() => {
+                            setHasStarted(false);
+                            setSelectedCategory(null);
+                            setSportMenuOpen(false);
+                        }}
+                        activeOpacity={0.7}
+                    >
                         <ChevronLeft size={18} color={FC.textSub} strokeWidth={2.5} />
                         <Text style={st.backText}>{t('addEntry.back', 'Retour')}</Text>
                     </TouchableOpacity>
@@ -400,6 +427,72 @@ export function AddEntryForm({
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
+                    {selectedCategory === 'sport' && (
+                        <View style={st.sportToolsWrap}>
+                            <TouchableOpacity
+                                style={st.realtimeHintBtn}
+                                onPress={handleRealTimeTracking}
+                                activeOpacity={0.75}
+                            >
+                                <Activity size={14} color={FC.textMuted} strokeWidth={2.4} />
+                                <Text style={st.realtimeHintText}>
+                                    {t('addEntry.realtimeHint', 'Vous preferez tracker cet exercice ?')}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <View style={st.sportSelectRow}>
+                                <TouchableOpacity
+                                    style={st.sportDropdownBtn}
+                                    onPress={() => setSportMenuOpen(v => !v)}
+                                    activeOpacity={0.75}
+                                >
+                                    <Text style={st.sportDropdownText} numberOfLines={1}>
+                                        {selectedSportLabel}
+                                    </Text>
+                                    <ChevronDown size={16} color={FC.textSub} strokeWidth={2.2} />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={st.sportSettingsBtn}
+                                    onPress={handleOpenSportsSettings}
+                                    activeOpacity={0.75}
+                                >
+                                    <Settings size={16} color={FC.textSub} strokeWidth={2.2} />
+                                </TouchableOpacity>
+                            </View>
+
+                            {sportMenuOpen && (
+                                <View style={st.sportDropdownMenu}>
+                                    {visibleSports.map((sport) => (
+                                        <TouchableOpacity
+                                            key={sport.id}
+                                            style={[
+                                                st.sportDropdownItem,
+                                                selectedSportId === sport.id && st.sportDropdownItemActive,
+                                            ]}
+                                            onPress={() => {
+                                                applySportSelection(sport.id);
+                                                setSportMenuOpen(false);
+                                            }}
+                                            activeOpacity={0.75}
+                                        >
+                                            <Text style={st.sportDropdownItemEmoji}>{sport.emoji}</Text>
+                                            <Text
+                                                style={[
+                                                    st.sportDropdownItemText,
+                                                    selectedSportId === sport.id && st.sportDropdownItemTextActive,
+                                                ]}
+                                                numberOfLines={1}
+                                            >
+                                                {sport.name}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+                    )}
+
                     {/* Date/heure */}
                     <DateTimeSelector
                         enabled={useCustomDateTime}
@@ -565,6 +658,91 @@ const st = StyleSheet.create({
         paddingHorizontal: FS.xl,
         paddingTop: FS.lg,
         paddingBottom: 50,
+    },
+    sportToolsWrap: {
+        marginBottom: FS.lg,
+        gap: FS.sm,
+    },
+    realtimeHintBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: FS.xs,
+        alignSelf: 'flex-start',
+        paddingHorizontal: FS.sm,
+        paddingVertical: FS.xs,
+        borderRadius: FR.md,
+        backgroundColor: FC.overlay,
+        borderWidth: 1,
+        borderColor: FC.border,
+    },
+    realtimeHintText: {
+        fontSize: FT.xs,
+        color: FC.textMuted,
+        fontWeight: FW.med,
+    },
+    sportSelectRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: FS.sm,
+    },
+    sportDropdownBtn: {
+        flex: 1,
+        minHeight: 42,
+        borderRadius: FR.lg,
+        borderWidth: 1,
+        borderColor: FC.border,
+        backgroundColor: FC.surface,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: FS.md,
+    },
+    sportDropdownText: {
+        fontSize: FT.sm,
+        color: FC.text,
+        fontWeight: FW.semi,
+        flex: 1,
+        marginRight: FS.sm,
+    },
+    sportSettingsBtn: {
+        width: 42,
+        height: 42,
+        borderRadius: FR.lg,
+        borderWidth: 1,
+        borderColor: FC.border,
+        backgroundColor: FC.surface,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    sportDropdownMenu: {
+        borderRadius: FR.lg,
+        borderWidth: 1,
+        borderColor: FC.border,
+        backgroundColor: FC.surface,
+        overflow: 'hidden',
+    },
+    sportDropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: FS.sm,
+        paddingHorizontal: FS.md,
+        paddingVertical: FS.sm,
+    },
+    sportDropdownItemActive: {
+        backgroundColor: FC.overlay,
+    },
+    sportDropdownItemEmoji: {
+        fontSize: 18,
+    },
+    sportDropdownItemText: {
+        flex: 1,
+        fontSize: FT.sm,
+        color: FC.textSub,
+        fontWeight: FW.med,
+    },
+    sportDropdownItemTextActive: {
+        color: FC.text,
+        fontWeight: FW.bold,
     },
 
     // Submit
