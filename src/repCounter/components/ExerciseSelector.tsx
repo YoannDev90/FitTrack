@@ -13,8 +13,8 @@ import {
 import { BuildConfig } from '@/config/buildConfig';
 import { useTranslation } from 'react-i18next';
 import * as Linking from 'expo-linking';
-import { useAppStore, useSportsConfig } from '../../stores';
-import type { CustomSportEntry, HomeWorkoutEntry, SportConfig } from '../../types';
+import { useAppStore } from '../../stores';
+import type { HomeWorkoutEntry } from '../../types';
 import { RC, SP, RAD, FONT, W, EXERCISES } from '../constants';
 import type { ExerciseConfig, DetectionMode } from '../types';
 
@@ -49,7 +49,7 @@ function mapActivityToExerciseId(activityName: string): ExerciseConfig['id'] | n
     const v = normalizeLabel(activityName);
 
     if (/course|run|jog|sprint/.test(v)) return 'run';
-    if (/traction|pull\s?up|climb|grimpe|escalade/.test(v)) return 'pullups';
+    if (/traction|tractions|pull\s?ups?/.test(v)) return 'pullups';
     if (/pompe|push\s?up/.test(v)) return 'pushups';
     if (/abdo|sit\s?up|crunch/.test(v)) return 'situps';
     if (/squat/.test(v)) return 'squats';
@@ -241,7 +241,6 @@ export function ExerciseSelector({
     const router = useRouter();
     const entries = useAppStore(s => s.entries);
     const settings = useAppStore(s => s.settings);
-    const sportsConfig = useSportsConfig();
 
     const recentSportCards = useMemo<RecentSportCard[]>(() => {
         const cards: RecentSportCard[] = [];
@@ -250,7 +249,7 @@ export function ExerciseSelector({
         for (const entry of entries) {
             if (cards.length >= 3) break;
 
-            if (!['home', 'run', 'beatsaber', 'custom'].includes(entry.type)) {
+            if (!['home', 'run'].includes(entry.type)) {
                 continue;
             }
 
@@ -298,52 +297,10 @@ export function ExerciseSelector({
                 });
                 continue;
             }
-
-            if (entry.type === 'custom') {
-                const sportConfig = sportsConfig.find((s: SportConfig) => s.id === (entry as CustomSportEntry).sportId);
-                if (!sportConfig) continue;
-
-                const mappedExerciseId = mapActivityToExerciseId(sportConfig.name);
-                if (!mappedExerciseId || mappedExerciseId === 'run_ai') {
-                    continue;
-                }
-
-                const key = `sport:${sportConfig.id}`;
-                if (seenKeys.has(key)) continue;
-                seenKeys.add(key);
-
-                cards.push({
-                    id: entry.id,
-                    key,
-                    label: sportConfig?.name || t('entries.custom', 'Sport custom'),
-                    emoji: sportConfig?.emoji || '⚡',
-                    color: sportConfig?.color || '#ff5533',
-                    subtitle: t('repCounter.quickTrack', 'Lancer le tracking'),
-                    targetRoute: mappedExerciseId === 'run' ? '/run/simple' : undefined,
-                    targetExerciseId: mappedExerciseId !== 'run' ? mappedExerciseId : undefined,
-                });
-                continue;
-            }
-
-            if (entry.type === 'beatsaber') {
-                const key = 'beatsaber';
-                if (seenKeys.has(key)) continue;
-                seenKeys.add(key);
-
-                cards.push({
-                    id: entry.id,
-                    key,
-                    label: t('entries.beatsaber', 'Beat Saber'),
-                    emoji: '🎮',
-                    color: '#a78bfa',
-                    subtitle: t('repCounter.quickTrack', 'Lancer le tracking'),
-                    targetExerciseId: 'jumping_jacks',
-                });
-            }
         }
 
         return cards;
-    }, [entries, sportsConfig, t]);
+    }, [entries, t]);
 
     const showDetectionModeSelector = selectedExercise ? !(settings.skipSensorSelection ?? false) : false;
 
