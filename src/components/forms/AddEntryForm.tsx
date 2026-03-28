@@ -252,10 +252,9 @@ export function AddEntryForm({
             return;
         }
 
-        setSelectedCategory('meal');
-        setActiveTab('meal');
-        setHasStarted(true);
-    }, [applySportSelection, selectedSportId, visibleSports]);
+        onDismiss?.();
+        router.push('/enhanced-meal');
+    }, [applySportSelection, selectedSportId, visibleSports, onDismiss]);
 
     const handleRealTimeTracking = useCallback(() => {
         onDismiss?.();
