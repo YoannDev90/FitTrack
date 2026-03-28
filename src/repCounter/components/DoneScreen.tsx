@@ -97,8 +97,8 @@ export function DoneScreen({
 
                         {/* Calories */}
                         <View style={s.summaryItem}>
-                            <View style={[s.statIcon, { backgroundColor: 'rgba(249,115,22,0.12)' }]}>
-                                <Flame size={18} color="#f97316" strokeWidth={2} />
+                            <View style={[s.statIcon, { backgroundColor: RC.emberGlow }]}> 
+                                <Flame size={18} color={RC.emberMid} strokeWidth={2} />
                             </View>
                             <Text style={s.summaryVal}>{calories}</Text>
                             <Text style={s.summaryLabel}>{t('common.kcal')}</Text>

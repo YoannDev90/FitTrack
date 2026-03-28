@@ -84,7 +84,7 @@ export function EllipticalCalibration({
             {/* STILL */}
             {phase === 'still' && (
                 <Animated.View entering={FadeIn} style={s.phaseWrap}>
-                    <View style={[s.iconBox, { backgroundColor: 'rgba(251,191,36,0.12)' }]}>
+                    <View style={[s.iconBox, { backgroundColor: RC.emberGlow }]}> 
                         <Text style={s.phaseIcon}>🗿</Text>
                     </View>
                     <Text style={s.phaseTitle}>{t('repCounter.elliptical.dontMove')}</Text>
@@ -179,15 +179,15 @@ const s = StyleSheet.create({
 
     countdownCircle: {
         width: 100, height: 100, borderRadius: 50,
-        backgroundColor: 'rgba(124,58,237,0.15)',
-        borderWidth: 3, borderColor: RC.cta1,
+        backgroundColor: RC.emberGlow,
+        borderWidth: 3, borderColor: RC.ember,
         justifyContent: 'center', alignItems: 'center',
     },
-    countdownNum: { fontSize: 48, fontWeight: W.black, color: RC.cta1 },
+    countdownNum: { fontSize: 48, fontWeight: W.black, color: RC.ember },
 
     stillCountdown: { flexDirection: 'row', alignItems: 'baseline', gap: SP.xs },
-    stillNum: { fontSize: 64, fontWeight: W.black, color: '#fbbf24' },
-    stillSec: { fontSize: FONT.xl, fontWeight: W.bold, color: '#fbbf24' },
+    stillNum: { fontSize: 64, fontWeight: W.black, color: RC.emberMid },
+    stillSec: { fontSize: FONT.xl, fontWeight: W.bold, color: RC.emberMid },
 
     pedalBox: { alignItems: 'center' },
     pedalRing: {

@@ -108,8 +108,8 @@ function ExerciseListItem({
                                 </View>
                             )}
                             {exercise.experimental && (
-                                <View style={[s.metaBadge, { backgroundColor: 'rgba(245,166,35,0.15)' }]}> 
-                                    <Text style={[s.metaBadgeText, { color: '#f5a623' }]}> 
+                                <View style={[s.metaBadge, { backgroundColor: RC.emberGlow }]}> 
+                                    <Text style={[s.metaBadgeText, { color: RC.emberMid }]}> 
                                         {t('common.badge.beta', 'BETA')}
                                     </Text>
                                 </View>
@@ -263,7 +263,7 @@ export function ExerciseSelector({
                     key,
                     label: t('entries.run', 'Course'),
                     emoji: '🏃',
-                    color: '#5599ff',
+                    color: RC.ember,
                     subtitle: t('repCounter.quickTrack', 'Lancer le tracking'),
                     targetRoute: '/run/simple',
                 });
@@ -378,7 +378,7 @@ export function ExerciseSelector({
                         <Animated.View entering={FadeInDown.delay(80)} style={s.fossCard}>
                             <View style={s.fossHeader}>
                                 <View style={s.fossIconBox}>
-                                    <Camera size={16} color="#f59e0b" />
+                                    <Camera size={16} color={RC.emberMid} />
                                 </View>
                                 <Text style={s.fossTitle}>{t('repCounter.fossCameraWarning.title')}</Text>
                             </View>
@@ -403,7 +403,7 @@ export function ExerciseSelector({
                                 }}
                             >
                                 <Text style={s.fossBtnText}>{t('repCounter.fossCameraWarning.downloadStandard')}</Text>
-                                <ChevronRight size={14} color="#22d3ee" />
+                                <ChevronRight size={14} color={RC.emberMid} />
                             </TouchableOpacity>
                         </Animated.View>
                     )}
@@ -614,10 +614,10 @@ const s = StyleSheet.create({
     cameraOnlyText: { fontSize: FONT.md, fontWeight: W.semi },
 
     fossCard: {
-        backgroundColor: 'rgba(245,158,11,0.09)',
+        backgroundColor: RC.emberGlow,
         borderRadius: RAD.xl,
         borderWidth: 1,
-        borderColor: 'rgba(245,158,11,0.28)',
+        borderColor: RC.emberBorder,
         padding: SP.lg,
         marginBottom: SP.xl,
     },
@@ -626,11 +626,11 @@ const s = StyleSheet.create({
         width: 28,
         height: 28,
         borderRadius: RAD.sm,
-        backgroundColor: 'rgba(245,158,11,0.18)',
+        backgroundColor: 'rgba(255,122,85,0.18)',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    fossTitle: { fontSize: FONT.sm, fontWeight: W.bold, color: '#f59e0b', flex: 1 },
+    fossTitle: { fontSize: FONT.sm, fontWeight: W.bold, color: RC.emberMid, flex: 1 },
     fossBody: { fontSize: FONT.xs, color: RC.textMuted, lineHeight: 18, marginBottom: SP.md },
     fossBtn: {
         flexDirection: 'row',
@@ -638,12 +638,12 @@ const s = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: SP.sm,
         paddingHorizontal: SP.md,
-        backgroundColor: 'rgba(34,211,238,0.09)',
+        backgroundColor: 'rgba(255,122,85,0.10)',
         borderRadius: RAD.md,
         borderWidth: 1,
-        borderColor: 'rgba(34,211,238,0.25)',
+        borderColor: 'rgba(255,122,85,0.24)',
     },
-    fossBtnText: { fontSize: FONT.xs, fontWeight: W.semi, color: '#22d3ee' },
+    fossBtnText: { fontSize: FONT.xs, fontWeight: W.semi, color: RC.emberMid },
 
     cta: { alignSelf: 'center', borderRadius: RAD.full, overflow: 'hidden' },
     ctaGrad: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 36, gap: 8 },

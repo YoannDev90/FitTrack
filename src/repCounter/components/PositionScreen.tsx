@@ -72,7 +72,7 @@ export function PositionScreen({ exercise, detectionMode, onReady }: PositionScr
             {/* Volume hint for plank */}
             {exercise.isTimeBased && (
                 <View style={s.volumeHint}>
-                    <Volume2 size={16} color={RC.gold} strokeWidth={2} />
+                    <Volume2 size={16} color={RC.emberMid} strokeWidth={2} />
                     <Text style={s.volumeText}>{t('repCounter.volumeHint')}</Text>
                 </View>
             )}
@@ -118,11 +118,11 @@ const s = StyleSheet.create({
     },
     volumeHint: {
         flexDirection: 'row', alignItems: 'center', gap: SP.sm,
-        backgroundColor: 'rgba(232,184,75,0.12)', borderRadius: RAD.lg,
+        backgroundColor: RC.emberGlow, borderRadius: RAD.lg,
         paddingVertical: SP.md, paddingHorizontal: SP.lg,
-        borderWidth: 1, borderColor: 'rgba(232,184,75,0.25)',
+        borderWidth: 1, borderColor: RC.emberBorder,
     },
-    volumeText: { fontSize: FONT.sm, color: RC.gold, fontWeight: W.med },
+    volumeText: { fontSize: FONT.sm, color: RC.emberMid, fontWeight: W.med },
     btn:      { borderRadius: RAD.full, overflow: 'hidden' },
     btnGrad: {
         flexDirection: 'row', alignItems: 'center', gap: SP.md,
