@@ -39,6 +39,7 @@ import {
   Zap,
   Activity,
   ChevronRight,
+  Plus,
 } from 'lucide-react-native';
 import {
   GlassCard,
@@ -415,6 +416,10 @@ export default function WorkoutScreen() {
     router.push(`/workout/${entry.id}`);
   }, []);
 
+  const handleOpenAddSheet = useCallback(() => {
+    bottomSheetRef.current?.present();
+  }, []);
+
   const renderItem = useCallback(({ item, index }: { item: Entry; index: number }) => (
     <EntryCard
       entry={item}
@@ -448,9 +453,19 @@ export default function WorkoutScreen() {
 
       {/* ── Header ── */}
       <Animated.View entering={FadeIn.delay(80)} style={styles.header}>
-        <View>
-          <Text style={styles.eyebrow}>{t('workout.historyTitle').toUpperCase()}</Text>
-          <Text style={styles.screenTitle}>Journal</Text>
+        <View style={styles.headerTopRow}>
+          <View>
+            <Text style={styles.eyebrow}>{t('workout.historyTitle').toUpperCase()}</Text>
+            <Text style={styles.screenTitle}>Journal</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.addEntryBtn}
+            onPress={handleOpenAddSheet}
+            activeOpacity={0.8}
+            accessibilityLabel={t('addEntry.title', 'Ajouter une entree')}
+          >
+            <Plus size={20} color={C.ember} strokeWidth={2.5} />
+          </TouchableOpacity>
         </View>
 
         {/* Quick stats */}
@@ -562,6 +577,12 @@ const styles = StyleSheet.create({
     paddingBottom: S.xl,
     gap: S.xl,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: S.md,
+  },
   eyebrow: {
     fontSize: T.xs,
     fontWeight: W.semi,
@@ -575,6 +596,17 @@ const styles = StyleSheet.create({
     color: C.text,
     letterSpacing: -2,
     lineHeight: T.display * 1.1,
+  },
+  addEntryBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: R.lg,
+    borderWidth: 1,
+    borderColor: C.emberBorder,
+    backgroundColor: C.emberGlow,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: S.xs,
   },
 
   // Stats row
