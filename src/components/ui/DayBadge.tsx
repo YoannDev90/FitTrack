@@ -58,12 +58,12 @@ const styles = StyleSheet.create({
         minWidth: 40,
     },
     dayDone: {
-        backgroundColor: Colors.overlaySuccess20,
-        borderColor: Colors.success,
+        backgroundColor: Colors.overlayCozyWarm15,
+        borderColor: Colors.overlayCozyWarm40,
     },
     dayToday: {
-        borderColor: Colors.overlayWhite30,
-        backgroundColor: Colors.overlayWhite10,
+        borderColor: Colors.cta,
+        backgroundColor: Colors.overlayCozyWarm15,
     },
     dow: {
         fontSize: FontSize.xs,
@@ -83,12 +83,12 @@ const styles = StyleSheet.create({
         width: 20,
         height: 20,
         borderRadius: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        backgroundColor: Colors.overlayWhite20,
         justifyContent: 'center',
         alignItems: 'center',
     },
     check: {
-        color: Colors.text,
+        color: Colors.cta,
         fontSize: 11,
         fontWeight: FontWeight.bold,
     },
