@@ -2,12 +2,54 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Switch, TextInput } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import * as Linking from 'expo-linking';
-import { Shield, Clock3, Settings, MessageCircleMore, MessageSquareText, AlertTriangle } from 'lucide-react-native';
-import { Colors, BorderRadius, FontSize, FontWeight, Spacing } from '../../constants';
+import { Shield, Clock3, Settings, MessageCircleMore, MessageSquareText, AlertTriangle, ShieldCheck } from 'lucide-react-native';
+
+// On garde tes imports d'origine pour GlassCard et les utilitaires
 import { GlassCard } from '../ui';
 import type { SafetyContact } from '../../types';
 import { SAFETY_AUTO_ALERT_OPTIONS, SAFETY_INTERVAL_OPTIONS, WHATSAPP_CAPABILITY_TEST_URL } from '../../constants/safety';
 import { formatSafetyDelay, formatSafetyInterval } from '../../utils/safety';
+
+// ─── Design Tokens ────────────────────────────────────────────────────────────
+const C = {
+  bg: '#070709',
+  surface: '#0e0f14',
+  surfaceUp: '#13151e',
+  surfaceHigh: '#1a1d28',
+  border: 'rgba(255,255,255,0.07)',
+  borderUp: 'rgba(255,255,255,0.12)',
+  text: '#f0ece4',
+  textSub: 'rgba(240,236,228,0.55)',
+  textMuted: 'rgba(240,236,228,0.28)',
+  // Primary accent — warm coral-ember
+  ember: '#ff5533',
+  emberMid: '#ff7a55',
+  emberGlow: 'rgba(255,85,51,0.15)',
+  emberBorder: 'rgba(255,85,51,0.25)',
+  // Secondary
+  gold: '#e8b84b',
+  goldSoft: 'rgba(232,184,75,0.10)',
+  goldBorder: 'rgba(232,184,75,0.22)',
+  amber: '#f5a623',
+  // Semantic
+  blue: '#5599ff',
+  blueSoft: 'rgba(85,153,255,0.10)',
+  blueBorder: 'rgba(85,153,255,0.22)',
+  teal: '#2dd4bf',
+  tealSoft: 'rgba(45,212,191,0.10)',
+  tealBorder: 'rgba(45,212,191,0.22)',
+  green: '#34d370',
+  greenSoft: 'rgba(52,211,112,0.10)',
+  greenBorder: 'rgba(52,211,112,0.22)',
+  violet: '#a78bfa',
+  error: '#f87171',
+};
+
+const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
+const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
+const T = { nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, xxxl: 34, display: 48 };
+const W: Record<string, any> = { light: '300', reg: '400', med: '500', semi: '600', bold: '700', xbold: '800', black: '900' };
+// ──────────────────────────────────────────────────────────────────────────────
 
 interface SafetyCheckConfigProps {
   visible: boolean;
@@ -26,8 +68,9 @@ interface SafetyCheckConfigProps {
   }) => void;
 }
 
+// Palette révisée pour s'accorder avec le dark mode premium
 function getAvatarColor(name: string): string {
-  const palette = ['#4f8cff', '#32b27b', '#e89b4d', '#bc7cff', '#e06767', '#4fb9d1'];
+  const palette = [C.blue, C.teal, C.gold, C.violet, C.emberMid, C.green];
   let hash = 0;
   for (let i = 0; i < name.length; i += 1) {
     hash = ((hash << 5) - hash) + name.charCodeAt(i);
@@ -125,36 +168,44 @@ export function SafetyCheckConfig({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <GlassCard style={styles.card} variant="solid">
+          
+          {/* Header */}
           <View style={styles.header}>
-            <View style={styles.shieldGlowOuter}>
-              <View style={styles.shieldGlowInner}>
-                <Shield size={34} color="#80bfff" />
+            <View style={styles.iconContainer}>
+              <View style={styles.iconGlow}>
+                <ShieldCheck size={38} color={C.blue} strokeWidth={1.5} />
               </View>
             </View>
             <Text style={styles.title}>{t('safety.config.title')}</Text>
             <Text style={styles.subtitle}>{t('safety.config.subtitle')}</Text>
-            <View style={styles.separator} />
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            <Text style={styles.sectionOverline}>{t('safety.config.intervalCaps')}</Text>
+            
+            {/* Interval Section */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionOverline}>{t('safety.config.intervalCaps')}</Text>
+            </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-              {SAFETY_INTERVAL_OPTIONS.map((value) => (
-                <TouchableOpacity
-                  key={value}
-                  style={[styles.chip, !isCustomInterval && intervalMinutes === value && styles.chipActive]}
-                  onPress={() => {
-                    setIsCustomInterval(false);
-                    setIntervalMinutes(value);
-                    setCustomIntervalText('');
-                    setCustomIntervalError(null);
-                  }}
-                >
-                  <Text style={[styles.chipText, !isCustomInterval && intervalMinutes === value && styles.chipTextActive]}>
-                    {formatSafetyInterval(value, t('common.minShort'), t('common.hour'))}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {SAFETY_INTERVAL_OPTIONS.map((value) => {
+                const isActive = !isCustomInterval && intervalMinutes === value;
+                return (
+                  <TouchableOpacity
+                    key={value}
+                    style={[styles.chip, isActive && styles.chipActive]}
+                    onPress={() => {
+                      setIsCustomInterval(false);
+                      setIntervalMinutes(value);
+                      setCustomIntervalText('');
+                      setCustomIntervalError(null);
+                    }}
+                  >
+                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                      {formatSafetyInterval(value, t('common.minShort'), t('common.hour'))}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
 
               <TouchableOpacity
                 key="custom"
@@ -176,7 +227,7 @@ export function SafetyCheckConfig({
                 <TextInput
                   style={[styles.input, customIntervalError && styles.inputError]}
                   placeholder={t('safety.config.customPlaceholder')}
-                  placeholderTextColor={Colors.muted2}
+                  placeholderTextColor={C.textMuted}
                   keyboardType="numeric"
                   value={customIntervalText}
                   onChangeText={(value) => {
@@ -205,33 +256,43 @@ export function SafetyCheckConfig({
               </View>
             )}
 
-            <View style={styles.delayHeaderRow}>
-              <Clock3 size={14} color={Colors.muted} />
+            {/* Delay Section */}
+            <View style={styles.sectionHeader}>
+              <Clock3 size={14} color={C.textMuted} />
               <Text style={styles.sectionOverline}>{t('safety.config.autoAlertCaps')}</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-              {SAFETY_AUTO_ALERT_OPTIONS.map((value) => (
-                <TouchableOpacity
-                  key={value}
-                  style={[styles.chip, autoAlertDelaySeconds === value && styles.chipActive]}
-                  onPress={() => setAutoAlertDelaySeconds(value)}
-                >
-                  <Text style={[styles.chipText, autoAlertDelaySeconds === value && styles.chipTextActive]}>
-                    {formatSafetyDelay(value, t('common.minShort'))}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {SAFETY_AUTO_ALERT_OPTIONS.map((value) => {
+                const isActive = autoAlertDelaySeconds === value;
+                return (
+                  <TouchableOpacity
+                    key={value}
+                    style={[styles.chip, isActive && styles.chipActive]}
+                    onPress={() => setAutoAlertDelaySeconds(value)}
+                  >
+                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                      {formatSafetyDelay(value, t('common.minShort'))}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
 
-            <Text style={styles.sectionOverline}>{t('safety.config.contactsCaps')}</Text>
+            {/* Contacts Section */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionOverline}>{t('safety.config.contactsCaps')}</Text>
+            </View>
+            
             {contacts.length === 0 ? (
               <View style={styles.warningCard}>
-                <AlertTriangle size={18} color={Colors.warning} />
-                <Text style={styles.warningText}>{t('safety.config.noContacts')}</Text>
-                <TouchableOpacity style={styles.settingsButton} onPress={onGoToSettings}>
-                  <Settings size={14} color={Colors.bg} />
-                  <Text style={styles.settingsButtonText}>{t('safety.config.addContacts')}</Text>
-                </TouchableOpacity>
+                <AlertTriangle size={20} color={C.amber} />
+                <View style={styles.warningTextContainer}>
+                  <Text style={styles.warningText}>{t('safety.config.noContacts')}</Text>
+                  <TouchableOpacity style={styles.settingsButton} onPress={onGoToSettings}>
+                    <Settings size={14} color={C.bg} />
+                    <Text style={styles.settingsButtonText}>{t('safety.config.addContacts')}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ) : (
               <View style={styles.contactsList}>
@@ -252,9 +313,9 @@ export function SafetyCheckConfig({
                       <View style={styles.contactMeta}>
                         <View style={[styles.methodBadge, methodIsWhatsApp ? styles.whatsAppBadge : styles.smsBadge]}>
                           {methodIsWhatsApp ? (
-                            <MessageCircleMore size={12} color={methodIsWhatsApp ? '#22c55e' : '#60a5fa'} />
+                            <MessageCircleMore size={12} color={C.green} />
                           ) : (
-                            <MessageSquareText size={12} color={methodIsWhatsApp ? '#22c55e' : '#60a5fa'} />
+                            <MessageSquareText size={12} color={C.blue} />
                           )}
                           <Text style={[styles.methodBadgeText, methodIsWhatsApp ? styles.whatsAppBadgeText : styles.smsBadgeText]}>
                             {methodIsWhatsApp ? t('settings.safety.methodWhatsApp') : t('settings.safety.methodSMS')}
@@ -277,35 +338,46 @@ export function SafetyCheckConfig({
               </View>
             )}
 
+            {/* Fall Detection Section */}
             <View style={styles.fallCard}>
+              <View style={styles.fallIconWrap}>
+                <AlertTriangle size={20} color={C.gold} />
+              </View>
               <View style={styles.fallTextWrap}>
-                <View style={styles.fallTitleRow}>
-                  <AlertTriangle size={15} color="#ffbe55" />
-                  <Text style={styles.fallTitle}>{t('settings.safety.fallDetection')}</Text>
-                </View>
+                <Text style={styles.fallTitle}>{t('settings.safety.fallDetection')}</Text>
                 <Text style={styles.fallDescription}>{t('settings.safety.fallDetectionDesc')}</Text>
               </View>
               <Switch
                 value={fallDetectionEnabled}
                 onValueChange={setFallDetectionEnabled}
-                trackColor={{ true: Colors.success, false: Colors.cardSolid }}
-                thumbColor="#fff"
+                trackColor={{ true: C.green, false: C.surfaceHigh }}
+                thumbColor={C.text}
+                ios_backgroundColor={C.surfaceHigh}
               />
             </View>
+
           </ScrollView>
 
+          {/* Actions */}
           <View style={styles.actions}>
-            <TouchableOpacity style={[styles.activateButton, !canActivate && styles.activateButtonDisabled]} onPress={handleActivate} disabled={!canActivate}>
-              <Shield size={18} color="#fff" />
-              <Text style={styles.activateText}>{t('safety.config.activate')}</Text>
-            </TouchableOpacity>
             {!canActivate && (
               <Text style={styles.tooltip}>{t('safety.config.activateTooltip')}</Text>
             )}
+            <TouchableOpacity 
+              style={[styles.activateButton, !canActivate && styles.activateButtonDisabled]} 
+              onPress={handleActivate} 
+              disabled={!canActivate}
+              activeOpacity={0.8}
+            >
+              <Shield size={20} color={C.text} strokeWidth={2.5} />
+              <Text style={styles.activateText}>{t('safety.config.activate')}</Text>
+            </TouchableOpacity>
+            
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.closeButtonText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
+
         </GlassCard>
       </View>
     </Modal>
@@ -315,323 +387,343 @@ export function SafetyCheckConfig({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(2,6,13,0.78)',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.xl,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'flex-end', // Aligné vers le bas pour un effet "BottomSheet" moderne, ou center selon ta pref
+    paddingHorizontal: S.lg,
+    paddingBottom: S.xxl,
   },
   card: {
-    maxHeight: '94%',
-    borderColor: 'rgba(153,190,255,0.22)',
-    backgroundColor: '#0b111c',
+    maxHeight: '90%',
+    backgroundColor: C.surface,
+    borderRadius: R.xxxl,
+    borderWidth: 1,
+    borderColor: C.borderUp,
+    padding: S.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    elevation: 10,
   },
   scrollContent: {
-    paddingBottom: Spacing.md,
-    gap: Spacing.md,
+    paddingBottom: S.xl,
+    gap: S.lg,
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: S.xl,
+    marginTop: S.sm,
   },
-  shieldGlowOuter: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: 'rgba(78,145,255,0.12)',
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: R.full,
+    backgroundColor: C.blueSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  shieldGlowInner: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: 'rgba(78,145,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: S.lg,
     borderWidth: 1,
-    borderColor: 'rgba(145,189,255,0.35)',
+    borderColor: C.blueBorder,
+  },
+  iconGlow: {
+    width: 56,
+    height: 56,
+    borderRadius: R.full,
+    backgroundColor: 'rgba(85,153,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
-    color: Colors.text,
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
+    color: C.text,
+    fontSize: T.xxl,
+    fontWeight: W.bold,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: Colors.muted,
-    fontSize: FontSize.sm,
+    color: C.textSub,
+    fontSize: T.md,
     textAlign: 'center',
-    marginTop: Spacing.xs,
+    marginTop: S.xs,
+    lineHeight: 22,
+    paddingHorizontal: S.md,
   },
-  separator: {
-    width: '100%',
-    height: 1,
-    backgroundColor: 'rgba(153,190,255,0.24)',
-    marginTop: Spacing.md,
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.sm,
+    marginBottom: -S.sm, // Rapproche le titre des chips
   },
   sectionOverline: {
-    color: Colors.muted2,
-    fontSize: FontSize.xs,
-    letterSpacing: 1.2,
+    color: C.textMuted,
+    fontSize: T.xs,
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
-    fontWeight: FontWeight.semibold,
+    fontWeight: W.bold,
   },
   chipsRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    paddingTop: Spacing.xs,
-    paddingBottom: Spacing.xs,
+    gap: S.sm,
+    paddingVertical: S.sm,
   },
   chip: {
     borderWidth: 1,
-    borderColor: 'rgba(158,175,200,0.35)',
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    backgroundColor: 'rgba(132,152,176,0.15)',
+    borderColor: C.borderUp,
+    borderRadius: R.full,
+    paddingHorizontal: S.xl,
+    paddingVertical: S.md,
+    backgroundColor: C.surfaceUp,
   },
   chipActive: {
-    backgroundColor: '#4f8cff',
-    borderColor: '#7fb2ff',
-    shadowColor: '#4f8cff',
+    backgroundColor: C.blue,
+    borderColor: C.blue,
+    shadowColor: C.blue,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
     elevation: 4,
   },
   chipText: {
-    color: Colors.textSecondary,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
+    color: C.textSub,
+    fontSize: T.sm,
+    fontWeight: W.semi,
   },
   chipTextActive: {
-    color: '#fff',
+    color: C.text,
+    fontWeight: W.bold,
   },
   customIntervalInputRow: {
-    marginTop: Spacing.sm,
-    gap: Spacing.xs,
+    gap: S.xs,
   },
   input: {
     borderWidth: 1,
-    borderColor: 'rgba(158,175,200,0.45)',
-    borderRadius: BorderRadius.lg,
-    color: Colors.text,
-    fontSize: FontSize.sm,
-    padding: Spacing.sm,
-    backgroundColor: Colors.card,
+    borderColor: C.borderUp,
+    borderRadius: R.lg,
+    color: C.text,
+    fontSize: T.md,
+    padding: S.lg,
+    backgroundColor: C.surfaceUp,
   },
   inputError: {
-    borderColor: Colors.error,
+    borderColor: C.error,
+    backgroundColor: 'rgba(248,113,113,0.05)',
   },
   customHintText: {
-    color: Colors.muted,
-    fontSize: FontSize.xs,
+    color: C.textMuted,
+    fontSize: T.xs,
+    marginLeft: S.xs,
   },
   errorText: {
-    color: Colors.error,
-    fontSize: FontSize.xs,
-    marginTop: 4,
-  },
-  delayHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    marginTop: Spacing.xs,
+    color: C.error,
+    fontSize: T.xs,
+    marginLeft: S.xs,
   },
   contactsList: {
-    gap: Spacing.sm,
+    gap: S.sm,
   },
   contactCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: BorderRadius.lg,
+    borderRadius: R.xl,
     borderWidth: 1,
-    borderColor: 'rgba(153,190,255,0.2)',
-    backgroundColor: 'rgba(20,30,46,0.75)',
-    padding: Spacing.sm,
-    gap: Spacing.sm,
+    borderColor: C.borderUp,
+    backgroundColor: C.surfaceUp,
+    padding: S.md,
+    gap: S.md,
   },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 46,
+    height: 46,
+    borderRadius: R.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#fff',
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    color: C.text,
+    fontSize: T.md,
+    fontWeight: W.bold,
   },
   contactInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   contactName: {
-    color: Colors.text,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
+    color: C.text,
+    fontSize: T.md,
+    fontWeight: W.semi,
   },
   contactPhone: {
-    color: Colors.muted,
-    fontSize: FontSize.xs,
+    color: C.textSub,
+    fontSize: T.xs,
     marginTop: 2,
   },
   contactMeta: {
     alignItems: 'flex-end',
-    gap: 6,
+    gap: 8,
   },
   methodBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    gap: 6,
+    borderRadius: R.full,
+    paddingHorizontal: S.md,
+    paddingVertical: S.xs,
     borderWidth: 1,
   },
   smsBadge: {
-    backgroundColor: 'rgba(96,165,250,0.14)',
-    borderColor: 'rgba(96,165,250,0.35)',
+    backgroundColor: C.blueSoft,
+    borderColor: C.blueBorder,
   },
   whatsAppBadge: {
-    backgroundColor: 'rgba(34,197,94,0.14)',
-    borderColor: 'rgba(34,197,94,0.35)',
+    backgroundColor: C.greenSoft,
+    borderColor: C.greenBorder,
   },
   methodBadgeText: {
-    fontSize: 10,
-    fontWeight: FontWeight.semibold,
+    fontSize: T.micro,
+    fontWeight: W.bold,
+    textTransform: 'uppercase',
   },
-  smsBadgeText: {
-    color: '#80b6ff',
-  },
-  whatsAppBadgeText: {
-    color: '#54d48f',
-  },
+  smsBadgeText: { color: C.blue },
+  whatsAppBadgeText: { color: C.green },
   reachableRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
   },
   reachableDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: R.full,
   },
-  reachableDotOn: {
-    backgroundColor: '#4ade80',
-  },
-  reachableDotOff: {
-    backgroundColor: '#f87171',
-  },
+  reachableDotOn: { backgroundColor: C.green },
+  reachableDotOff: { backgroundColor: C.error },
   reachableText: {
-    color: Colors.muted2,
-    fontSize: 10,
+    color: C.textSub,
+    fontSize: T.micro,
+    fontWeight: W.med,
   },
   moreContactsText: {
-    color: Colors.textSecondary,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semibold,
-    textAlign: 'right',
+    color: C.textMuted,
+    fontSize: T.xs,
+    fontWeight: W.semi,
+    textAlign: 'center',
+    marginTop: S.xs,
   },
   warningCard: {
-    borderRadius: BorderRadius.lg,
+    flexDirection: 'row',
+    borderRadius: R.xl,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.45)',
-    backgroundColor: 'rgba(251,191,36,0.12)',
-    padding: Spacing.md,
-    gap: Spacing.sm,
+    borderColor: C.goldBorder,
+    backgroundColor: C.goldSoft,
+    padding: S.lg,
+    gap: S.md,
+  },
+  warningTextContainer: {
+    flex: 1,
+    gap: S.md,
   },
   warningText: {
-    color: '#ffd68a',
-    fontSize: FontSize.sm,
-    lineHeight: 18,
+    color: C.gold,
+    fontSize: T.sm,
+    lineHeight: 20,
+    fontWeight: W.med,
   },
   settingsButton: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
-    gap: Spacing.xs,
+    gap: S.sm,
     alignItems: 'center',
-    borderRadius: BorderRadius.full,
-    backgroundColor: '#f0b95b',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+    borderRadius: R.full,
+    backgroundColor: C.gold,
+    paddingHorizontal: S.lg,
+    paddingVertical: S.sm,
   },
   settingsButtonText: {
-    color: Colors.bg,
-    fontWeight: FontWeight.bold,
-    fontSize: FontSize.sm,
+    color: C.bg,
+    fontWeight: W.bold,
+    fontSize: T.sm,
   },
   fallCard: {
-    marginTop: Spacing.xs,
-    borderRadius: BorderRadius.lg,
+    marginTop: S.sm,
+    borderRadius: R.xl,
     borderWidth: 1,
-    borderColor: 'rgba(255,190,85,0.3)',
-    backgroundColor: 'rgba(255,190,85,0.1)',
-    padding: Spacing.md,
+    borderColor: C.borderUp,
+    backgroundColor: C.surfaceUp,
+    padding: S.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: S.md,
+  },
+  fallIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: R.full,
+    backgroundColor: C.goldSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: C.goldBorder,
   },
   fallTextWrap: {
     flex: 1,
-  },
-  fallTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    marginBottom: 4,
+    gap: 2,
   },
   fallTitle: {
-    color: Colors.text,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    color: C.text,
+    fontSize: T.md,
+    fontWeight: W.bold,
   },
   fallDescription: {
-    color: Colors.muted,
-    fontSize: FontSize.xs,
-    lineHeight: 16,
+    color: C.textSub,
+    fontSize: T.xs,
+    lineHeight: 18,
   },
   actions: {
-    marginTop: Spacing.md,
-    gap: Spacing.sm,
+    marginTop: S.xl,
+    gap: S.md,
   },
   activateButton: {
-    borderRadius: 18,
-    backgroundColor: '#16a34a',
-    minHeight: 56,
+    borderRadius: R.full,
+    backgroundColor: C.ember,
+    minHeight: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.sm,
-    shadowColor: '#16a34a',
+    gap: S.md,
+    shadowColor: C.ember,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
   },
   activateButtonDisabled: {
-    backgroundColor: 'rgba(107,114,128,0.45)',
+    backgroundColor: C.surfaceHigh,
     shadowOpacity: 0,
     elevation: 0,
+    borderWidth: 1,
+    borderColor: C.borderUp,
   },
   activateText: {
-    color: '#fff',
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
+    color: C.text,
+    fontSize: T.lg,
+    fontWeight: W.bold,
+    letterSpacing: 0.5,
   },
   tooltip: {
-    color: Colors.warning,
-    fontSize: FontSize.xs,
+    color: C.error,
+    fontSize: T.xs,
     textAlign: 'center',
+    marginBottom: -S.sm,
+    fontWeight: W.med,
   },
   closeButton: {
     alignSelf: 'center',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
+    paddingVertical: S.sm,
+    paddingHorizontal: S.xl,
   },
   closeButtonText: {
-    color: Colors.textSecondary,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
+    color: C.textSub,
+    fontSize: T.sm,
+    fontWeight: W.semi,
   },
 });
