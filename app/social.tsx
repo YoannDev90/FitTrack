@@ -2,7 +2,7 @@
 // SOCIAL SCREEN - Classement, Amis, Encouragements
 // ============================================================================
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { 
     View, 
     Text, 
@@ -47,7 +47,8 @@ import { isSocialAvailable } from '../src/services/supabase';
 import * as NotificationService from '../src/services/notifications';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../src/constants';
 import { BuildConfig } from '../src/config';
-import type { Profile, LeaderboardEntry } from '../src/services/supabase';
+import type { Profile, LeaderboardEntry, FriendProfile } from '../src/services/supabase';
+import { calculateXpForEntry } from '../src/stores/gamificationStore';
 
 // ============================================================================
 // COMPONENTS
@@ -96,6 +97,8 @@ function LeaderboardItem({
     rank,
     isMe,
     onEncourage,
+    onAddFriend,
+    isRequestPending,
     isFriend,
     onPress,
     onBlock,
@@ -104,6 +107,8 @@ function LeaderboardItem({
     rank: number;
     isMe?: boolean;
     onEncourage?: () => void;
+    onAddFriend?: () => void;
+    isRequestPending?: boolean;
     isFriend?: boolean;
     onPress?: () => void;
     onBlock?: () => void;
@@ -117,7 +122,12 @@ function LeaderboardItem({
 
     return (
         <Animated.View entering={FadeInDown.delay(rank * 50).springify()}>
-            <TouchableOpacity onPress={onPress} disabled={isMe || !onPress} activeOpacity={0.7}>
+            <TouchableOpacity
+                onPress={onPress}
+                onLongPress={!isMe && !isFriend && onBlock ? onBlock : undefined}
+                disabled={!!isMe}
+                activeOpacity={onPress ? 0.7 : 1}
+            >
             <GlassCard style={isMe ? [styles.leaderboardItem, styles.leaderboardItemMe] : styles.leaderboardItem}>
                 <View style={styles.rankContainer}>
                     {getRankIcon()}
@@ -152,14 +162,20 @@ function LeaderboardItem({
                         <Heart size={18} color={Colors.cta} />
                     </TouchableOpacity>
                 )}
-                {/* Afficher le bouton de blocage si ce n'est pas un ami */}
-                {!isMe && !isFriend && onBlock && (
-                    <TouchableOpacity 
-                        style={styles.blockButton}
-                        onPress={onBlock}
-                    >
-                        <UserX size={18} color={Colors.error} />
-                    </TouchableOpacity>
+                {/* Action primaire pour non-amis: ajout */}
+                {!isMe && !isFriend && (
+                    isRequestPending ? (
+                        <View style={styles.pendingBadgeSmall}>
+                            <Text style={styles.pendingBadgeSmallText}>En attente</Text>
+                        </View>
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.addFriendButton}
+                            onPress={onAddFriend}
+                        >
+                            <UserPlus size={18} color={Colors.cta} />
+                        </TouchableOpacity>
+                    )
                 )}
             </GlassCard>
             </TouchableOpacity>
@@ -304,16 +320,18 @@ export default function SocialScreen() {
     const [leaderboardType, setLeaderboardType] = useState<'global' | 'friends'>('global');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchError, setSearchError] = useState<'network' | 'server' | null>(null);
     const [isSearching, setIsSearching] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
-    const [showAuthModal, setShowAuthModal] = useState(false);
     const [notificationStatus, setNotificationStatus] = useState<'unknown' | 'granted' | 'denied' | 'network_error'>('unknown');
     const [isInitialLoading, setIsInitialLoading] = useState(true);
-    const [selectedFriend, setSelectedFriend] = useState<Profile | null>(null);
+    const [selectedFriend, setSelectedFriend] = useState<FriendProfile | null>(null);
     const [showFriendModal, setShowFriendModal] = useState(false);
     const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
     const [selectedUserForBlock, setSelectedUserForBlock] = useState<Profile | null>(null);
     const [showBlockModal, setShowBlockModal] = useState(false);
+    const [pendingFriendRequestIds, setPendingFriendRequestIds] = useState<Set<string>>(new Set());
+    const searchRequestIdRef = useRef(0);
 
     // Local data from app store
     const { entries, getStreak } = useAppStore();
@@ -321,7 +339,6 @@ export default function SocialScreen() {
 
     const {
         isAuthenticated,
-        isLoading,
         profile,
         socialEnabled,
         globalLeaderboard,
@@ -330,6 +347,10 @@ export default function SocialScreen() {
         pendingRequests,
         unreadEncouragements,
         recentEncouragements,
+        globalLeaderboardError,
+        friendsLeaderboardError,
+        friendsError,
+        encouragementsError,
         fetchGlobalLeaderboard,
         fetchFriendsLeaderboard,
         fetchFriends,
@@ -343,24 +364,33 @@ export default function SocialScreen() {
         searchUsers,
         checkAuth,
         syncStats,
-        initializeNotifications,
         setupRealtimeSubscriptions,
+        cleanupSubscriptions,
         savePushToken,
         blockUser,
-        isUserBlocked,
     } = useSocialStore();
+
+    const getFriendlyErrorMessage = useCallback(
+        (scope: 'leaderboard' | 'friends' | 'encouragements' | 'search', kind: 'network' | 'server' | null) => {
+            if (!kind) return '';
+            if (scope === 'leaderboard') {
+                return kind === 'network' ? t('social.errorLeaderboardNetwork') : t('social.errorLeaderboardServer');
+            }
+            if (scope === 'friends') {
+                return kind === 'network' ? t('social.errorFriendsNetwork') : t('social.errorFriendsServer');
+            }
+            if (scope === 'encouragements') {
+                return kind === 'network' ? t('social.errorEncouragementsNetwork') : t('social.errorEncouragementsServer');
+            }
+            return kind === 'network' ? t('social.errorSearchNetwork') : t('social.errorSearchServer');
+        },
+        [t]
+    );
 
     // Helper pour vérifier si un utilisateur est ami
     const isFriend = useCallback((userId: string) => {
         return friends.some(f => f.id === userId);
     }, [friends]);
-
-    // Trouver le friendship ID pour un ami
-    const getFriendshipId = useCallback((friendId: string) => {
-        // Chercher dans les amis - on a besoin de la relation
-        // Pour l'instant on retourne l'ID du friend, mais idéalement on devrait stocker le friendship_id
-        return friendId;
-    }, []);
 
     // Check auth and notifications on mount
     useEffect(() => {
@@ -393,12 +423,14 @@ export default function SocialScreen() {
         initialize();
     }, []);
 
-    // Setup realtime when authenticated
+    // Setup realtime when authenticated and cleanup on unmount/disable
     useEffect(() => {
         if (isAuthenticated && socialEnabled) {
             setupRealtimeSubscriptions();
+            return () => cleanupSubscriptions();
         }
-    }, [isAuthenticated, socialEnabled]);
+        cleanupSubscriptions();
+    }, [isAuthenticated, socialEnabled, setupRealtimeSubscriptions, cleanupSubscriptions]);
 
     // Initial fetch + auto sync
     useEffect(() => {
@@ -409,7 +441,17 @@ export default function SocialScreen() {
             fetchPendingRequests();
             fetchEncouragements();
         }
-    }, [isAuthenticated, socialEnabled]);
+    }, [isAuthenticated, socialEnabled, fetchGlobalLeaderboard, fetchFriendsLeaderboard, fetchFriends, fetchPendingRequests, fetchEncouragements]);
+
+    // Remove optimistic pending IDs when users become friends
+    useEffect(() => {
+        if (pendingFriendRequestIds.size === 0) return;
+        setPendingFriendRequestIds(prev => {
+            const next = new Set(prev);
+            friends.forEach(friend => next.delete(friend.id));
+            return next;
+        });
+    }, [friends, pendingFriendRequestIds.size]);
 
     // Auto-sync when local data changes (entries, XP, level)
     useEffect(() => {
@@ -455,8 +497,8 @@ export default function SocialScreen() {
         weekStart.setDate(now.getDate() + diff);
         weekStart.setHours(0, 0, 0, 0);
 
-        const sportEntries = entries.filter(e => 
-            e.type === 'home' || e.type === 'run' || e.type === 'beatsaber'
+        const sportEntries = entries.filter(e =>
+            e.type === 'home' || e.type === 'run' || e.type === 'beatsaber' || e.type === 'custom'
         );
         
         const weeklyEntries = sportEntries.filter(e => 
@@ -465,27 +507,12 @@ export default function SocialScreen() {
 
         const weeklyWorkouts = weeklyEntries.length;
         const weeklyDistance = weeklyEntries
-            .filter(e => e.type === 'run')
+            .filter(e => e.type === 'run' || e.type === 'custom')
             .reduce((sum, e) => sum + ((e as any).distanceKm || 0), 0);
         const weeklyDuration = weeklyEntries
             .reduce((sum, e) => sum + ((e as any).durationMinutes || 0), 0);
-        
-        // Calcul des XP de la semaine basé sur la vraie logique XP :
-        // Home: 50 XP base
-        // Run: 30 + (km * 5) XP
-        // Beat Saber: 15 + (duration / 5) XP
-        let weeklyXp = 0;
-        weeklyEntries.forEach(entry => {
-            if (entry.type === 'home') {
-                weeklyXp += 50; // 50 XP par séance maison
-            } else if (entry.type === 'run') {
-                const km = (entry as any).distanceKm || 0;
-                weeklyXp += 30 + Math.floor(km * 5);
-            } else if (entry.type === 'beatsaber') {
-                const minutes = (entry as any).durationMinutes || 0;
-                weeklyXp += 15 + Math.floor(minutes / 5);
-            }
-        });
+
+        const weeklyXp = weeklyEntries.reduce((sum, entry) => sum + calculateXpForEntry(entry as any), 0);
 
         const streakData = getStreak();
 
@@ -505,28 +532,57 @@ export default function SocialScreen() {
     // Refresh handler
     const handleRefresh = useCallback(async () => {
         setRefreshing(true);
-        await Promise.all([
-            fetchGlobalLeaderboard(),
-            fetchFriendsLeaderboard(),
-            fetchFriends(),
-            fetchPendingRequests(),
-            fetchEncouragements(),
-        ]);
-        setRefreshing(false);
-    }, []);
+        try {
+            await Promise.all([
+                fetchGlobalLeaderboard(),
+                fetchFriendsLeaderboard(),
+                fetchFriends(),
+                fetchPendingRequests(),
+                fetchEncouragements(),
+            ]);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [fetchGlobalLeaderboard, fetchFriendsLeaderboard, fetchFriends, fetchPendingRequests, fetchEncouragements]);
 
-    // Search handler
-    const handleSearch = useCallback(async (query: string) => {
-        setSearchQuery(query);
-        if (query.length < 2) {
+    // Search with debounce and stale request cancellation
+    useEffect(() => {
+        if (searchQuery.length < 2) {
+            searchRequestIdRef.current += 1;
             setSearchResults([]);
+            setSearchError(null);
+            setIsSearching(false);
             return;
         }
+
+        const requestId = ++searchRequestIdRef.current;
         setIsSearching(true);
-        const results = await searchUsers(query);
-        setSearchResults(results);
-        setIsSearching(false);
-    }, [searchUsers]);
+        setSearchError(null);
+
+        const timeoutId = setTimeout(async () => {
+            try {
+                const results = await searchUsers(searchQuery);
+                if (requestId !== searchRequestIdRef.current) return;
+                setSearchResults(results);
+            } catch (error: any) {
+                if (requestId !== searchRequestIdRef.current) return;
+                const message = (error?.message || '').toLowerCase();
+                const kind = message.includes('network') || message.includes('fetch') || message.includes('offline')
+                    ? 'network'
+                    : 'server';
+                setSearchError(kind);
+                setSearchResults([]);
+            } finally {
+                if (requestId === searchRequestIdRef.current) {
+                    setIsSearching(false);
+                }
+            }
+        }, 300);
+
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [searchQuery, searchUsers]);
 
     // Encourage handler
     const handleEncourage = useCallback(async (userId: string, username: string) => {
@@ -543,19 +599,21 @@ export default function SocialScreen() {
         try {
             await sendFriendRequest(userId);
             Alert.alert(t('common.success'), t('social.requestSent'))
+            setPendingFriendRequestIds(prev => new Set(prev).add(userId));
             setSearchResults(prev => 
                 prev.map(u => u.id === userId ? { ...u, friendship_status: 'pending' } : u)
             );
-        } catch (error: any) {
-            Alert.alert('Erreur', error.message);
+        } catch {
+            Alert.alert('Erreur', 'Impossible d\'envoyer la demande pour le moment.');
         }
-    }, [sendFriendRequest]);
+    }, [sendFriendRequest, t]);
 
     // Current leaderboard
     const currentLeaderboard = leaderboardType === 'global' ? globalLeaderboard : friendsLeaderboard;
+    const currentLeaderboardError = leaderboardType === 'global' ? globalLeaderboardError : friendsLeaderboardError;
 
     // Handler pour supprimer un ami
-    const handleRemoveFriend = useCallback(async (friendId: string) => {
+    const handleRemoveFriend = useCallback(async (friendshipId: string) => {
         Alert.alert(
             'Supprimer cet ami ?',
             'Tu ne pourras plus voir ses statistiques et il ne pourra plus t\'envoyer d\'encouragements.',
@@ -566,7 +624,7 @@ export default function SocialScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await removeFriend(friendId);
+                            await removeFriend(friendshipId);
                             setShowFriendModal(false);
                             setSelectedFriend(null);
                             Alert.alert('Ami supprimé', 'Cet utilisateur n\'est plus dans ta liste d\'amis.');
@@ -580,7 +638,7 @@ export default function SocialScreen() {
     }, [removeFriend]);
 
     // Handler pour ouvrir le modal d'ami
-    const handleOpenFriendModal = useCallback((friend: Profile) => {
+    const handleOpenFriendModal = useCallback((friend: FriendProfile) => {
         setSelectedFriend(friend);
         setShowFriendModal(true);
     }, []);
@@ -821,8 +879,20 @@ export default function SocialScreen() {
                             </TouchableOpacity>
                         </View>
 
+                        <Text style={styles.sectionHint}>{t('social.blockHint')}</Text>
+
                         {/* Leaderboard list */}
-                        {currentLeaderboard.length === 0 ? (
+                        {currentLeaderboardError ? (
+                            <GlassCard style={styles.errorStateCard}>
+                                <Text style={styles.errorStateTitle}>{t('common.error')}</Text>
+                                <Text style={styles.errorStateSubtitle}>
+                                    {getFriendlyErrorMessage('leaderboard', currentLeaderboardError)}
+                                </Text>
+                                <TouchableOpacity style={styles.errorRetryButton} onPress={handleRefresh}>
+                                    <Text style={styles.errorRetryText}>{t('common.retry')}</Text>
+                                </TouchableOpacity>
+                            </GlassCard>
+                        ) : currentLeaderboard.length === 0 ? (
                             <View style={styles.emptyState}>
                                 <Trophy size={48} color={Colors.muted} />
                                 <Text style={styles.emptyStateTitle}>
@@ -833,16 +903,22 @@ export default function SocialScreen() {
                                 </Text>
                             </View>
                         ) : (
-                            currentLeaderboard.map((entry, index) => (
+                            currentLeaderboard.map((entry) => (
                                 <LeaderboardItem
                                     key={entry.id}
                                     entry={entry}
-                                    rank={index + 1}
+                                    rank={entry.rank}
                                     isMe={entry.id === profile?.id}
                                     isFriend={isFriend(entry.id)}
+                                    isRequestPending={pendingFriendRequestIds.has(entry.id)}
                                     onEncourage={
                                         entry.id !== profile?.id && isFriend(entry.id)
                                             ? () => handleEncourage(entry.id, entry.display_name || entry.username)
+                                            : undefined
+                                    }
+                                    onAddFriend={
+                                        entry.id !== profile?.id && !isFriend(entry.id)
+                                            ? () => handleSendRequest(entry.id)
                                             : undefined
                                     }
                                     onPress={
@@ -872,10 +948,31 @@ export default function SocialScreen() {
                                 placeholder={t('social.searchPlaceholder')}
                                 placeholderTextColor={Colors.muted}
                                 value={searchQuery}
-                                onChangeText={handleSearch}
+                                onChangeText={setSearchQuery}
                             />
                             {isSearching && <ActivityIndicator size="small" color={Colors.cta} />}
                         </View>
+
+                        {searchError && (
+                            <GlassCard style={styles.errorStateCard}>
+                                <Text style={styles.errorStateTitle}>{t('common.error')}</Text>
+                                <Text style={styles.errorStateSubtitle}>
+                                    {getFriendlyErrorMessage('search', searchError)}
+                                </Text>
+                            </GlassCard>
+                        )}
+
+                        {friendsError && (
+                            <GlassCard style={styles.errorStateCard}>
+                                <Text style={styles.errorStateTitle}>{t('common.error')}</Text>
+                                <Text style={styles.errorStateSubtitle}>
+                                    {getFriendlyErrorMessage('friends', friendsError)}
+                                </Text>
+                                <TouchableOpacity style={styles.errorRetryButton} onPress={handleRefresh}>
+                                    <Text style={styles.errorRetryText}>{t('common.retry')}</Text>
+                                </TouchableOpacity>
+                            </GlassCard>
+                        )}
 
                         {/* Search Results */}
                         {searchResults.length > 0 && (
@@ -998,6 +1095,18 @@ export default function SocialScreen() {
                 {/* ENCOURAGEMENTS TAB */}
                 {activeTab === 'encouragements' && (
                     <View style={styles.tabContent}>
+                        {encouragementsError && (
+                            <GlassCard style={styles.errorStateCard}>
+                                <Text style={styles.errorStateTitle}>{t('common.error')}</Text>
+                                <Text style={styles.errorStateSubtitle}>
+                                    {getFriendlyErrorMessage('encouragements', encouragementsError)}
+                                </Text>
+                                <TouchableOpacity style={styles.errorRetryButton} onPress={handleRefresh}>
+                                    <Text style={styles.errorRetryText}>{t('common.retry')}</Text>
+                                </TouchableOpacity>
+                            </GlassCard>
+                        )}
+
                         {/* Unread */}
                         {unreadEncouragements.length > 0 && (
                             <View style={styles.section}>
@@ -1103,7 +1212,7 @@ export default function SocialScreen() {
 
                                     <TouchableOpacity
                                         style={[styles.friendModalActionBtn, styles.friendModalActionDanger]}
-                                        onPress={() => handleRemoveFriend(selectedFriend.id)}
+                                        onPress={() => handleRemoveFriend(selectedFriend.friendship_id)}
                                     >
                                         <UserX size={20} color={Colors.error} />
                                         <Text style={[styles.friendModalActionText, { color: Colors.error }]}>
@@ -1439,19 +1548,16 @@ const styles = StyleSheet.create({
         fontSize: FontSize.xs,
         color: Colors.muted,
     },
+    sectionHint: {
+        fontSize: FontSize.xs,
+        color: Colors.muted,
+        marginBottom: Spacing.sm,
+    },
     encourageButton: {
         width: 36,
         height: 36,
         borderRadius: 18,
         backgroundColor: Colors.overlayCozyWarm15,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    blockButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: Colors.overlayError15,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1513,6 +1619,32 @@ const styles = StyleSheet.create({
         fontSize: FontSize.xs,
         color: Colors.warning,
         fontWeight: FontWeight.semibold,
+    },
+    errorStateCard: {
+        marginBottom: Spacing.md,
+        padding: Spacing.md,
+        gap: Spacing.sm,
+    },
+    errorStateTitle: {
+        fontSize: FontSize.sm,
+        color: Colors.error,
+        fontWeight: FontWeight.bold,
+    },
+    errorStateSubtitle: {
+        fontSize: FontSize.sm,
+        color: Colors.text,
+    },
+    errorRetryButton: {
+        alignSelf: 'flex-start',
+        backgroundColor: Colors.overlayCozyWarm15,
+        borderRadius: BorderRadius.md,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.xs,
+    },
+    errorRetryText: {
+        color: Colors.cta,
+        fontWeight: FontWeight.semibold,
+        fontSize: FontSize.xs,
     },
 
     // Friend Request

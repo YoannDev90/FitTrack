@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { zustandStorage } from '../storage';
-import type { Profile, LeaderboardEntry, Encouragement, Friendship } from '../services/supabase';
+import type { Profile, LeaderboardEntry, Encouragement, Friendship, FriendProfile } from '../services/supabase';
 import * as SocialService from '../services/supabase/social';
 import { isSocialAvailable } from '../services/supabase';
 import * as Notifications from '../services/notifications';
@@ -28,10 +28,13 @@ interface SocialState {
     // Leaderboard
     globalLeaderboard: LeaderboardEntry[];
     friendsLeaderboard: LeaderboardEntry[];
+    globalLeaderboardError: 'network' | 'server' | null;
+    friendsLeaderboardError: 'network' | 'server' | null;
     
     // Friends
-    friends: Profile[];
+    friends: FriendProfile[];
     pendingRequests: (Friendship & { requester: Profile })[];
+    friendsError: 'network' | 'server' | null;
     
     // Blocked users
     blockedUsers: Profile[];
@@ -39,6 +42,7 @@ interface SocialState {
     // Encouragements
     unreadEncouragements: (Encouragement & { sender: Profile })[];
     recentEncouragements: (Encouragement & { sender: Profile })[];
+    encouragementsError: 'network' | 'server' | null;
     
     // Actions - Auth
     checkAuth: () => Promise<void>;
@@ -100,6 +104,19 @@ interface SocialState {
     registerPushTokenAfterAuth: () => Promise<void>;
 }
 
+function classifySocialError(error: unknown): 'network' | 'server' {
+    const message = `${(error as any)?.message || ''}`.toLowerCase();
+    if (
+        message.includes('network') ||
+        message.includes('fetch') ||
+        message.includes('offline') ||
+        message.includes('timed out')
+    ) {
+        return 'network';
+    }
+    return 'server';
+}
+
 // ============================================================================
 // STORE
 // ============================================================================
@@ -114,11 +131,15 @@ export const useSocialStore = create<SocialState>()(
             socialEnabled: true,
             globalLeaderboard: [],
             friendsLeaderboard: [],
+            globalLeaderboardError: null,
+            friendsLeaderboardError: null,
             friends: [],
             pendingRequests: [],
+            friendsError: null,
             blockedUsers: [],
             unreadEncouragements: [],
             recentEncouragements: [],
+            encouragementsError: null,
 
             // ========================================
             // AUTH
@@ -130,6 +151,9 @@ export const useSocialStore = create<SocialState>()(
                 set({ isLoading: true });
                 try {
                     const profile = await SocialService.getMyProfile();
+                    if (!profile) {
+                        get().cleanupSubscriptions();
+                    }
                     set({ 
                         isAuthenticated: !!profile,
                         profile,
@@ -141,6 +165,7 @@ export const useSocialStore = create<SocialState>()(
                         get().registerPushTokenAfterAuth();
                     }
                 } catch {
+                    get().cleanupSubscriptions();
                     set({ isAuthenticated: false, profile: null, isLoading: false });
                 }
             },
@@ -180,17 +205,22 @@ export const useSocialStore = create<SocialState>()(
             },
 
             signOut: async () => {
+                get().cleanupSubscriptions();
                 await SocialService.signOut();
                 set({ 
                     isAuthenticated: false, 
                     profile: null,
                     globalLeaderboard: [],
                     friendsLeaderboard: [],
+                    globalLeaderboardError: null,
+                    friendsLeaderboardError: null,
                     friends: [],
                     pendingRequests: [],
+                    friendsError: null,
                     blockedUsers: [],
                     unreadEncouragements: [],
                     recentEncouragements: [],
+                    encouragementsError: null,
                 });
             },
 
@@ -217,6 +247,9 @@ export const useSocialStore = create<SocialState>()(
 
             setSocialEnabled: (enabled) => {
                 set({ socialEnabled: enabled });
+                if (!enabled) {
+                    get().cleanupSubscriptions();
+                }
                 // Also update profile if authenticated
                 if (get().isAuthenticated) {
                     SocialService.updateProfile({ social_enabled: enabled });
@@ -229,6 +262,7 @@ export const useSocialStore = create<SocialState>()(
 
             disableSocialAndDeleteData: async () => {
                 try {
+                    get().cleanupSubscriptions();
                     // Delete all user data from Supabase
                     await SocialService.deleteAllUserData();
                     
@@ -239,11 +273,15 @@ export const useSocialStore = create<SocialState>()(
                         socialEnabled: false,
                         globalLeaderboard: [],
                         friendsLeaderboard: [],
+                        globalLeaderboardError: null,
+                        friendsLeaderboardError: null,
                         friends: [],
                         pendingRequests: [],
+                        friendsError: null,
                         blockedUsers: [],
                         unreadEncouragements: [],
                         recentEncouragements: [],
+                        encouragementsError: null,
                     });
                     storeLogger.debug('User data deleted and social disabled');
                 } catch (error) {
@@ -289,14 +327,22 @@ export const useSocialStore = create<SocialState>()(
 
             fetchGlobalLeaderboard: async () => {
                 if (!get().isAuthenticated || !get().socialEnabled) return;
-                const data = await SocialService.getGlobalLeaderboard();
-                set({ globalLeaderboard: data });
+                try {
+                    const data = await SocialService.getGlobalLeaderboard();
+                    set({ globalLeaderboard: data, globalLeaderboardError: null });
+                } catch (error) {
+                    set({ globalLeaderboardError: classifySocialError(error) });
+                }
             },
 
             fetchFriendsLeaderboard: async () => {
                 if (!get().isAuthenticated || !get().socialEnabled) return;
-                const data = await SocialService.getFriendsLeaderboard();
-                set({ friendsLeaderboard: data });
+                try {
+                    const data = await SocialService.getFriendsLeaderboard();
+                    set({ friendsLeaderboard: data, friendsLeaderboardError: null });
+                } catch (error) {
+                    set({ friendsLeaderboardError: classifySocialError(error) });
+                }
             },
 
             // ========================================
@@ -305,14 +351,22 @@ export const useSocialStore = create<SocialState>()(
 
             fetchFriends: async () => {
                 if (!get().isAuthenticated || !get().socialEnabled) return;
-                const data = await SocialService.getFriends();
-                set({ friends: data });
+                try {
+                    const data = await SocialService.getFriends();
+                    set({ friends: data, friendsError: null });
+                } catch (error) {
+                    set({ friendsError: classifySocialError(error) });
+                }
             },
 
             fetchPendingRequests: async () => {
                 if (!get().isAuthenticated || !get().socialEnabled) return;
-                const data = await SocialService.getPendingRequests();
-                set({ pendingRequests: data });
+                try {
+                    const data = await SocialService.getPendingRequests();
+                    set({ pendingRequests: data, friendsError: null });
+                } catch (error) {
+                    set({ friendsError: classifySocialError(error) });
+                }
             },
 
             sendFriendRequest: async (userId) => {
@@ -372,11 +426,15 @@ export const useSocialStore = create<SocialState>()(
 
             fetchEncouragements: async () => {
                 if (!get().isAuthenticated || !get().socialEnabled) return;
-                const [unread, recent] = await Promise.all([
-                    SocialService.getUnreadEncouragements(),
-                    SocialService.getRecentEncouragements(),
-                ]);
-                set({ unreadEncouragements: unread, recentEncouragements: recent });
+                try {
+                    const [unread, recent] = await Promise.all([
+                        SocialService.getUnreadEncouragements(),
+                        SocialService.getRecentEncouragements(),
+                    ]);
+                    set({ unreadEncouragements: unread, recentEncouragements: recent, encouragementsError: null });
+                } catch (error) {
+                    set({ encouragementsError: classifySocialError(error) });
+                }
             },
 
             sendEncouragement: async (userId, message) => {
@@ -414,6 +472,9 @@ export const useSocialStore = create<SocialState>()(
 
                 const profile = get().profile;
                 if (!profile) return;
+
+                // Prevent duplicate subscriptions when screen re-mounts.
+                SocialService.unsubscribeAll();
 
                 // Subscribe to encouragements
                 SocialService.subscribeToEncouragements(profile.id, async (encouragement) => {

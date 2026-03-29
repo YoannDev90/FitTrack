@@ -17,6 +17,8 @@ import { MAX_LEADERBOARD_RESULTS } from '../../constants/values';
 // Supabase URL for Edge Functions
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 
+export type FriendProfile = Profile & { friendship_id: string };
+
 // ============================================================================
 // AUTH & PROFILE
 // ============================================================================
@@ -244,7 +246,7 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
 
     if (error) {
         errorLogger.error('Error fetching global leaderboard:', error);
-        return [];
+        throw error;
     }
     
     // If not authenticated, return all
@@ -265,7 +267,7 @@ export async function getFriendsLeaderboard(): Promise<LeaderboardEntry[]> {
     const { data, error } = await (supabase as any)
         .rpc('get_friends_leaderboard', { user_id: user.id });
 
-    if (error) return [];
+    if (error) throw error;
     return (data || []) as LeaderboardEntry[];
 }
 
@@ -284,7 +286,7 @@ export async function searchUsers(query: string) {
             current_user_id: user.id 
         });
 
-    if (error) return [];
+    if (error) throw error;
     return data || [];
 }
 
@@ -319,11 +321,16 @@ export async function respondToFriendRequest(friendshipId: string, accept: boole
 
 export async function removeFriend(friendshipId: string) {
     const client = getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
 
     const { error } = await (client as any)
         .from('friendships')
         .delete()
-        .eq('id', friendshipId);
+        .or(
+            `id.eq.${friendshipId},and(requester_id.eq.${user.id},addressee_id.eq.${friendshipId}),and(requester_id.eq.${friendshipId},addressee_id.eq.${user.id})`
+        )
+        .eq('status', 'accepted');
 
     if (error) throw error;
 }
@@ -342,11 +349,11 @@ export async function getPendingRequests(): Promise<(Friendship & { requester: P
         .eq('addressee_id', user.id)
         .eq('status', 'pending');
 
-    if (error) return [];
+    if (error) throw error;
     return (data || []) as (Friendship & { requester: Profile })[];
 }
 
-export async function getFriends(): Promise<Profile[]> {
+export async function getFriends(): Promise<FriendProfile[]> {
     if (!supabase) return [];
     const user = await getCurrentUser();
     if (!user) return [];
@@ -354,18 +361,22 @@ export async function getFriends(): Promise<Profile[]> {
     const { data, error } = await (supabase as any)
         .from('friendships')
         .select(`
+            id,
             requester:profiles!friendships_requester_id_fkey(*),
             addressee:profiles!friendships_addressee_id_fkey(*)
         `)
         .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
         .eq('status', 'accepted');
 
-    if (error) return [];
+    if (error) throw error;
     
     // Extract friend profiles
     return ((data || []) as any[]).map((f: any) => 
-        f.requester.id === user.id ? f.addressee : f.requester
-    ) as Profile[];
+        ({
+            ...(f.requester.id === user.id ? f.addressee : f.requester),
+            friendship_id: f.id,
+        })
+    ) as FriendProfile[];
 }
 
 // ============================================================================
@@ -423,7 +434,7 @@ export async function getUnreadEncouragements(): Promise<(Encouragement & { send
         .is('read_at', null)
         .order('created_at', { ascending: false });
 
-    if (error) return [];
+    if (error) throw error;
     return (data || []) as (Encouragement & { sender: Profile })[];
 }
 
@@ -451,7 +462,7 @@ export async function getRecentEncouragements(limit = 10): Promise<(Encouragemen
         .order('created_at', { ascending: false })
         .limit(limit);
 
-    if (error) return [];
+    if (error) throw error;
     return (data || []) as (Encouragement & { sender: Profile })[];
 }
 
