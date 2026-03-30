@@ -156,6 +156,8 @@ export default function PrivacyPolicyScreen() {
                     <BulletPoint>{t('privacyPolicy.social.syncedData.xp')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.social.syncedData.streak')}</BulletPoint>
                     <BulletPoint>{t('privacyPolicy.social.syncedData.weeklyCount')}</BulletPoint>
+                    <BulletPoint>{t('privacyPolicy.social.syncedData.challenges')}</BulletPoint>
+                    <BulletPoint>{t('privacyPolicy.social.syncedData.sharedWorkouts')}</BulletPoint>
                     
                     <Text style={styles.subheading}>{t('privacyPolicy.social.accountDataTitle')}</Text>
                     <BulletPoint>{t('privacyPolicy.social.accountData.email')}</BulletPoint>

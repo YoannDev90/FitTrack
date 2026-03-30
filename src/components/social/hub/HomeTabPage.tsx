@@ -19,7 +19,9 @@ interface HomeTabPageProps {
     challengesError: string | null;
     feedItems: FeedViewItem[];
     isSendingLikeForId: string | null;
+    isDeletingItemId: string | null;
     onSendLike: (item: FeedViewItem) => void;
+    onDeleteFeedItem: (item: FeedViewItem) => void;
     onRefreshFeed: () => void;
     feedError: string | null;
     onPressShareWorkout: () => void;
@@ -68,7 +70,9 @@ export function HomeTabPage({
     challengesError,
     feedItems,
     isSendingLikeForId,
+    isDeletingItemId,
     onSendLike,
+    onDeleteFeedItem,
     onRefreshFeed,
     feedError,
     onPressShareWorkout,
@@ -104,7 +108,9 @@ export function HomeTabPage({
                 <FeedSection
                     items={feedItems}
                     isSendingLikeForId={isSendingLikeForId}
+                    isDeletingItemId={isDeletingItemId}
                     onSendLike={onSendLike}
+                    onDeleteItem={onDeleteFeedItem}
                     onRefresh={onRefreshFeed}
                     error={feedError}
                     labels={labels.feed}

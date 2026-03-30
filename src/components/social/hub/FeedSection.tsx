@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Heart } from 'lucide-react-native';
+import { Heart, X } from 'lucide-react-native';
 import { GlassCard } from '../../ui';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
 import type { FeedViewItem } from './types';
@@ -8,7 +8,9 @@ import type { FeedViewItem } from './types';
 interface FeedSectionProps {
     items: FeedViewItem[];
     isSendingLikeForId: string | null;
+    isDeletingItemId: string | null;
     onSendLike: (item: FeedViewItem) => void;
+    onDeleteItem: (item: FeedViewItem) => void;
     onRefresh: () => void;
     error?: string | null;
     labels: {
@@ -39,7 +41,9 @@ function relativeTimeLabel(dateIso: string, labels: FeedSectionProps['labels']):
 export function FeedSection({
     items,
     isSendingLikeForId,
+    isDeletingItemId,
     onSendLike,
+    onDeleteItem,
     onRefresh,
     error,
     labels,
@@ -68,7 +72,18 @@ export function FeedSection({
                                 <Text style={styles.feedAvatarText}>{item.actorName.charAt(0).toUpperCase()}</Text>
                             </View>
                             <View style={styles.feedContent}>
-                                <Text style={styles.feedTitle}>{item.title}</Text>
+                                <View style={styles.feedTitleRow}>
+                                    <Text style={styles.feedTitle}>{item.title}</Text>
+                                    {item.canDelete && (
+                                        <TouchableOpacity
+                                            onPress={() => onDeleteItem(item)}
+                                            disabled={isDeletingItemId === item.id}
+                                            style={styles.feedDeleteBtn}
+                                        >
+                                            <X size={12} color={Colors.muted2} />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                                 <Text style={styles.feedDetail}>{item.detail}</Text>
                                 <View style={styles.feedFooter}>
                                     <Text style={styles.feedTime}>{relativeTimeLabel(item.createdAt, labels)}</Text>
@@ -145,9 +160,23 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     feedTitle: {
+        flex: 1,
         color: Colors.text,
         fontWeight: FontWeight.semibold,
         fontSize: FontSize.sm,
+    },
+    feedTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.xs,
+    },
+    feedDeleteBtn: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Colors.overlayWhite08,
     },
     feedDetail: {
         color: Colors.muted2,

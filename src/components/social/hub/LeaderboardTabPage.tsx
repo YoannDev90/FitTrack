@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Trophy } from 'lucide-react-native';
+import { Medal, Trophy } from 'lucide-react-native';
 import { GlassCard } from '../../ui';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
 
@@ -33,6 +33,13 @@ interface LeaderboardTabPageProps {
         meBadge: string;
         xpSuffix: string;
     };
+}
+
+function medalColorForRank(rank: number): string {
+    if (rank === 1) return Colors.gold;
+    if (rank === 2) return Colors.silver;
+    if (rank === 3) return Colors.bronze;
+    return Colors.muted2;
 }
 
 export function LeaderboardTabPage({
@@ -80,7 +87,13 @@ export function LeaderboardTabPage({
                 ) : (
                     rows.map((entry, index) => (
                         <View key={`${entry.id}-${index}`} style={[styles.rankRow, index < rows.length - 1 && styles.rankRowBorder]}>
-                            <Text style={styles.rankNumber}>{entry.rank}</Text>
+                            <View style={styles.rankBadgeWrap}>
+                                {entry.rank <= 3 ? (
+                                    <Medal size={15} color={medalColorForRank(entry.rank)} />
+                                ) : (
+                                    <Text style={styles.rankNumber}>{entry.rank}</Text>
+                                )}
+                            </View>
                             <View style={styles.rankAvatar}>
                                 <Text style={styles.rankAvatarText}>
                                     {(entry.display_name || entry.username).charAt(0).toUpperCase()}
@@ -178,10 +191,14 @@ const styles = StyleSheet.create({
         borderBottomColor: Colors.overlayWhite08,
     },
     rankNumber: {
-        width: 24,
         color: Colors.muted,
         fontWeight: FontWeight.semibold,
         textAlign: 'center',
+    },
+    rankBadgeWrap: {
+        width: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     rankAvatar: {
         width: 34,

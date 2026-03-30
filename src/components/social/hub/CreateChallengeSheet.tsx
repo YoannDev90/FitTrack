@@ -4,6 +4,12 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
 import type { SocialChallengeGoalType } from '../../../services/supabase/social';
 
+interface ChallengeFriendOption {
+    id: string;
+    username: string;
+    display_name: string | null;
+}
+
 interface CreateChallengeSheetProps {
     sheetRef: React.RefObject<TrueSheet | null>;
     title: string;
@@ -14,6 +20,9 @@ interface CreateChallengeSheetProps {
     onChangeGoalTarget: (value: string) => void;
     durationDays: string;
     onChangeDurationDays: (value: string) => void;
+    friendOptions: ChallengeFriendOption[];
+    selectedFriendIds: string[];
+    onToggleFriendId: (friendId: string) => void;
     isCreating: boolean;
     onCreate: () => void;
     labels: {
@@ -29,6 +38,8 @@ interface CreateChallengeSheetProps {
         distance: string;
         duration: string;
         xp: string;
+        friendsTitle: string;
+        noFriends: string;
     };
 }
 
@@ -42,6 +53,9 @@ export function CreateChallengeSheet({
     onChangeGoalTarget,
     durationDays,
     onChangeDurationDays,
+    friendOptions,
+    selectedFriendIds,
+    onToggleFriendId,
     isCreating,
     onCreate,
     labels,
@@ -105,6 +119,30 @@ export function CreateChallengeSheet({
                         value={durationDays}
                         onChangeText={onChangeDurationDays}
                     />
+                </View>
+
+                <View style={styles.friendsSection}>
+                    <Text style={styles.friendsTitle}>{labels.friendsTitle}</Text>
+                    {friendOptions.length === 0 ? (
+                        <Text style={styles.friendsEmpty}>{labels.noFriends}</Text>
+                    ) : (
+                        <View style={styles.friendChipRow}>
+                            {friendOptions.map(friend => {
+                                const isSelected = selectedFriendIds.includes(friend.id);
+                                return (
+                                    <TouchableOpacity
+                                        key={friend.id}
+                                        style={[styles.friendChip, isSelected && styles.friendChipSelected]}
+                                        onPress={() => onToggleFriendId(friend.id)}
+                                    >
+                                        <Text style={[styles.friendChipText, isSelected && styles.friendChipTextSelected]}>
+                                            {friend.display_name || friend.username}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    )}
                 </View>
 
                 <View style={styles.sheetActions}>
@@ -178,6 +216,44 @@ const styles = StyleSheet.create({
     sheetInputRow: {
         flexDirection: 'row',
         gap: Spacing.sm,
+    },
+    friendsSection: {
+        marginTop: Spacing.xs,
+        gap: Spacing.xs,
+    },
+    friendsTitle: {
+        color: Colors.text,
+        fontSize: FontSize.sm,
+        fontWeight: FontWeight.semibold,
+    },
+    friendsEmpty: {
+        color: Colors.muted2,
+        fontSize: FontSize.xs,
+    },
+    friendChipRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    friendChip: {
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.stroke,
+        backgroundColor: Colors.overlay,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: 6,
+    },
+    friendChipSelected: {
+        borderColor: Colors.overlayCozyWarm40,
+        backgroundColor: Colors.overlayCozyWarm15,
+    },
+    friendChipText: {
+        color: Colors.muted,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.semibold,
+    },
+    friendChipTextSelected: {
+        color: Colors.cta,
     },
     sheetInputHalf: {
         flex: 1,

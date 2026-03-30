@@ -10,6 +10,7 @@ export interface FeedViewItem {
     detail: string;
     createdAt: string;
     isWorkoutShare: boolean;
+    canDelete: boolean;
     eventId?: string;
 }
 

@@ -23,6 +23,7 @@ import { useAppStore, useSocialStore } from '../../stores';
 import { isSocialAvailable } from '../../services/supabase';
 import {
     createSocialChallenge,
+    deleteMySharedWorkoutEvent,
     getActiveSocialChallenges,
     getSocialFeed,
     setSocialFeedReaction,
@@ -132,6 +133,7 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
     const metadata = event.metadata || {};
 
     if (event.event_type === 'workout') {
+        const isOwnWorkout = event.actor_id === currentUserId;
         return {
             id: event.id,
             actorId: event.actor_id,
@@ -139,7 +141,8 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
             title: t('socialHub.feed.workoutTitle', { name: event.actor_name }),
             detail: `${metadata.title || t('socialHub.workoutTypes.home')} · ${metadata.summary || t('socialHub.feed.genericWorkoutDetail')}`,
             createdAt: event.created_at,
-            isWorkoutShare: event.actor_id !== currentUserId,
+            isWorkoutShare: !isOwnWorkout,
+            canDelete: isOwnWorkout,
             eventId: event.id,
         };
     }
@@ -153,6 +156,7 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
             detail: `${metadata.challenge_title || t('socialHub.feed.challengeFallback')}`,
             createdAt: event.created_at,
             isWorkoutShare: false,
+            canDelete: false,
             eventId: event.id,
         };
     }
@@ -166,6 +170,7 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
             detail: `${event.message}`,
             createdAt: event.created_at,
             isWorkoutShare: false,
+            canDelete: false,
             eventId: event.id,
         };
     }
@@ -178,6 +183,7 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
         detail: event.message,
         createdAt: event.created_at,
         isWorkoutShare: false,
+        canDelete: false,
         eventId: event.id,
     };
 }
@@ -218,7 +224,9 @@ export default function SocialHubScreen() {
     const [challengeGoalType, setChallengeGoalType] = useState<SocialChallengeGoalType>('workouts');
     const [challengeGoalTarget, setChallengeGoalTarget] = useState('10');
     const [challengeDurationDays, setChallengeDurationDays] = useState('7');
+    const [selectedFriendIdsForChallenge, setSelectedFriendIdsForChallenge] = useState<string[]>([]);
     const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
+    const [isDeletingFeedItemId, setIsDeletingFeedItemId] = useState<string | null>(null);
 
     const { entries } = useAppStore();
     const {
@@ -246,8 +254,6 @@ export default function SocialHubScreen() {
     const hasLoadedFriendsTabRef = useRef(false);
     const hasLoadedLeaderboardTabRef = useRef(false);
 
-    const friendIds = useMemo(() => new Set(friends.map(friend => friend.id)), [friends]);
-
     const shareableWorkouts = useMemo(() => {
         return entries
             .filter(isWorkoutEntry)
@@ -257,19 +263,22 @@ export default function SocialHubScreen() {
     }, [entries, t]);
 
     const friendsLeaderboardRows = useMemo(() => {
-        const friendRows = friendsLeaderboard
-            .filter(entry => friendIds.has(entry.id))
-            .slice();
-
-        const rows = friendRows.length > 0
-            ? friendRows
+        const rows = friendsLeaderboard.length > 0
+            ? friendsLeaderboard
             : [...friends].map(friend => ({
                 ...friend,
             }));
 
-        const withSelf = profile
-            ? [...rows, { ...profile }]
-            : rows;
+        const byId = new Map<string, any>();
+        rows.forEach(row => {
+            byId.set(row.id, row);
+        });
+
+        if (profile) {
+            byId.set(profile.id, profile);
+        }
+
+        const withSelf = Array.from(byId.values());
 
         return withSelf
             .sort((a, b) => (b.weekly_xp || 0) - (a.weekly_xp || 0))
@@ -278,7 +287,15 @@ export default function SocialHubScreen() {
                 ...row,
                 rank: index + 1,
             }));
-    }, [friendsLeaderboard, friendIds, friends, profile]);
+    }, [friendsLeaderboard, friends, profile]);
+
+    const friendOptionsForChallenge = useMemo(() => {
+        return friends.map(friend => ({
+            id: friend.id,
+            username: friend.username,
+            display_name: friend.display_name,
+        }));
+    }, [friends]);
 
     const globalLeaderboardRows = useMemo(() => {
         const rows = globalLeaderboard.slice(0, 20);
@@ -302,7 +319,7 @@ export default function SocialHubScreen() {
 
     const loadFeed = useCallback(async () => {
         try {
-            const events = await getSocialFeed(20);
+            const events = await getSocialFeed(10);
             const currentUserId = useSocialStore.getState().profile?.id;
             const mapped = events.map(event => mapFeedEvent(event, currentUserId, t));
             setFeedItems(mapped);
@@ -317,13 +334,14 @@ export default function SocialHubScreen() {
         setIsHydratingHub(true);
         try {
             await Promise.allSettled([
+                fetchFriends(),
                 loadChallenges(),
                 loadFeed(),
             ]);
         } finally {
             setIsHydratingHub(false);
         }
-    }, [loadChallenges, loadFeed]);
+    }, [fetchFriends, loadChallenges, loadFeed]);
 
     const loadFriendsTabData = useCallback(async () => {
         setIsHydratingFriendsTab(true);
@@ -542,6 +560,21 @@ export default function SocialHubScreen() {
         }
     }, [globalLeaderboardRows.length, loadGlobalLeaderboardData]);
 
+    const handleToggleFriendForChallenge = useCallback((friendId: string) => {
+        setSelectedFriendIdsForChallenge((previous) => (
+            previous.includes(friendId)
+                ? previous.filter(id => id !== friendId)
+                : [...previous, friendId]
+        ));
+    }, []);
+
+    const openChallengeSheet = useCallback(async () => {
+        if (friends.length === 0) {
+            await fetchFriends();
+        }
+        challengeSheetRef.current?.present();
+    }, [fetchFriends, friends.length]);
+
     const handleSendLike = useCallback(async (item: FeedViewItem) => {
         if (!item.isWorkoutShare || !item.eventId || item.actorId === profile?.id) return;
 
@@ -555,6 +588,33 @@ export default function SocialHubScreen() {
             setIsSendingLikeForId(null);
         }
     }, [profile?.id, sendEncouragement, t]);
+
+    const handleDeleteSharedWorkout = useCallback((item: FeedViewItem) => {
+        if (!item.canDelete || !item.eventId) return;
+
+        Alert.alert(
+            t('socialHub.feed.deleteConfirmTitle'),
+            t('socialHub.feed.deleteConfirmMessage'),
+            [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                    text: t('common.delete'),
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsDeletingFeedItemId(item.id);
+                        try {
+                            await deleteMySharedWorkoutEvent(item.eventId as string);
+                            await loadFeed();
+                        } catch {
+                            Alert.alert(t('common.error'), t('socialHub.feed.deleteError'));
+                        } finally {
+                            setIsDeletingFeedItemId(null);
+                        }
+                    },
+                },
+            ]
+        );
+    }, [loadFeed, t]);
 
     const handleShareWorkout = useCallback(async (workout: ShareableWorkoutItem) => {
         setIsSharingWorkoutId(workout.id);
@@ -597,6 +657,11 @@ export default function SocialHubScreen() {
             return;
         }
 
+        if (selectedFriendIdsForChallenge.length === 0) {
+            Alert.alert(t('common.warning'), t('socialHub.challenge.validation.friendsRequired'));
+            return;
+        }
+
         setIsCreatingChallenge(true);
         try {
             await createSocialChallenge({
@@ -604,20 +669,32 @@ export default function SocialHubScreen() {
                 goalType: challengeGoalType,
                 goalTarget: target,
                 durationDays,
+                invitedFriendIds: selectedFriendIdsForChallenge,
             });
             challengeSheetRef.current?.dismiss();
             setChallengeTitle('');
             setChallengeGoalType('workouts');
             setChallengeGoalTarget('10');
             setChallengeDurationDays('7');
-            await Promise.all([loadChallenges(), loadFeed()]);
+            setSelectedFriendIdsForChallenge([]);
+            await Promise.all([loadChallenges(), loadFeed(), loadFriendsTabData()]);
             Alert.alert(t('common.success'), t('socialHub.challenge.createSuccess'));
         } catch {
             Alert.alert(t('common.error'), t('socialHub.errors.createChallenge'));
         } finally {
             setIsCreatingChallenge(false);
         }
-    }, [challengeDurationDays, challengeGoalTarget, challengeGoalType, challengeTitle, loadChallenges, loadFeed, t]);
+    }, [
+        challengeDurationDays,
+        challengeGoalTarget,
+        challengeGoalType,
+        challengeTitle,
+        selectedFriendIdsForChallenge,
+        loadChallenges,
+        loadFeed,
+        loadFriendsTabData,
+        t,
+    ]);
 
     if (!isSocialAvailable()) {
         return (
@@ -714,11 +791,13 @@ export default function SocialHubScreen() {
                             challengesError={challengesError}
                             feedItems={feedItems}
                             isSendingLikeForId={isSendingLikeForId}
+                            isDeletingItemId={isDeletingFeedItemId}
                             onSendLike={handleSendLike}
+                            onDeleteFeedItem={handleDeleteSharedWorkout}
                             onRefreshFeed={loadFeed}
                             feedError={feedError}
                             onPressShareWorkout={() => shareWorkoutSheetRef.current?.present()}
-                            onPressCreateChallenge={() => challengeSheetRef.current?.present()}
+                            onPressCreateChallenge={openChallengeSheet}
                             labels={{
                                 challenge: {
                                     sectionTitle: t('socialHub.challenge.sectionTitle'),
@@ -756,7 +835,7 @@ export default function SocialHubScreen() {
                         <ChallengesTabPage
                             challenges={activeChallenges}
                             error={challengesError}
-                            onPressCreateChallenge={() => challengeSheetRef.current?.present()}
+                            onPressCreateChallenge={openChallengeSheet}
                             onPressAddSession={() => router.push('/workout' as any)}
                             labels={{
                                 pageTitle: t('socialHub.pages.challenges.title'),
@@ -851,6 +930,9 @@ export default function SocialHubScreen() {
                     onChangeGoalTarget={setChallengeGoalTarget}
                     durationDays={challengeDurationDays}
                     onChangeDurationDays={setChallengeDurationDays}
+                    friendOptions={friendOptionsForChallenge}
+                    selectedFriendIds={selectedFriendIdsForChallenge}
+                    onToggleFriendId={handleToggleFriendForChallenge}
                     isCreating={isCreatingChallenge}
                     onCreate={handleCreateChallenge}
                     labels={{
@@ -866,6 +948,8 @@ export default function SocialHubScreen() {
                         distance: t('socialHub.challenge.goalTypes.distance'),
                         duration: t('socialHub.challenge.goalTypes.duration'),
                         xp: t('socialHub.challenge.goalTypes.xp'),
+                        friendsTitle: t('socialHub.challenge.sheet.friendsTitle'),
+                        noFriends: t('socialHub.challenge.sheet.noFriends'),
                     }}
                 />
 
