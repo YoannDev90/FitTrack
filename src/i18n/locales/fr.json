@@ -2201,6 +2201,27 @@
       "friends": "Amis",
       "leaderboard": "Classement"
     },
+    "pages": {
+      "challenges": {
+        "title": "Mes challenges",
+        "subtitle": "Retrouve les challenges en cours et avance séance après séance.",
+        "create": "Lancer un challenge",
+        "emptyTitle": "Aucun challenge actif",
+        "emptySubtitle": "Lance un challenge pour démarrer.",
+        "participantsLabel": "Participants",
+        "progressLabel": "Progression"
+      },
+      "friends": {
+        "title": "Mes amis",
+        "subtitle": "Gère tes demandes d'ami et ton réseau.",
+        "noRequests": "Aucune demande en attente"
+      },
+      "leaderboard": {
+        "title": "Classement",
+        "subtitle": "Classement amis par défaut, global en option.",
+        "loadingGlobal": "Chargement du classement global..."
+      }
+    },
     "errors": {
       "challengesLoad": "Impossible de charger les challenges pour le moment.",
       "feedLoad": "Le feed social est temporairement indisponible.",

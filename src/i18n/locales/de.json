@@ -2192,6 +2192,27 @@
       "friends": "Freunde",
       "leaderboard": "Bestenliste"
     },
+    "pages": {
+      "challenges": {
+        "title": "Meine Challenges",
+        "subtitle": "Verfolge laufende Challenges mit mehr Details zum Fortschritt.",
+        "create": "Challenge starten",
+        "emptyTitle": "Keine aktive Challenge",
+        "emptySubtitle": "Starte eine Challenge, um zu beginnen.",
+        "participantsLabel": "Teilnehmer",
+        "progressLabel": "Fortschritt"
+      },
+      "friends": {
+        "title": "Meine Freunde",
+        "subtitle": "Verwalte Freundschaftsanfragen und deine Freunde.",
+        "noRequests": "Keine offenen Anfragen"
+      },
+      "leaderboard": {
+        "title": "Bestenliste",
+        "subtitle": "Freundes-Bestenliste standardmäßig, global bei Bedarf.",
+        "loadingGlobal": "Globale Bestenliste wird geladen..."
+      }
+    },
     "errors": {
       "challengesLoad": "Challenges konnten derzeit nicht geladen werden.",
       "feedLoad": "Der Social-Feed ist vorübergehend nicht verfügbar.",

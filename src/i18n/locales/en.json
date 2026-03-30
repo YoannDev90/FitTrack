@@ -2201,6 +2201,27 @@
       "friends": "Friends",
       "leaderboard": "Leaderboard"
     },
+    "pages": {
+      "challenges": {
+        "title": "My challenges",
+        "subtitle": "Track active challenges with deeper progress details.",
+        "create": "Start a challenge",
+        "emptyTitle": "No active challenges",
+        "emptySubtitle": "Start a challenge to begin.",
+        "participantsLabel": "Participants",
+        "progressLabel": "Progress"
+      },
+      "friends": {
+        "title": "My friends",
+        "subtitle": "Manage friend requests and your social circle.",
+        "noRequests": "No pending requests"
+      },
+      "leaderboard": {
+        "title": "Leaderboard",
+        "subtitle": "Friends leaderboard by default, global on demand.",
+        "loadingGlobal": "Loading global leaderboard..."
+      }
+    },
     "errors": {
       "challengesLoad": "Unable to load challenges right now.",
       "feedLoad": "The social feed is temporarily unavailable.",

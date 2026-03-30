@@ -2192,6 +2192,27 @@
       "friends": "Amici",
       "leaderboard": "Classifica"
     },
+    "pages": {
+      "challenges": {
+        "title": "Le mie challenge",
+        "subtitle": "Segui le challenge attive con dettagli di progresso più completi.",
+        "create": "Lancia una challenge",
+        "emptyTitle": "Nessuna challenge attiva",
+        "emptySubtitle": "Lancia una challenge per iniziare.",
+        "participantsLabel": "Partecipanti",
+        "progressLabel": "Progresso"
+      },
+      "friends": {
+        "title": "I miei amici",
+        "subtitle": "Gestisci richieste di amicizia e rete amici.",
+        "noRequests": "Nessuna richiesta in sospeso"
+      },
+      "leaderboard": {
+        "title": "Classifica",
+        "subtitle": "Classifica amici di default, globale su richiesta.",
+        "loadingGlobal": "Caricamento classifica globale..."
+      }
+    },
     "errors": {
       "challengesLoad": "Impossibile caricare le challenge al momento.",
       "feedLoad": "Il feed social è temporaneamente non disponibile.",
