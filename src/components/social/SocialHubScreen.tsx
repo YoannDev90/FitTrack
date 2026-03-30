@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Alert,
-    RefreshControl,
     Share,
     StyleSheet,
     Text,
@@ -12,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Bell, Sparkles, UserCircle2, Users } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -19,6 +18,8 @@ import { useTranslation } from 'react-i18next';
 import type { Entry } from '../../types';
 import { BuildConfig } from '../../config';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../constants';
+import { CustomAlertModal } from '../ui';
+import type { AlertButton, AlertType } from '../ui';
 import { useAppStore, useSocialStore } from '../../stores';
 import { isSocialAvailable } from '../../services/supabase';
 import {
@@ -42,6 +43,21 @@ import { LeaderboardTabPage } from './hub/LeaderboardTabPage';
 import { ShareWorkoutSheet } from './hub/ShareWorkoutSheet';
 import { TopTabs } from './hub/TopTabs';
 import type { FeedViewItem, SearchResult, ShareableWorkoutItem, SocialTopTabId } from './hub/types';
+
+interface HubDialogState {
+    visible: boolean;
+    title: string;
+    message: string;
+    type: AlertType;
+    buttons?: AlertButton[];
+    showCloseButton?: boolean;
+}
+
+const HOME_HYDRATION_CACHE_TTL_MS = 45 * 1000;
+let homeChallengesCache: SocialChallengeProgress[] = [];
+let homeFeedCache: FeedViewItem[] = [];
+let homeHydrationCacheAt = 0;
+let homeCacheProfileId: string | null = null;
 
 function isWorkoutEntry(entry: Entry): entry is Extract<Entry, { type: 'home' | 'run' | 'beatsaber' | 'custom' }> {
     return entry.type === 'home' || entry.type === 'run' || entry.type === 'beatsaber' || entry.type === 'custom';
@@ -210,9 +226,13 @@ export default function SocialHubScreen() {
     const [isSendingLikeForId, setIsSendingLikeForId] = useState<string | null>(null);
     const [isSharingWorkoutId, setIsSharingWorkoutId] = useState<string | null>(null);
 
-    const [activeChallenges, setActiveChallenges] = useState<SocialChallengeProgress[]>([]);
+    const [activeChallenges, setActiveChallenges] = useState<SocialChallengeProgress[]>(() => (
+        profile?.id && homeCacheProfileId === profile.id ? homeChallengesCache : []
+    ));
     const [challengesError, setChallengesError] = useState<string | null>(null);
-    const [feedItems, setFeedItems] = useState<FeedViewItem[]>([]);
+    const [feedItems, setFeedItems] = useState<FeedViewItem[]>(() => (
+        profile?.id && homeCacheProfileId === profile.id ? homeFeedCache : []
+    ));
     const [feedError, setFeedError] = useState<string | null>(null);
 
     const [showAddFriendPanel, setShowAddFriendPanel] = useState(false);
@@ -230,6 +250,14 @@ export default function SocialHubScreen() {
     const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
     const [isDeletingChallengeId, setIsDeletingChallengeId] = useState<string | null>(null);
     const [isDeletingFeedItemId, setIsDeletingFeedItemId] = useState<string | null>(null);
+    const [dialogState, setDialogState] = useState<HubDialogState>({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'info',
+        buttons: [{ text: t('common.ok') }],
+        showCloseButton: true,
+    });
 
     const { entries } = useAppStore();
     const {
@@ -256,6 +284,71 @@ export default function SocialHubScreen() {
 
     const hasLoadedFriendsTabRef = useRef(false);
     const hasLoadedLeaderboardTabRef = useRef(false);
+
+    const closeDialog = useCallback(() => {
+        setDialogState(prev => ({ ...prev, visible: false }));
+    }, []);
+
+    const openDialog = useCallback((options: Omit<HubDialogState, 'visible'>) => {
+        setDialogState({
+            visible: true,
+            ...options,
+        });
+    }, []);
+
+    const showSuccessDialog = useCallback((message: string) => {
+        openDialog({
+            title: t('common.success'),
+            message,
+            type: 'success',
+            buttons: [{ text: t('common.ok') }],
+            showCloseButton: true,
+        });
+    }, [openDialog, t]);
+
+    const showErrorDialog = useCallback((message: string) => {
+        openDialog({
+            title: t('common.error'),
+            message,
+            type: 'error',
+            buttons: [{ text: t('common.ok') }],
+            showCloseButton: true,
+        });
+    }, [openDialog, t]);
+
+    const showWarningDialog = useCallback((message: string) => {
+        openDialog({
+            title: t('common.warning'),
+            message,
+            type: 'warning',
+            buttons: [{ text: t('common.ok') }],
+            showCloseButton: true,
+        });
+    }, [openDialog, t]);
+
+    const showConfirmDialog = useCallback((
+        title: string,
+        message: string,
+        confirmLabel: string,
+        onConfirm: () => Promise<void> | void
+    ) => {
+        openDialog({
+            title,
+            message,
+            type: 'warning',
+            showCloseButton: false,
+            buttons: [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                    text: confirmLabel,
+                    style: 'destructive',
+                    onPress: () => {
+                        void onConfirm();
+                    },
+                },
+            ],
+        });
+    }, [openDialog, t]);
 
     const shareableWorkouts = useMemo(() => {
         return entries
@@ -312,10 +405,13 @@ export default function SocialHubScreen() {
         try {
             const challenges = await getActiveSocialChallenges();
             setActiveChallenges(challenges);
+            homeChallengesCache = challenges;
             setChallengeIndex(0);
             setChallengesError(null);
         } catch {
-            setActiveChallenges([]);
+            if (homeChallengesCache.length === 0) {
+                setActiveChallenges([]);
+            }
             setChallengesError(t('socialHub.errors.challengesLoad'));
         }
     }, [t]);
@@ -326,25 +422,36 @@ export default function SocialHubScreen() {
             const currentUserId = useSocialStore.getState().profile?.id;
             const mapped = events.map(event => mapFeedEvent(event, currentUserId, t));
             setFeedItems(mapped);
+            homeFeedCache = mapped;
             setFeedError(null);
         } catch {
-            setFeedItems([]);
+            if (homeFeedCache.length === 0) {
+                setFeedItems([]);
+            }
             setFeedError(t('socialHub.errors.feedLoad'));
         }
     }, [t]);
 
-    const loadHomeData = useCallback(async () => {
-        setIsHydratingHub(true);
+    const loadHomeData = useCallback(async (options?: { silent?: boolean }) => {
+        const silent = options?.silent ?? false;
+        if (!silent) {
+            setIsHydratingHub(true);
+        }
+
         try {
             await Promise.allSettled([
                 fetchFriends(),
                 loadChallenges(),
                 loadFeed(),
             ]);
+            homeCacheProfileId = profile?.id ?? null;
+            homeHydrationCacheAt = Date.now();
         } finally {
-            setIsHydratingHub(false);
+            if (!silent) {
+                setIsHydratingHub(false);
+            }
         }
-    }, [fetchFriends, loadChallenges, loadFeed]);
+    }, [fetchFriends, loadChallenges, loadFeed, profile?.id]);
 
     const loadFriendsTabData = useCallback(async () => {
         setIsHydratingFriendsTab(true);
@@ -380,6 +487,12 @@ export default function SocialHubScreen() {
         let cancelled = false;
 
         const initialize = async () => {
+            if (isAuthenticated && profile) {
+                setIsInitialLoading(false);
+                void checkAuth();
+                return;
+            }
+
             setIsInitialLoading(true);
             await checkAuth();
 
@@ -393,11 +506,34 @@ export default function SocialHubScreen() {
         return () => {
             cancelled = true;
         };
-    }, [checkAuth]);
+    }, [checkAuth, isAuthenticated, profile]);
+
+    useEffect(() => {
+        const profileId = profile?.id ?? null;
+
+        if (homeCacheProfileId !== profileId) {
+            homeCacheProfileId = profileId;
+            homeChallengesCache = [];
+            homeFeedCache = [];
+            homeHydrationCacheAt = 0;
+            setActiveChallenges([]);
+            setFeedItems([]);
+        }
+    }, [profile?.id]);
 
     useEffect(() => {
         if (isInitialLoading) return;
         if (!isAuthenticated || !socialEnabled) return;
+
+        const hasFreshCache =
+            homeHydrationCacheAt > 0 &&
+            Date.now() - homeHydrationCacheAt < HOME_HYDRATION_CACHE_TTL_MS;
+
+        if (hasFreshCache) {
+            void loadHomeData({ silent: true });
+            return;
+        }
+
         loadHomeData();
     }, [isInitialLoading, isAuthenticated, socialEnabled, loadHomeData]);
 
@@ -502,11 +638,11 @@ export default function SocialHubScreen() {
             setSearchResults(prev => prev.map(result => (
                 result.id === userId ? { ...result, friendship_status: 'pending' } : result
             )));
-            Alert.alert(t('common.success'), t('social.requestSent'));
+            showSuccessDialog(t('social.requestSent'));
         } catch {
-            Alert.alert(t('common.error'), t('socialHub.errors.sendFriendRequest'));
+            showErrorDialog(t('socialHub.errors.sendFriendRequest'));
         }
-    }, [sendFriendRequest, t]);
+    }, [sendFriendRequest, showErrorDialog, showSuccessDialog, t]);
 
     const handleInviteFriend = useCallback(async () => {
         try {
@@ -516,41 +652,43 @@ export default function SocialHubScreen() {
                 message: t('socialHub.invite.shareMessage', { username }),
             });
         } catch {
-            Alert.alert(t('common.error'), t('socialHub.errors.shareInvite'));
+            showErrorDialog(t('socialHub.errors.shareInvite'));
         }
-    }, [profile?.username, t]);
+    }, [profile?.username, showErrorDialog, t]);
 
     const handleRespondToRequest = useCallback(async (friendshipId: string, accept: boolean) => {
         try {
             await respondToRequest(friendshipId, accept);
             await loadFriendsTabData();
         } catch {
-            Alert.alert(t('common.error'), t('socialHub.errors.sendFriendRequest'));
+            showErrorDialog(t('socialHub.errors.sendFriendRequest'));
         }
-    }, [respondToRequest, loadFriendsTabData, t]);
+    }, [respondToRequest, loadFriendsTabData, showErrorDialog, t]);
 
     const handleRemoveFriend = useCallback(async (friendshipId: string, friendName: string) => {
-        Alert.alert(
+        showConfirmDialog(
             t('social.removeFriendConfirmTitle'),
             t('social.removeFriendConfirmMessage'),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                    text: t('common.delete'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await removeFriend(friendshipId);
-                            await Promise.allSettled([loadFriendsTabData(), loadFriendsLeaderboardData()]);
-                            Alert.alert(t('common.success'), `${t('social.friendRemoved')} · ${friendName}`);
-                        } catch {
-                            Alert.alert(t('common.error'), t('socialHub.errors.sendFriendRequest'));
-                        }
-                    },
-                },
-            ]
+            t('common.delete'),
+            async () => {
+                try {
+                    await removeFriend(friendshipId);
+                    await Promise.allSettled([loadFriendsTabData(), loadFriendsLeaderboardData()]);
+                    showSuccessDialog(`${t('social.friendRemoved')} · ${friendName}`);
+                } catch {
+                    showErrorDialog(t('socialHub.errors.sendFriendRequest'));
+                }
+            }
         );
-    }, [removeFriend, loadFriendsTabData, loadFriendsLeaderboardData, t]);
+    }, [
+        removeFriend,
+        loadFriendsTabData,
+        loadFriendsLeaderboardData,
+        showConfirmDialog,
+        showSuccessDialog,
+        showErrorDialog,
+        t,
+    ]);
 
     const handleShowFriendsLeaderboard = useCallback(() => {
         setIsGlobalLeaderboardActive(false);
@@ -573,7 +711,11 @@ export default function SocialHubScreen() {
 
     const openChallengeSheet = useCallback(async () => {
         if (friends.length === 0) {
-            await fetchFriends();
+            try {
+                await fetchFriends();
+            } catch {
+                // Keep opening the sheet even if preloading friends fails.
+            }
         }
         challengeSheetRef.current?.present();
     }, [fetchFriends, friends.length]);
@@ -586,38 +728,32 @@ export default function SocialHubScreen() {
             await setSocialFeedReaction(item.eventId, 'like');
             await sendEncouragement(item.actorId, t('socialHub.feed.likeMessage'));
         } catch {
-            Alert.alert(t('common.error'), t('socialHub.errors.sendLike'));
+            showErrorDialog(t('socialHub.errors.sendLike'));
         } finally {
             setIsSendingLikeForId(null);
         }
-    }, [profile?.id, sendEncouragement, t]);
+    }, [profile?.id, sendEncouragement, showErrorDialog, t]);
 
     const handleDeleteSharedWorkout = useCallback((item: FeedViewItem) => {
         if (!item.canDelete || !item.eventId) return;
 
-        Alert.alert(
+        showConfirmDialog(
             t('socialHub.feed.deleteConfirmTitle'),
             t('socialHub.feed.deleteConfirmMessage'),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                    text: t('common.delete'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        setIsDeletingFeedItemId(item.id);
-                        try {
-                            await deleteMySharedWorkoutEvent(item.eventId as string);
-                            await loadFeed();
-                        } catch {
-                            Alert.alert(t('common.error'), t('socialHub.feed.deleteError'));
-                        } finally {
-                            setIsDeletingFeedItemId(null);
-                        }
-                    },
-                },
-            ]
+            t('common.delete'),
+            async () => {
+                setIsDeletingFeedItemId(item.id);
+                try {
+                    await deleteMySharedWorkoutEvent(item.eventId as string);
+                    await loadFeed();
+                } catch {
+                    showErrorDialog(t('socialHub.feed.deleteError'));
+                } finally {
+                    setIsDeletingFeedItemId(null);
+                }
+            }
         );
-    }, [loadFeed, t]);
+    }, [loadFeed, showConfirmDialog, showErrorDialog, t]);
 
     const handleShareWorkout = useCallback(async (workout: ShareableWorkoutItem) => {
         setIsSharingWorkoutId(workout.id);
@@ -632,13 +768,13 @@ export default function SocialHubScreen() {
             });
             shareWorkoutSheetRef.current?.dismiss();
             await loadFeed();
-            Alert.alert(t('common.success'), t('socialHub.shareWorkout.sharedSuccess'));
+            showSuccessDialog(t('socialHub.shareWorkout.sharedSuccess'));
         } catch {
-            Alert.alert(t('common.error'), t('socialHub.errors.shareWorkout'));
+            showErrorDialog(t('socialHub.errors.shareWorkout'));
         } finally {
             setIsSharingWorkoutId(null);
         }
-    }, [loadFeed, t]);
+    }, [loadFeed, showErrorDialog, showSuccessDialog, t]);
 
     const handleCreateChallenge = useCallback(async () => {
         const title = challengeTitle.trim();
@@ -646,22 +782,22 @@ export default function SocialHubScreen() {
         const durationDays = Number(challengeDurationDays);
 
         if (!title) {
-            Alert.alert(t('common.warning'), t('socialHub.challenge.validation.titleRequired'));
+            showWarningDialog(t('socialHub.challenge.validation.titleRequired'));
             return;
         }
 
         if (!Number.isFinite(target) || target <= 0) {
-            Alert.alert(t('common.warning'), t('socialHub.challenge.validation.targetInvalid'));
+            showWarningDialog(t('socialHub.challenge.validation.targetInvalid'));
             return;
         }
 
         if (!Number.isFinite(durationDays) || durationDays <= 0 || durationDays > 90) {
-            Alert.alert(t('common.warning'), t('socialHub.challenge.validation.durationInvalid'));
+            showWarningDialog(t('socialHub.challenge.validation.durationInvalid'));
             return;
         }
 
         if (selectedFriendIdsForChallenge.length === 0) {
-            Alert.alert(t('common.warning'), t('socialHub.challenge.validation.friendsRequired'));
+            showWarningDialog(t('socialHub.challenge.validation.friendsRequired'));
             return;
         }
 
@@ -681,9 +817,9 @@ export default function SocialHubScreen() {
             setChallengeDurationDays('7');
             setSelectedFriendIdsForChallenge([]);
             await Promise.all([loadChallenges(), loadFeed(), loadFriendsTabData()]);
-            Alert.alert(t('common.success'), t('socialHub.challenge.createSuccess'));
+            showSuccessDialog(t('socialHub.challenge.createSuccess'));
         } catch {
-            Alert.alert(t('common.error'), t('socialHub.errors.createChallenge'));
+            showErrorDialog(t('socialHub.errors.createChallenge'));
         } finally {
             setIsCreatingChallenge(false);
         }
@@ -696,6 +832,9 @@ export default function SocialHubScreen() {
         loadChallenges,
         loadFeed,
         loadFriendsTabData,
+        showWarningDialog,
+        showSuccessDialog,
+        showErrorDialog,
         t,
     ]);
 
@@ -703,49 +842,41 @@ export default function SocialHubScreen() {
         const challengeId = item.challenge.id;
         const isOwner = item.challenge.creator_id === profile?.id;
 
-        Alert.alert(
+        showConfirmDialog(
             isOwner
                 ? t('socialHub.challenge.deleteConfirmTitle')
                 : t('socialHub.challenge.leaveConfirmTitle'),
             isOwner
                 ? t('socialHub.challenge.deleteConfirmMessage')
                 : t('socialHub.challenge.leaveConfirmMessage'),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                    text: isOwner ? t('socialHub.challenge.deleteAction') : t('socialHub.challenge.leaveAction'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        setIsDeletingChallengeId(challengeId);
-                        try {
-                            if (isOwner) {
-                                await deleteSocialChallenge(challengeId);
-                            } else {
-                                await leaveSocialChallenge(challengeId);
-                            }
+            isOwner ? t('socialHub.challenge.deleteAction') : t('socialHub.challenge.leaveAction'),
+            async () => {
+                setIsDeletingChallengeId(challengeId);
+                try {
+                    if (isOwner) {
+                        await deleteSocialChallenge(challengeId);
+                    } else {
+                        await leaveSocialChallenge(challengeId);
+                    }
 
-                            await Promise.all([loadChallenges(), loadFeed()]);
-                            Alert.alert(
-                                t('common.success'),
-                                isOwner
-                                    ? t('socialHub.challenge.deleteSuccess')
-                                    : t('socialHub.challenge.leaveSuccess')
-                            );
-                        } catch {
-                            Alert.alert(
-                                t('common.error'),
-                                isOwner
-                                    ? t('socialHub.challenge.deleteError')
-                                    : t('socialHub.challenge.leaveError')
-                            );
-                        } finally {
-                            setIsDeletingChallengeId(null);
-                        }
-                    },
-                },
-            ]
+                    await Promise.all([loadChallenges(), loadFeed()]);
+                    showSuccessDialog(
+                        isOwner
+                            ? t('socialHub.challenge.deleteSuccess')
+                            : t('socialHub.challenge.leaveSuccess')
+                    );
+                } catch {
+                    showErrorDialog(
+                        isOwner
+                            ? t('socialHub.challenge.deleteError')
+                            : t('socialHub.challenge.leaveError')
+                    );
+                } finally {
+                    setIsDeletingChallengeId(null);
+                }
+            }
         );
-    }, [loadChallenges, loadFeed, profile?.id, t]);
+    }, [loadChallenges, loadFeed, profile?.id, showConfirmDialog, showSuccessDialog, showErrorDialog, t]);
 
     if (!isSocialAvailable()) {
         return (
@@ -802,10 +933,31 @@ export default function SocialHubScreen() {
 
     return (
         <GestureHandlerRootView style={styles.container}>
+            <LinearGradient
+                colors={[Colors.overlayViolet12, Colors.transparent]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.topGlow}
+            />
+            <LinearGradient
+                colors={[Colors.overlayTeal10, Colors.transparent]}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.bottomGlow}
+            />
+
             <SafeAreaView style={styles.container} edges={['top']}>
                 <Animated.View entering={FadeIn.delay(100)} style={styles.topbarWrap}>
                     <View style={styles.topbar}>
-                        <Text style={styles.screenTitle}>{t('social.title')}</Text>
+                        <View style={styles.titleBlock}>
+                            <View style={styles.eyebrowPill}>
+                                <Sparkles size={12} color={Colors.cta} />
+                                <Text style={styles.eyebrowText}>{t('tabs.social')}</Text>
+                            </View>
+                            <Text style={styles.screenTitle}>{t('social.title')}</Text>
+                            <Text style={styles.screenSubtitle}>{t('socialHub.feed.sectionTitle')}</Text>
+                        </View>
+
                         <View style={styles.topbarActions}>
                             <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/settings/notifications' as any)}>
                                 <Bell size={18} color={Colors.text} />
@@ -845,7 +997,6 @@ export default function SocialHubScreen() {
                             isDeletingItemId={isDeletingFeedItemId}
                             onSendLike={handleSendLike}
                             onDeleteFeedItem={handleDeleteSharedWorkout}
-                            onRefreshFeed={loadFeed}
                             feedError={feedError}
                             onPressShareWorkout={() => shareWorkoutSheetRef.current?.present()}
                             onPressCreateChallenge={openChallengeSheet}
@@ -861,7 +1012,6 @@ export default function SocialHubScreen() {
                                 },
                                 feed: {
                                     sectionTitle: t('socialHub.feed.sectionTitle'),
-                                    refresh: t('socialHub.feed.refresh'),
                                     emptyTitle: t('socialHub.feed.emptyTitle'),
                                     emptySubtitle: t('socialHub.feed.emptySubtitle'),
                                     like: t('socialHub.feed.likeAction'),
@@ -1025,6 +1175,16 @@ export default function SocialHubScreen() {
                     }}
                 />
             </SafeAreaView>
+
+            <CustomAlertModal
+                visible={dialogState.visible}
+                title={dialogState.title}
+                message={dialogState.message}
+                type={dialogState.type}
+                buttons={dialogState.buttons}
+                showCloseButton={dialogState.showCloseButton}
+                onClose={closeDialog}
+            />
         </GestureHandlerRootView>
     );
 }
@@ -1034,39 +1194,86 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.bg,
     },
+    topGlow: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 230,
+    },
+    bottomGlow: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 220,
+    },
     topbarWrap: {
         paddingHorizontal: Spacing.lg,
+        paddingTop: Spacing.xs,
     },
     topbar: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         marginBottom: Spacing.md,
+    },
+    titleBlock: {
+        flex: 1,
+        gap: 2,
+    },
+    eyebrowPill: {
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
+        backgroundColor: Colors.overlayCozyWarm15,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 4,
+        marginBottom: 4,
+    },
+    eyebrowText: {
+        color: Colors.cta,
+        fontSize: 10,
+        fontWeight: FontWeight.semibold,
+        textTransform: 'uppercase',
+        letterSpacing: 0.9,
     },
     topbarActions: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: Spacing.xs,
+        marginTop: 2,
     },
     screenTitle: {
-        fontSize: 30,
+        fontSize: 32,
         fontWeight: FontWeight.extrabold,
         color: Colors.text,
-        letterSpacing: -0.5,
+        letterSpacing: -0.7,
+    },
+    screenSubtitle: {
+        color: Colors.muted2,
+        fontSize: FontSize.xs,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     notifButton: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         borderWidth: 1,
-        borderColor: Colors.stroke,
-        backgroundColor: Colors.overlay,
+        borderColor: Colors.overlayWhite12,
+        backgroundColor: Colors.overlayBlack25,
         alignItems: 'center',
         justifyContent: 'center',
     },
     pageContent: {
         flex: 1,
         paddingHorizontal: Spacing.lg,
+        paddingTop: 2,
     },
     centeredState: {
         flex: 1,

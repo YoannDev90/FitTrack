@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Medal, Trophy } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Crown, Medal, Trophy } from 'lucide-react-native';
 import { GlassCard } from '../../ui';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
 
@@ -54,9 +55,16 @@ export function LeaderboardTabPage({
 }: LeaderboardTabPageProps) {
     return (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-            <GlassCard style={styles.headerCard}>
+            <LinearGradient
+                colors={[Colors.overlayInfo12, Colors.overlayViolet12]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.headerCard}
+            >
                 <View style={styles.headerTop}>
-                    <Trophy size={18} color={Colors.cta} />
+                    <View style={styles.headerIconWrap}>
+                        <Trophy size={16} color={Colors.cta} />
+                    </View>
                     <Text style={styles.pageTitle}>{labels.pageTitle}</Text>
                 </View>
                 <Text style={styles.pageSubtitle}>{labels.pageSubtitle}</Text>
@@ -75,7 +83,7 @@ export function LeaderboardTabPage({
                         <Text style={[styles.segmentedText, isGlobal && styles.segmentedTextActive]}>{labels.globalTab}</Text>
                     </TouchableOpacity>
                 </View>
-            </GlassCard>
+            </LinearGradient>
 
             {!!error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -86,9 +94,18 @@ export function LeaderboardTabPage({
                     <Text style={styles.emptyText}>{isGlobal ? labels.emptyGlobal : labels.emptyFriends}</Text>
                 ) : (
                     rows.map((entry, index) => (
-                        <View key={`${entry.id}-${index}`} style={[styles.rankRow, index < rows.length - 1 && styles.rankRowBorder]}>
+                        <View
+                            key={`${entry.id}-${index}`}
+                            style={[
+                                styles.rankRow,
+                                index < rows.length - 1 && styles.rankRowBorder,
+                                entry.rank <= 3 && styles.rankRowTop,
+                            ]}
+                        >
                             <View style={styles.rankBadgeWrap}>
-                                {entry.rank <= 3 ? (
+                                {entry.rank === 1 ? (
+                                    <Crown size={16} color={medalColorForRank(entry.rank)} />
+                                ) : entry.rank <= 3 ? (
                                     <Medal size={15} color={medalColorForRank(entry.rank)} />
                                 ) : (
                                     <Text style={styles.rankNumber}>{entry.rank}</Text>
@@ -123,6 +140,9 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
     },
     headerCard: {
+        borderRadius: BorderRadius.xxl,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite12,
         padding: Spacing.md,
         gap: Spacing.xs,
     },
@@ -131,14 +151,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: Spacing.xs,
     },
+    headerIconWrap: {
+        width: 30,
+        height: 30,
+        borderRadius: BorderRadius.md,
+        backgroundColor: Colors.overlayCozyWarm15,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     pageTitle: {
         color: Colors.text,
         fontSize: FontSize.lg,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.extrabold,
+        letterSpacing: -0.3,
     },
     pageSubtitle: {
         color: Colors.muted2,
         fontSize: FontSize.sm,
+        lineHeight: 16,
     },
     segmentedRow: {
         marginTop: Spacing.xs,
@@ -150,6 +182,7 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.full,
         borderWidth: 1,
         borderColor: Colors.stroke,
+        backgroundColor: Colors.overlayBlack25,
         alignItems: 'center',
         paddingVertical: 8,
     },
@@ -170,7 +203,8 @@ const styles = StyleSheet.create({
         fontSize: FontSize.xs,
     },
     listCard: {
-        padding: Spacing.md,
+        padding: Spacing.sm,
+        borderRadius: BorderRadius.xxl,
     },
     loadingText: {
         color: Colors.muted2,
@@ -185,10 +219,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: Spacing.sm,
         paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.sm,
+        borderRadius: BorderRadius.lg,
     },
     rankRowBorder: {
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.overlayWhite08,
+        marginBottom: 2,
+    },
+    rankRowTop: {
+        backgroundColor: Colors.overlayGold10,
+        borderWidth: 1,
+        borderColor: Colors.overlayGold20,
     },
     rankNumber: {
         color: Colors.muted,
@@ -204,7 +244,9 @@ const styles = StyleSheet.create({
         width: 34,
         height: 34,
         borderRadius: 17,
-        backgroundColor: Colors.overlayViolet15,
+        backgroundColor: Colors.overlayViolet20,
+        borderWidth: 1,
+        borderColor: Colors.overlayViolet35,
         alignItems: 'center',
         justifyContent: 'center',
     },

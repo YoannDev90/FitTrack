@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Compass, Users } from 'lucide-react-native';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
 import type { ChallengeSectionProps } from './types';
 
@@ -19,8 +20,10 @@ export function ChallengeCarouselSection({
     return (
         <View>
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionLabel}>{strings.sectionTitle}</Text>
-                <Text style={styles.sectionLink}>{strings.swipeHint}</Text>
+                <View style={styles.sectionLabelWrap}>
+                    <Compass size={13} color={Colors.violet} />
+                    <Text style={styles.sectionLabel}>{strings.sectionTitle}</Text>
+                </View>
             </View>
 
             <ScrollView
@@ -49,23 +52,35 @@ export function ChallengeCarouselSection({
                     return (
                         <LinearGradient
                             key={item.challenge.id}
-                            colors={[Colors.violetStrong, Colors.violetDeep]}
+                            colors={['#3d2e65', '#271b46', '#181230']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={[styles.challengeCard, { width: challengeCardWidth }]}
                         >
-                            <Text style={styles.challengeKicker}>{strings.daysRemaining(remainingDays)}</Text>
+                            <View style={styles.challengeTopRow}>
+                                <View style={styles.challengeKickerPill}>
+                                    <Text style={styles.challengeKicker}>{strings.daysRemaining(remainingDays)}</Text>
+                                </View>
+                                <View style={styles.goalPill}>
+                                    <Text style={styles.goalPillText}>{strings.goalLabel(item.challenge.goal_type)}</Text>
+                                </View>
+                            </View>
+
                             <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
 
                             <View style={styles.progressTrack}>
                                 <View style={[styles.progressFill, { width: `${ratio * 100}%` }]} />
                             </View>
 
-                            <View style={styles.challengeMetaRow}>
-                                <Text style={styles.challengeMetaText}>
-                                    {progress}/{target} {strings.goalLabel(item.challenge.goal_type)}
+                            <Text style={styles.progressLabel}>
+                                {Math.round(progress)}/{Math.round(target)} ({Math.round(ratio * 100)}%)
+                            </Text>
+
+                            <View style={styles.challengeParticipantsRow}>
+                                <Users size={12} color={Colors.textWhite80} />
+                                <Text style={styles.challengeMetaText} numberOfLines={1}>
+                                    {participantsPreview || strings.noParticipants}
                                 </Text>
-                                <Text style={styles.challengeMetaText}>{participantsPreview || strings.noParticipants}</Text>
                             </View>
 
                             <View style={styles.challengeActions}>
@@ -100,69 +115,109 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: Spacing.sm,
     },
+    sectionLabelWrap: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
     sectionLabel: {
-        color: Colors.textSecondary,
-        fontSize: FontSize.sm,
+        color: Colors.text,
+        fontSize: FontSize.xs,
         fontWeight: FontWeight.semibold,
         textTransform: 'uppercase',
-        letterSpacing: 0.7,
-    },
-    sectionLink: {
-        color: Colors.violet,
-        fontSize: FontSize.sm,
+        letterSpacing: 1,
     },
     challengeCarousel: {
         gap: Spacing.md,
         paddingRight: Spacing.md,
     },
     challengeCard: {
-        borderRadius: BorderRadius.xl,
+        borderRadius: BorderRadius.xxl,
         padding: Spacing.lg,
         borderWidth: 1,
         borderColor: Colors.overlayWhite12,
+        gap: Spacing.xs,
+    },
+    challengeTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 2,
+    },
+    challengeKickerPill: {
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite20,
+        backgroundColor: Colors.overlayWhite10,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 4,
+    },
+    goalPill: {
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
+        backgroundColor: Colors.overlayCozyWarm15,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 4,
+    },
+    goalPillText: {
+        color: Colors.cta,
+        fontSize: 10,
+        fontWeight: FontWeight.semibold,
+        textTransform: 'uppercase',
+        letterSpacing: 0.6,
     },
     challengeKicker: {
         color: Colors.textWhite80,
-        fontSize: FontSize.xs,
-        marginBottom: 6,
+        fontSize: 10,
+        fontWeight: FontWeight.semibold,
     },
     challengeTitle: {
         color: Colors.white,
-        fontSize: FontSize.xl,
+        fontSize: FontSize.xxl,
         fontWeight: FontWeight.bold,
-        marginBottom: Spacing.md,
+        letterSpacing: -0.5,
+        marginTop: 2,
+        marginBottom: Spacing.xs,
     },
     progressTrack: {
-        height: 8,
+        height: 10,
         borderRadius: 4,
         backgroundColor: Colors.overlayWhite20,
         overflow: 'hidden',
-        marginBottom: 8,
     },
     progressFill: {
         height: '100%',
-        backgroundColor: Colors.violet,
+        backgroundColor: Colors.cta2,
     },
-    challengeMetaRow: {
+    progressLabel: {
+        color: Colors.textWhite80,
+        fontSize: 10,
+        fontWeight: FontWeight.semibold,
+    },
+    challengeParticipantsRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: Spacing.md,
-        gap: Spacing.sm,
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: Spacing.xs,
     },
     challengeMetaText: {
         color: Colors.textWhite80,
         fontSize: FontSize.xs,
-        flexShrink: 1,
+        flex: 1,
     },
     challengeActions: {
         flexDirection: 'row',
         gap: Spacing.sm,
+        marginTop: 2,
     },
     challengeGhostBtn: {
         flex: 1,
-        borderRadius: BorderRadius.md,
+        borderRadius: BorderRadius.lg,
         paddingVertical: Spacing.sm,
         backgroundColor: Colors.overlayWhite12,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite20,
         alignItems: 'center',
     },
     challengeGhostBtnText: {
@@ -172,13 +227,13 @@ const styles = StyleSheet.create({
     },
     challengeSolidBtn: {
         flex: 1,
-        borderRadius: BorderRadius.md,
+        borderRadius: BorderRadius.lg,
         paddingVertical: Spacing.sm,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.cta,
         alignItems: 'center',
     },
     challengeSolidBtnText: {
-        color: Colors.violetDeep,
+        color: Colors.white,
         fontWeight: FontWeight.semibold,
         fontSize: FontSize.sm,
     },

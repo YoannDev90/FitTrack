@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Search, UserMinus, UserPlus, Users } from 'lucide-react-native';
 import type { FriendProfile } from '../../../services/supabase/social';
 import type { Friendship, Profile } from '../../../services/supabase/database.types';
@@ -64,11 +65,19 @@ export function FriendsTabPage({
 }: FriendsTabPageProps) {
     return (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-            <GlassCard style={styles.headerCard}>
+            <LinearGradient
+                colors={[Colors.overlayTeal15, Colors.overlayViolet12]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.headerCard}
+            >
                 <View style={styles.headerTop}>
-                    <Users size={18} color={Colors.cta} />
+                    <View style={styles.headerIconWrap}>
+                        <Users size={16} color={Colors.cta} />
+                    </View>
                     <Text style={styles.pageTitle}>{labels.pageTitle}</Text>
                 </View>
+
                 <Text style={styles.pageSubtitle}>{labels.pageSubtitle}</Text>
 
                 <View style={styles.headerActions}>
@@ -80,7 +89,7 @@ export function FriendsTabPage({
                         <Text style={styles.headerGhostBtnText}>{labels.invite}</Text>
                     </TouchableOpacity>
                 </View>
-            </GlassCard>
+            </LinearGradient>
 
             {showAddFriendPanel && (
                 <GlassCard style={styles.searchCard}>
@@ -98,13 +107,16 @@ export function FriendsTabPage({
                     {searchError && <Text style={styles.errorText}>{searchError}</Text>}
                     {searchResults.map(user => (
                         <View key={user.id} style={styles.searchResultRow}>
-                            <Text style={styles.searchResultName}>{user.display_name || user.username}</Text>
+                            <View style={styles.searchResultInfo}>
+                                <Text style={styles.searchResultName}>{user.display_name || user.username}</Text>
+                                <Text style={styles.searchResultSub}>@{user.username}</Text>
+                            </View>
                             {user.friendship_status === 'accepted' ? (
                                 <Text style={styles.searchResultBadge}>{labels.badgeFriend}</Text>
                             ) : user.friendship_status === 'pending' ? (
                                 <Text style={styles.searchResultBadge}>{labels.badgePending}</Text>
                             ) : (
-                                <TouchableOpacity onPress={() => onSendRequest(user.id)}>
+                                <TouchableOpacity style={styles.addResultBtn} onPress={() => onSendRequest(user.id)}>
                                     <Text style={styles.searchResultAction}>{labels.addAction}</Text>
                                 </TouchableOpacity>
                             )}
@@ -182,6 +194,9 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
     },
     headerCard: {
+        borderRadius: BorderRadius.xxl,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite12,
         padding: Spacing.md,
         gap: Spacing.xs,
     },
@@ -190,14 +205,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: Spacing.xs,
     },
+    headerIconWrap: {
+        width: 30,
+        height: 30,
+        borderRadius: BorderRadius.md,
+        backgroundColor: Colors.overlayCozyWarm15,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     pageTitle: {
         color: Colors.text,
         fontSize: FontSize.lg,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.extrabold,
+        letterSpacing: -0.3,
     },
     pageSubtitle: {
         color: Colors.muted2,
         fontSize: FontSize.sm,
+        lineHeight: 16,
     },
     headerActions: {
         flexDirection: 'row',
@@ -206,7 +233,7 @@ const styles = StyleSheet.create({
     },
     headerPrimaryBtn: {
         flex: 1,
-        borderRadius: BorderRadius.md,
+        borderRadius: BorderRadius.lg,
         borderWidth: 1,
         borderColor: Colors.overlayCozyWarm40,
         backgroundColor: Colors.overlayCozyWarm15,
@@ -222,9 +249,10 @@ const styles = StyleSheet.create({
         fontSize: FontSize.sm,
     },
     headerGhostBtn: {
-        borderRadius: BorderRadius.md,
+        borderRadius: BorderRadius.lg,
         borderWidth: 1,
         borderColor: Colors.stroke,
+        backgroundColor: Colors.overlayBlack25,
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: Spacing.md,
@@ -237,12 +265,13 @@ const styles = StyleSheet.create({
     searchCard: {
         padding: Spacing.md,
         gap: Spacing.xs,
+        borderRadius: BorderRadius.xxl,
     },
     searchInputWrap: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        borderRadius: BorderRadius.md,
+        borderRadius: BorderRadius.lg,
         borderWidth: 1,
         borderColor: Colors.stroke,
         backgroundColor: Colors.overlayBlack30,
@@ -265,23 +294,51 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 6,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite08,
+        backgroundColor: Colors.overlayBlack25,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 8,
+    },
+    searchResultInfo: {
+        flex: 1,
+        gap: 1,
     },
     searchResultName: {
         color: Colors.text,
         fontSize: FontSize.sm,
+        fontWeight: FontWeight.semibold,
+    },
+    searchResultSub: {
+        color: Colors.muted2,
+        fontSize: 10,
     },
     searchResultAction: {
-        color: Colors.violet,
+        color: Colors.cta,
+        fontSize: FontSize.xs,
         fontWeight: FontWeight.semibold,
     },
     searchResultBadge: {
         color: Colors.muted2,
         fontSize: FontSize.xs,
+        backgroundColor: Colors.overlayWhite08,
+        borderRadius: BorderRadius.full,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 4,
+    },
+    addResultBtn: {
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
+        backgroundColor: Colors.overlayCozyWarm15,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 5,
     },
     requestCard: {
         padding: Spacing.md,
         gap: Spacing.xs,
+        borderRadius: BorderRadius.xxl,
     },
     sectionTitle: {
         color: Colors.text,
@@ -293,7 +350,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: Spacing.sm,
-        paddingVertical: 8,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite08,
+        backgroundColor: Colors.overlayBlack25,
+        padding: Spacing.sm,
     },
     requestInfo: {
         flex: 1,
@@ -314,6 +375,8 @@ const styles = StyleSheet.create({
     acceptBtn: {
         borderRadius: BorderRadius.full,
         backgroundColor: Colors.cta,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
         paddingHorizontal: Spacing.sm,
         paddingVertical: 5,
     },
@@ -326,6 +389,7 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.full,
         borderWidth: 1,
         borderColor: Colors.stroke,
+        backgroundColor: Colors.overlayWhite05,
         paddingHorizontal: Spacing.sm,
         paddingVertical: 5,
     },
@@ -337,18 +401,25 @@ const styles = StyleSheet.create({
     friendsCard: {
         padding: Spacing.md,
         gap: Spacing.xs,
+        borderRadius: BorderRadius.xxl,
     },
     friendRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: Spacing.sm,
-        paddingVertical: 8,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite08,
+        backgroundColor: Colors.overlayBlack25,
+        padding: Spacing.sm,
     },
     friendAvatar: {
-        width: 34,
-        height: 34,
-        borderRadius: 17,
-        backgroundColor: Colors.overlayViolet15,
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: Colors.overlayViolet20,
+        borderWidth: 1,
+        borderColor: Colors.overlayViolet35,
         alignItems: 'center',
         justifyContent: 'center',
     },

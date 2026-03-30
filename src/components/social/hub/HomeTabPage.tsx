@@ -22,7 +22,6 @@ interface HomeTabPageProps {
     isDeletingItemId: string | null;
     onSendLike: (item: FeedViewItem) => void;
     onDeleteFeedItem: (item: FeedViewItem) => void;
-    onRefreshFeed: () => void;
     feedError: string | null;
     onPressShareWorkout: () => void;
     onPressCreateChallenge: () => void;
@@ -38,7 +37,6 @@ interface HomeTabPageProps {
         };
         feed: {
             sectionTitle: string;
-            refresh: string;
             emptyTitle: string;
             emptySubtitle: string;
             like: string;
@@ -73,7 +71,6 @@ export function HomeTabPage({
     isDeletingItemId,
     onSendLike,
     onDeleteFeedItem,
-    onRefreshFeed,
     feedError,
     onPressShareWorkout,
     onPressCreateChallenge,
@@ -111,7 +108,6 @@ export function HomeTabPage({
                     isDeletingItemId={isDeletingItemId}
                     onSendLike={onSendLike}
                     onDeleteItem={onDeleteFeedItem}
-                    onRefresh={onRefreshFeed}
                     error={feedError}
                     labels={labels.feed}
                 />

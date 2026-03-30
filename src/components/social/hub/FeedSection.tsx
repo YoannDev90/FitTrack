@@ -11,11 +11,9 @@ interface FeedSectionProps {
     isDeletingItemId: string | null;
     onSendLike: (item: FeedViewItem) => void;
     onDeleteItem: (item: FeedViewItem) => void;
-    onRefresh: () => void;
     error?: string | null;
     labels: {
         sectionTitle: string;
-        refresh: string;
         emptyTitle: string;
         emptySubtitle: string;
         like: string;
@@ -44,7 +42,6 @@ export function FeedSection({
     isDeletingItemId,
     onSendLike,
     onDeleteItem,
-    onRefresh,
     error,
     labels,
 }: FeedSectionProps) {
@@ -52,9 +49,6 @@ export function FeedSection({
         <View>
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionLabel}>{labels.sectionTitle}</Text>
-                <TouchableOpacity onPress={onRefresh}>
-                    <Text style={styles.sectionLink}>{labels.refresh}</Text>
-                </TouchableOpacity>
             </View>
 
             {!!error && <Text style={styles.errorText}>{error}</Text>}
@@ -71,22 +65,16 @@ export function FeedSection({
                             <View style={styles.feedAvatar}>
                                 <Text style={styles.feedAvatarText}>{item.actorName.charAt(0).toUpperCase()}</Text>
                             </View>
+
                             <View style={styles.feedContent}>
                                 <View style={styles.feedTitleRow}>
-                                    <Text style={styles.feedTitle}>{item.title}</Text>
-                                    {item.canDelete && (
-                                        <TouchableOpacity
-                                            onPress={() => onDeleteItem(item)}
-                                            disabled={isDeletingItemId === item.id}
-                                            style={styles.feedDeleteBtn}
-                                        >
-                                            <X size={12} color={Colors.muted2} />
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-                                <Text style={styles.feedDetail}>{item.detail}</Text>
-                                <View style={styles.feedFooter}>
+                                    <Text style={styles.feedTitle} numberOfLines={1}>{item.title}</Text>
                                     <Text style={styles.feedTime}>{relativeTimeLabel(item.createdAt, labels)}</Text>
+                                </View>
+
+                                <Text style={styles.feedDetail} numberOfLines={2}>{item.detail}</Text>
+
+                                <View style={styles.feedActionsRow}>
                                     {item.isWorkoutShare && (
                                         <TouchableOpacity
                                             style={styles.feedLikeBtn}
@@ -97,6 +85,16 @@ export function FeedSection({
                                             <Text style={styles.feedLikeText}>
                                                 {isSendingLikeForId === item.id ? labels.sending : labels.like}
                                             </Text>
+                                        </TouchableOpacity>
+                                    )}
+
+                                    {item.canDelete && (
+                                        <TouchableOpacity
+                                            onPress={() => onDeleteItem(item)}
+                                            disabled={isDeletingItemId === item.id}
+                                            style={styles.feedDeleteBtn}
+                                        >
+                                            <X size={12} color={Colors.error} />
                                         </TouchableOpacity>
                                     )}
                                 </View>
@@ -117,15 +115,11 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.sm,
     },
     sectionLabel: {
-        color: Colors.textSecondary,
-        fontSize: FontSize.sm,
+        color: Colors.text,
+        fontSize: FontSize.xs,
         fontWeight: FontWeight.semibold,
         textTransform: 'uppercase',
-        letterSpacing: 0.7,
-    },
-    sectionLink: {
-        color: Colors.violet,
-        fontSize: FontSize.sm,
+        letterSpacing: 1,
     },
     errorText: {
         color: Colors.error,
@@ -133,11 +127,13 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.xs,
     },
     feedCard: {
-        padding: Spacing.md,
+        padding: 0,
+        borderRadius: BorderRadius.xxl,
     },
     feedRow: {
         flexDirection: 'row',
         gap: Spacing.sm,
+        paddingHorizontal: Spacing.sm,
         paddingVertical: Spacing.sm,
     },
     feedRowBorder: {
@@ -148,12 +144,14 @@ const styles = StyleSheet.create({
         width: 34,
         height: 34,
         borderRadius: 17,
-        backgroundColor: Colors.overlayTeal20,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite12,
+        backgroundColor: Colors.overlayWhite08,
         alignItems: 'center',
         justifyContent: 'center',
     },
     feedAvatarText: {
-        color: Colors.teal,
+        color: Colors.text,
         fontWeight: FontWeight.bold,
     },
     feedContent: {
@@ -167,50 +165,56 @@ const styles = StyleSheet.create({
     },
     feedTitleRow: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
         gap: Spacing.xs,
     },
     feedDeleteBtn: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
+        width: 26,
+        height: 26,
+        borderRadius: 13,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: Colors.overlayWhite08,
+        backgroundColor: Colors.overlayError10,
+        borderWidth: 1,
+        borderColor: Colors.overlayError20,
     },
     feedDetail: {
         color: Colors.muted2,
         fontSize: FontSize.xs,
         marginTop: 2,
+        lineHeight: 15,
     },
-    feedFooter: {
+    feedActionsRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-end',
+        gap: Spacing.xs,
         marginTop: Spacing.xs,
     },
     feedTime: {
         color: Colors.muted2,
-        fontSize: 11,
+        fontSize: 10,
     },
     feedLikeBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 5,
         borderRadius: BorderRadius.full,
         borderWidth: 1,
         borderColor: Colors.overlayCozyWarm40,
         backgroundColor: Colors.overlayCozyWarm15,
-        paddingHorizontal: Spacing.sm,
+        paddingHorizontal: 10,
         paddingVertical: 4,
     },
     feedLikeText: {
         color: Colors.cta,
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: FontWeight.semibold,
     },
     emptyFeed: {
-        paddingVertical: Spacing.md,
+        paddingVertical: Spacing.lg,
+        paddingHorizontal: Spacing.sm,
         gap: Spacing.xs,
     },
     emptyTitle: {

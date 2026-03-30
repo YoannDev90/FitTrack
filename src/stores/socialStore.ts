@@ -43,6 +43,12 @@ interface SocialState {
     unreadEncouragements: (Encouragement & { sender: Profile })[];
     recentEncouragements: (Encouragement & { sender: Profile })[];
     encouragementsError: 'network' | 'server' | null;
+
+    // Internal runtime guards
+    lastAuthCheckAt: number;
+    lastPushTokenCheckAt: number;
+    lastPushToken: string | null;
+    isRegisteringPushToken: boolean;
     
     // Actions - Auth
     checkAuth: () => Promise<void>;
@@ -117,6 +123,9 @@ function classifySocialError(error: unknown): 'network' | 'server' {
     return 'server';
 }
 
+const AUTH_RECHECK_INTERVAL_MS = 60 * 1000;
+const PUSH_TOKEN_RECHECK_INTERVAL_MS = 30 * 60 * 1000;
+
 // ============================================================================
 // STORE
 // ============================================================================
@@ -140,6 +149,10 @@ export const useSocialStore = create<SocialState>()(
             unreadEncouragements: [],
             recentEncouragements: [],
             encouragementsError: null,
+            lastAuthCheckAt: 0,
+            lastPushTokenCheckAt: 0,
+            lastPushToken: null,
+            isRegisteringPushToken: false,
 
             // ========================================
             // AUTH
@@ -147,6 +160,14 @@ export const useSocialStore = create<SocialState>()(
 
             checkAuth: async () => {
                 if (!isSocialAvailable()) return;
+
+                const state = get();
+                const now = Date.now();
+
+                if (state.isLoading) return;
+                if (state.lastAuthCheckAt > 0 && now - state.lastAuthCheckAt < AUTH_RECHECK_INTERVAL_MS) {
+                    return;
+                }
                 
                 set({ isLoading: true });
                 try {
@@ -158,6 +179,7 @@ export const useSocialStore = create<SocialState>()(
                         isAuthenticated: !!profile,
                         profile,
                         isLoading: false,
+                        lastAuthCheckAt: now,
                     });
                     
                     // If authenticated, try to register/update push token
@@ -166,7 +188,7 @@ export const useSocialStore = create<SocialState>()(
                     }
                 } catch {
                     get().cleanupSubscriptions();
-                    set({ isAuthenticated: false, profile: null, isLoading: false });
+                    set({ isAuthenticated: false, profile: null, isLoading: false, lastAuthCheckAt: now });
                 }
             },
 
@@ -177,7 +199,12 @@ export const useSocialStore = create<SocialState>()(
                 try {
                     await SocialService.signUp(email, password, username);
                     const profile = await SocialService.getMyProfile();
-                    set({ isAuthenticated: true, profile, isLoading: false });
+                    set({
+                        isAuthenticated: true,
+                        profile,
+                        isLoading: false,
+                        lastAuthCheckAt: Date.now(),
+                    });
                     
                     // Auto-register push token after successful signup
                     get().registerPushTokenAfterAuth();
@@ -194,7 +221,12 @@ export const useSocialStore = create<SocialState>()(
                 try {
                     await SocialService.signIn(email, password);
                     const profile = await SocialService.getMyProfile();
-                    set({ isAuthenticated: true, profile, isLoading: false });
+                    set({
+                        isAuthenticated: true,
+                        profile,
+                        isLoading: false,
+                        lastAuthCheckAt: Date.now(),
+                    });
                     
                     // Auto-register push token after successful login
                     get().registerPushTokenAfterAuth();
@@ -221,6 +253,10 @@ export const useSocialStore = create<SocialState>()(
                     unreadEncouragements: [],
                     recentEncouragements: [],
                     encouragementsError: null,
+                    lastAuthCheckAt: 0,
+                    lastPushTokenCheckAt: 0,
+                    lastPushToken: null,
+                    isRegisteringPushToken: false,
                 });
             },
 
@@ -514,9 +550,23 @@ export const useSocialStore = create<SocialState>()(
             },
 
             savePushToken: async (token) => {
-                if (!get().isAuthenticated) return;
+                const state = get();
+                if (!state.isAuthenticated) return;
+
+                const profilePushToken = (state.profile as any)?.push_token || null;
+                if (token === state.lastPushToken || token === profilePushToken) {
+                    storeLogger.debug('Push token unchanged locally, skipping backend save');
+                    return;
+                }
+
                 try {
                     await SocialService.savePushToken(token);
+                    set(prev => ({
+                        lastPushToken: token,
+                        profile: prev.profile
+                            ? ({ ...(prev.profile as any), push_token: token } as Profile)
+                            : prev.profile,
+                    }));
                     storeLogger.debug('Push token saved successfully');
                 } catch (error) {
                     errorLogger.error('Failed to save push token:', error);
@@ -526,15 +576,41 @@ export const useSocialStore = create<SocialState>()(
             registerPushTokenAfterAuth: async () => {
                 // Non-blocking call to register push token
                 // This runs in background after login/signup
+                const state = get();
+                if (!state.isAuthenticated) return;
+                if (state.isRegisteringPushToken) return;
+
+                const now = Date.now();
+                if (
+                    state.lastPushToken &&
+                    state.lastPushTokenCheckAt > 0 &&
+                    now - state.lastPushTokenCheckAt < PUSH_TOKEN_RECHECK_INTERVAL_MS
+                ) {
+                    return;
+                }
+
+                set({ isRegisteringPushToken: true, lastPushTokenCheckAt: now });
+
                 try {
                     const result = await Notifications.registerForPushNotifications();
                     if (result.success) {
-                        await get().savePushToken(result.token);
+                        const latest = get();
+                        const profilePushToken = (latest.profile as any)?.push_token || null;
+
+                        if (result.token === latest.lastPushToken || result.token === profilePushToken) {
+                            set({ lastPushToken: result.token });
+                            storeLogger.debug('Push token unchanged, skipping backend update');
+                            return;
+                        }
+
+                        await latest.savePushToken(result.token);
                     } else {
                         storeLogger.debug('Push token registration failed:', result.reason);
                     }
                 } catch (error) {
                     errorLogger.error('Error registering push token:', error);
+                } finally {
+                    set({ isRegisteringPushToken: false });
                 }
             },
         }),
