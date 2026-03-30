@@ -19,6 +19,45 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 
 export type FriendProfile = Profile & { friendship_id: string };
 
+export type SocialChallengeGoalType = 'workouts' | 'distance' | 'duration' | 'xp';
+
+export interface SocialChallenge {
+    id: string;
+    title: string;
+    description: string | null;
+    goal_type: SocialChallengeGoalType;
+    goal_target: number;
+    starts_at: string;
+    ends_at: string;
+    status: 'active' | 'completed' | 'cancelled';
+    creator_id: string;
+    created_at: string;
+}
+
+export interface SocialChallengeProgress {
+    challenge: SocialChallenge;
+    my_progress: number;
+    participants_count: number;
+    preview_participants: Array<{ id: string; username: string; display_name: string | null; progress: number }>;
+}
+
+export interface SocialFeedEventItem {
+    id: string;
+    actor_id: string;
+    actor_name: string;
+    event_type: 'workout' | 'challenge_progress' | 'streak' | 'encouragement';
+    message: string;
+    metadata: Record<string, any>;
+    created_at: string;
+}
+
+const MAX_CHALLENGE_TITLE_LENGTH = 80;
+const MAX_CHALLENGE_DESCRIPTION_LENGTH = 280;
+
+function sanitizeTrimmedText(value: string, maxLength: number): string {
+    return value.trim().slice(0, maxLength);
+}
+
 // ============================================================================
 // AUTH & PROFILE
 // ============================================================================
@@ -464,6 +503,254 @@ export async function getRecentEncouragements(limit = 10): Promise<(Encouragemen
 
     if (error) throw error;
     return (data || []) as (Encouragement & { sender: Profile })[];
+}
+
+// ============================================================================
+// CHALLENGES + FEED (Phase 2)
+// ============================================================================
+
+export async function getActiveSocialChallenges(): Promise<SocialChallengeProgress[]> {
+    if (!supabase) return [];
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    const { data, error } = await (supabase as any)
+        .from('social_challenge_participants')
+        .select(`
+            challenge_id,
+            progress_value,
+            challenge:social_challenges(*)
+        `)
+        .eq('user_id', user.id)
+        .eq('challenge.status', 'active')
+        .order('ends_at', { ascending: true, foreignTable: 'social_challenges' });
+
+    if (error) throw error;
+
+    const rows = (data || []) as any[];
+    const challengeIds = rows
+        .map(row => row.challenge_id as string)
+        .filter(Boolean);
+
+    if (challengeIds.length === 0) return [];
+
+    const { data: allParticipants, error: participantsError } = await (supabase as any)
+        .from('social_challenge_participants')
+        .select('challenge_id, user_id, progress_value')
+        .in('challenge_id', challengeIds);
+
+    if (participantsError) throw participantsError;
+
+    const { data: participantsWithProfiles, error: previewError } = await (supabase as any)
+        .from('social_challenge_participants')
+        .select(`
+            challenge_id,
+            progress_value,
+            user:profiles(id, username, display_name)
+        `)
+        .in('challenge_id', challengeIds)
+        .order('progress_value', { ascending: false });
+
+    if (previewError) throw previewError;
+
+    const countByChallengeId = new Map<string, number>();
+    ((allParticipants || []) as any[]).forEach(item => {
+        const challengeId = item.challenge_id as string;
+        countByChallengeId.set(challengeId, (countByChallengeId.get(challengeId) || 0) + 1);
+    });
+
+    const previewByChallengeId = new Map<string, Array<{ id: string; username: string; display_name: string | null; progress: number }>>();
+    ((participantsWithProfiles || []) as any[]).forEach(item => {
+        const challengeId = item.challenge_id as string;
+        const userProfile = item.user;
+        if (!challengeId || !userProfile) return;
+
+        const current = previewByChallengeId.get(challengeId) || [];
+        if (current.length >= 3) return;
+        previewByChallengeId.set(challengeId, [
+            ...current,
+            {
+                id: userProfile.id,
+                username: userProfile.username,
+                display_name: userProfile.display_name,
+                progress: item.progress_value || 0,
+            },
+        ]);
+    });
+
+    return rows
+        .map(row => {
+            const challenge = row.challenge as SocialChallenge;
+            if (!challenge) return null;
+
+            return {
+                challenge,
+                my_progress: row.progress_value || 0,
+                participants_count: countByChallengeId.get(challenge.id) || 0,
+                preview_participants: previewByChallengeId.get(challenge.id) || [],
+            } as SocialChallengeProgress;
+        })
+        .filter(Boolean) as SocialChallengeProgress[];
+}
+
+export async function createSocialChallenge(input: {
+    title: string;
+    description?: string;
+    goalType: SocialChallengeGoalType;
+    goalTarget: number;
+    durationDays: number;
+}): Promise<void> {
+    const client = getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const startsAt = new Date();
+    const endsAt = new Date(startsAt.getTime() + input.durationDays * 24 * 60 * 60 * 1000);
+    const safeTitle = sanitizeTrimmedText(input.title, MAX_CHALLENGE_TITLE_LENGTH);
+    const safeDescription = input.description
+        ? sanitizeTrimmedText(input.description, MAX_CHALLENGE_DESCRIPTION_LENGTH)
+        : null;
+
+    if (!safeTitle) {
+        throw new Error('Challenge title is required');
+    }
+
+    const { data: challenge, error: challengeError } = await (client as any)
+        .from('social_challenges')
+        .insert({
+            creator_id: user.id,
+            title: safeTitle,
+            description: safeDescription,
+            goal_type: input.goalType,
+            goal_target: input.goalTarget,
+            starts_at: startsAt.toISOString(),
+            ends_at: endsAt.toISOString(),
+            status: 'active',
+        })
+        .select('*')
+        .single();
+
+    if (challengeError) throw challengeError;
+
+    const challengeId = challenge.id as string;
+
+    const { error: participantError } = await (client as any)
+        .from('social_challenge_participants')
+        .insert({
+            challenge_id: challengeId,
+            user_id: user.id,
+            progress_value: 0,
+        });
+
+    if (participantError) throw participantError;
+
+    // Create a feed event for visibility in the social hub.
+    await (client as any)
+        .from('social_feed_events')
+        .insert({
+            actor_id: user.id,
+            event_type: 'challenge_progress',
+            message: 'challenge_created',
+            metadata: {
+                challenge_id: challengeId,
+                challenge_title: safeTitle,
+                goal_type: input.goalType,
+                goal_target: input.goalTarget,
+            },
+        });
+}
+
+export async function shareWorkoutToFeed(input: {
+    entryId: string;
+    entryType: 'home' | 'run' | 'beatsaber' | 'custom';
+    title: string;
+    summary: string;
+    createdAtIso: string;
+    metadata?: Record<string, unknown>;
+}): Promise<void> {
+    const client = getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const safeTitle = sanitizeTrimmedText(input.title, 120);
+    const safeSummary = sanitizeTrimmedText(input.summary, 220);
+
+    if (!safeTitle || !safeSummary) {
+        throw new Error('Invalid workout payload');
+    }
+
+    const { error } = await (client as any)
+        .from('social_feed_events')
+        .insert({
+            actor_id: user.id,
+            event_type: 'workout',
+            message: 'workout_shared',
+            metadata: {
+                entry_id: input.entryId,
+                entry_type: input.entryType,
+                title: safeTitle,
+                summary: safeSummary,
+                source_created_at: input.createdAtIso,
+                ...(input.metadata || {}),
+            },
+        });
+
+    if (error) throw error;
+}
+
+export async function getSocialFeed(limit = 20): Promise<SocialFeedEventItem[]> {
+    if (!supabase) return [];
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    const { data, error } = await (supabase as any)
+        .from('social_feed_events')
+        .select(`
+            id,
+            actor_id,
+            event_type,
+            message,
+            metadata,
+            created_at,
+            actor:profiles!social_feed_events_actor_id_fkey(id, username, display_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error) throw error;
+
+    return ((data || []) as any[]).map(item => ({
+        id: item.id,
+        actor_id: item.actor_id,
+        actor_name: item.actor?.display_name || item.actor?.username || 'Utilisateur',
+        event_type: item.event_type,
+        message: item.message,
+        metadata: item.metadata || {},
+        created_at: item.created_at,
+    })) as SocialFeedEventItem[];
+}
+
+export async function setSocialFeedReaction(eventId: string, reaction: string): Promise<void> {
+    const client = getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    if (reaction !== 'like') {
+        throw new Error('Unsupported reaction');
+    }
+
+    const { error } = await (client as any)
+        .from('social_feed_reactions')
+        .upsert(
+            {
+                event_id: eventId,
+                user_id: user.id,
+                reaction,
+            },
+            { onConflict: 'event_id,user_id' }
+        );
+
+    if (error) throw error;
 }
 
 // ============================================================================
