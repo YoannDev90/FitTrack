@@ -378,73 +378,238 @@
     "eyebrow": "CONTATORE RIPETIZIONI",
     "motivations": {
       "pushups": [
-        {"text": "Continua così!", "emoji": "💪"},
-        {"text": "Pettorali in fiamme!", "emoji": "🔥"},
-        {"text": "Eccellente!", "emoji": "⭐"},
-        {"text": "Potenza!", "emoji": "💥"},
-        {"text": "Campione!", "emoji": "🏆"},
-        {"text": "Bel lavoro!", "emoji": "👏"},
-        {"text": "Ottima forma!", "emoji": "⚡"},
-        {"text": "Solido!", "emoji": "🦾"},
-        {"text": "Forte!", "emoji": "💪"}
+        {
+          "text": "Continua così!",
+          "emoji": "💪"
+        },
+        {
+          "text": "Pettorali in fiamme!",
+          "emoji": "🔥"
+        },
+        {
+          "text": "Eccellente!",
+          "emoji": "⭐"
+        },
+        {
+          "text": "Potenza!",
+          "emoji": "💥"
+        },
+        {
+          "text": "Campione!",
+          "emoji": "🏆"
+        },
+        {
+          "text": "Bel lavoro!",
+          "emoji": "👏"
+        },
+        {
+          "text": "Ottima forma!",
+          "emoji": "⚡"
+        },
+        {
+          "text": "Solido!",
+          "emoji": "🦾"
+        },
+        {
+          "text": "Forte!",
+          "emoji": "💪"
+        }
       ],
       "pullups": [
-        {"text": "Tirata potente!", "emoji": "🧗"},
-        {"text": "Ripetizione pulita!", "emoji": "💪"},
-        {"text": "Domini la sbarra!", "emoji": "🔥"},
-        {"text": "Controllo perfetto!", "emoji": "⚡"},
-        {"text": "Eccellente!", "emoji": "🏆"},
-        {"text": "Su ancora!", "emoji": "🚀"}
+        {
+          "text": "Tirata potente!",
+          "emoji": "🧗"
+        },
+        {
+          "text": "Ripetizione pulita!",
+          "emoji": "💪"
+        },
+        {
+          "text": "Domini la sbarra!",
+          "emoji": "🔥"
+        },
+        {
+          "text": "Controllo perfetto!",
+          "emoji": "⚡"
+        },
+        {
+          "text": "Eccellente!",
+          "emoji": "🏆"
+        },
+        {
+          "text": "Su ancora!",
+          "emoji": "🚀"
+        }
       ],
       "squats": [
-        {"text": "Gambe d'acciaio!", "emoji": "🦵"},
-        {"text": "Stai andando alla grande!", "emoji": "🔥"},
-        {"text": "Squat eccellente!", "emoji": "⭐"},
-        {"text": "Potenza!", "emoji": "💥"},
-        {"text": "Incredibile!", "emoji": "🚀"},
-        {"text": "Continua così!", "emoji": "💪"},
-        {"text": "Cosce forti!", "emoji": "⚡"},
-        {"text": "Al top!", "emoji": "🏆"}
+        {
+          "text": "Gambe d'acciaio!",
+          "emoji": "🦵"
+        },
+        {
+          "text": "Stai andando alla grande!",
+          "emoji": "🔥"
+        },
+        {
+          "text": "Squat eccellente!",
+          "emoji": "⭐"
+        },
+        {
+          "text": "Potenza!",
+          "emoji": "💥"
+        },
+        {
+          "text": "Incredibile!",
+          "emoji": "🚀"
+        },
+        {
+          "text": "Continua così!",
+          "emoji": "💪"
+        },
+        {
+          "text": "Cosce forti!",
+          "emoji": "⚡"
+        },
+        {
+          "text": "Al top!",
+          "emoji": "🏆"
+        }
       ],
       "situps": [
-        {"text": "Addominali in fiamme!", "emoji": "🔥"},
-        {"text": "Tartaruga in arrivo!", "emoji": "💪"},
-        {"text": "Continua così!", "emoji": "⚡"},
-        {"text": "Eccellente!", "emoji": "⭐"},
-        {"text": "Core forte!", "emoji": "💥"},
-        {"text": "Bel lavoro!", "emoji": "👏"},
-        {"text": "Potenza!", "emoji": "🚀"},
-        {"text": "Ce la puoi fare!", "emoji": "🏆"}
+        {
+          "text": "Addominali in fiamme!",
+          "emoji": "🔥"
+        },
+        {
+          "text": "Tartaruga in arrivo!",
+          "emoji": "💪"
+        },
+        {
+          "text": "Continua così!",
+          "emoji": "⚡"
+        },
+        {
+          "text": "Eccellente!",
+          "emoji": "⭐"
+        },
+        {
+          "text": "Core forte!",
+          "emoji": "💥"
+        },
+        {
+          "text": "Bel lavoro!",
+          "emoji": "👏"
+        },
+        {
+          "text": "Potenza!",
+          "emoji": "🚀"
+        },
+        {
+          "text": "Ce la puoi fare!",
+          "emoji": "🏆"
+        }
       ],
       "jumpingJacks": [
-        {"text": "Cardio attivato!", "emoji": "❤️"},
-        {"text": "Continua così!", "emoji": "⚡"},
-        {"text": "Eccellente!", "emoji": "⭐"},
-        {"text": "Energia!", "emoji": "🔋"},
-        {"text": "Sei inarrestabile!", "emoji": "🔥"},
-        {"text": "Dinamico!", "emoji": "💫"},
-        {"text": "Super!", "emoji": "🎉"},
-        {"text": "Esplosivo!", "emoji": "💥"}
+        {
+          "text": "Cardio attivato!",
+          "emoji": "❤️"
+        },
+        {
+          "text": "Continua così!",
+          "emoji": "⚡"
+        },
+        {
+          "text": "Eccellente!",
+          "emoji": "⭐"
+        },
+        {
+          "text": "Energia!",
+          "emoji": "🔋"
+        },
+        {
+          "text": "Sei inarrestabile!",
+          "emoji": "🔥"
+        },
+        {
+          "text": "Dinamico!",
+          "emoji": "💫"
+        },
+        {
+          "text": "Super!",
+          "emoji": "🎉"
+        },
+        {
+          "text": "Esplosivo!",
+          "emoji": "💥"
+        }
       ],
       "plank": [
-        {"text": "Tieni duro!", "emoji": "💪"},
-        {"text": "Non mollare!", "emoji": "🔥"},
-        {"text": "Sei una macchina!", "emoji": "🤖"},
-        {"text": "Respira profondamente!", "emoji": "🌬️"},
-        {"text": "Core d'acciaio!", "emoji": "⚡"},
-        {"text": "Ce la puoi fare!", "emoji": "🏆"},
-        {"text": "Mentalità da campione!", "emoji": "🧠"},
-        {"text": "Quasi finito!", "emoji": "💥"}
+        {
+          "text": "Tieni duro!",
+          "emoji": "💪"
+        },
+        {
+          "text": "Non mollare!",
+          "emoji": "🔥"
+        },
+        {
+          "text": "Sei una macchina!",
+          "emoji": "🤖"
+        },
+        {
+          "text": "Respira profondamente!",
+          "emoji": "🌬️"
+        },
+        {
+          "text": "Core d'acciaio!",
+          "emoji": "⚡"
+        },
+        {
+          "text": "Ce la puoi fare!",
+          "emoji": "🏆"
+        },
+        {
+          "text": "Mentalità da campione!",
+          "emoji": "🧠"
+        },
+        {
+          "text": "Quasi finito!",
+          "emoji": "💥"
+        }
       ],
       "elliptical": [
-        {"text": "Continua a pedalare!", "emoji": "🚴"},
-        {"text": "Ottimo ritmo!", "emoji": "⚡"},
-        {"text": "Gambe d'acciaio!", "emoji": "💪"},
-        {"text": "Sei inarrestabile!", "emoji": "🔥"},
-        {"text": "Resta a ritmo!", "emoji": "🎵"},
-        {"text": "Bestia da cardio!", "emoji": "❤️‍🔥"},
-        {"text": "Continua così!", "emoji": "🏃"},
-        {"text": "Modalità resistenza!", "emoji": "💫"}
+        {
+          "text": "Continua a pedalare!",
+          "emoji": "🚴"
+        },
+        {
+          "text": "Ottimo ritmo!",
+          "emoji": "⚡"
+        },
+        {
+          "text": "Gambe d'acciaio!",
+          "emoji": "💪"
+        },
+        {
+          "text": "Sei inarrestabile!",
+          "emoji": "🔥"
+        },
+        {
+          "text": "Resta a ritmo!",
+          "emoji": "🎵"
+        },
+        {
+          "text": "Bestia da cardio!",
+          "emoji": "❤️‍🔥"
+        },
+        {
+          "text": "Continua così!",
+          "emoji": "🏃"
+        },
+        {
+          "text": "Modalità resistenza!",
+          "emoji": "💫"
+        }
       ],
       "started": "Andiamo! 💪",
       "plankSec": "{{seconds}}s - Ben fatto!",
@@ -2019,5 +2184,117 @@
     "question": "Vuoi riprenderla?",
     "discard": "No, scarta",
     "resume": "Sì, riprendi"
+  },
+  "socialHub": {
+    "topTabs": {
+      "home": "Home",
+      "challenges": "Challenge",
+      "friends": "Amici",
+      "leaderboard": "Classifica"
+    },
+    "errors": {
+      "challengesLoad": "Impossibile caricare le challenge al momento.",
+      "feedLoad": "Il feed social è temporaneamente non disponibile.",
+      "searchUnavailable": "La ricerca non è disponibile al momento.",
+      "sendFriendRequest": "Impossibile inviare la richiesta di amicizia al momento.",
+      "shareInvite": "Impossibile condividere l'invito.",
+      "sendLike": "Impossibile inviare il like al momento.",
+      "shareWorkout": "Impossibile condividere questa sessione al momento.",
+      "createChallenge": "Impossibile creare questa challenge al momento."
+    },
+    "invite": {
+      "shareTitle": "Unisciti a me su Spix",
+      "shareMessage": "Sfida con me su Spix. Aggiungimi: @{{username}}"
+    },
+    "challenge": {
+      "sectionTitle": "Challenge attiva",
+      "swipeHint": "Scorri",
+      "noParticipants": "Nessun partecipante",
+      "details": "Dettagli",
+      "addSession": "Aggiungi sessione",
+      "daysRemaining": "{{count}}g rimanenti",
+      "goalTypes": {
+        "workouts": "sessioni",
+        "distance": "km",
+        "duration": "min",
+        "xp": "XP"
+      },
+      "sheet": {
+        "title": "Nuova challenge",
+        "subtitle": "Crea una challenge e motiva i tuoi amici.",
+        "placeholderTitle": "Titolo challenge",
+        "placeholderTarget": "Obiettivo",
+        "placeholderDuration": "Durata (giorni)",
+        "create": "Crea",
+        "creating": "Creazione..."
+      },
+      "validation": {
+        "titleRequired": "Aggiungi un titolo alla challenge.",
+        "targetInvalid": "Obiettivo non valido.",
+        "durationInvalid": "Durata non valida (da 1 a 90 giorni)."
+      },
+      "createSuccess": "La tua challenge è ora visibile nel Social Hub."
+    },
+    "friends": {
+      "sectionTitle": "Classifica amici",
+      "period": "Settimana",
+      "emptyTitle": "Ancora nessun amico",
+      "emptySubtitle": "Aggiungi un amico o invia un invito per iniziare le prime challenge.",
+      "addFriend": "Aggiungi amico",
+      "invite": "Invita",
+      "searchPlaceholder": "Cerca un utente",
+      "badgeFriend": "Amico",
+      "badgePending": "In attesa",
+      "addAction": "Aggiungi",
+      "workoutsWeek": "{{count}} sessioni questa settimana",
+      "meBadge": "tu",
+      "xpSuffix": "xp"
+    },
+    "feed": {
+      "sectionTitle": "Attività recente",
+      "refresh": "Aggiorna",
+      "emptyTitle": "Nessuna attività recente",
+      "emptySubtitle": "Condividi una sessione per avviare il feed social.",
+      "likeAction": "Like",
+      "likeSending": "Invio...",
+      "likeMessage": "Ottima sessione!",
+      "time": {
+        "justNow": "Proprio adesso",
+        "minutesAgo": "{{count}} min fa",
+        "hoursAgo": "{{count}} h fa",
+        "daysAgo": "{{count}} g fa"
+      },
+      "workoutTitle": "{{name}} ha condiviso una sessione",
+      "genericWorkoutDetail": "Sessione completata",
+      "challengeTitle": "{{name}} ha avviato una challenge",
+      "challengeFallback": "Nuova challenge",
+      "streakTitle": "{{name}} ha una nuova serie",
+      "encouragementTitle": "{{name}} ti ha incoraggiato"
+    },
+    "cards": {
+      "shareTitle": "Condividi una sessione",
+      "shareSubtitle": "Pubblica una sessione recente nel feed amici",
+      "challengeTitle": "Lancia una nuova challenge",
+      "challengeSubtitle": "Sfida i tuoi amici per una settimana o un mese"
+    },
+    "shareWorkout": {
+      "sheetTitle": "Condividi una sessione",
+      "sheetSubtitle": "Scegli una sessione recente da pubblicare nel feed amici.",
+      "emptyTitle": "Nessuna sessione da condividere",
+      "emptySubtitle": "Aggiungi una sessione per poterla condividere.",
+      "shareAction": "Condividi",
+      "sharingAction": "Condivisione...",
+      "sharedSuccess": "Sessione condivisa nel feed.",
+      "runSummary": "{{distance}} km · {{duration}} min",
+      "durationSummary": "{{duration}} min",
+      "customSummary": "{{duration}} min · {{reps}} rep",
+      "homeSummary": "{{duration}} min · {{reps}} rep"
+    },
+    "workoutTypes": {
+      "home": "Allenamento a casa",
+      "run": "Corsa",
+      "beatsaber": "Beat Saber",
+      "custom": "Sport personalizzato"
+    }
   }
 }

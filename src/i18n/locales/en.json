@@ -2193,5 +2193,117 @@
     "question": "Do you want to resume?",
     "discard": "No, discard",
     "resume": "Yes, resume"
+  },
+  "socialHub": {
+    "topTabs": {
+      "home": "Home",
+      "challenges": "Challenges",
+      "friends": "Friends",
+      "leaderboard": "Leaderboard"
+    },
+    "errors": {
+      "challengesLoad": "Unable to load challenges right now.",
+      "feedLoad": "The social feed is temporarily unavailable.",
+      "searchUnavailable": "Search is unavailable right now.",
+      "sendFriendRequest": "Unable to send the friend request right now.",
+      "shareInvite": "Unable to share the invite.",
+      "sendLike": "Unable to send the like right now.",
+      "shareWorkout": "Unable to share this workout right now.",
+      "createChallenge": "Unable to create this challenge right now."
+    },
+    "invite": {
+      "shareTitle": "Join me on Spix",
+      "shareMessage": "Let's challenge each other on Spix. Add me: @{{username}}"
+    },
+    "challenge": {
+      "sectionTitle": "Active challenge",
+      "swipeHint": "Swipe",
+      "noParticipants": "No participants",
+      "details": "View details",
+      "addSession": "Add workout",
+      "daysRemaining": "{{count}}d left",
+      "goalTypes": {
+        "workouts": "workouts",
+        "distance": "km",
+        "duration": "min",
+        "xp": "XP"
+      },
+      "sheet": {
+        "title": "New challenge",
+        "subtitle": "Create a challenge and start motivating your friends.",
+        "placeholderTitle": "Challenge title",
+        "placeholderTarget": "Target",
+        "placeholderDuration": "Duration (days)",
+        "create": "Create",
+        "creating": "Creating..."
+      },
+      "validation": {
+        "titleRequired": "Please add a challenge title.",
+        "targetInvalid": "Invalid target.",
+        "durationInvalid": "Invalid duration (1 to 90 days)."
+      },
+      "createSuccess": "Your challenge is now visible on the Social Hub."
+    },
+    "friends": {
+      "sectionTitle": "Friends leaderboard",
+      "period": "Week",
+      "emptyTitle": "No friends yet",
+      "emptySubtitle": "Add a friend or send an invite to start your first challenges.",
+      "addFriend": "Add friend",
+      "invite": "Invite",
+      "searchPlaceholder": "Search for a user",
+      "badgeFriend": "Friend",
+      "badgePending": "Pending",
+      "addAction": "Add",
+      "workoutsWeek": "{{count}} workouts this week",
+      "meBadge": "you",
+      "xpSuffix": "xp"
+    },
+    "feed": {
+      "sectionTitle": "Recent activity",
+      "refresh": "Refresh",
+      "emptyTitle": "No recent activity",
+      "emptySubtitle": "Share a workout to kickstart your social feed.",
+      "likeAction": "Like",
+      "likeSending": "Sending...",
+      "likeMessage": "Great workout!",
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "{{count}} min ago",
+        "hoursAgo": "{{count}} h ago",
+        "daysAgo": "{{count}} d ago"
+      },
+      "workoutTitle": "{{name}} shared a workout",
+      "genericWorkoutDetail": "Workout completed",
+      "challengeTitle": "{{name}} started a challenge",
+      "challengeFallback": "New challenge",
+      "streakTitle": "{{name}} has a new streak",
+      "encouragementTitle": "{{name}} encouraged you"
+    },
+    "cards": {
+      "shareTitle": "Share a workout",
+      "shareSubtitle": "Publish a recent workout to your friends feed",
+      "challengeTitle": "Start a new challenge",
+      "challengeSubtitle": "Challenge your friends for a week or a month"
+    },
+    "shareWorkout": {
+      "sheetTitle": "Share a workout",
+      "sheetSubtitle": "Pick a recent workout to publish in your friends feed.",
+      "emptyTitle": "No workout to share",
+      "emptySubtitle": "Add a workout to share it.",
+      "shareAction": "Share",
+      "sharingAction": "Sharing...",
+      "sharedSuccess": "Workout shared to the feed.",
+      "runSummary": "{{distance}} km · {{duration}} min",
+      "durationSummary": "{{duration}} min",
+      "customSummary": "{{duration}} min · {{reps}} reps",
+      "homeSummary": "{{duration}} min · {{reps}} reps"
+    },
+    "workoutTypes": {
+      "home": "Home workout",
+      "run": "Run",
+      "beatsaber": "Beat Saber",
+      "custom": "Custom sport"
+    }
   }
 }

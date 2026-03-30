@@ -2193,5 +2193,117 @@
     "question": "Voulez-vous reprendre ?",
     "discard": "Non, abandonner",
     "resume": "Oui, reprendre"
+  },
+  "socialHub": {
+    "topTabs": {
+      "home": "Accueil",
+      "challenges": "Challenges",
+      "friends": "Amis",
+      "leaderboard": "Classement"
+    },
+    "errors": {
+      "challengesLoad": "Impossible de charger les challenges pour le moment.",
+      "feedLoad": "Le feed social est temporairement indisponible.",
+      "searchUnavailable": "La recherche est indisponible pour le moment.",
+      "sendFriendRequest": "Impossible d'envoyer la demande pour le moment.",
+      "shareInvite": "Impossible de partager l'invitation.",
+      "sendLike": "Impossible d'envoyer le like pour le moment.",
+      "shareWorkout": "Impossible de partager la séance pour le moment.",
+      "createChallenge": "Impossible de créer le challenge pour le moment."
+    },
+    "invite": {
+      "shareTitle": "Rejoins-moi sur Spix",
+      "shareMessage": "On se challenge sur Spix ? Ajoute-moi: @{{username}}"
+    },
+    "challenge": {
+      "sectionTitle": "Challenge en cours",
+      "swipeHint": "Swipe",
+      "noParticipants": "Aucun participant",
+      "details": "Voir détail",
+      "addSession": "Ajouter séance",
+      "daysRemaining": "{{count}}j restants",
+      "goalTypes": {
+        "workouts": "séances",
+        "distance": "km",
+        "duration": "min",
+        "xp": "XP"
+      },
+      "sheet": {
+        "title": "Nouveau challenge",
+        "subtitle": "Crée un challenge et commence à motiver tes amis.",
+        "placeholderTitle": "Titre du challenge",
+        "placeholderTarget": "Objectif",
+        "placeholderDuration": "Durée (jours)",
+        "create": "Créer",
+        "creating": "Création..."
+      },
+      "validation": {
+        "titleRequired": "Ajoute un titre au challenge.",
+        "targetInvalid": "Objectif invalide.",
+        "durationInvalid": "Durée invalide (1 à 90 jours)."
+      },
+      "createSuccess": "Ton challenge est maintenant visible sur le Social Hub."
+    },
+    "friends": {
+      "sectionTitle": "Classement amis",
+      "period": "Semaine",
+      "emptyTitle": "Aucun ami pour le moment",
+      "emptySubtitle": "Ajoute un ami ou envoie une invitation pour lancer tes premiers challenges.",
+      "addFriend": "Ajouter un ami",
+      "invite": "Inviter",
+      "searchPlaceholder": "Rechercher un utilisateur",
+      "badgeFriend": "Ami",
+      "badgePending": "En attente",
+      "addAction": "Ajouter",
+      "workoutsWeek": "{{count}} séances cette semaine",
+      "meBadge": "toi",
+      "xpSuffix": "xp"
+    },
+    "feed": {
+      "sectionTitle": "Activité récente",
+      "refresh": "Actualiser",
+      "emptyTitle": "Pas d'activité récente",
+      "emptySubtitle": "Partage une séance pour démarrer le feed social.",
+      "likeAction": "J'aime",
+      "likeSending": "Envoi...",
+      "likeMessage": "Bravo pour ta séance !",
+      "time": {
+        "justNow": "À l'instant",
+        "minutesAgo": "Il y a {{count}} min",
+        "hoursAgo": "Il y a {{count}} h",
+        "daysAgo": "Il y a {{count}} j"
+      },
+      "workoutTitle": "{{name}} a partagé une séance",
+      "genericWorkoutDetail": "Séance terminée",
+      "challengeTitle": "{{name}} a lancé un challenge",
+      "challengeFallback": "Nouveau challenge",
+      "streakTitle": "{{name}} a une nouvelle série",
+      "encouragementTitle": "{{name}} t'encourage"
+    },
+    "cards": {
+      "shareTitle": "Partager une séance",
+      "shareSubtitle": "Publie une séance récente dans le feed amis",
+      "challengeTitle": "Lancer un nouveau challenge",
+      "challengeSubtitle": "Défie tes amis sur la semaine ou le mois"
+    },
+    "shareWorkout": {
+      "sheetTitle": "Partager une séance",
+      "sheetSubtitle": "Choisis une séance récente à publier dans le feed amis.",
+      "emptyTitle": "Aucune séance à partager",
+      "emptySubtitle": "Ajoute une séance pour pouvoir la partager.",
+      "shareAction": "Partager",
+      "sharingAction": "Partage...",
+      "sharedSuccess": "La séance a été partagée sur le feed.",
+      "runSummary": "{{distance}} km · {{duration}} min",
+      "durationSummary": "{{duration}} min",
+      "customSummary": "{{duration}} min · {{reps}} reps",
+      "homeSummary": "{{duration}} min · {{reps}} reps"
+    },
+    "workoutTypes": {
+      "home": "Musculation",
+      "run": "Course",
+      "beatsaber": "Beat Saber",
+      "custom": "Sport personnalisé"
+    }
   }
 }
