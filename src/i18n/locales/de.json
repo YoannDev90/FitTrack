@@ -1442,7 +1442,9 @@
         "nickname": "Öffentlicher Nickname (den wählst du aus)",
         "xp": "Gesamte EP und Level",
         "streak": "Aktueller Streak und bester Streak",
-        "weeklyCount": "Anzahl wöchentlicher Workouts"
+        "weeklyCount": "Anzahl wöchentlicher Workouts",
+        "challenges": "Teilnahme an Social-Challenges (Fortschritt und Mitglieder)",
+        "sharedWorkouts": "Geteilte Trainingsbeiträge im Social-Feed (Titel, Zusammenfassung, Datum)"
       },
       "accountData": {
         "email": "E-Mail (nur zur Anmeldung)",
@@ -2246,13 +2248,16 @@
         "placeholderTitle": "Challenge-Titel",
         "placeholderTarget": "Ziel",
         "placeholderDuration": "Dauer (Tage)",
+        "friendsTitle": "Freunde auswählen",
+        "noFriends": "Füge Freunde hinzu, um eine gemeinsame Challenge zu erstellen.",
         "create": "Erstellen",
         "creating": "Wird erstellt..."
       },
       "validation": {
         "titleRequired": "Bitte gib einen Challenge-Titel ein.",
         "targetInvalid": "Ungültiges Ziel.",
-        "durationInvalid": "Ungültige Dauer (1 bis 90 Tage)."
+        "durationInvalid": "Ungültige Dauer (1 bis 90 Tage).",
+        "friendsRequired": "Wähle mindestens einen Freund für diese Challenge aus."
       },
       "createSuccess": "Deine Challenge ist jetzt im Social Hub sichtbar."
     },
@@ -2278,6 +2283,9 @@
       "emptySubtitle": "Teile ein Training, um deinen Social-Feed zu starten.",
       "likeAction": "Like",
       "likeSending": "Sende...",
+      "deleteConfirmTitle": "Diesen Beitrag löschen?",
+      "deleteConfirmMessage": "Dieses Training wird aus dem Social-Feed entfernt.",
+      "deleteError": "Diese Aktivität konnte derzeit nicht gelöscht werden.",
       "likeMessage": "Starkes Training!",
       "time": {
         "justNow": "Gerade eben",

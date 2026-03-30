@@ -1451,7 +1451,9 @@
         "nickname": "Public nickname (you choose)",
         "xp": "Total XP and level",
         "streak": "Current streak and best streak",
-        "weeklyCount": "Weekly workouts count"
+        "weeklyCount": "Weekly workouts count",
+        "challenges": "Social challenge participation (progress and members)",
+        "sharedWorkouts": "Shared workout posts in social feed (title, summary, date)"
       },
       "accountData": {
         "email": "Email (for sign-in only)",
@@ -2255,13 +2257,16 @@
         "placeholderTitle": "Challenge title",
         "placeholderTarget": "Target",
         "placeholderDuration": "Duration (days)",
+        "friendsTitle": "Select friends",
+        "noFriends": "Add friends to create a shared challenge.",
         "create": "Create",
         "creating": "Creating..."
       },
       "validation": {
         "titleRequired": "Please add a challenge title.",
         "targetInvalid": "Invalid target.",
-        "durationInvalid": "Invalid duration (1 to 90 days)."
+        "durationInvalid": "Invalid duration (1 to 90 days).",
+        "friendsRequired": "Select at least one friend to create this challenge."
       },
       "createSuccess": "Your challenge is now visible on the Social Hub."
     },
@@ -2287,6 +2292,9 @@
       "emptySubtitle": "Share a workout to kickstart your social feed.",
       "likeAction": "Like",
       "likeSending": "Sending...",
+      "deleteConfirmTitle": "Delete this share?",
+      "deleteConfirmMessage": "This workout post will be removed from the social feed.",
+      "deleteError": "Unable to delete this activity right now.",
       "likeMessage": "Great workout!",
       "time": {
         "justNow": "Just now",

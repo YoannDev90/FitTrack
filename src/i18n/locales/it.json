@@ -1442,7 +1442,9 @@
         "nickname": "Nickname pubblico (lo scegli tu)",
         "xp": "XP totali e livello",
         "streak": "Serie attuale e migliore serie",
-        "weeklyCount": "Conteggio allenamenti settimanali"
+        "weeklyCount": "Conteggio allenamenti settimanali",
+        "challenges": "Partecipazione alle challenge social (progressi e membri)",
+        "sharedWorkouts": "Post di sessioni condivise nel feed social (titolo, riepilogo, data)"
       },
       "accountData": {
         "email": "Email (solo per l'accesso)",
@@ -2246,13 +2248,16 @@
         "placeholderTitle": "Titolo challenge",
         "placeholderTarget": "Obiettivo",
         "placeholderDuration": "Durata (giorni)",
+        "friendsTitle": "Seleziona amici",
+        "noFriends": "Aggiungi amici per creare una challenge condivisa.",
         "create": "Crea",
         "creating": "Creazione..."
       },
       "validation": {
         "titleRequired": "Aggiungi un titolo alla challenge.",
         "targetInvalid": "Obiettivo non valido.",
-        "durationInvalid": "Durata non valida (da 1 a 90 giorni)."
+        "durationInvalid": "Durata non valida (da 1 a 90 giorni).",
+        "friendsRequired": "Seleziona almeno un amico per creare questa challenge."
       },
       "createSuccess": "La tua challenge è ora visibile nel Social Hub."
     },
@@ -2278,6 +2283,9 @@
       "emptySubtitle": "Condividi una sessione per avviare il feed social.",
       "likeAction": "Like",
       "likeSending": "Invio...",
+      "deleteConfirmTitle": "Eliminare questa condivisione?",
+      "deleteConfirmMessage": "Questa attività verrà rimossa dal feed social.",
+      "deleteError": "Impossibile eliminare questa attività al momento.",
       "likeMessage": "Ottima sessione!",
       "time": {
         "justNow": "Proprio adesso",
