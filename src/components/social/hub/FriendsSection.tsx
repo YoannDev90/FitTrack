@@ -70,7 +70,13 @@ export function FriendsSection({
         <View>
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionLabel}>{labels.sectionTitle}</Text>
-                {hasFriends && <Text style={styles.sectionLink}>{labels.period}</Text>}
+                <View style={styles.sectionHeaderActions}>
+                    {hasFriends && <Text style={styles.sectionLink}>{labels.period}</Text>}
+                    <TouchableOpacity style={styles.addFriendBtn} onPress={() => setShowAddFriendPanel(!showAddFriendPanel)}>
+                        <UserPlus size={14} color={Colors.cta} />
+                        <Text style={styles.addFriendBtnText}>{labels.addFriend}</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {!hasFriends ? (
@@ -78,45 +84,10 @@ export function FriendsSection({
                     <Text style={styles.emptyFriendsTitle}>{labels.emptyTitle}</Text>
                     <Text style={styles.emptyFriendsText}>{labels.emptySubtitle}</Text>
                     <View style={styles.emptyFriendsActions}>
-                        <TouchableOpacity style={styles.inlinePrimaryBtn} onPress={() => setShowAddFriendPanel(!showAddFriendPanel)}>
-                            <UserPlus size={16} color={Colors.cta} />
-                            <Text style={styles.inlinePrimaryBtnText}>{labels.addFriend}</Text>
-                        </TouchableOpacity>
                         <TouchableOpacity style={styles.inlineGhostBtn} onPress={onInvite}>
                             <Text style={styles.inlineGhostBtnText}>{labels.invite}</Text>
                         </TouchableOpacity>
                     </View>
-
-                    {showAddFriendPanel && (
-                        <View style={styles.searchPanel}>
-                            <View style={styles.searchInputWrap}>
-                                <Search size={16} color={Colors.muted} />
-                                <TextInput
-                                    style={styles.searchInput}
-                                    placeholder={labels.searchPlaceholder}
-                                    placeholderTextColor={Colors.muted2}
-                                    value={searchQuery}
-                                    onChangeText={onChangeSearchQuery}
-                                />
-                            </View>
-                            {isSearching && <ActivityIndicator size="small" color={Colors.cta} style={styles.searchLoader} />}
-                            {searchError && <Text style={styles.errorText}>{searchError}</Text>}
-                            {searchResults.map(user => (
-                                <View key={user.id} style={styles.searchResultRow}>
-                                    <Text style={styles.searchResultName}>{user.display_name || user.username}</Text>
-                                    {user.friendship_status === 'accepted' ? (
-                                        <Text style={styles.searchResultBadge}>{labels.badgeFriend}</Text>
-                                    ) : user.friendship_status === 'pending' ? (
-                                        <Text style={styles.searchResultBadge}>{labels.badgePending}</Text>
-                                    ) : (
-                                        <TouchableOpacity onPress={() => onSendRequest(user.id)}>
-                                            <Text style={styles.searchResultAction}>{labels.addAction}</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-                            ))}
-                        </View>
-                    )}
                 </GlassCard>
             ) : (
                 <GlassCard style={styles.leaderboardCard}>
@@ -142,6 +113,39 @@ export function FriendsSection({
                     ))}
                 </GlassCard>
             )}
+
+            {showAddFriendPanel && (
+                <GlassCard style={styles.searchCard}>
+                    <View style={styles.searchPanel}>
+                        <View style={styles.searchInputWrap}>
+                            <Search size={16} color={Colors.muted} />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder={labels.searchPlaceholder}
+                                placeholderTextColor={Colors.muted2}
+                                value={searchQuery}
+                                onChangeText={onChangeSearchQuery}
+                            />
+                        </View>
+                        {isSearching && <ActivityIndicator size="small" color={Colors.cta} style={styles.searchLoader} />}
+                        {searchError && <Text style={styles.errorText}>{searchError}</Text>}
+                        {searchResults.map(user => (
+                            <View key={user.id} style={styles.searchResultRow}>
+                                <Text style={styles.searchResultName}>{user.display_name || user.username}</Text>
+                                {user.friendship_status === 'accepted' ? (
+                                    <Text style={styles.searchResultBadge}>{labels.badgeFriend}</Text>
+                                ) : user.friendship_status === 'pending' ? (
+                                    <Text style={styles.searchResultBadge}>{labels.badgePending}</Text>
+                                ) : (
+                                    <TouchableOpacity onPress={() => onSendRequest(user.id)}>
+                                        <Text style={styles.searchResultAction}>{labels.addAction}</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        ))}
+                    </View>
+                </GlassCard>
+            )}
         </View>
     );
 }
@@ -153,6 +157,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: Spacing.sm,
     },
+    sectionHeaderActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.xs,
+    },
     sectionLabel: {
         color: Colors.textSecondary,
         fontSize: FontSize.sm,
@@ -163,6 +172,22 @@ const styles = StyleSheet.create({
     sectionLink: {
         color: Colors.violet,
         fontSize: FontSize.sm,
+    },
+    addFriendBtn: {
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
+        backgroundColor: Colors.overlayCozyWarm15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 6,
+    },
+    addFriendBtnText: {
+        color: Colors.cta,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.semibold,
     },
     leaderboardCard: {
         padding: Spacing.md,
@@ -244,38 +269,27 @@ const styles = StyleSheet.create({
     },
     emptyFriendsActions: {
         flexDirection: 'row',
-        gap: Spacing.sm,
+        gap: Spacing.xs,
         marginTop: 4,
     },
-    inlinePrimaryBtn: {
+    inlineGhostBtn: {
         flex: 1,
         borderRadius: BorderRadius.md,
         borderWidth: 1,
-        borderColor: Colors.overlayCozyWarm40,
-        backgroundColor: Colors.overlayCozyWarm15,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        paddingVertical: Spacing.sm,
-    },
-    inlinePrimaryBtnText: {
-        color: Colors.cta,
-        fontWeight: FontWeight.semibold,
-    },
-    inlineGhostBtn: {
-        borderRadius: BorderRadius.md,
-        borderWidth: 1,
         borderColor: Colors.stroke,
+        alignItems: 'center',
+        paddingVertical: Spacing.sm,
         paddingHorizontal: Spacing.md,
-        justifyContent: 'center',
     },
     inlineGhostBtnText: {
         color: Colors.text,
         fontWeight: FontWeight.semibold,
     },
-    searchPanel: {
+    searchCard: {
         marginTop: Spacing.sm,
+        padding: Spacing.md,
+    },
+    searchPanel: {
         gap: Spacing.xs,
     },
     searchInputWrap: {

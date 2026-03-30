@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Bell, Sparkles, Users } from 'lucide-react-native';
+import { Bell, Sparkles, UserCircle2, Users } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { Entry } from '../../types';
@@ -205,6 +205,7 @@ export default function SocialHubScreen() {
     const [activeTopTab, setActiveTopTab] = useState<SocialTopTabId>('home');
     const [refreshing, setRefreshing] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isHydratingHub, setIsHydratingHub] = useState(false);
     const [challengeIndex, setChallengeIndex] = useState(0);
     const [isSendingLikeForId, setIsSendingLikeForId] = useState<string | null>(null);
     const [isSharingWorkoutId, setIsSharingWorkoutId] = useState<string | null>(null);
@@ -227,8 +228,6 @@ export default function SocialHubScreen() {
     const [challengeDurationDays, setChallengeDurationDays] = useState('7');
     const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
 
-    const initialDataLoadedRef = useRef(false);
-
     const { entries } = useAppStore();
     const {
         isAuthenticated,
@@ -239,7 +238,6 @@ export default function SocialHubScreen() {
         checkAuth,
         fetchFriends,
         fetchFriendsLeaderboard,
-        fetchEncouragements,
         sendEncouragement,
         sendFriendRequest,
         searchUsers,
@@ -294,24 +292,29 @@ export default function SocialHubScreen() {
     const loadFeed = useCallback(async () => {
         try {
             const events = await getSocialFeed(20);
-            const mapped = events.map(event => mapFeedEvent(event, profile?.id, t));
+            const currentUserId = useSocialStore.getState().profile?.id;
+            const mapped = events.map(event => mapFeedEvent(event, currentUserId, t));
             setFeedItems(mapped);
             setFeedError(null);
         } catch {
             setFeedItems([]);
             setFeedError(t('socialHub.errors.feedLoad'));
         }
-    }, [profile?.id, t]);
+    }, [t]);
 
     const loadHubData = useCallback(async () => {
-        await Promise.allSettled([
-            fetchFriends(),
-            fetchFriendsLeaderboard(),
-            fetchEncouragements(),
-            loadChallenges(),
-            loadFeed(),
-        ]);
-    }, [fetchFriends, fetchFriendsLeaderboard, fetchEncouragements, loadChallenges, loadFeed]);
+        setIsHydratingHub(true);
+        try {
+            await Promise.allSettled([
+                fetchFriends(),
+                fetchFriendsLeaderboard(),
+                loadChallenges(),
+                loadFeed(),
+            ]);
+        } finally {
+            setIsHydratingHub(false);
+        }
+    }, [fetchFriends, fetchFriendsLeaderboard, loadChallenges, loadFeed]);
 
     useEffect(() => {
         let cancelled = false;
@@ -320,14 +323,8 @@ export default function SocialHubScreen() {
             setIsInitialLoading(true);
             await checkAuth();
 
-            const state = useSocialStore.getState();
-            if (state.isAuthenticated && state.socialEnabled) {
-                await loadHubData();
-            }
-
             if (!cancelled) {
                 setIsInitialLoading(false);
-                initialDataLoadedRef.current = true;
             }
         };
 
@@ -336,13 +333,13 @@ export default function SocialHubScreen() {
         return () => {
             cancelled = true;
         };
-    }, [checkAuth, loadHubData]);
+    }, [checkAuth]);
 
     useEffect(() => {
-        if (!initialDataLoadedRef.current) return;
+        if (isInitialLoading) return;
         if (!isAuthenticated || !socialEnabled) return;
         loadHubData();
-    }, [isAuthenticated, socialEnabled, loadHubData]);
+    }, [isInitialLoading, isAuthenticated, socialEnabled, loadHubData]);
 
     useEffect(() => {
         if (!showAddFriendPanel || searchQuery.trim().length < 2) {
@@ -579,9 +576,14 @@ export default function SocialHubScreen() {
                 >
                     <Animated.View entering={FadeIn.delay(100)} style={styles.topbar}>
                         <Text style={styles.screenTitle}>{t('social.title')}</Text>
-                        <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/settings/notifications' as any)}>
-                            <Bell size={18} color={Colors.text} />
-                        </TouchableOpacity>
+                        <View style={styles.topbarActions}>
+                            <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/settings/notifications' as any)}>
+                                <Bell size={18} color={Colors.text} />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/profile' as any)}>
+                                <UserCircle2 size={18} color={Colors.text} />
+                            </TouchableOpacity>
+                        </View>
                     </Animated.View>
 
                     <Animated.View entering={FadeIn.delay(120)}>
@@ -596,6 +598,13 @@ export default function SocialHubScreen() {
                             }}
                         />
                     </Animated.View>
+
+                    {isHydratingHub && (
+                        <View style={styles.hubLoadingRow}>
+                            <ActivityIndicator size="small" color={Colors.cta} />
+                            <Text style={styles.hubLoadingText}>{t('common.loading')}</Text>
+                        </View>
+                    )}
 
                     <Animated.View entering={FadeInDown.delay(140).springify()} style={styles.section} onLayout={registerSectionOffset('challenges')}>
                         <ChallengeCarouselSection
@@ -752,6 +761,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: Spacing.md,
     },
+    topbarActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.xs,
+    },
     screenTitle: {
         fontSize: 30,
         fontWeight: FontWeight.extrabold,
@@ -770,6 +784,16 @@ const styles = StyleSheet.create({
     },
     section: {
         marginBottom: Spacing.md,
+    },
+    hubLoadingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.xs,
+        marginBottom: Spacing.sm,
+    },
+    hubLoadingText: {
+        color: Colors.muted,
+        fontSize: FontSize.xs,
     },
     centeredState: {
         flex: 1,
