@@ -23,9 +23,11 @@ import { useAppStore, useSocialStore } from '../../stores';
 import { isSocialAvailable } from '../../services/supabase';
 import {
     createSocialChallenge,
+    deleteSocialChallenge,
     deleteMySharedWorkoutEvent,
     getActiveSocialChallenges,
     getSocialFeed,
+    leaveSocialChallenge,
     setSocialFeedReaction,
     shareWorkoutToFeed,
     type SocialChallengeGoalType,
@@ -226,6 +228,7 @@ export default function SocialHubScreen() {
     const [challengeDurationDays, setChallengeDurationDays] = useState('7');
     const [selectedFriendIdsForChallenge, setSelectedFriendIdsForChallenge] = useState<string[]>([]);
     const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
+    const [isDeletingChallengeId, setIsDeletingChallengeId] = useState<string | null>(null);
     const [isDeletingFeedItemId, setIsDeletingFeedItemId] = useState<string | null>(null);
 
     const { entries } = useAppStore();
@@ -696,6 +699,54 @@ export default function SocialHubScreen() {
         t,
     ]);
 
+    const handleDeleteChallenge = useCallback((item: SocialChallengeProgress) => {
+        const challengeId = item.challenge.id;
+        const isOwner = item.challenge.creator_id === profile?.id;
+
+        Alert.alert(
+            isOwner
+                ? t('socialHub.challenge.deleteConfirmTitle')
+                : t('socialHub.challenge.leaveConfirmTitle'),
+            isOwner
+                ? t('socialHub.challenge.deleteConfirmMessage')
+                : t('socialHub.challenge.leaveConfirmMessage'),
+            [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                    text: isOwner ? t('socialHub.challenge.deleteAction') : t('socialHub.challenge.leaveAction'),
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsDeletingChallengeId(challengeId);
+                        try {
+                            if (isOwner) {
+                                await deleteSocialChallenge(challengeId);
+                            } else {
+                                await leaveSocialChallenge(challengeId);
+                            }
+
+                            await Promise.all([loadChallenges(), loadFeed()]);
+                            Alert.alert(
+                                t('common.success'),
+                                isOwner
+                                    ? t('socialHub.challenge.deleteSuccess')
+                                    : t('socialHub.challenge.leaveSuccess')
+                            );
+                        } catch {
+                            Alert.alert(
+                                t('common.error'),
+                                isOwner
+                                    ? t('socialHub.challenge.deleteError')
+                                    : t('socialHub.challenge.leaveError')
+                            );
+                        } finally {
+                            setIsDeletingChallengeId(null);
+                        }
+                    },
+                },
+            ]
+        );
+    }, [loadChallenges, loadFeed, profile?.id, t]);
+
     if (!isSocialAvailable()) {
         return (
             <SafeAreaView style={styles.container} edges={['top']}>
@@ -835,8 +886,11 @@ export default function SocialHubScreen() {
                         <ChallengesTabPage
                             challenges={activeChallenges}
                             error={challengesError}
+                            profileId={profile?.id}
+                            deletingChallengeId={isDeletingChallengeId}
                             onPressCreateChallenge={openChallengeSheet}
                             onPressAddSession={() => router.push('/workout' as any)}
+                            onDeleteChallenge={handleDeleteChallenge}
                             labels={{
                                 pageTitle: t('socialHub.pages.challenges.title'),
                                 pageSubtitle: t('socialHub.pages.challenges.subtitle'),
@@ -847,6 +901,9 @@ export default function SocialHubScreen() {
                                 progressLabel: t('socialHub.pages.challenges.progressLabel'),
                                 detailsLabel: t('socialHub.challenge.details'),
                                 addSession: t('socialHub.challenge.addSession'),
+                                deleteChallenge: t('socialHub.challenge.deleteAction'),
+                                leaveChallenge: t('socialHub.challenge.leaveAction'),
+                                deletingChallenge: t('socialHub.challenge.deletingAction'),
                                 daysRemaining: (count) => t('socialHub.challenge.daysRemaining', { count }),
                                 goalLabel: (goalType) => t(`socialHub.challenge.goalTypes.${goalType}`),
                             }}

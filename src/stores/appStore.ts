@@ -29,6 +29,7 @@ import {
 import { checkBadges } from '../utils/badges';
 import { useGamificationStore, calculateQuestTotals, calculateXpForEntry } from './gamificationStore';
 import { useSocialStore } from './socialStore';
+import { syncActiveChallengeProgressFromEntries } from '../services/supabase/social';
 import { storeLogger } from '../utils/logger';
 import { 
     SPORT_ENTRY_TYPES, 
@@ -168,6 +169,7 @@ const defaultSportsConfig: SportConfig[] = [
 ];
 
 let socialStatsSyncTimeout: ReturnType<typeof setTimeout> | null = null;
+let socialChallengeProgressSyncTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function isSportEntry(entry: Entry): entry is HomeWorkoutEntry | RunEntry | BeatSaberEntry | CustomSportEntry {
     return isSportEntryType(entry.type);
@@ -244,6 +246,30 @@ function scheduleSocialStatsSync(entries: Entry[]) {
     }, 450);
 }
 
+function scheduleSocialChallengeProgressSync(entries: Entry[]) {
+    if (socialChallengeProgressSyncTimeout) {
+        clearTimeout(socialChallengeProgressSyncTimeout);
+    }
+
+    socialChallengeProgressSyncTimeout = setTimeout(async () => {
+        const socialStore = useSocialStore.getState();
+        if (!socialStore.isAuthenticated || !socialStore.socialEnabled) {
+            return;
+        }
+
+        try {
+            await syncActiveChallengeProgressFromEntries(entries);
+        } catch (error) {
+            storeLogger.warn('Failed to sync social challenge progress', error);
+        }
+    }, 500);
+}
+
+function scheduleSocialSync(entries: Entry[]) {
+    scheduleSocialStatsSync(entries);
+    scheduleSocialChallengeProgressSync(entries);
+}
+
 // ============================================================================
 // STORE
 // ============================================================================
@@ -280,7 +306,7 @@ export const useAppStore = create<AppState>()(
                 gamificationStore.processEntryAdded(entry);
                 gamificationStore.syncQuestsWithEntries(get().entries);
                 get().recheckBadges(get().entries);
-                scheduleSocialStatsSync(get().entries);
+                scheduleSocialSync(get().entries);
                 storeLogger.debug('Added home workout', entry.id);
             },
 
@@ -309,7 +335,7 @@ export const useAppStore = create<AppState>()(
                 gamificationStore.processEntryAdded(entry);
                 gamificationStore.syncQuestsWithEntries(get().entries);
                 get().recheckBadges(get().entries);
-                scheduleSocialStatsSync(get().entries);
+                scheduleSocialSync(get().entries);
                 storeLogger.debug('Added run', entry.id);
             },
 
@@ -332,7 +358,7 @@ export const useAppStore = create<AppState>()(
                 gamificationStore.processEntryAdded(entry);
                 gamificationStore.syncQuestsWithEntries(get().entries);
                 get().recheckBadges(get().entries);
-                scheduleSocialStatsSync(get().entries);
+                scheduleSocialSync(get().entries);
                 storeLogger.debug('Added BeatSaber session', entry.id);
             },
 
@@ -383,7 +409,7 @@ export const useAppStore = create<AppState>()(
                 gamificationStore.processEntryAdded(entry);
                 gamificationStore.syncQuestsWithEntries(get().entries);
                 get().recheckBadges(get().entries);
-                scheduleSocialStatsSync(get().entries);
+                scheduleSocialSync(get().entries);
                 storeLogger.debug('Added custom sport', entry.id);
             },
 
@@ -402,7 +428,7 @@ export const useAppStore = create<AppState>()(
                     gamificationStore.processEntryDeleted(entryToDelete);
                     gamificationStore.syncQuestsWithEntries(get().entries);
                     get().recheckBadges(get().entries);
-                    scheduleSocialStatsSync(get().entries);
+                    scheduleSocialSync(get().entries);
                     storeLogger.debug('Deleted sport entry, synced gamification', id);
                 }
             },
@@ -425,7 +451,7 @@ export const useAppStore = create<AppState>()(
                     gamificationStore.processEntryUpdated(oldEntry, newEntry);
                     gamificationStore.syncQuestsWithEntries(get().entries);
                     get().recheckBadges(get().entries);
-                    scheduleSocialStatsSync(get().entries);
+                    scheduleSocialSync(get().entries);
                     storeLogger.debug('Updated sport entry, synced gamification', id);
                 }
             },
@@ -456,7 +482,7 @@ export const useAppStore = create<AppState>()(
                     settings: defaultSettings,
                     unlockedBadges: [],
                 });
-                scheduleSocialStatsSync([]);
+                scheduleSocialSync([]);
             },
 
             restoreFromBackup: (data) => {
@@ -489,7 +515,7 @@ export const useAppStore = create<AppState>()(
                     sportsConfig: mergedSportsConfig,
                 });
 
-                scheduleSocialStatsSync(get().entries);
+                scheduleSocialSync(get().entries);
                 
                 storeLogger.info('[Backup] Restored successfully with sportsConfig');
             },
@@ -513,7 +539,7 @@ export const useAppStore = create<AppState>()(
                 // Recalculer complètement la gamification après archivage
                 const gamificationStore = useGamificationStore.getState();
                 gamificationStore.recalculateFromEntries(get().entries);
-                scheduleSocialStatsSync(get().entries);
+                scheduleSocialSync(get().entries);
                 
                 storeLogger.info(`[Archive] Archived ${result.archivedCount} entries, kept ${result.keptEntries.length}`);
                 

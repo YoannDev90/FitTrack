@@ -11,8 +11,11 @@ import type {
     LeaderboardEntry,
     BlockedUser,
 } from './database.types';
+import type { Entry } from '../../types';
 import { serviceLogger, errorLogger } from '../../utils/logger';
 import { MAX_LEADERBOARD_RESULTS } from '../../constants/values';
+import { isSportEntryType } from '../../constants/values';
+import { calculateXpForEntry } from '../../stores/gamificationStore';
 
 // Supabase URL for Edge Functions
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -53,9 +56,65 @@ export interface SocialFeedEventItem {
 
 const MAX_CHALLENGE_TITLE_LENGTH = 80;
 const MAX_CHALLENGE_DESCRIPTION_LENGTH = 280;
+const CHALLENGE_PROGRESS_EPSILON = 0.01;
 
 function sanitizeTrimmedText(value: string, maxLength: number): string {
     return value.trim().slice(0, maxLength);
+}
+
+function entryTimestampMs(entry: Entry): number {
+    const createdAtMs = new Date(entry.createdAt).getTime();
+    if (Number.isFinite(createdAtMs)) {
+        return createdAtMs;
+    }
+
+    const fallbackMs = new Date(`${entry.date}T12:00:00.000Z`).getTime();
+    return Number.isFinite(fallbackMs) ? fallbackMs : 0;
+}
+
+function isEntryInsideChallengeWindow(entry: Entry, startsAtMs: number, endsAtMs: number): boolean {
+    const timestamp = entryTimestampMs(entry);
+    return timestamp >= startsAtMs && timestamp <= endsAtMs;
+}
+
+function computeChallengeProgressValue(
+    entries: Entry[],
+    challenge: Pick<SocialChallenge, 'goal_type' | 'starts_at' | 'ends_at'>
+): number {
+    const startsAtMs = new Date(challenge.starts_at).getTime();
+    const endsAtMs = new Date(challenge.ends_at).getTime();
+
+    if (!Number.isFinite(startsAtMs) || !Number.isFinite(endsAtMs)) {
+        return 0;
+    }
+
+    const relevantEntries = entries.filter((entry) => (
+        isSportEntryType(entry.type) && isEntryInsideChallengeWindow(entry, startsAtMs, endsAtMs)
+    ));
+
+    if (challenge.goal_type === 'workouts') {
+        return relevantEntries.length;
+    }
+
+    if (challenge.goal_type === 'distance') {
+        return relevantEntries.reduce((sum, entry) => {
+            if (entry.type === 'run' || entry.type === 'custom') {
+                return sum + (entry.distanceKm || 0);
+            }
+            return sum;
+        }, 0);
+    }
+
+    if (challenge.goal_type === 'duration') {
+        return relevantEntries.reduce((sum, entry) => {
+            if (entry.type === 'run' || entry.type === 'beatsaber' || entry.type === 'custom' || entry.type === 'home') {
+                return sum + (entry.durationMinutes || 0);
+            }
+            return sum;
+        }, 0);
+    }
+
+    return relevantEntries.reduce((sum, entry) => sum + calculateXpForEntry(entry), 0);
 }
 
 // ============================================================================
@@ -681,6 +740,90 @@ export async function createSocialChallenge(input: {
                 invited_count: invitedFriendIds.length,
             },
         });
+}
+
+export async function deleteSocialChallenge(challengeId: string): Promise<void> {
+    const client = getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await (client as any)
+        .from('social_challenges')
+        .delete()
+        .eq('id', challengeId)
+        .eq('creator_id', user.id);
+
+    if (error) throw error;
+}
+
+export async function leaveSocialChallenge(challengeId: string): Promise<void> {
+    const client = getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await (client as any)
+        .from('social_challenge_participants')
+        .delete()
+        .eq('challenge_id', challengeId)
+        .eq('user_id', user.id);
+
+    if (error) throw error;
+}
+
+export async function syncActiveChallengeProgressFromEntries(entries: Entry[]): Promise<void> {
+    if (!supabase) return;
+
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const { data, error } = await (supabase as any)
+        .from('social_challenge_participants')
+        .select(`
+            challenge_id,
+            progress_value,
+            completed_at,
+            challenge:social_challenges(id, goal_type, goal_target, starts_at, ends_at, status)
+        `)
+        .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    const rows = ((data || []) as any[])
+        .filter(row => row.challenge?.status === 'active');
+
+    if (rows.length === 0) return;
+
+    const nowIso = new Date().toISOString();
+
+    await Promise.all(rows.map(async (row) => {
+        const challenge = row.challenge as SocialChallenge | undefined;
+        if (!challenge?.id) return;
+
+        const nextProgress = computeChallengeProgressValue(entries, challenge);
+        const safeProgress = Math.max(0, Math.round(nextProgress * 100) / 100);
+        const currentProgress = Number(row.progress_value || 0);
+        const goalTarget = Number(challenge.goal_target || 0);
+        const isNowCompleted = goalTarget > 0 && safeProgress >= goalTarget;
+        const nextCompletedAt = isNowCompleted ? (row.completed_at || nowIso) : null;
+
+        const isProgressSame = Math.abs(currentProgress - safeProgress) < CHALLENGE_PROGRESS_EPSILON;
+        const isCompletedAtSame = (row.completed_at || null) === nextCompletedAt;
+
+        if (isProgressSame && isCompletedAtSame) {
+            return;
+        }
+
+        const { error: updateError } = await (supabase as any)
+            .from('social_challenge_participants')
+            .update({
+                progress_value: safeProgress,
+                completed_at: nextCompletedAt,
+            })
+            .eq('challenge_id', challenge.id)
+            .eq('user_id', user.id);
+
+        if (updateError) throw updateError;
+    }));
 }
 
 export async function shareWorkoutToFeed(input: {

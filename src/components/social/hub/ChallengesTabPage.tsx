@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Trophy } from 'lucide-react-native';
+import { Trophy, X } from 'lucide-react-native';
 import type { SocialChallengeProgress } from '../../../services/supabase/social';
 import { GlassCard } from '../../ui';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
@@ -8,8 +8,11 @@ import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../co
 interface ChallengesTabPageProps {
     challenges: SocialChallengeProgress[];
     error: string | null;
+    profileId?: string;
+    deletingChallengeId: string | null;
     onPressCreateChallenge: () => void;
     onPressAddSession: () => void;
+    onDeleteChallenge: (challenge: SocialChallengeProgress) => void;
     labels: {
         pageTitle: string;
         pageSubtitle: string;
@@ -20,6 +23,9 @@ interface ChallengesTabPageProps {
         progressLabel: string;
         detailsLabel: string;
         addSession: string;
+        deleteChallenge: string;
+        leaveChallenge: string;
+        deletingChallenge: string;
         daysRemaining: (count: number) => string;
         goalLabel: (goalType: 'workouts' | 'distance' | 'duration' | 'xp') => string;
     };
@@ -28,8 +34,11 @@ interface ChallengesTabPageProps {
 export function ChallengesTabPage({
     challenges,
     error,
+    profileId,
+    deletingChallengeId,
     onPressCreateChallenge,
     onPressAddSession,
+    onDeleteChallenge,
     labels,
 }: ChallengesTabPageProps) {
     return (
@@ -59,12 +68,28 @@ export function ChallengesTabPage({
                     const ratio = Math.min(1, progress / Math.max(target, 1));
                     const endsAt = new Date(item.challenge.ends_at);
                     const remainingDays = Math.max(0, Math.ceil((endsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+                    const isOwner = item.challenge.creator_id === profileId;
+                    const isDeleting = deletingChallengeId === item.challenge.id;
 
                     return (
                         <GlassCard key={item.challenge.id} style={styles.challengeCard}>
                             <View style={styles.challengeTop}>
                                 <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
-                                <Text style={styles.challengeDays}>{labels.daysRemaining(remainingDays)}</Text>
+                                <View style={styles.challengeTopActions}>
+                                    <Text style={styles.challengeDays}>{labels.daysRemaining(remainingDays)}</Text>
+                                    <TouchableOpacity
+                                        style={styles.deleteButton}
+                                        onPress={() => onDeleteChallenge(item)}
+                                        disabled={isDeleting}
+                                    >
+                                        <X size={12} color={Colors.error} />
+                                        <Text style={styles.deleteButtonText}>
+                                            {isDeleting
+                                                ? labels.deletingChallenge
+                                                : (isOwner ? labels.deleteChallenge : labels.leaveChallenge)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
 
                             {!!item.challenge.description && (
@@ -162,9 +187,13 @@ const styles = StyleSheet.create({
     },
     challengeTop: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         gap: Spacing.sm,
+    },
+    challengeTopActions: {
+        alignItems: 'flex-end',
+        gap: 6,
     },
     challengeTitle: {
         flex: 1,
@@ -174,6 +203,22 @@ const styles = StyleSheet.create({
     },
     challengeDays: {
         color: Colors.violet,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.semibold,
+    },
+    deleteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayError30,
+        backgroundColor: Colors.overlayError15,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+    },
+    deleteButtonText: {
+        color: Colors.error,
         fontSize: FontSize.xs,
         fontWeight: FontWeight.semibold,
     },
