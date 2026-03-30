@@ -1,10 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
     Alert,
-    LayoutChangeEvent,
     RefreshControl,
-    ScrollView,
     Share,
     StyleSheet,
     Text,
@@ -15,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Bell, Sparkles, UserCircle2, Users } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -34,16 +31,14 @@ import {
     type SocialChallengeProgress,
     type SocialFeedEventItem,
 } from '../../services/supabase/social';
-import { ActionCards } from './hub/ActionCards';
-import { ChallengeCarouselSection } from './hub/ChallengeCarouselSection';
+import { ChallengesTabPage } from './hub/ChallengesTabPage';
 import { CreateChallengeSheet } from './hub/CreateChallengeSheet';
-import { FeedSection } from './hub/FeedSection';
-import { FriendsSection } from './hub/FriendsSection';
+import { FriendsTabPage } from './hub/FriendsTabPage';
+import { HomeTabPage } from './hub/HomeTabPage';
+import { LeaderboardTabPage } from './hub/LeaderboardTabPage';
 import { ShareWorkoutSheet } from './hub/ShareWorkoutSheet';
 import { TopTabs } from './hub/TopTabs';
 import type { FeedViewItem, SearchResult, ShareableWorkoutItem, SocialTopTabId } from './hub/types';
-
-type ScrollSectionKey = 'challenges' | 'friends' | 'feed' | 'actions';
 
 function isWorkoutEntry(entry: Entry): entry is Extract<Entry, { type: 'home' | 'run' | 'beatsaber' | 'custom' }> {
     return entry.type === 'home' || entry.type === 'run' || entry.type === 'beatsaber' || entry.type === 'custom';
@@ -192,20 +187,17 @@ export default function SocialHubScreen() {
     const { width } = useWindowDimensions();
     const challengeCardWidth = Math.max(260, width - Spacing.lg * 2);
 
-    const scrollRef = useRef<ScrollView>(null);
     const challengeSheetRef = useRef<TrueSheet>(null);
     const shareWorkoutSheetRef = useRef<TrueSheet>(null);
-    const sectionOffsets = useRef<Record<ScrollSectionKey, number>>({
-        challenges: 0,
-        friends: 0,
-        feed: 0,
-        actions: 0,
-    });
 
     const [activeTopTab, setActiveTopTab] = useState<SocialTopTabId>('home');
     const [refreshing, setRefreshing] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isHydratingHub, setIsHydratingHub] = useState(false);
+    const [isHydratingFriendsTab, setIsHydratingFriendsTab] = useState(false);
+    const [isHydratingLeaderboardTab, setIsHydratingLeaderboardTab] = useState(false);
+    const [isGlobalLeaderboardActive, setIsGlobalLeaderboardActive] = useState(false);
+    const [isLoadingGlobalLeaderboard, setIsLoadingGlobalLeaderboard] = useState(false);
     const [challengeIndex, setChallengeIndex] = useState(0);
     const [isSendingLikeForId, setIsSendingLikeForId] = useState<string | null>(null);
     const [isSharingWorkoutId, setIsSharingWorkoutId] = useState<string | null>(null);
@@ -234,14 +226,25 @@ export default function SocialHubScreen() {
         socialEnabled,
         profile,
         friends,
+        pendingRequests,
+        globalLeaderboard,
+        globalLeaderboardError,
         friendsLeaderboard,
+        friendsLeaderboardError,
         checkAuth,
         fetchFriends,
+        fetchPendingRequests,
+        respondToRequest,
+        removeFriend,
+        fetchGlobalLeaderboard,
         fetchFriendsLeaderboard,
         sendEncouragement,
         sendFriendRequest,
         searchUsers,
     } = useSocialStore();
+
+    const hasLoadedFriendsTabRef = useRef(false);
+    const hasLoadedLeaderboardTabRef = useRef(false);
 
     const friendIds = useMemo(() => new Set(friends.map(friend => friend.id)), [friends]);
 
@@ -253,7 +256,7 @@ export default function SocialHubScreen() {
             .map(entry => formatSportEntry(entry, t));
     }, [entries, t]);
 
-    const leaderboardRows = useMemo(() => {
+    const friendsLeaderboardRows = useMemo(() => {
         const friendRows = friendsLeaderboard
             .filter(entry => friendIds.has(entry.id))
             .slice();
@@ -276,6 +279,14 @@ export default function SocialHubScreen() {
                 rank: index + 1,
             }));
     }, [friendsLeaderboard, friendIds, friends, profile]);
+
+    const globalLeaderboardRows = useMemo(() => {
+        const rows = globalLeaderboard.slice(0, 20);
+        return rows.map((row, index) => ({
+            ...row,
+            rank: row.rank || index + 1,
+        }));
+    }, [globalLeaderboard]);
 
     const loadChallenges = useCallback(async () => {
         try {
@@ -302,19 +313,47 @@ export default function SocialHubScreen() {
         }
     }, [t]);
 
-    const loadHubData = useCallback(async () => {
+    const loadHomeData = useCallback(async () => {
         setIsHydratingHub(true);
         try {
             await Promise.allSettled([
-                fetchFriends(),
-                fetchFriendsLeaderboard(),
                 loadChallenges(),
                 loadFeed(),
             ]);
         } finally {
             setIsHydratingHub(false);
         }
-    }, [fetchFriends, fetchFriendsLeaderboard, loadChallenges, loadFeed]);
+    }, [loadChallenges, loadFeed]);
+
+    const loadFriendsTabData = useCallback(async () => {
+        setIsHydratingFriendsTab(true);
+        try {
+            await Promise.allSettled([
+                fetchFriends(),
+                fetchPendingRequests(),
+            ]);
+        } finally {
+            setIsHydratingFriendsTab(false);
+        }
+    }, [fetchFriends, fetchPendingRequests]);
+
+    const loadFriendsLeaderboardData = useCallback(async () => {
+        setIsHydratingLeaderboardTab(true);
+        try {
+            await fetchFriendsLeaderboard();
+        } finally {
+            setIsHydratingLeaderboardTab(false);
+        }
+    }, [fetchFriendsLeaderboard]);
+
+    const loadGlobalLeaderboardData = useCallback(async () => {
+        setIsLoadingGlobalLeaderboard(true);
+        try {
+            await fetchGlobalLeaderboard();
+        } finally {
+            setIsLoadingGlobalLeaderboard(false);
+        }
+    }, [fetchGlobalLeaderboard]);
 
     useEffect(() => {
         let cancelled = false;
@@ -338,8 +377,23 @@ export default function SocialHubScreen() {
     useEffect(() => {
         if (isInitialLoading) return;
         if (!isAuthenticated || !socialEnabled) return;
-        loadHubData();
-    }, [isInitialLoading, isAuthenticated, socialEnabled, loadHubData]);
+        loadHomeData();
+    }, [isInitialLoading, isAuthenticated, socialEnabled, loadHomeData]);
+
+    useEffect(() => {
+        if (!isAuthenticated || !socialEnabled) return;
+
+        if (activeTopTab === 'friends' && !hasLoadedFriendsTabRef.current) {
+            hasLoadedFriendsTabRef.current = true;
+            loadFriendsTabData();
+            return;
+        }
+
+        if (activeTopTab === 'leaderboard' && !hasLoadedLeaderboardTabRef.current) {
+            hasLoadedLeaderboardTabRef.current = true;
+            loadFriendsLeaderboardData();
+        }
+    }, [activeTopTab, isAuthenticated, socialEnabled, loadFriendsTabData, loadFriendsLeaderboardData]);
 
     useEffect(() => {
         if (!showAddFriendPanel || searchQuery.trim().length < 2) {
@@ -373,42 +427,53 @@ export default function SocialHubScreen() {
         return () => clearTimeout(timeoutId);
     }, [showAddFriendPanel, searchQuery, searchUsers, t]);
 
-    const registerSectionOffset = useCallback((key: ScrollSectionKey) => (event: LayoutChangeEvent) => {
-        sectionOffsets.current[key] = event.nativeEvent.layout.y;
-    }, []);
-
-    const scrollToSection = useCallback((tab: SocialTopTabId) => {
-        let key: ScrollSectionKey = 'challenges';
-
-        if (tab === 'home') {
-            scrollRef.current?.scrollTo({ y: 0, animated: true });
-            return;
-        }
-
-        if (tab === 'challenges') {
-            key = activeChallenges.length > 0 ? 'challenges' : 'actions';
-        } else if (tab === 'friends' || tab === 'leaderboard') {
-            key = 'friends';
-        }
-
-        const y = sectionOffsets.current[key] || 0;
-        scrollRef.current?.scrollTo({ y, animated: true });
-    }, [activeChallenges.length]);
-
     const handlePressTopTab = useCallback((tab: SocialTopTabId) => {
         setActiveTopTab(tab);
-        scrollToSection(tab);
-    }, [scrollToSection]);
+        if (tab !== 'friends') {
+            setShowAddFriendPanel(false);
+            setSearchQuery('');
+            setSearchResults([]);
+            setSearchError(null);
+        }
+    }, []);
 
     const onRefresh = useCallback(async () => {
         if (!isAuthenticated || !socialEnabled) return;
         setRefreshing(true);
         try {
-            await loadHubData();
+            if (activeTopTab === 'home') {
+                await loadHomeData();
+                return;
+            }
+
+            if (activeTopTab === 'challenges') {
+                await loadChallenges();
+                return;
+            }
+
+            if (activeTopTab === 'friends') {
+                await loadFriendsTabData();
+                return;
+            }
+
+            await loadFriendsLeaderboardData();
+            if (isGlobalLeaderboardActive) {
+                await loadGlobalLeaderboardData();
+            }
         } finally {
             setRefreshing(false);
         }
-    }, [isAuthenticated, socialEnabled, loadHubData]);
+    }, [
+        isAuthenticated,
+        socialEnabled,
+        activeTopTab,
+        loadHomeData,
+        loadChallenges,
+        loadFriendsTabData,
+        loadFriendsLeaderboardData,
+        isGlobalLeaderboardActive,
+        loadGlobalLeaderboardData,
+    ]);
 
     const handleSendRequest = useCallback(async (userId: string) => {
         try {
@@ -433,6 +498,49 @@ export default function SocialHubScreen() {
             Alert.alert(t('common.error'), t('socialHub.errors.shareInvite'));
         }
     }, [profile?.username, t]);
+
+    const handleRespondToRequest = useCallback(async (friendshipId: string, accept: boolean) => {
+        try {
+            await respondToRequest(friendshipId, accept);
+            await loadFriendsTabData();
+        } catch {
+            Alert.alert(t('common.error'), t('socialHub.errors.sendFriendRequest'));
+        }
+    }, [respondToRequest, loadFriendsTabData, t]);
+
+    const handleRemoveFriend = useCallback(async (friendshipId: string, friendName: string) => {
+        Alert.alert(
+            t('social.removeFriendConfirmTitle'),
+            t('social.removeFriendConfirmMessage'),
+            [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                    text: t('common.delete'),
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await removeFriend(friendshipId);
+                            await Promise.allSettled([loadFriendsTabData(), loadFriendsLeaderboardData()]);
+                            Alert.alert(t('common.success'), `${t('social.friendRemoved')} · ${friendName}`);
+                        } catch {
+                            Alert.alert(t('common.error'), t('socialHub.errors.sendFriendRequest'));
+                        }
+                    },
+                },
+            ]
+        );
+    }, [removeFriend, loadFriendsTabData, loadFriendsLeaderboardData, t]);
+
+    const handleShowFriendsLeaderboard = useCallback(() => {
+        setIsGlobalLeaderboardActive(false);
+    }, []);
+
+    const handleShowGlobalLeaderboard = useCallback(async () => {
+        setIsGlobalLeaderboardActive(true);
+        if (globalLeaderboardRows.length === 0) {
+            await loadGlobalLeaderboardData();
+        }
+    }, [globalLeaderboardRows.length, loadGlobalLeaderboardData]);
 
     const handleSendLike = useCallback(async (item: FeedViewItem) => {
         if (!item.isWorkoutShare || !item.eventId || item.actorId === profile?.id) return;
@@ -567,14 +675,8 @@ export default function SocialHubScreen() {
     return (
         <GestureHandlerRootView style={styles.container}>
             <SafeAreaView style={styles.container} edges={['top']}>
-                <ScrollView
-                    ref={scrollRef}
-                    style={styles.scroll}
-                    contentContainerStyle={styles.content}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.cta} />}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <Animated.View entering={FadeIn.delay(100)} style={styles.topbar}>
+                <Animated.View entering={FadeIn.delay(100)} style={styles.topbarWrap}>
+                    <View style={styles.topbar}>
                         <Text style={styles.screenTitle}>{t('social.title')}</Text>
                         <View style={styles.topbarActions}>
                             <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/settings/notifications' as any)}>
@@ -584,53 +686,99 @@ export default function SocialHubScreen() {
                                 <UserCircle2 size={18} color={Colors.text} />
                             </TouchableOpacity>
                         </View>
-                    </Animated.View>
+                    </View>
 
-                    <Animated.View entering={FadeIn.delay(120)}>
-                        <TopTabs
-                            activeTab={activeTopTab}
-                            onPressTab={handlePressTopTab}
-                            labels={{
-                                home: t('socialHub.topTabs.home'),
-                                challenges: t('socialHub.topTabs.challenges'),
-                                friends: t('socialHub.topTabs.friends'),
-                                leaderboard: t('socialHub.topTabs.leaderboard'),
-                            }}
-                        />
-                    </Animated.View>
+                    <TopTabs
+                        activeTab={activeTopTab}
+                        onPressTab={handlePressTopTab}
+                        labels={{
+                            home: t('socialHub.topTabs.home'),
+                            challenges: t('socialHub.topTabs.challenges'),
+                            friends: t('socialHub.topTabs.friends'),
+                            leaderboard: t('socialHub.topTabs.leaderboard'),
+                        }}
+                    />
+                </Animated.View>
 
-                    {isHydratingHub && (
-                        <View style={styles.hubLoadingRow}>
-                            <ActivityIndicator size="small" color={Colors.cta} />
-                            <Text style={styles.hubLoadingText}>{t('common.loading')}</Text>
-                        </View>
-                    )}
-
-                    <Animated.View entering={FadeInDown.delay(140).springify()} style={styles.section} onLayout={registerSectionOffset('challenges')}>
-                        <ChallengeCarouselSection
+                <View style={styles.pageContent}>
+                    {activeTopTab === 'home' && (
+                        <HomeTabPage
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            isHydrating={isHydratingHub}
                             activeChallenges={activeChallenges}
                             challengeCardWidth={challengeCardWidth}
                             challengeIndex={challengeIndex}
                             setChallengeIndex={setChallengeIndex}
                             onAddSession={() => router.push('/workout' as any)}
-                            strings={{
-                                sectionTitle: t('socialHub.challenge.sectionTitle'),
-                                swipeHint: t('socialHub.challenge.swipeHint'),
-                                noParticipants: t('socialHub.challenge.noParticipants'),
-                                details: t('socialHub.challenge.details'),
+                            challengesError={challengesError}
+                            feedItems={feedItems}
+                            isSendingLikeForId={isSendingLikeForId}
+                            onSendLike={handleSendLike}
+                            onRefreshFeed={loadFeed}
+                            feedError={feedError}
+                            onPressShareWorkout={() => shareWorkoutSheetRef.current?.present()}
+                            onPressCreateChallenge={() => challengeSheetRef.current?.present()}
+                            labels={{
+                                challenge: {
+                                    sectionTitle: t('socialHub.challenge.sectionTitle'),
+                                    swipeHint: t('socialHub.challenge.swipeHint'),
+                                    noParticipants: t('socialHub.challenge.noParticipants'),
+                                    details: t('socialHub.challenge.details'),
+                                    addSession: t('socialHub.challenge.addSession'),
+                                    daysRemaining: (count) => t('socialHub.challenge.daysRemaining', { count }),
+                                    goalLabel: (goalType) => t(`socialHub.challenge.goalTypes.${goalType}`),
+                                },
+                                feed: {
+                                    sectionTitle: t('socialHub.feed.sectionTitle'),
+                                    refresh: t('socialHub.feed.refresh'),
+                                    emptyTitle: t('socialHub.feed.emptyTitle'),
+                                    emptySubtitle: t('socialHub.feed.emptySubtitle'),
+                                    like: t('socialHub.feed.likeAction'),
+                                    sending: t('socialHub.feed.likeSending'),
+                                    justNow: t('socialHub.feed.time.justNow'),
+                                    minutesAgo: (count) => t('socialHub.feed.time.minutesAgo', { count }),
+                                    hoursAgo: (count) => t('socialHub.feed.time.hoursAgo', { count }),
+                                    daysAgo: (count) => t('socialHub.feed.time.daysAgo', { count }),
+                                },
+                                cards: {
+                                    shareTitle: t('socialHub.cards.shareTitle'),
+                                    shareSubtitle: t('socialHub.cards.shareSubtitle'),
+                                    challengeTitle: t('socialHub.cards.challengeTitle'),
+                                    challengeSubtitle: t('socialHub.cards.challengeSubtitle'),
+                                },
+                                loading: t('common.loading'),
+                            }}
+                        />
+                    )}
+
+                    {activeTopTab === 'challenges' && (
+                        <ChallengesTabPage
+                            challenges={activeChallenges}
+                            error={challengesError}
+                            onPressCreateChallenge={() => challengeSheetRef.current?.present()}
+                            onPressAddSession={() => router.push('/workout' as any)}
+                            labels={{
+                                pageTitle: t('socialHub.pages.challenges.title'),
+                                pageSubtitle: t('socialHub.pages.challenges.subtitle'),
+                                createChallenge: t('socialHub.pages.challenges.create'),
+                                noChallengesTitle: t('socialHub.pages.challenges.emptyTitle'),
+                                noChallengesSubtitle: t('socialHub.pages.challenges.emptySubtitle'),
+                                participantsLabel: t('socialHub.pages.challenges.participantsLabel'),
+                                progressLabel: t('socialHub.pages.challenges.progressLabel'),
+                                detailsLabel: t('socialHub.challenge.details'),
                                 addSession: t('socialHub.challenge.addSession'),
                                 daysRemaining: (count) => t('socialHub.challenge.daysRemaining', { count }),
                                 goalLabel: (goalType) => t(`socialHub.challenge.goalTypes.${goalType}`),
                             }}
                         />
-                        {!!challengesError && <Text style={styles.errorText}>{challengesError}</Text>}
-                    </Animated.View>
+                    )}
 
-                    <Animated.View entering={FadeInDown.delay(170).springify()} style={styles.section} onLayout={registerSectionOffset('friends')}>
-                        <FriendsSection
-                            hasFriends={friends.length > 0}
+                    {activeTopTab === 'friends' && (
+                        <FriendsTabPage
+                            friends={friends}
+                            pendingRequests={pendingRequests}
                             profileId={profile?.id}
-                            leaderboardRows={leaderboardRows as any}
                             showAddFriendPanel={showAddFriendPanel}
                             setShowAddFriendPanel={setShowAddFriendPanel}
                             searchQuery={searchQuery}
@@ -640,61 +788,58 @@ export default function SocialHubScreen() {
                             searchResults={searchResults}
                             onSendRequest={handleSendRequest}
                             onInvite={handleInviteFriend}
+                            onRespondToRequest={handleRespondToRequest}
+                            onRemoveFriend={handleRemoveFriend}
                             labels={{
-                                sectionTitle: t('socialHub.friends.sectionTitle'),
-                                period: t('socialHub.friends.period'),
-                                emptyTitle: t('socialHub.friends.emptyTitle'),
-                                emptySubtitle: t('socialHub.friends.emptySubtitle'),
+                                pageTitle: t('socialHub.pages.friends.title'),
+                                pageSubtitle: isHydratingFriendsTab ? t('common.loading') : t('socialHub.pages.friends.subtitle'),
                                 addFriend: t('socialHub.friends.addFriend'),
                                 invite: t('socialHub.friends.invite'),
                                 searchPlaceholder: t('socialHub.friends.searchPlaceholder'),
+                                pendingTitle: (count) => t('social.pendingRequestsTitle', { count }),
+                                myFriendsTitle: (count) => t('social.myFriends', { count }),
+                                accept: t('common.confirm'),
+                                decline: t('common.cancel'),
+                                remove: t('common.delete'),
+                                noFriendsTitle: t('socialHub.friends.emptyTitle'),
+                                noFriendsSubtitle: t('socialHub.friends.emptySubtitle'),
+                                noRequests: t('socialHub.pages.friends.noRequests'),
                                 badgeFriend: t('socialHub.friends.badgeFriend'),
                                 badgePending: t('socialHub.friends.badgePending'),
                                 addAction: t('socialHub.friends.addAction'),
+                                meBadge: t('socialHub.friends.meBadge'),
+                                workoutsWeek: (count) => t('socialHub.friends.workoutsWeek', { count }),
+                                xpSuffix: t('socialHub.friends.xpSuffix'),
+                            }}
+                        />
+                    )}
+
+                    {activeTopTab === 'leaderboard' && (
+                        <LeaderboardTabPage
+                            isGlobal={isGlobalLeaderboardActive}
+                            onShowFriends={handleShowFriendsLeaderboard}
+                            onShowGlobal={handleShowGlobalLeaderboard}
+                            rows={isGlobalLeaderboardActive ? globalLeaderboardRows : friendsLeaderboardRows}
+                            loadingGlobal={isLoadingGlobalLeaderboard}
+                            error={isGlobalLeaderboardActive
+                                ? (globalLeaderboardError ? t(`social.errorLeaderboard${globalLeaderboardError === 'network' ? 'Network' : 'Server'}`) : null)
+                                : (friendsLeaderboardError ? t(`social.errorLeaderboard${friendsLeaderboardError === 'network' ? 'Network' : 'Server'}`) : null)}
+                            profileId={profile?.id}
+                            labels={{
+                                pageTitle: t('socialHub.pages.leaderboard.title'),
+                                pageSubtitle: isHydratingLeaderboardTab ? t('common.loading') : t('socialHub.pages.leaderboard.subtitle'),
+                                friendsTab: t('social.friends'),
+                                globalTab: t('social.global'),
+                                loadingGlobal: t('socialHub.pages.leaderboard.loadingGlobal'),
+                                emptyFriends: t('social.emptyLeaderboardFriends'),
+                                emptyGlobal: t('social.emptyLeaderboardGlobal'),
                                 workoutsWeek: (count) => t('socialHub.friends.workoutsWeek', { count }),
                                 meBadge: t('socialHub.friends.meBadge'),
                                 xpSuffix: t('socialHub.friends.xpSuffix'),
                             }}
                         />
-                    </Animated.View>
-
-                    <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.section} onLayout={registerSectionOffset('feed')}>
-                        <FeedSection
-                            items={feedItems}
-                            isSendingLikeForId={isSendingLikeForId}
-                            onSendLike={handleSendLike}
-                            onRefresh={loadFeed}
-                            error={feedError}
-                            labels={{
-                                sectionTitle: t('socialHub.feed.sectionTitle'),
-                                refresh: t('socialHub.feed.refresh'),
-                                emptyTitle: t('socialHub.feed.emptyTitle'),
-                                emptySubtitle: t('socialHub.feed.emptySubtitle'),
-                                like: t('socialHub.feed.likeAction'),
-                                sending: t('socialHub.feed.likeSending'),
-                                justNow: t('socialHub.feed.time.justNow'),
-                                minutesAgo: (count) => t('socialHub.feed.time.minutesAgo', { count }),
-                                hoursAgo: (count) => t('socialHub.feed.time.hoursAgo', { count }),
-                                daysAgo: (count) => t('socialHub.feed.time.daysAgo', { count }),
-                            }}
-                        />
-                    </Animated.View>
-
-                    <Animated.View entering={FadeInDown.delay(230).springify()} style={styles.section} onLayout={registerSectionOffset('actions')}>
-                        <ActionCards
-                            onPressShareWorkout={() => shareWorkoutSheetRef.current?.present()}
-                            onPressCreateChallenge={() => challengeSheetRef.current?.present()}
-                            labels={{
-                                shareTitle: t('socialHub.cards.shareTitle'),
-                                shareSubtitle: t('socialHub.cards.shareSubtitle'),
-                                challengeTitle: t('socialHub.cards.challengeTitle'),
-                                challengeSubtitle: t('socialHub.cards.challengeSubtitle'),
-                            }}
-                        />
-                    </Animated.View>
-
-                    <View style={styles.bottomSpacer} />
-                </ScrollView>
+                    )}
+                </View>
 
                 <CreateChallengeSheet
                     sheetRef={challengeSheetRef}
@@ -748,12 +893,8 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.bg,
     },
-    scroll: {
-        flex: 1,
-    },
-    content: {
+    topbarWrap: {
         paddingHorizontal: Spacing.lg,
-        paddingBottom: 24,
     },
     topbar: {
         flexDirection: 'row',
@@ -782,18 +923,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    section: {
-        marginBottom: Spacing.md,
-    },
-    hubLoadingRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: Spacing.xs,
-        marginBottom: Spacing.sm,
-    },
-    hubLoadingText: {
-        color: Colors.muted,
-        fontSize: FontSize.xs,
+    pageContent: {
+        flex: 1,
+        paddingHorizontal: Spacing.lg,
     },
     centeredState: {
         flex: 1,
@@ -827,8 +959,5 @@ const styles = StyleSheet.create({
     errorText: {
         color: Colors.error,
         fontSize: FontSize.xs,
-    },
-    bottomSpacer: {
-        height: 96,
     },
 });
