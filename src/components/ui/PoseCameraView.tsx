@@ -37,6 +37,7 @@ import {
     isPoseValid,
     detectPlankPosition,
     detectEllipticalMovement,
+    type RepEventMetadata,
     type PlankDebugInfo,
     type EllipticalState,
 } from '../../utils/poseDetection';
@@ -68,11 +69,12 @@ interface PoseCameraViewProps {
     facing?: 'front' | 'back';
     showDebugOverlay?: boolean;
     exerciseType?: ExerciseType;
-    onRepDetected?: (newCount: number, feedback?: string) => void;
+    onRepDetected?: (newCount: number, feedback?: string, repEvent?: RepEventMetadata) => void;
     onPoseDetected?: (landmarks: PoseLandmarks | null) => void;
     onPlankStateChange?: (isInPlank: boolean, confidence: number, debugInfo?: PlankDebugInfo) => void;
     onEllipticalStateChange?: (state: EllipticalState) => void;
     onCameraReady?: () => void;
+    onModelReady?: () => void;
     currentCount?: number;
     style?: any;
     isActive?: boolean;
@@ -88,6 +90,7 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
     onPlankStateChange,
     onEllipticalStateChange,
     onCameraReady,
+    onModelReady,
     currentCount = 0,
     style,
     isActive = true,
@@ -96,6 +99,7 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
     const { hasPermission, requestPermission } = useCameraPermission();
     const device = useCameraDevice(facing);
     const [isReady, setIsReady] = useState(false);
+    const [isModelReady, setIsModelReady] = useState(false);
     const [currentPose, setCurrentPose] = useState<PoseLandmarks | null>(null);
     const [cameraLayout, setCameraLayout] = useState({ width: 1, height: 1 });
     const [poseStatus, setPoseStatus] = useState<'detecting' | 'pose' | 'no-pose'>('detecting');
@@ -103,6 +107,7 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
     
     const countRef = useRef(currentCount);
     const exerciseTypeRef = useRef(exerciseType);
+    const modelReadyRef = useRef(false);
 
     // Update refs when props change
     useEffect(() => {
@@ -129,6 +134,12 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
         {
             onResults: useCallback((result: PoseDetectionResultBundle) => {
                 try {
+                    if (!modelReadyRef.current) {
+                        modelReadyRef.current = true;
+                        setIsModelReady(true);
+                        onModelReady?.();
+                    }
+
                     // Get the first detected pose (if any)
                     // Structure: result.results[0]?.landmarks[0] -> Landmark[]
                     const poseResult = result.results?.[0];
@@ -172,7 +183,7 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
                             if (repResult.count > countRef.current) {
                                 countRef.current = repResult.count;
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                onRepDetected?.(repResult.count, repResult.feedback);
+                                onRepDetected?.(repResult.count, repResult.feedback, repResult.repEvent);
                             }
                         }
                     } else {
@@ -190,14 +201,14 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
                     console.error('[PoseCamera] Error processing pose results:', error);
                     setPoseStatus('no-pose');
                 }
-            }, [onPoseDetected, onRepDetected, onPlankStateChange, onEllipticalStateChange, debugPlank]),
+            }, [onPoseDetected, onRepDetected, onPlankStateChange, onEllipticalStateChange, onModelReady, debugPlank]),
             onError: useCallback((error: any) => {
                 console.error('[PoseCamera] Detection error:', error.message);
                 setPoseStatus('no-pose');
             }, []),
         },
         RunningMode.LIVE_STREAM,
-        'pose_landmarker_lite.task',
+        'pose_landmarker_full.task',
         {
             numPoses: 1,
             minPoseDetectionConfidence: 0.5,
@@ -224,7 +235,6 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
 
     // Handle camera ready
     const handleCameraReady = useCallback(() => {
-        console.log('[PoseCamera] Camera ready');
         setIsReady(true);
         onCameraReady?.();
     }, [onCameraReady]);
@@ -370,10 +380,12 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
             )}
 
             {/* Loading overlay */}
-            {!isReady && (
+            {(!isReady || !isModelReady) && (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color={Colors.cta} />
-                    <Text style={styles.loadingText}>{t('common.loading')}</Text>
+                    <Text style={styles.loadingText}>
+                        {!isReady ? t('common.loading') : t('repCounter.modelLoading')}
+                    </Text>
                 </View>
             )}
         </View>

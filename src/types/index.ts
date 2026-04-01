@@ -48,14 +48,30 @@ export interface BaseEntry {
   healthConnectId?: string; // ID de la séance Health Connect si importée
 }
 
+export interface RepTimelinePoint {
+  repNumber: number;
+  startTimeMs: number;
+  endTimeMs: number;
+  durationMs: number;
+  restMsBefore: number | null;
+}
+
+export interface RepTimelineData {
+  sessionStartedAt: string; // ISO date
+  sessionEndedAt: string; // ISO date
+  reps: RepTimelinePoint[];
+}
+
 // Séance à la maison
 export interface HomeWorkoutEntry extends BaseEntry {
   type: 'home';
   name?: string;
+  trackedExerciseId?: string;
   exercises: string; // Texte libre: "Pompes: 3x10\nSquats: 3x20"
   absBlock?: string; // Bloc abdos optionnel
   totalReps?: number; // Total des répétitions pour le tracking des quêtes
   durationMinutes?: number; // Durée de la séance en minutes
+  repTimeline?: RepTimelineData;
 }
 
 // Course

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { LineChart } from 'react-native-gifted-charts';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -42,6 +43,10 @@ import {
   Navigation,
   Mountain,
   Share2,
+  ChevronDown,
+  ChevronUp,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react-native';
 import { shareGPXFile } from '../../src/services/gpxExport';
 import { getMapLibreModule } from '../../src/services/maplibre';
@@ -62,6 +67,8 @@ import type {
   MeasureEntry,
   CustomSportEntry,
   SportConfig,
+  RepTimelineData,
+  RepTimelinePoint,
 } from '../../src/types';
 
 const { width: SW } = Dimensions.get('window');
@@ -187,6 +194,75 @@ function computeSessionStats(entry: Entry, allEntries: Entry[]) {
   };
 }
 
+interface RepInsights {
+  reps: RepTimelinePoint[];
+  sessionStartMs: number;
+  averageRestMs: number | null;
+  totalActiveMs: number;
+  totalRestMs: number;
+  fastestRepMs: number;
+  slowestRepMs: number;
+  averageRepMs: number;
+  consistencyScore: number;
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+function computeRepInsights(repTimeline?: RepTimelineData | null): RepInsights | null {
+  if (!repTimeline?.reps?.length) {
+    return null;
+  }
+
+  const reps = [...repTimeline.reps]
+    .filter((rep) => rep.endTimeMs >= rep.startTimeMs)
+    .sort((a, b) => a.repNumber - b.repNumber);
+
+  if (!reps.length) {
+    return null;
+  }
+
+  const durations = reps.map((rep) => Math.max(0, rep.durationMs));
+  const restDurations = reps
+    .map((rep, index) => {
+      if (index === 0) return null;
+
+      if (rep.restMsBefore != null) {
+        return Math.max(0, rep.restMsBefore);
+      }
+
+      const previous = reps[index - 1];
+      return Math.max(0, rep.startTimeMs - previous.endTimeMs);
+    })
+    .filter((value): value is number => value != null);
+
+  const totalActiveMs = durations.reduce((sum, value) => sum + value, 0);
+  const totalRestMs = restDurations.reduce((sum, value) => sum + value, 0);
+  const averageRepMs = totalActiveMs / durations.length;
+  const averageRestMs = restDurations.length ? totalRestMs / restDurations.length : null;
+  const fastestRepMs = Math.min(...durations);
+  const slowestRepMs = Math.max(...durations);
+
+  const variance = durations.reduce((sum, value) => sum + Math.pow(value - averageRepMs, 2), 0) / durations.length;
+  const stdDev = Math.sqrt(variance);
+  const coefficientOfVariation = averageRepMs > 0 ? stdDev / averageRepMs : 0;
+  const consistencyScore = Math.round(clamp((1 - coefficientOfVariation) * 100, 0, 100));
+
+  const parsedStart = Date.parse(repTimeline.sessionStartedAt);
+  const sessionStartMs = Number.isFinite(parsedStart) ? parsedStart : reps[0].startTimeMs;
+
+  return {
+    reps,
+    sessionStartMs,
+    averageRestMs,
+    totalActiveMs,
+    totalRestMs,
+    fastestRepMs,
+    slowestRepMs,
+    averageRepMs,
+    consistencyScore,
+  };
+}
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -220,11 +296,81 @@ export default function WorkoutDetailScreen() {
     return computeSessionStats(entry, entries);
   }, [entry, entries]);
 
+  const homeEntry = useMemo(() => {
+    if (entry?.type !== 'home') return null;
+    return entry as HomeWorkoutEntry;
+  }, [entry]);
+
+  const repInsights = useMemo(() => {
+    return computeRepInsights(homeEntry?.repTimeline);
+  }, [homeEntry?.repTimeline]);
+
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [showRepInsights, setShowRepInsights] = useState(true);
+  const [chartZoom, setChartZoom] = useState(1);
+  const [chartWidth, setChartWidth] = useState(0);
+  const [selectedRepIndex, setSelectedRepIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!repInsights?.reps.length) {
+      setSelectedRepIndex(null);
+      return;
+    }
+
+    setSelectedRepIndex(repInsights.reps.length - 1);
+  }, [repInsights?.reps.length]);
+
+  const formatClock = useCallback((totalSeconds: number) => {
+    const safeSeconds = Math.max(0, Math.round(totalSeconds));
+    const minutes = Math.floor(safeSeconds / 60);
+    const seconds = safeSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  }, []);
+
+  const formatRepDuration = useCallback((valueMs: number) => {
+    return `${(valueMs / 1000).toFixed(1)} ${t('common.seconds')}`;
+  }, [t]);
+
+  const formatTotalDuration = useCallback((valueMs: number) => {
+    return formatClock(valueMs / 1000);
+  }, [formatClock]);
+
+  const chartSpacing = useMemo(() => Math.round(28 * chartZoom), [chartZoom]);
+
+  const repChartData = useMemo(() => {
+    if (!repInsights) return [];
+
+    return repInsights.reps.map((rep, index) => {
+      const secondsFromStart = (rep.endTimeMs - repInsights.sessionStartMs) / 1000;
+      const shouldLabel = index === 0 || index === repInsights.reps.length - 1 || (index + 1) % 5 === 0;
+
+      return {
+        value: rep.repNumber,
+        label: shouldLabel ? formatClock(secondsFromStart) : '',
+        dataPointColor: selectedRepIndex === index ? C.gold : C.violet,
+        onPress: () => setSelectedRepIndex(index),
+      };
+    });
+  }, [repInsights, formatClock, selectedRepIndex]);
+
+  const selectedRep = useMemo(() => {
+    if (!repInsights || selectedRepIndex == null) return null;
+    return repInsights.reps[selectedRepIndex] ?? null;
+  }, [repInsights, selectedRepIndex]);
+
+  const selectedRepRestMs = useMemo(() => {
+    if (!repInsights || selectedRepIndex == null || selectedRepIndex === 0) return null;
+
+    const rep = repInsights.reps[selectedRepIndex];
+    if (rep.restMsBefore != null) return Math.max(0, rep.restMsBefore);
+
+    const previous = repInsights.reps[selectedRepIndex - 1];
+    return Math.max(0, rep.startTimeMs - previous.endTimeMs);
+  }, [repInsights, selectedRepIndex]);
 
   const fetchAnalysis = useCallback(async (force: boolean = false) => {
     if (!entry || !settings.aiWorkoutEnabled || !isConnected) return;
@@ -652,6 +798,132 @@ export default function WorkoutDetailScreen() {
           {renderContent()}
         </Animated.View>
 
+        {/* Rep insights (tracked rep-counter sessions) */}
+        {entry.type === 'home' && (
+          <Animated.View entering={FadeInDown.delay(260)} style={styles.repInsightsCard}>
+            <TouchableOpacity
+              style={styles.repInsightsHeader}
+              onPress={() => setShowRepInsights((prev) => !prev)}
+              accessibilityLabel={showRepInsights ? t('workout.detail.repInsights.collapse') : t('workout.detail.repInsights.expand')}
+            >
+              <View style={styles.repInsightsHeaderLeft}>
+                <TrendingUp size={16} color={C.violet} />
+                <Text style={styles.repInsightsTitle}>{t('workout.detail.repInsights.title')}</Text>
+              </View>
+              {showRepInsights ? <ChevronUp size={18} color={C.textMuted} /> : <ChevronDown size={18} color={C.textMuted} />}
+            </TouchableOpacity>
+
+            {showRepInsights && (
+              repInsights ? (
+                <>
+                  <View style={styles.repMetricGrid}>
+                    <View style={styles.repMetricCard}>
+                      <Text style={styles.repMetricLabel}>{t('workout.detail.repInsights.averageRest')}</Text>
+                      <Text style={styles.repMetricValue}>
+                        {repInsights.averageRestMs == null ? t('workout.detail.repInsights.notAvailable') : formatRepDuration(repInsights.averageRestMs)}
+                      </Text>
+                    </View>
+                    <View style={styles.repMetricCard}>
+                      <Text style={styles.repMetricLabel}>{t('workout.detail.repInsights.averageRep')}</Text>
+                      <Text style={styles.repMetricValue}>{formatRepDuration(repInsights.averageRepMs)}</Text>
+                    </View>
+                    <View style={styles.repMetricCard}>
+                      <Text style={styles.repMetricLabel}>{t('workout.detail.repInsights.totalActive')}</Text>
+                      <Text style={styles.repMetricValue}>{formatTotalDuration(repInsights.totalActiveMs)}</Text>
+                    </View>
+                    <View style={styles.repMetricCard}>
+                      <Text style={styles.repMetricLabel}>{t('workout.detail.repInsights.totalRest')}</Text>
+                      <Text style={styles.repMetricValue}>{formatTotalDuration(repInsights.totalRestMs)}</Text>
+                    </View>
+                    <View style={styles.repMetricCard}>
+                      <Text style={styles.repMetricLabel}>{t('workout.detail.repInsights.fastestRep')}</Text>
+                      <Text style={styles.repMetricValue}>{formatRepDuration(repInsights.fastestRepMs)}</Text>
+                    </View>
+                    <View style={styles.repMetricCard}>
+                      <Text style={styles.repMetricLabel}>{t('workout.detail.repInsights.slowestRep')}</Text>
+                      <Text style={styles.repMetricValue}>{formatRepDuration(repInsights.slowestRepMs)}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.consistencyRow}>
+                    <Text style={styles.consistencyLabel}>{t('workout.detail.repInsights.consistency')}</Text>
+                    <Text style={styles.consistencyValue}>
+                      {t('workout.detail.repInsights.consistencyValue', { value: repInsights.consistencyScore })}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={styles.repChartWrap}
+                    onLayout={(event) => setChartWidth(event.nativeEvent.layout.width)}
+                  >
+                    <View style={styles.repChartHeader}>
+                      <Text style={styles.repChartTitle}>{t('workout.detail.repInsights.chartTitle')}</Text>
+                      <View style={styles.repChartZoomControls}>
+                        <TouchableOpacity
+                          style={styles.repChartZoomBtn}
+                          onPress={() => setChartZoom((prev) => clamp(prev - 0.2, 0.8, 1.8))}
+                          accessibilityLabel={t('workout.detail.repInsights.zoomOut')}
+                        >
+                          <ZoomOut size={14} color={C.textSub} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.repChartZoomBtn}
+                          onPress={() => setChartZoom((prev) => clamp(prev + 0.2, 0.8, 1.8))}
+                          accessibilityLabel={t('workout.detail.repInsights.zoomIn')}
+                        >
+                          <ZoomIn size={14} color={C.textSub} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <LineChart
+                      data={repChartData}
+                      spacing={chartSpacing}
+                      initialSpacing={16}
+                      thickness={3}
+                      color={C.teal}
+                      dataPointsColor={C.violet}
+                      dataPointsRadius={4}
+                      noOfSections={4}
+                      maxValue={Math.max(repChartData.length, 1)}
+                      yAxisColor={C.border}
+                      xAxisColor={C.border}
+                      yAxisTextStyle={styles.repChartAxisText}
+                      xAxisLabelTextStyle={styles.repChartAxisText}
+                      rulesColor={C.border}
+                      hideRules={false}
+                      adjustToWidth={false}
+                      disableScroll={false}
+                      focusEnabled
+                      width={Math.max(Math.max(chartWidth - 24, 220), repChartData.length * chartSpacing + 30)}
+                    />
+                  </View>
+
+                  {selectedRep && (
+                    <View style={styles.repTooltip}>
+                      <Text style={styles.repTooltipTitle}>{t('workout.detail.repInsights.tooltipRep', { value: selectedRep.repNumber })}</Text>
+                      <View style={styles.repTooltipRow}>
+                        <Text style={styles.repTooltipLabel}>{t('workout.detail.repInsights.tooltipDuration')}</Text>
+                        <Text style={styles.repTooltipValue}>{formatRepDuration(selectedRep.durationMs)}</Text>
+                      </View>
+                      <View style={styles.repTooltipRow}>
+                        <Text style={styles.repTooltipLabel}>{t('workout.detail.repInsights.tooltipRest')}</Text>
+                        <Text style={styles.repTooltipValue}>
+                          {selectedRepRestMs == null ? t('workout.detail.repInsights.notAvailable') : formatRepDuration(selectedRepRestMs)}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </>
+              ) : (
+                <View style={styles.repInsightsEmpty}>
+                  <Text style={styles.repInsightsEmptyText}>{t('workout.detail.repInsights.unavailable')}</Text>
+                </View>
+              )
+            )}
+          </Animated.View>
+        )}
+
         {/* AI Analysis Section */}
         {isSport && settings.aiWorkoutEnabled && (
           <Animated.View entering={FadeInDown.delay(350)} style={styles.aiSection}>
@@ -773,6 +1045,158 @@ const styles = StyleSheet.create({
   },
   statLabel: { flex: 1, fontSize: T.sm, fontWeight: W.med, color: C.textSub },
   statValue: { fontSize: T.md, fontWeight: W.bold, color: C.text },
+
+  // Rep insights
+  repInsightsCard: {
+    backgroundColor: C.surface,
+    borderRadius: R.xxl,
+    borderWidth: 1,
+    borderColor: C.violetBorder,
+    padding: S.lg,
+    gap: S.md,
+    marginBottom: S.lg,
+  },
+  repInsightsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  repInsightsHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.sm,
+  },
+  repInsightsTitle: {
+    fontSize: T.md,
+    fontWeight: W.bold,
+    color: C.violet,
+  },
+  repMetricGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: S.sm,
+  },
+  repMetricCard: {
+    width: '48%',
+    backgroundColor: C.surfaceUp,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: R.lg,
+    paddingVertical: S.sm,
+    paddingHorizontal: S.md,
+    gap: S.xs,
+  },
+  repMetricLabel: {
+    fontSize: T.xs,
+    fontWeight: W.semi,
+    color: C.textMuted,
+  },
+  repMetricValue: {
+    fontSize: T.sm,
+    fontWeight: W.bold,
+    color: C.text,
+  },
+  consistencyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: C.surfaceUp,
+    borderColor: C.border,
+    borderWidth: 1,
+    borderRadius: R.lg,
+    paddingVertical: S.sm,
+    paddingHorizontal: S.md,
+  },
+  consistencyLabel: {
+    fontSize: T.sm,
+    color: C.textSub,
+    fontWeight: W.semi,
+  },
+  consistencyValue: {
+    fontSize: T.md,
+    color: C.teal,
+    fontWeight: W.bold,
+  },
+  repChartWrap: {
+    backgroundColor: C.surfaceUp,
+    borderColor: C.border,
+    borderWidth: 1,
+    borderRadius: R.lg,
+    padding: S.sm,
+    gap: S.sm,
+    overflow: 'hidden',
+  },
+  repChartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  repChartTitle: {
+    fontSize: T.sm,
+    color: C.text,
+    fontWeight: W.semi,
+  },
+  repChartZoomControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.xs,
+  },
+  repChartZoomBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: R.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  repChartAxisText: {
+    color: C.textMuted,
+    fontSize: T.nano,
+  },
+  repTooltip: {
+    backgroundColor: C.surfaceUp,
+    borderColor: C.borderUp,
+    borderWidth: 1,
+    borderRadius: R.lg,
+    paddingVertical: S.sm,
+    paddingHorizontal: S.md,
+    gap: S.xs,
+  },
+  repTooltipTitle: {
+    fontSize: T.sm,
+    color: C.violet,
+    fontWeight: W.bold,
+  },
+  repTooltipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  repTooltipLabel: {
+    fontSize: T.xs,
+    color: C.textMuted,
+    fontWeight: W.semi,
+  },
+  repTooltipValue: {
+    fontSize: T.sm,
+    color: C.text,
+    fontWeight: W.bold,
+  },
+  repInsightsEmpty: {
+    backgroundColor: C.surfaceUp,
+    borderColor: C.border,
+    borderWidth: 1,
+    borderRadius: R.lg,
+    paddingVertical: S.md,
+    paddingHorizontal: S.md,
+  },
+  repInsightsEmptyText: {
+    fontSize: T.sm,
+    color: C.textMuted,
+    lineHeight: T.sm * 1.5,
+  },
 
   // Tag badge
   tagBadge: {

@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { RC, SP, RAD, FONT, W, SCREEN_WIDTH } from '../constants';
 import { ProgressRing } from './ProgressRing';
 import type { ExerciseConfig, DetectionMode } from '../types';
-import type { PlankDebugInfo, EllipticalState } from '@utils/poseDetection';
+import type { PlankDebugInfo, EllipticalState, RepEventMetadata } from '@utils/poseDetection';
 
 interface CountingScreenProps {
     exercise: ExerciseConfig;
@@ -48,7 +48,7 @@ interface CountingScreenProps {
     onToggleTracking: () => void;
     onReset: () => void;
     onFinish: () => void;
-    onCameraRepDetected: (count: number, feedback?: string) => void;
+    onCameraRepDetected: (count: number, feedback?: string, repEvent?: RepEventMetadata) => void;
     onPlankStateChange: (inPlank: boolean, conf: number, debug?: PlankDebugInfo) => void;
     onEllipticalStateChange: (state: EllipticalState) => void;
 }

@@ -29,6 +29,7 @@ export function EllipticalCalibration({
     onBegin,
 }: EllipticalCalibrationProps) {
     const { t } = useTranslation();
+    const [isModelReady, setIsModelReady] = React.useState(false);
 
     return (
         <View style={s.container}>
@@ -40,6 +41,7 @@ export function EllipticalCalibration({
                     exerciseType="elliptical"
                     currentCount={0}
                     onRepDetected={() => {}}
+                    onModelReady={() => setIsModelReady(true)}
                     isActive={phase !== 'none' && phase !== 'complete'}
                     style={{ width: 320, height: 240 }}
                 />
@@ -58,9 +60,24 @@ export function EllipticalCalibration({
                             <Text style={s.errorText}>{t('repCounter.elliptical.calibrationFailed')}</Text>
                         </View>
                     )}
-                    <TouchableOpacity onPress={onBegin} activeOpacity={0.88} style={s.btn}>
-                        <LinearGradient colors={[RC.cta1, RC.cta2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.btnGrad}>
-                            <Text style={s.btnText}>{t('repCounter.elliptical.letsGo')}</Text>
+                    {!isModelReady && (
+                        <View style={s.loadingHint}>
+                            <Text style={s.loadingHintText}>{t('repCounter.modelPreparing')}</Text>
+                        </View>
+                    )}
+                    <TouchableOpacity
+                        onPress={onBegin}
+                        activeOpacity={isModelReady ? 0.88 : 1}
+                        disabled={!isModelReady}
+                        style={isModelReady ? s.btn : [s.btn, s.btnDisabled]}
+                    >
+                        <LinearGradient
+                            colors={isModelReady ? [RC.cta1, RC.cta2] : [RC.overlayUp, RC.overlay]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={s.btnGrad}
+                        >
+                            <Text style={s.btnText}>{isModelReady ? t('repCounter.elliptical.letsGo') : t('repCounter.modelLoading')}</Text>
                             <ChevronRight size={20} color={RC.white} />
                         </LinearGradient>
                     </TouchableOpacity>
@@ -174,8 +191,18 @@ const s = StyleSheet.create({
     },
     errorText: { color: RC.error, fontSize: FONT.md, textAlign: 'center' },
     btn:      { borderRadius: RAD.full, overflow: 'hidden' },
+    btnDisabled: { opacity: 0.55 },
     btnGrad:  { flexDirection: 'row', alignItems: 'center', gap: SP.md, paddingVertical: 16, paddingHorizontal: 32 },
     btnText:  { fontSize: FONT.lg, fontWeight: W.bold, color: RC.white },
+    loadingHint: {
+        backgroundColor: RC.surface,
+        borderColor: RC.border,
+        borderWidth: 1,
+        borderRadius: RAD.lg,
+        paddingVertical: SP.sm,
+        paddingHorizontal: SP.md,
+    },
+    loadingHintText: { fontSize: FONT.sm, color: RC.textMuted, fontWeight: W.med },
 
     countdownCircle: {
         width: 100, height: 100, borderRadius: 50,

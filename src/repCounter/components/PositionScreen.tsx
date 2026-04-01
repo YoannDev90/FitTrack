@@ -10,6 +10,7 @@ import { Play, Smartphone, Camera, Timer, ArrowDown, Volume2 } from 'lucide-reac
 import { useTranslation } from 'react-i18next';
 import { RC, SP, RAD, FONT, W } from '../constants';
 import type { ExerciseConfig, DetectionMode } from '../types';
+import { PoseCameraView } from '@components/ui';
 
 interface PositionScreenProps {
     exercise: ExerciseConfig;
@@ -20,6 +21,11 @@ interface PositionScreenProps {
 export function PositionScreen({ exercise, detectionMode, onReady }: PositionScreenProps) {
     const { t } = useTranslation();
     const float = useSharedValue(0);
+    const [isModelReady, setIsModelReady] = React.useState(detectionMode !== 'camera');
+
+    useEffect(() => {
+        setIsModelReady(detectionMode !== 'camera');
+    }, [detectionMode, exercise.id]);
 
     useEffect(() => {
         float.value = withRepeat(
@@ -43,8 +49,25 @@ export function PositionScreen({ exercise, detectionMode, onReady }: PositionScr
         : exercise.isTimeBased ? Timer
         : Smartphone;
 
+    const canStart = detectionMode !== 'camera' || isModelReady;
+
     return (
         <Animated.View entering={FadeIn} style={s.container}>
+            {detectionMode === 'camera' && (
+                <View style={s.hiddenCam}>
+                    <PoseCameraView
+                        facing="front"
+                        showDebugOverlay={false}
+                        exerciseType={exercise.id as any}
+                        currentCount={0}
+                        onRepDetected={() => {}}
+                        onModelReady={() => setIsModelReady(true)}
+                        isActive={true}
+                        style={{ width: 320, height: 240 }}
+                    />
+                </View>
+            )}
+
             {/* Floating icon */}
             <Animated.View style={[s.iconWrap, floatStyle]}>
                 <View style={[s.iconCircle, { borderColor: `${exercise.color}55` }]}>
@@ -67,6 +90,12 @@ export function PositionScreen({ exercise, detectionMode, onReady }: PositionScr
                         ? t('repCounter.cameraNote')
                         : t('repCounter.whenReady')}
                 </Text>
+
+                {detectionMode === 'camera' && !isModelReady && (
+                    <View style={s.loadingHint}>
+                        <Text style={s.loadingHintText}>{t('repCounter.modelPreparing')}</Text>
+                    </View>
+                )}
             </View>
 
             {/* Volume hint for plank */}
@@ -78,14 +107,19 @@ export function PositionScreen({ exercise, detectionMode, onReady }: PositionScr
             )}
 
             {/* CTA */}
-            <TouchableOpacity onPress={onReady} activeOpacity={0.88} style={s.btn}>
+            <TouchableOpacity
+                onPress={onReady}
+                activeOpacity={canStart ? 0.88 : 1}
+                disabled={!canStart}
+                style={canStart ? s.btn : [s.btn, s.btnDisabled]}
+            >
                 <LinearGradient
-                    colors={[exercise.color, `${exercise.color}cc`]}
+                    colors={canStart ? [exercise.color, `${exercise.color}cc`] : [RC.overlayUp, RC.overlay]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={s.btnGrad}
                 >
                     <Play size={22} color={RC.white} fill={RC.white} />
-                    <Text style={s.btnText}>{t('common.start')}</Text>
+                    <Text style={s.btnText}>{canStart ? t('common.start') : t('repCounter.modelLoading')}</Text>
                 </LinearGradient>
             </TouchableOpacity>
         </Animated.View>
@@ -123,7 +157,18 @@ const s = StyleSheet.create({
         borderWidth: 1, borderColor: RC.emberBorder,
     },
     volumeText: { fontSize: FONT.sm, color: RC.emberMid, fontWeight: W.med },
+    hiddenCam: { position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' },
+    loadingHint: {
+        backgroundColor: RC.surface,
+        borderColor: RC.border,
+        borderWidth: 1,
+        borderRadius: RAD.lg,
+        paddingVertical: SP.sm,
+        paddingHorizontal: SP.md,
+    },
+    loadingHintText: { fontSize: FONT.sm, color: RC.textMuted, fontWeight: W.med },
     btn:      { borderRadius: RAD.full, overflow: 'hidden' },
+    btnDisabled: { opacity: 0.55 },
     btnGrad: {
         flexDirection: 'row', alignItems: 'center', gap: SP.md,
         paddingVertical: 18, paddingHorizontal: 44,

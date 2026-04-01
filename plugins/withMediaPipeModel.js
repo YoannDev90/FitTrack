@@ -3,8 +3,8 @@ const { withDangerousMod, withPlugins } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
-const MODEL_NAME = 'pose_landmarker_lite.task';
+const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task';
+const MODEL_NAME = 'pose_landmarker_full.task';
 
 async function downloadModel(destPath) {
     // Use dynamic import for fetch (Node 18+)

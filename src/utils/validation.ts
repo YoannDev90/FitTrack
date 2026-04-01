@@ -16,13 +16,29 @@ const BaseEntrySchema = z.object({
     healthConnectId: z.string().optional(),
 });
 
+const RepTimelinePointSchema = z.object({
+    repNumber: z.number().int().positive(),
+    startTimeMs: z.number().int().nonnegative(),
+    endTimeMs: z.number().int().nonnegative(),
+    durationMs: z.number().int().nonnegative(),
+    restMsBefore: z.number().int().nonnegative().nullable(),
+});
+
+const RepTimelineDataSchema = z.object({
+    sessionStartedAt: z.string(),
+    sessionEndedAt: z.string(),
+    reps: z.array(RepTimelinePointSchema),
+});
+
 const HomeWorkoutEntrySchema = BaseEntrySchema.extend({
     type: z.literal('home'),
     name: z.string().optional(),
+    trackedExerciseId: z.string().optional(),
     exercises: z.string(),
     absBlock: z.string().optional(),
     totalReps: z.number().int().nonnegative().optional(),
     durationMinutes: z.number().nonnegative().optional(),
+    repTimeline: RepTimelineDataSchema.optional(),
 });
 
 const RunEntrySchema = BaseEntrySchema.extend({

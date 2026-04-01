@@ -307,6 +307,8 @@
     "cameraOnly": "Mode caméra uniquement",
     "cameraPosition": "Positionne le téléphone de côté pour te voir de profil",
     "cameraSearching": "Recherche de caméra...",
+    "modelPreparing": "Préparation du modèle de pose...",
+    "modelLoading": "Chargement du modèle...",
     "cameraPermissionRequired": "Permission caméra requise",
     "allowCamera": "Autoriser la caméra",
     "volumeHint": "Monte le son pour les encouragements ! 🔊",
@@ -1903,7 +1905,28 @@
       "suggestions": "Suggestions",
       "noData": "Aucune donnée",
       "date": "Date",
-      "type": "Type"
+      "type": "Type",
+      "repInsights": {
+        "title": "Analyse des reps",
+        "expand": "Afficher l'analyse des reps",
+        "collapse": "Masquer l'analyse des reps",
+        "unavailable": "La timeline détaillée des répétitions n'est pas disponible pour cette séance.",
+        "averageRest": "Repos moyen entre reps",
+        "totalActive": "Temps actif total",
+        "totalRest": "Temps de repos total",
+        "fastestRep": "Rep la plus rapide",
+        "slowestRep": "Rep la plus lente",
+        "averageRep": "Durée moyenne d'une rep",
+        "consistency": "Régularité des reps",
+        "consistencyValue": "{{value}}%",
+        "chartTitle": "Timeline des reps",
+        "zoomIn": "Zoomer la timeline",
+        "zoomOut": "Dézoomer la timeline",
+        "tooltipRep": "Rep {{value}}",
+        "tooltipDuration": "Durée",
+        "tooltipRest": "Repos avant",
+        "notAvailable": "N/D"
+      }
     },
     "ai": {
       "title": "Analyse de Ploppy 🤖",

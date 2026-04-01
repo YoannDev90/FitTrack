@@ -308,6 +308,8 @@
     "cameraOnly": "Camera mode only",
     "cameraPosition": "Position your phone sideways for a profile view",
     "cameraSearching": "Searching for camera...",
+    "modelPreparing": "Preparing pose model...",
+    "modelLoading": "Loading model...",
     "cameraPermissionRequired": "Camera permission required",
     "allowCamera": "Allow Camera",
     "volumeHint": "Turn up the volume for encouragement! 🔊",
@@ -1887,7 +1889,28 @@
       "suggestions": "Suggestions",
       "noData": "No data",
       "date": "Date",
-      "type": "Type"
+      "type": "Type",
+      "repInsights": {
+        "title": "Rep Analytics",
+        "expand": "Expand rep analytics",
+        "collapse": "Collapse rep analytics",
+        "unavailable": "Detailed rep timeline is not available for this session.",
+        "averageRest": "Avg rest between reps",
+        "totalActive": "Total active time",
+        "totalRest": "Total rest time",
+        "fastestRep": "Fastest rep",
+        "slowestRep": "Slowest rep",
+        "averageRep": "Average rep duration",
+        "consistency": "Rep consistency",
+        "consistencyValue": "{{value}}%",
+        "chartTitle": "Rep timeline",
+        "zoomIn": "Zoom in timeline",
+        "zoomOut": "Zoom out timeline",
+        "tooltipRep": "Rep {{value}}",
+        "tooltipDuration": "Duration",
+        "tooltipRest": "Rest before",
+        "notAvailable": "N/A"
+      }
     },
     "ai": {
       "title": "Ploppy's Analysis 🤖",

@@ -20,6 +20,7 @@ import {
     hasEllipticalMovementStarted,
     resetEllipticalSamples,
 } from '../../utils/poseDetection';
+import { playSessionEndSound } from '../../services/audio/sessionEndSound';
 import {
     startSessionTracking,
     updateSessionData,
@@ -28,7 +29,8 @@ import {
     getRoundedSessionData,
     type ActiveSession,
 } from '../../services/sessionRecovery';
-import type { PlankDebugInfo, EllipticalState } from '../../utils/poseDetection';
+import type { PlankDebugInfo, EllipticalState, RepEventMetadata } from '../../utils/poseDetection';
+import type { HomeWorkoutEntry } from '../../types';
 import type { ExerciseConfig, DetectionMode, TutorialStep, EllipticalCalibrationPhase } from '../types';
 import { EXERCISES } from '../constants';
 
@@ -52,6 +54,7 @@ export function useRepCounter() {
     const [plankDebugInfo, setPlankDebugInfo] = useState<PlankDebugInfo | null>(null);
     const [showNewRecord, setShowNewRecord] = useState(false);
     const [personalBest, setPersonalBest] = useState(0);
+    const [hasExistingRecord, setHasExistingRecord] = useState(false);
     const [isEllipticalActive, setIsEllipticalActive] = useState(false);
     const [ellipticalSeconds, setEllipticalSeconds] = useState(0);
     const [ellipticalState, setEllipticalState] = useState<EllipticalState | null>(null);
@@ -81,6 +84,10 @@ export function useRepCounter() {
     const movementDetectionRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const hasBeatenRecord = useRef(false);
     const lastKeepGoingTime = useRef(0);
+    const activeRepStartTime = useRef<number | null>(null);
+    const repTimelineRef = useRef<RepEventMetadata[]>([]);
+    const sessionStartedAtRef = useRef<number>(Date.now());
+    const lastRepEndRef = useRef<number | null>(null);
 
     // ── Animations ─────────────────────────────────────────────────────────────
     const countScale = useSharedValue(1);
@@ -92,7 +99,6 @@ export function useRepCounter() {
     const keepGoingSound  = useAudioPlayer(require('../../../assets/keepgoing.mp3'));
     const secondsSound    = useAudioPlayer(require('../../../assets/seconds.mp3'));
     const newRecordSound  = useAudioPlayer(require('../../../assets/new-record.mp3'));
-    const finishedSound   = useAudioPlayer(require('../../../assets/finished.mp3'));
 
     const playSound = useCallback((player: any) => {
         try { player.seekTo(0); player.play(); } catch {}
@@ -102,7 +108,6 @@ export function useRepCounter() {
     const playKeepGoing      = useCallback(() => playSound(keepGoingSound), [keepGoingSound, playSound]);
     const playSeconds        = useCallback(() => playSound(secondsSound), [secondsSound, playSound]);
     const playNewRecord      = useCallback(() => playSound(newRecordSound), [newRecordSound, playSound]);
-    const playFinished       = useCallback(() => playSound(finishedSound), [finishedSound, playSound]);
 
     // ── Session recovery ───────────────────────────────────────────────────────
     useEffect(() => {
@@ -122,6 +127,10 @@ export function useRepCounter() {
         setElapsedTime(roundedTime);
         setPlankSeconds(roundedPlankSeconds);
         setEllipticalSeconds(roundedEllipticalSeconds);
+        sessionStartedAtRef.current = Date.now();
+        repTimelineRef.current = [];
+        activeRepStartTime.current = null;
+        lastRepEndRef.current = null;
         setStep('counting');
         setIsTracking(false);
         setShowRecoveryModal(false);
@@ -132,6 +141,9 @@ export function useRepCounter() {
     const handleDiscardSession = useCallback(() => {
         setShowRecoveryModal(false);
         setRecoverySession(null);
+        repTimelineRef.current = [];
+        activeRepStartTime.current = null;
+        lastRepEndRef.current = null;
         stopSessionTracking();
     }, []);
 
@@ -145,15 +157,25 @@ export function useRepCounter() {
     // ── Personal best ──────────────────────────────────────────────────────────
     useEffect(() => {
         if (!selectedExercise) return;
+        const matchingEntries = entries.filter((entry): entry is HomeWorkoutEntry => {
+            if (entry.type !== 'home') return false;
+
+            if (entry.trackedExerciseId) {
+                return entry.trackedExerciseId === selectedExercise.id;
+            }
+
+            return entry.name?.toLowerCase().includes(selectedExercise.name.toLowerCase()) ?? false;
+        });
+
         let best = 0;
-        for (const entry of entries) {
-            if (entry.type !== 'home') continue;
-            if (!entry.name?.toLowerCase().includes(selectedExercise.name.toLowerCase())) continue;
+        for (const entry of matchingEntries) {
             const val = selectedExercise.isTimeBased
                 ? (entry.durationMinutes ?? 0) * 60
                 : (entry.totalReps ?? 0);
             if (val > best) best = val;
         }
+
+        setHasExistingRecord(matchingEntries.length > 0);
         setPersonalBest(best);
         hasBeatenRecord.current = false;
     }, [selectedExercise, entries]);
@@ -161,9 +183,12 @@ export function useRepCounter() {
     // ── New record check ───────────────────────────────────────────────────────
     useEffect(() => {
         if (!selectedExercise || hasBeatenRecord.current) return;
+        if (!hasExistingRecord || personalBest <= 0) return;
+
         const cur = selectedExercise.isTimeBased
             ? (selectedExercise.id === 'elliptical' ? ellipticalSeconds : plankSeconds)
             : repCount;
+
         if (cur > personalBest && cur > 0) {
             hasBeatenRecord.current = true;
             setShowNewRecord(true);
@@ -171,7 +196,7 @@ export function useRepCounter() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setTimeout(() => setShowNewRecord(false), 3000);
         }
-    }, [repCount, plankSeconds, ellipticalSeconds, personalBest, selectedExercise, playNewRecord]);
+    }, [repCount, plankSeconds, ellipticalSeconds, personalBest, hasExistingRecord, selectedExercise, playNewRecord]);
 
     // ── Motivational messages ──────────────────────────────────────────────────
     const showMotivationalMessage = useCallback((feedback?: string) => {
@@ -195,10 +220,42 @@ export function useRepCounter() {
         pulseOpacity.value = withSequence(withTiming(0.8, { duration: 80 }), withTiming(0, { duration: 350 }));
     }, []);
 
+    const recordRepEvent = useCallback((repNumber: number, repEvent?: RepEventMetadata) => {
+        const now = Date.now();
+        const previousRepEnd = lastRepEndRef.current;
+
+        const normalizedEvent: RepEventMetadata = repEvent
+            ? {
+                ...repEvent,
+                repNumber,
+                startTimeMs: Math.max(0, repEvent.startTimeMs),
+                endTimeMs: Math.max(repEvent.startTimeMs, repEvent.endTimeMs),
+                durationMs: Math.max(0, repEvent.durationMs),
+                restMsBefore: repEvent.restMsBefore ?? (previousRepEnd == null ? null : Math.max(0, repEvent.startTimeMs - previousRepEnd)),
+            }
+            : {
+                repNumber,
+                startTimeMs: previousRepEnd == null ? Math.max(0, now - 500) : previousRepEnd,
+                endTimeMs: now,
+                durationMs: previousRepEnd == null ? 500 : Math.max(0, now - previousRepEnd),
+                restMsBefore: previousRepEnd == null ? null : 0,
+            };
+
+        const existingIndex = repTimelineRef.current.findIndex((item) => item.repNumber === repNumber);
+        if (existingIndex >= 0) {
+            repTimelineRef.current[existingIndex] = normalizedEvent;
+        } else {
+            repTimelineRef.current.push(normalizedEvent);
+        }
+
+        lastRepEndRef.current = normalizedEvent.endTimeMs;
+    }, []);
+
     // ── Increment rep ──────────────────────────────────────────────────────────
-    const incrementRep = useCallback(() => {
+    const incrementRep = useCallback((repEvent?: RepEventMetadata) => {
         setRepCount(prev => {
             const n = prev + 1;
+            recordRepEvent(n, repEvent);
             if (n > 0 && n % 10 === 0) playKeepGoing();
             return n;
         });
@@ -206,18 +263,22 @@ export function useRepCounter() {
         playRepSound();
         showMotivationalMessage();
         animateRep();
-    }, [animateRep, playRepSound, showMotivationalMessage, playKeepGoing]);
+    }, [animateRep, playRepSound, showMotivationalMessage, playKeepGoing, recordRepEvent]);
 
     // ── Camera rep detected ────────────────────────────────────────────────────
-    const handleCameraRepDetected = useCallback((newCount: number, feedback?: string) => {
+    const handleCameraRepDetected = useCallback((newCount: number, feedback?: string, repEvent?: RepEventMetadata) => {
         if (!isTracking || newCount <= repCount) return;
         if (newCount > 0 && newCount % 10 === 0) playKeepGoing();
-        setRepCount(newCount);
+        setRepCount((prev) => {
+            if (newCount <= prev) return prev;
+            recordRepEvent(newCount, repEvent);
+            return newCount;
+        });
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         playRepSound();
         showMotivationalMessage(feedback);
         animateRep();
-    }, [isTracking, repCount, animateRep, playRepSound, showMotivationalMessage, playKeepGoing]);
+    }, [isTracking, repCount, animateRep, playRepSound, showMotivationalMessage, playKeepGoing, recordRepEvent]);
 
     // ── Plank state change ─────────────────────────────────────────────────────
     const handlePlankStateChange = useCallback((isInPlank: boolean, confidence: number, debugInfo?: PlankDebugInfo) => {
@@ -392,6 +453,14 @@ export function useRepCounter() {
     const startTracking = useCallback(async () => {
         if (!selectedExercise) return;
         const isResuming = repCount > 0 || plankSeconds > 0 || ellipticalSeconds > 0 || elapsedTime > 0;
+
+        if (!isResuming) {
+            sessionStartedAtRef.current = Date.now();
+            repTimelineRef.current = [];
+            activeRepStartTime.current = null;
+            lastRepEndRef.current = null;
+        }
+
         setIsTracking(true);
         startSessionTracking({
             exerciseId: selectedExercise.id as any,
@@ -410,6 +479,7 @@ export function useRepCounter() {
             hasBeatenRecord.current = false; calibrationSamples.current = [];
             recentValues.current = []; peakValue.current = 0;
             wasAboveThreshold.current = false; lastKeepGoingTime.current = 0;
+            setShowNewRecord(false);
         }
         // Camera or elliptical/plank modes don't use accelerometer
         if (selectedExercise.id === 'elliptical' && (detectionMode === 'camera' || detectionMode === 'manual')) {
@@ -439,17 +509,29 @@ export function useRepCounter() {
             const delta = Math.abs(smoothed - baselineZ.current);
             const { threshold, cooldown } = selectedExercise;
             if (delta > threshold) {
+                if (!wasAboveThreshold.current) {
+                    activeRepStartTime.current = now;
+                }
                 if (delta > peakValue.current) peakValue.current = delta;
                 wasAboveThreshold.current = true;
             } else if (wasAboveThreshold.current && delta < threshold * 0.4) {
                 if ((now - lastRepTime.current) > cooldown && peakValue.current > threshold * 1.2) {
                     lastRepTime.current = now;
-                    runOnJS(incrementRep)();
+                    const repStart = activeRepStartTime.current ?? now;
+                    const normalizedStart = Math.max(lastRepEndRef.current ?? 0, repStart);
+                    runOnJS(incrementRep)({
+                        repNumber: 0,
+                        startTimeMs: normalizedStart,
+                        endTimeMs: now,
+                        durationMs: Math.max(0, now - normalizedStart),
+                        restMsBefore: lastRepEndRef.current == null ? null : Math.max(0, normalizedStart - lastRepEndRef.current),
+                    });
                 }
+                activeRepStartTime.current = null;
                 wasAboveThreshold.current = false; peakValue.current = 0;
             }
         });
-    }, [selectedExercise, incrementRep, detectionMode, repCount, plankSeconds, elapsedTime, t]);
+    }, [selectedExercise, incrementRep, detectionMode, repCount, plankSeconds, ellipticalSeconds, elapsedTime, t]);
 
     // ── Stop tracking ──────────────────────────────────────────────────────────
     const stopTracking = useCallback(() => {
@@ -467,8 +549,10 @@ export function useRepCounter() {
         const seconds = isElliptical ? ellipticalSeconds : plankSeconds;
         const valueToCheck = selectedExercise.isTimeBased ? seconds : repCount;
         if (valueToCheck === 0) return;
+
         await stopSessionTracking();
-        playFinished();
+        await playSessionEndSound();
+
         const exerciseId = selectedExercise.id;
         const displayName = t(`repCounter.exercises.${exerciseId}`);
         const formattedTime = selectedExercise.isTimeBased
@@ -476,18 +560,30 @@ export function useRepCounter() {
             : null;
         const exerciseText = selectedExercise.isTimeBased
             ? `${displayName}: ${formattedTime}`
-            : `${displayName}: ${repCount} reps`;
+            : `${displayName}: ${repCount} ${t('common.reps')}`;
         const durationMinutes = selectedExercise.isTimeBased
             ? Math.ceil(seconds / 60)
             : Math.floor(elapsedTime / 60);
+
+        const hasRepTimeline = !selectedExercise.isTimeBased && repTimelineRef.current.length > 0;
+        const repTimeline = hasRepTimeline
+            ? {
+                sessionStartedAt: new Date(sessionStartedAtRef.current).toISOString(),
+                sessionEndedAt: new Date().toISOString(),
+                reps: [...repTimelineRef.current].sort((a, b) => a.repNumber - b.repNumber),
+            }
+            : undefined;
+
         addHomeWorkout({
             name: t('repCounter.trackedSession', { exercise: displayName }),
             exercises: exerciseText,
+            trackedExerciseId: exerciseId,
             totalReps: selectedExercise.isTimeBased ? undefined : repCount,
             durationMinutes: durationMinutes > 0 ? durationMinutes : 1,
+            repTimeline,
         });
         setWorkoutSaved(true);
-    }, [selectedExercise, repCount, plankSeconds, ellipticalSeconds, elapsedTime, addHomeWorkout, playFinished, t]);
+    }, [selectedExercise, repCount, plankSeconds, ellipticalSeconds, elapsedTime, addHomeWorkout, t]);
 
     // ── Reset after save ───────────────────────────────────────────────────────
     useEffect(() => {
@@ -497,6 +593,10 @@ export function useRepCounter() {
             setIsPlankActive(false); setIsEllipticalActive(false);
             setEllipticalCalibrationPhase('none'); resetEllipticalState();
             hasBeatenRecord.current = false; setWorkoutSaved(false);
+            setShowNewRecord(false);
+            repTimelineRef.current = [];
+            activeRepStartTime.current = null;
+            lastRepEndRef.current = null;
             setStep('select'); setSelectedExercise(null);
         }, 200);
     }, [workoutSaved]);
@@ -508,7 +608,12 @@ export function useRepCounter() {
         setRepCount(0); setElapsedTime(0); setPlankSeconds(0); setEllipticalSeconds(0);
         setIsPlankActive(false); setIsEllipticalActive(false);
         setEllipticalCalibrationPhase('none'); resetEllipticalState();
-        hasBeatenRecord.current = false; setStep('select'); setSelectedExercise(null);
+        hasBeatenRecord.current = false;
+        setShowNewRecord(false);
+        repTimelineRef.current = [];
+        activeRepStartTime.current = null;
+        lastRepEndRef.current = null;
+        setStep('select'); setSelectedExercise(null);
     }, [stopTracking]);
 
     // ── Exercise select ────────────────────────────────────────────────────────
@@ -557,6 +662,10 @@ export function useRepCounter() {
         await stopSessionTracking();
         setShowExitModal(false); setStep('select'); setSelectedExercise(null);
         setRepCount(0); setElapsedTime(0);
+        setShowNewRecord(false);
+        repTimelineRef.current = [];
+        activeRepStartTime.current = null;
+        lastRepEndRef.current = null;
     }, []);
 
     const toggleEllipticalManual = useCallback(() => {
