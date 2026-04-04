@@ -43,7 +43,7 @@ export function ExerciseSelector({ onSelect, selectedExercise }: ExerciseSelecto
                         >
                             <Text style={styles.exerciseIcon}>{exercise.icon}</Text>
                             <Text style={styles.exerciseName}>
-                                {t(`repCounter.exercises.${exercise.id === 'jumping_jacks' ? 'jumpingJacks' : exercise.id}`)}
+                                {t(`repCounter.exercises.${exercise.id}`)}
                             </Text>
                             {selectedExercise?.id === exercise.id && (
                                 <View style={[styles.selectedBadge, { backgroundColor: exercise.color }]}>

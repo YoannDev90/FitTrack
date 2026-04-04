@@ -1327,7 +1327,7 @@ export default function ProgressScreen() {
             { id: 'pushups',       name: t('repCounter.exercises.pushups', 'Pompes'),       icon: '💪', type: 'reps' as const },
             { id: 'situps',        name: t('repCounter.exercises.situps', 'Abdos'),          icon: '🔥', type: 'reps' as const },
             { id: 'squats',        name: t('repCounter.exercises.squats', 'Squats'),         icon: '🦵', type: 'reps' as const },
-            { id: 'jumping_jacks', name: t('repCounter.exercises.jumpingJacks', 'J. Jacks'), icon: '⭐', type: 'reps' as const },
+            { id: 'jumpingJacks', name: t('repCounter.exercises.jumpingJacks', 'J. Jacks'), icon: '⭐', type: 'reps' as const },
             { id: 'plank',         name: t('repCounter.exercises.plank', 'Gainage'),         icon: '🧘', type: 'time' as const },
         ];
         return tracked.reduce<{ id: string; name: string; icon: string; value: string }[]>((acc, ex) => {

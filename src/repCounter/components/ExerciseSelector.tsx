@@ -53,7 +53,7 @@ function mapActivityToExerciseId(activityName: string): ExerciseConfig['id'] | n
     if (/pompe|push\s?up/.test(v)) return 'pushups';
     if (/abdo|sit\s?up|crunch/.test(v)) return 'situps';
     if (/squat/.test(v)) return 'squats';
-    if (/jumping|jack/.test(v)) return 'jumping_jacks';
+    if (/jumping|jack/.test(v)) return 'jumpingJacks';
     if (/planche|plank/.test(v)) return 'plank';
     if (/ellipt|velo|bike/.test(v)) return 'elliptical';
 
@@ -85,7 +85,7 @@ function ExerciseListItem({
     index: number;
 }) {
     const { t } = useTranslation();
-    const key = exercise.id === 'jumping_jacks' ? 'jumpingJacks' : exercise.id;
+    const key = exercise.id;
 
     return (
         <Animated.View entering={FadeInDown.delay(180 + index * 45).springify()}>
@@ -289,7 +289,7 @@ export function ExerciseSelector({
                 cards.push({
                     id: entry.id,
                     key,
-                    label: t(`repCounter.exercises.${mappedExerciseId === 'jumping_jacks' ? 'jumpingJacks' : mappedExerciseId}`),
+                    label: t(`repCounter.exercises.${mappedExerciseId}`),
                     emoji: targetExercise.icon,
                     color: targetExercise.color,
                     subtitle: t('repCounter.quickTrack', 'Lancer le tracking'),

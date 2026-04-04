@@ -18,7 +18,7 @@
 import { KnownPoseLandmarks } from 'react-native-mediapipe-posedetection';
 
 // Types for pose detection
-export type ExerciseType = 'pushups' | 'pullups' | 'situps' | 'squats' | 'jumping_jacks' | 'plank' | 'elliptical';
+export type ExerciseType = 'pushups' | 'pullups' | 'situps' | 'squats' | 'jumpingJacks' | 'plank' | 'elliptical';
 
 // MediaPipe landmark structure (from the package)
 export interface Landmark {
@@ -215,7 +215,7 @@ const EXERCISE_CONFIG: Record<ExerciseType, ExerciseConfig> = {
         minRangeAngle: 35,
         timing: { minRepDurationMs: 400, cooldownMs: 280 },
     },
-    jumping_jacks: {
+    jumpingJacks: {
         // Jumping jacks : bras < 65° = bas, bras > 105° = haut
         // Amplitude minimale : 35°
         downAngle: 65,
@@ -1058,7 +1058,7 @@ export const countRepsFromPose = (
             break;
         }
 
-        case 'jumping_jacks': {
+        case 'jumpingJacks': {
             // Jumping jacks : angle bras relatif au torse (hanche – épaule – poignet)
             const leftShoulder = getLandmark(filtered, KnownPoseLandmarks.leftShoulder);
             const rightShoulder = getLandmark(filtered, KnownPoseLandmarks.rightShoulder);
@@ -1073,7 +1073,7 @@ export const countRepsFromPose = (
                 const rawArmAngle = (leftArmAngle + rightArmAngle) / 2;
                 const armAngle = smoothAngle(state, 'arms', rawArmAngle);
 
-                const { downAngle, upAngle } = EXERCISE_CONFIG.jumping_jacks;
+                const { downAngle, upAngle } = EXERCISE_CONFIG.jumpingJacks;
 
                 if (armAngle < downAngle) {
                     enterDownStage(state, now, armAngle);

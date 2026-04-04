@@ -134,7 +134,7 @@ export const EXERCISES: ExerciseConfig[] = [
         preferredCameraView: 'front',
     },
     {
-        id: 'jumping_jacks',
+        id: 'jumpingJacks',
         name: 'Jumping Jacks',
         icon: '⭐',
         color: '#ff7a55',
@@ -319,7 +319,7 @@ export const applyRepCounterTheme = (theme: ThemeCustomColors): void => {
     RC.goldBorder = alpha(theme.gold, 0.35);
 
     EXERCISES.forEach((exercise) => {
-        if (exercise.id === 'situps' || exercise.id === 'jumping_jacks' || exercise.id === 'elliptical' || exercise.id === 'run_ai') {
+        if (exercise.id === 'situps' || exercise.id === 'jumpingJacks' || exercise.id === 'elliptical' || exercise.id === 'run_ai') {
             exercise.color = RC.emberMid;
         } else {
             exercise.color = RC.ember;

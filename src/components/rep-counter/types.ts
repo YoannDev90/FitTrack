@@ -4,7 +4,7 @@
 
 import type { PlankDebugInfo, EllipticalState } from '../../utils/poseDetection';
 
-export type ExerciseType = 'pushups' | 'situps' | 'squats' | 'jumping_jacks' | 'plank' | 'elliptical';
+export type ExerciseType = 'pushups' | 'situps' | 'squats' | 'jumpingJacks' | 'plank' | 'elliptical';
 export type DetectionMode = 'sensor' | 'camera' | 'manual';
 export type CameraView = 'front' | 'side';
 export type TutorialStep = 'select' | 'position' | 'ready' | 'counting' | 'done';
@@ -112,7 +112,7 @@ export const EXERCISES: ExerciseConfig[] = [
         preferredCameraView: 'front',
     },
     {
-        id: 'jumping_jacks',
+        id: 'jumpingJacks',
         name: 'Jumping Jacks',
         icon: '⭐',
         color: '#eab308',
