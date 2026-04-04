@@ -2,7 +2,7 @@
   "expo": {
     "name": "Spix",
     "slug": "spix-app",
-    "version": "10.6.0",
+    "version": "11.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,7 @@
           "location"
         ]
       },
-      "buildNumber": "10.6.0"
+      "buildNumber": "11.0.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -54,7 +54,7 @@
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
       ],
-      "versionCode": 100600,
+      "versionCode": 110000,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
