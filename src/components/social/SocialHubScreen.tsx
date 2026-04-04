@@ -13,7 +13,7 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Bell, Sparkles, UserCircle2, Users } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { Entry } from '../../types';
 import { BuildConfig } from '../../config';
@@ -26,6 +26,7 @@ import {
     createSocialChallenge,
     deleteSocialChallenge,
     deleteMySharedWorkoutEvent,
+    computeChallengeProgressValue,
     getActiveSocialChallenges,
     getSocialFeed,
     leaveSocialChallenge,
@@ -358,6 +359,40 @@ export default function SocialHubScreen() {
             .map(entry => formatSportEntry(entry, t));
     }, [entries, t]);
 
+    const mergeLocalChallengeProgress = useCallback((challenges: SocialChallengeProgress[]) => {
+        let hasChanges = false;
+
+        const nextChallenges = challenges.map((item) => {
+            const computedProgress = Math.max(
+                0,
+                Math.round(computeChallengeProgressValue(entries, item.challenge) * 100) / 100
+            );
+            const remoteProgress = Number(item.my_progress || 0);
+
+            if (Math.abs(computedProgress - remoteProgress) < 0.01) {
+                return item;
+            }
+
+            hasChanges = true;
+            return {
+                ...item,
+                my_progress: computedProgress,
+            };
+        });
+
+        return hasChanges ? nextChallenges : challenges;
+    }, [entries]);
+
+    useEffect(() => {
+        if (activeChallenges.length === 0) return;
+
+        const nextChallenges = mergeLocalChallengeProgress(activeChallenges);
+        if (nextChallenges !== activeChallenges) {
+            setActiveChallenges(nextChallenges);
+            homeChallengesCache = nextChallenges;
+        }
+    }, [activeChallenges, mergeLocalChallengeProgress]);
+
     const friendsLeaderboardRows = useMemo(() => {
         const rows = friendsLeaderboard.length > 0
             ? friendsLeaderboard
@@ -404,8 +439,9 @@ export default function SocialHubScreen() {
     const loadChallenges = useCallback(async () => {
         try {
             const challenges = await getActiveSocialChallenges();
-            setActiveChallenges(challenges);
-            homeChallengesCache = challenges;
+            const mergedChallenges = mergeLocalChallengeProgress(challenges);
+            setActiveChallenges(mergedChallenges);
+            homeChallengesCache = mergedChallenges;
             setChallengeIndex(0);
             setChallengesError(null);
         } catch {
@@ -414,7 +450,7 @@ export default function SocialHubScreen() {
             }
             setChallengesError(t('socialHub.errors.challengesLoad'));
         }
-    }, [t]);
+    }, [mergeLocalChallengeProgress, t]);
 
     const loadFeed = useCallback(async () => {
         try {
@@ -551,6 +587,16 @@ export default function SocialHubScreen() {
             loadFriendsLeaderboardData();
         }
     }, [activeTopTab, isAuthenticated, socialEnabled, loadFriendsTabData, loadFriendsLeaderboardData]);
+
+    useFocusEffect(
+        useCallback(() => {
+            if (!isAuthenticated || !socialEnabled) {
+                return;
+            }
+
+            void loadHomeData({ silent: true });
+        }, [isAuthenticated, socialEnabled, loadHomeData])
+    );
 
     useEffect(() => {
         if (!showAddFriendPanel || searchQuery.trim().length < 2) {
