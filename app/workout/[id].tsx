@@ -206,6 +206,15 @@ interface RepInsights {
   consistencyScore: number;
 }
 
+type RepChartMetricKey = 'repNumber' | 'elapsedSeconds' | 'durationSeconds' | 'restBeforeSeconds';
+
+interface RepChartRow {
+  repNumber: number;
+  elapsedSeconds: number;
+  durationSeconds: number;
+  restBeforeSeconds: number | null;
+}
+
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 function computeRepInsights(repTimeline?: RepTimelineData | null): RepInsights | null {
@@ -314,6 +323,8 @@ export default function WorkoutDetailScreen() {
   const [chartZoom, setChartZoom] = useState(1);
   const [chartWidth, setChartWidth] = useState(0);
   const [selectedRepIndex, setSelectedRepIndex] = useState<number | null>(null);
+  const [chartXAxisMetric, setChartXAxisMetric] = useState<RepChartMetricKey>('elapsedSeconds');
+  const [chartYAxisMetric, setChartYAxisMetric] = useState<RepChartMetricKey>('repNumber');
 
   useEffect(() => {
     if (!repInsights?.reps.length) {
@@ -341,26 +352,99 @@ export default function WorkoutDetailScreen() {
 
   const chartSpacing = useMemo(() => Math.round(28 * chartZoom), [chartZoom]);
 
-  const repChartData = useMemo(() => {
+  const repChartRows = useMemo<RepChartRow[]>(() => {
     if (!repInsights) return [];
 
     return repInsights.reps.map((rep, index) => {
-      const secondsFromStart = (rep.endTimeMs - repInsights.sessionStartMs) / 1000;
-      const shouldLabel = index === 0 || index === repInsights.reps.length - 1 || (index + 1) % 5 === 0;
+      const previous = index > 0 ? repInsights.reps[index - 1] : null;
+      const restMs = index === 0
+        ? null
+        : (rep.restMsBefore != null
+          ? Math.max(0, rep.restMsBefore)
+          : Math.max(0, rep.startTimeMs - (previous?.endTimeMs ?? rep.startTimeMs)));
 
       return {
-        value: rep.repNumber,
-        label: shouldLabel ? formatClock(secondsFromStart) : '',
+        repNumber: rep.repNumber,
+        elapsedSeconds: Math.max(0, (rep.endTimeMs - repInsights.sessionStartMs) / 1000),
+        durationSeconds: Math.max(0, rep.durationMs / 1000),
+        restBeforeSeconds: restMs == null ? null : restMs / 1000,
+      };
+    });
+  }, [repInsights]);
+
+  const chartMetricOptions = useMemo(() => ([
+    { key: 'repNumber' as RepChartMetricKey, label: t('workout.detail.repInsights.metricRepNumber') },
+    { key: 'elapsedSeconds' as RepChartMetricKey, label: t('workout.detail.repInsights.metricElapsed') },
+    { key: 'durationSeconds' as RepChartMetricKey, label: t('workout.detail.repInsights.metricDuration') },
+    { key: 'restBeforeSeconds' as RepChartMetricKey, label: t('workout.detail.repInsights.metricRestBefore') },
+  ]), [t]);
+
+  const getChartMetricValue = useCallback((row: RepChartRow, metric: RepChartMetricKey): number | null => {
+    if (metric === 'repNumber') return row.repNumber;
+    if (metric === 'elapsedSeconds') return row.elapsedSeconds;
+    if (metric === 'durationSeconds') return row.durationSeconds;
+    return row.restBeforeSeconds;
+  }, []);
+
+  const formatChartMetricValue = useCallback((metric: RepChartMetricKey, value: number | null | undefined) => {
+    if (value == null || !Number.isFinite(value)) {
+      return t('workout.detail.repInsights.notAvailable');
+    }
+
+    if (metric === 'repNumber') {
+      return `${Math.round(value)}`;
+    }
+
+    if (metric === 'elapsedSeconds') {
+      return formatClock(value);
+    }
+
+    return `${value.toFixed(1)} ${t('common.seconds')}`;
+  }, [formatClock, t]);
+
+  const repChartData = useMemo(() => {
+    if (repChartRows.length === 0) return [];
+
+    return repChartRows.map((row, index) => {
+      const xValue = getChartMetricValue(row, chartXAxisMetric);
+      const yValue = getChartMetricValue(row, chartYAxisMetric);
+      const shouldLabel = index === 0 || index === repChartRows.length - 1 || (index + 1) % 5 === 0;
+
+      return {
+        value: yValue == null || !Number.isFinite(yValue) ? 0 : yValue,
+        label: shouldLabel ? formatChartMetricValue(chartXAxisMetric, xValue) : '',
         dataPointColor: selectedRepIndex === index ? C.gold : C.violet,
         onPress: () => setSelectedRepIndex(index),
       };
     });
-  }, [repInsights, formatClock, selectedRepIndex]);
+  }, [
+    chartXAxisMetric,
+    chartYAxisMetric,
+    formatChartMetricValue,
+    getChartMetricValue,
+    repChartRows,
+    selectedRepIndex,
+  ]);
+
+  const chartMaxValue = useMemo(() => {
+    const values = repChartRows
+      .map((row) => getChartMetricValue(row, chartYAxisMetric))
+      .filter((value): value is number => value != null && Number.isFinite(value));
+
+    if (values.length === 0) return 1;
+    const max = Math.max(...values);
+    return Math.max(1, Math.ceil(max * 1.1));
+  }, [chartYAxisMetric, getChartMetricValue, repChartRows]);
 
   const selectedRep = useMemo(() => {
     if (!repInsights || selectedRepIndex == null) return null;
     return repInsights.reps[selectedRepIndex] ?? null;
   }, [repInsights, selectedRepIndex]);
+
+  const selectedRepRow = useMemo(() => {
+    if (selectedRepIndex == null) return null;
+    return repChartRows[selectedRepIndex] ?? null;
+  }, [repChartRows, selectedRepIndex]);
 
   const selectedRepRestMs = useMemo(() => {
     if (!repInsights || selectedRepIndex == null || selectedRepIndex === 0) return null;
@@ -371,6 +455,12 @@ export default function WorkoutDetailScreen() {
     const previous = repInsights.reps[selectedRepIndex - 1];
     return Math.max(0, rep.startTimeMs - previous.endTimeMs);
   }, [repInsights, selectedRepIndex]);
+
+  const handleRepPointFocus = useCallback((_: unknown, index?: number) => {
+    if (typeof index === 'number' && index >= 0) {
+      setSelectedRepIndex(index);
+    }
+  }, []);
 
   const fetchAnalysis = useCallback(async (force: boolean = false) => {
     if (!entry || !settings.aiWorkoutEnabled || !isConnected) return;
@@ -876,6 +966,62 @@ export default function WorkoutDetailScreen() {
                       </View>
                     </View>
 
+                    <View style={styles.repAxisControls}>
+                      <View style={styles.repAxisGroup}>
+                        <Text style={styles.repAxisGroupLabel}>{t('workout.detail.repInsights.xAxis')}</Text>
+                        <View style={styles.repAxisChipRow}>
+                          {chartMetricOptions.map((option) => {
+                            const isActive = chartXAxisMetric === option.key;
+                            const chipStyle = isActive
+                              ? [styles.repAxisChip, styles.repAxisChipActive]
+                              : styles.repAxisChip;
+                            const chipTextStyle = isActive
+                              ? [styles.repAxisChipText, styles.repAxisChipTextActive]
+                              : styles.repAxisChipText;
+
+                            return (
+                              <TouchableOpacity
+                                key={`x-${option.key}`}
+                                style={chipStyle}
+                                activeOpacity={0.82}
+                                onPress={() => setChartXAxisMetric(option.key)}
+                              >
+                                <Text style={chipTextStyle}>{option.label}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+
+                      <View style={styles.repAxisGroup}>
+                        <Text style={styles.repAxisGroupLabel}>{t('workout.detail.repInsights.yAxis')}</Text>
+                        <View style={styles.repAxisChipRow}>
+                          {chartMetricOptions.map((option) => {
+                            const isActive = chartYAxisMetric === option.key;
+                            const chipStyle = isActive
+                              ? [styles.repAxisChip, styles.repAxisChipActive]
+                              : styles.repAxisChip;
+                            const chipTextStyle = isActive
+                              ? [styles.repAxisChipText, styles.repAxisChipTextActive]
+                              : styles.repAxisChipText;
+
+                            return (
+                              <TouchableOpacity
+                                key={`y-${option.key}`}
+                                style={chipStyle}
+                                activeOpacity={0.82}
+                                onPress={() => setChartYAxisMetric(option.key)}
+                              >
+                                <Text style={chipTextStyle}>{option.label}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    </View>
+
+                    <Text style={styles.repChartHint}>{t('workout.detail.repInsights.panHint')}</Text>
+
                     <LineChart
                       data={repChartData}
                       spacing={chartSpacing}
@@ -885,7 +1031,7 @@ export default function WorkoutDetailScreen() {
                       dataPointsColor={C.violet}
                       dataPointsRadius={4}
                       noOfSections={4}
-                      maxValue={Math.max(repChartData.length, 1)}
+                      maxValue={chartMaxValue}
                       yAxisColor={C.border}
                       xAxisColor={C.border}
                       yAxisTextStyle={styles.repChartAxisText}
@@ -894,14 +1040,37 @@ export default function WorkoutDetailScreen() {
                       hideRules={false}
                       adjustToWidth={false}
                       disableScroll={false}
+                      nestedScrollEnabled
+                      showScrollIndicator
+                      scrollEventThrottle={16}
                       focusEnabled
-                      width={Math.max(Math.max(chartWidth - 24, 220), repChartData.length * chartSpacing + 30)}
+                      focusedDataPointIndex={selectedRepIndex ?? undefined}
+                      onFocus={handleRepPointFocus}
+                      onPress={handleRepPointFocus}
+                      unFocusOnPressOut={false}
+                      width={Math.max(Math.max(chartWidth - 24, 220), repChartData.length * chartSpacing + 40)}
                     />
                   </View>
 
                   {selectedRep && (
                     <View style={styles.repTooltip}>
                       <Text style={styles.repTooltipTitle}>{t('workout.detail.repInsights.tooltipRep', { value: selectedRep.repNumber })}</Text>
+                      {selectedRepRow && (
+                        <>
+                          <View style={styles.repTooltipRow}>
+                            <Text style={styles.repTooltipLabel}>{t('workout.detail.repInsights.xAxis')}</Text>
+                            <Text style={styles.repTooltipValue}>
+                              {formatChartMetricValue(chartXAxisMetric, getChartMetricValue(selectedRepRow, chartXAxisMetric))}
+                            </Text>
+                          </View>
+                          <View style={styles.repTooltipRow}>
+                            <Text style={styles.repTooltipLabel}>{t('workout.detail.repInsights.yAxis')}</Text>
+                            <Text style={styles.repTooltipValue}>
+                              {formatChartMetricValue(chartYAxisMetric, getChartMetricValue(selectedRepRow, chartYAxisMetric))}
+                            </Text>
+                          </View>
+                        </>
+                      )}
                       <View style={styles.repTooltipRow}>
                         <Text style={styles.repTooltipLabel}>{t('workout.detail.repInsights.tooltipDuration')}</Text>
                         <Text style={styles.repTooltipValue}>{formatRepDuration(selectedRep.durationMs)}</Text>
@@ -1135,6 +1304,49 @@ const styles = StyleSheet.create({
     fontSize: T.sm,
     color: C.text,
     fontWeight: W.semi,
+  },
+  repAxisControls: {
+    gap: S.sm,
+  },
+  repAxisGroup: {
+    gap: S.xs,
+  },
+  repAxisGroupLabel: {
+    fontSize: T.nano,
+    color: C.textMuted,
+    fontWeight: W.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.9,
+  },
+  repAxisChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: S.xs,
+  },
+  repAxisChip: {
+    borderRadius: R.full,
+    borderWidth: 1,
+    borderColor: C.border,
+    backgroundColor: C.surface,
+    paddingHorizontal: S.sm,
+    paddingVertical: 6,
+  },
+  repAxisChipActive: {
+    borderColor: C.violetBorder,
+    backgroundColor: C.violetSoft,
+  },
+  repAxisChipText: {
+    fontSize: T.nano,
+    color: C.textSub,
+    fontWeight: W.semi,
+  },
+  repAxisChipTextActive: {
+    color: C.violet,
+    fontWeight: W.bold,
+  },
+  repChartHint: {
+    fontSize: T.nano,
+    color: C.textMuted,
   },
   repChartZoomControls: {
     flexDirection: 'row',
