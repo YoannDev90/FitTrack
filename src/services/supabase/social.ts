@@ -72,24 +72,34 @@ function entryTimestampMs(entry: Entry): number {
     return Number.isFinite(fallbackMs) ? fallbackMs : 0;
 }
 
-function isEntryInsideChallengeWindow(entry: Entry, startsAtMs: number, endsAtMs: number): boolean {
+function isEntryInsideChallengeWindow(entry: Entry, startsAt: string, endsAt: string): boolean {
+    const challengeStartDate = startsAt.slice(0, 10);
+    const challengeEndDate = endsAt.slice(0, 10);
+
+    if (
+        /^\d{4}-\d{2}-\d{2}$/.test(entry.date) &&
+        /^\d{4}-\d{2}-\d{2}$/.test(challengeStartDate) &&
+        /^\d{4}-\d{2}-\d{2}$/.test(challengeEndDate)
+    ) {
+        return entry.date >= challengeStartDate && entry.date <= challengeEndDate;
+    }
+
+    const startsAtMs = new Date(startsAt).getTime();
+    const endsAtMs = new Date(endsAt).getTime();
+    if (!Number.isFinite(startsAtMs) || !Number.isFinite(endsAtMs)) {
+        return false;
+    }
+
     const timestamp = entryTimestampMs(entry);
     return timestamp >= startsAtMs && timestamp <= endsAtMs;
 }
 
-function computeChallengeProgressValue(
+export function computeChallengeProgressValue(
     entries: Entry[],
     challenge: Pick<SocialChallenge, 'goal_type' | 'starts_at' | 'ends_at'>
 ): number {
-    const startsAtMs = new Date(challenge.starts_at).getTime();
-    const endsAtMs = new Date(challenge.ends_at).getTime();
-
-    if (!Number.isFinite(startsAtMs) || !Number.isFinite(endsAtMs)) {
-        return 0;
-    }
-
     const relevantEntries = entries.filter((entry) => (
-        isSportEntryType(entry.type) && isEntryInsideChallengeWindow(entry, startsAtMs, endsAtMs)
+        isSportEntryType(entry.type) && isEntryInsideChallengeWindow(entry, challenge.starts_at, challenge.ends_at)
     ));
 
     if (challenge.goal_type === 'workouts') {
@@ -771,12 +781,17 @@ export async function leaveSocialChallenge(challengeId: string): Promise<void> {
 }
 
 export async function syncActiveChallengeProgressFromEntries(entries: Entry[]): Promise<void> {
-    if (!supabase) return;
+    let client;
+    try {
+        client = getSupabaseClient();
+    } catch {
+        return;
+    }
 
     const user = await getCurrentUser();
     if (!user) return;
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (client as any)
         .from('social_challenge_participants')
         .select(`
             challenge_id,
@@ -813,7 +828,7 @@ export async function syncActiveChallengeProgressFromEntries(entries: Entry[]): 
             return;
         }
 
-        const { error: updateError } = await (supabase as any)
+        const { error: updateError } = await (client as any)
             .from('social_challenge_participants')
             .update({
                 progress_value: safeProgress,
