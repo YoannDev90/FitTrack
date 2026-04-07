@@ -26,6 +26,7 @@ export interface FullBackup {
             };
             preferCameraDetection?: boolean;
             debugCamera?: boolean;
+            useLitePoseModel?: boolean;
             units?: {
                 weight: 'kg' | 'lbs';
                 distance: 'km' | 'miles';
@@ -74,6 +75,7 @@ export function generateFullBackup(
                 },
                 preferCameraDetection: appState.settings?.preferCameraDetection,
                 debugCamera: appState.settings?.debugCamera,
+                useLitePoseModel: appState.settings?.useLitePoseModel,
                 units: appState.settings?.units,
             },
             unlockedBadges: appState.unlockedBadges,

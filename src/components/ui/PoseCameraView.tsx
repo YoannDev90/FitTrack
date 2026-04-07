@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
+    Platform,
     View,
     StyleSheet,
     Text,
@@ -29,12 +30,13 @@ import Svg, { Circle, Line } from 'react-native-svg';
 
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '../../constants';
 import { useTranslation } from 'react-i18next';
+import { useAppStore } from '../../stores';
 import { 
     ExerciseType, 
     PoseLandmarks,
     countRepsFromPose,
     resetExerciseState,
-    isPoseValid,
+    isPoseValidForExercise,
     detectPlankPosition,
     detectEllipticalMovement,
     type RepEventMetadata,
@@ -64,6 +66,50 @@ const SKELETON_CONNECTIONS: [number, number][] = [
     [KnownPoseLandmarks.rightHip, KnownPoseLandmarks.rightKnee],
     [KnownPoseLandmarks.rightKnee, KnownPoseLandmarks.rightAnkle],
 ];
+
+const isLandmarkPoint = (value: unknown): value is PoseLandmarks[number] => {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Partial<PoseLandmarks[number]>;
+    return (
+        typeof candidate.x === 'number' &&
+        typeof candidate.y === 'number' &&
+        typeof candidate.z === 'number'
+    );
+};
+
+const normalizeLandmarksCandidate = (candidate: unknown): PoseLandmarks | null => {
+    if (!Array.isArray(candidate) || candidate.length === 0) return null;
+
+    if (isLandmarkPoint(candidate[0])) {
+        return candidate as PoseLandmarks;
+    }
+
+    const firstPose = candidate[0];
+    if (Array.isArray(firstPose) && firstPose.length > 0 && isLandmarkPoint(firstPose[0])) {
+        return firstPose as PoseLandmarks;
+    }
+
+    return null;
+};
+
+const extractPoseLandmarks = (result: PoseDetectionResultBundle | Record<string, unknown>): PoseLandmarks | null => {
+    const payload = result as Record<string, any>;
+    const candidates = [
+        payload?.results?.[0]?.landmarks,
+        payload?.results?.[0]?.poseLandmarks,
+        payload?.landmarks,
+        payload?.poseLandmarks,
+    ];
+
+    for (const candidate of candidates) {
+        const landmarks = normalizeLandmarksCandidate(candidate);
+        if (landmarks && landmarks.length >= 33) {
+            return landmarks;
+        }
+    }
+
+    return null;
+};
 
 interface PoseCameraViewProps {
     facing?: 'front' | 'back';
@@ -99,15 +145,24 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
     const { hasPermission, requestPermission } = useCameraPermission();
     const device = useCameraDevice(facing);
     const [isReady, setIsReady] = useState(false);
-    const [isModelReady, setIsModelReady] = useState(false);
     const [currentPose, setCurrentPose] = useState<PoseLandmarks | null>(null);
     const [cameraLayout, setCameraLayout] = useState({ width: 1, height: 1 });
     const [poseStatus, setPoseStatus] = useState<'detecting' | 'pose' | 'no-pose'>('detecting');
     const { t } = useTranslation();
+    const useLitePoseModel = useAppStore((state) => state.settings.useLitePoseModel ?? false);
+    const modelName = Platform.OS === 'android' && useLitePoseModel
+        ? 'pose_landmarker_lite.task'
+        : 'pose_landmarker_full.task';
     
     const countRef = useRef(currentCount);
     const exerciseTypeRef = useRef(exerciseType);
     const modelReadyRef = useRef(false);
+
+    const markModelReady = useCallback(() => {
+        if (modelReadyRef.current) return;
+        modelReadyRef.current = true;
+        onModelReady?.();
+    }, [onModelReady]);
 
     // Update refs when props change
     useEffect(() => {
@@ -134,21 +189,16 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
         {
             onResults: useCallback((result: PoseDetectionResultBundle) => {
                 try {
-                    if (!modelReadyRef.current) {
-                        modelReadyRef.current = true;
-                        setIsModelReady(true);
-                        onModelReady?.();
-                    }
+                    markModelReady();
 
-                    // Get the first detected pose (if any)
-                    // Structure: result.results[0]?.landmarks[0] -> Landmark[]
-                    const poseResult = result.results?.[0];
-                    const landmarks = poseResult?.landmarks?.[0] as PoseLandmarks | undefined;
+                    // Handle both payload variants from the native module:
+                    // - result.results[0].landmarks[0]
+                    // - result.landmarks[0]
+                    const landmarks = extractPoseLandmarks(result);
                     
-                    // For elliptical, we only need the nose landmark, not full body validation
-                    const isElliptical = exerciseTypeRef.current === 'elliptical';
-                    const hasValidLandmarks = landmarks && Array.isArray(landmarks) && landmarks.length >= 33;
-                    const poseIsValid = hasValidLandmarks && (isElliptical || isPoseValid(landmarks));
+                    const hasValidLandmarks = !!landmarks && landmarks.length >= 33;
+                    const currentExerciseType = exerciseTypeRef.current ?? 'squats';
+                    const poseIsValid = hasValidLandmarks && isPoseValidForExercise(landmarks, currentExerciseType);
                     
                     if (poseIsValid && landmarks) {
                         setCurrentPose(landmarks);
@@ -201,14 +251,14 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
                     console.error('[PoseCamera] Error processing pose results:', error);
                     setPoseStatus('no-pose');
                 }
-            }, [onPoseDetected, onRepDetected, onPlankStateChange, onEllipticalStateChange, onModelReady, debugPlank]),
+            }, [onPoseDetected, onRepDetected, onPlankStateChange, onEllipticalStateChange, markModelReady, debugPlank]),
             onError: useCallback((error: any) => {
                 console.error('[PoseCamera] Detection error:', error.message);
                 setPoseStatus('no-pose');
             }, []),
         },
         RunningMode.LIVE_STREAM,
-        'pose_landmarker_full.task',
+        modelName,
         {
             numPoses: 1,
             minPoseDetectionConfidence: 0.5,
@@ -237,7 +287,8 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
     const handleCameraReady = useCallback(() => {
         setIsReady(true);
         onCameraReady?.();
-    }, [onCameraReady]);
+        markModelReady();
+    }, [onCameraReady, markModelReady]);
 
     // Handle layout change
     const handleLayout = useCallback((event: any) => {
@@ -380,12 +431,10 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
             )}
 
             {/* Loading overlay */}
-            {(!isReady || !isModelReady) && (
+            {!isReady && (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color={Colors.cta} />
-                    <Text style={styles.loadingText}>
-                        {!isReady ? t('common.loading') : t('repCounter.modelLoading')}
-                    </Text>
+                    <Text style={styles.loadingText}>{t('common.loading')}</Text>
                 </View>
             )}
         </View>

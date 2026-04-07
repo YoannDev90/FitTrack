@@ -200,12 +200,11 @@ const EXERCISE_CONFIG: Record<ExerciseType, ExerciseConfig> = {
         timing: { minRepDurationMs: 500, cooldownMs: 300 },
     },
     squats: {
-        // Squats : genou < 110° = en bas, genou > 155° = debout
-        // Amplitude minimale : 45°
-        downAngle: 110,
-        upAngle: 155,
-        minRangeAngle: 40,
-        timing: { minRepDurationMs: 400, cooldownMs: 250 },
+        // Squats de face: seuils plus tolérants pour capter les amplitudes réelles caméra
+        downAngle: 125,
+        upAngle: 150,
+        minRangeAngle: 15,
+        timing: { minRepDurationMs: 320, cooldownMs: 200 },
     },
     situps: {
         // Abdos : hanche > 135° = allongé (bas), hanche < 95° = assis (haut)
@@ -1120,4 +1119,40 @@ export const isPoseValid = (landmarks: PoseLandmarks | null | undefined): boolea
     }
 
     return visibleCount >= 3;
+};
+
+export const isPoseValidForExercise = (
+    landmarks: PoseLandmarks | null | undefined,
+    exerciseType: ExerciseType
+): boolean => {
+    if (!landmarks || landmarks.length < 33) return false;
+
+    if (exerciseType === 'elliptical') {
+        const nose = landmarks[KnownPoseLandmarks.nose];
+        return !!nose && (nose.visibility ?? 1) >= 0.5;
+    }
+
+    if (exerciseType === 'squats') {
+        const lowerBodyIndices = [
+            KnownPoseLandmarks.leftHip,
+            KnownPoseLandmarks.rightHip,
+            KnownPoseLandmarks.leftKnee,
+            KnownPoseLandmarks.rightKnee,
+            KnownPoseLandmarks.leftAnkle,
+            KnownPoseLandmarks.rightAnkle,
+        ];
+
+        let visibleCount = 0;
+        for (const idx of lowerBodyIndices) {
+            const lm = landmarks[idx];
+            if (lm && (lm.visibility ?? 1) >= VISIBILITY_THRESHOLD) {
+                visibleCount++;
+            }
+        }
+
+        // At least one complete side (hip+knee+ankle) + one extra point.
+        return visibleCount >= 4;
+    }
+
+    return isPoseValid(landmarks);
 };

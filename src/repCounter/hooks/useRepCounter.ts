@@ -19,6 +19,7 @@ import {
     resetEllipticalState,
     hasEllipticalMovementStarted,
     resetEllipticalSamples,
+    resetExerciseState,
 } from '../../utils/poseDetection';
 import { playSessionEndSound } from '../../services/audio/sessionEndSound';
 import {
@@ -29,7 +30,7 @@ import {
     getRoundedSessionData,
     type ActiveSession,
 } from '../../services/sessionRecovery';
-import type { PlankDebugInfo, EllipticalState, RepEventMetadata } from '../../utils/poseDetection';
+import type { ExerciseType, PlankDebugInfo, EllipticalState, RepEventMetadata } from '../../utils/poseDetection';
 import type { HomeWorkoutEntry } from '../../types';
 import type { ExerciseConfig, DetectionMode, TutorialStep, EllipticalCalibrationPhase } from '../types';
 import { EXERCISES } from '../constants';
@@ -455,6 +456,13 @@ export function useRepCounter() {
         const isResuming = repCount > 0 || plankSeconds > 0 || ellipticalSeconds > 0 || elapsedTime > 0;
 
         if (!isResuming) {
+            const shouldKeepEllipticalCalibration =
+                selectedExercise.id === 'elliptical' && detectionMode === 'camera';
+
+            if (!shouldKeepEllipticalCalibration) {
+                resetExerciseState(selectedExercise.id as ExerciseType);
+            }
+
             sessionStartedAtRef.current = Date.now();
             repTimelineRef.current = [];
             activeRepStartTime.current = null;

@@ -119,6 +119,7 @@ const defaultSettings: UserSettings = {
     themePreset: 'default',
     debugCamera: false,
     preferCameraDetection: true,
+    useLitePoseModel: false,
     debugPlank: false,
     developerMode: false,
     skipSensorSelection: true,

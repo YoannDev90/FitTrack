@@ -383,6 +383,7 @@ export default function DataScreen() {
                   },
                   debugCamera: backup.app.settings.debugCamera,
                   preferCameraDetection: backup.app.settings.preferCameraDetection,
+                  useLitePoseModel: backup.app.settings.useLitePoseModel,
                   units: backup.app.settings.units,
                 },
                 unlockedBadges: backup.app.unlockedBadges,
