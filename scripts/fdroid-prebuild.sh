@@ -50,6 +50,14 @@ const fossPackage = 'com.spix.app.foss';
 appJson.expo.android.package = fossPackage;
 appJson.expo.ios.bundleIdentifier = 'com.spix.app';
 
+// Ensure FOSS builds block INTERNET permission
+appJson.expo.android.blockedPermissions = Array.isArray(appJson.expo.android.blockedPermissions)
+  ? appJson.expo.android.blockedPermissions
+  : [];
+if (!appJson.expo.android.blockedPermissions.includes('android.permission.INTERNET')) {
+  appJson.expo.android.blockedPermissions.push('android.permission.INTERNET');
+}
+
 // CRITICAL: Remove expo-notifications and expo-application plugins
 if (appJson.expo.plugins) {
   appJson.expo.plugins = appJson.expo.plugins.filter(plugin => {
