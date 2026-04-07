@@ -254,7 +254,6 @@ export interface UserSettings {
   // Labs settings
   debugCamera?: boolean; // Afficher les points de pose sur la caméra
   preferCameraDetection?: boolean; // Préférer la caméra à l'accéléromètre
-  useLitePoseModel?: boolean; // Utiliser le modèle MediaPipe Lite (plus rapide, moins précis)
   debugPlank?: boolean; // Afficher les infos de debug pour la détection de planche
   // Notifications de rappel de série
   streakReminderEnabled?: boolean;

@@ -3,26 +3,18 @@ const { withDangerousMod, withPlugins } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-const MODELS = [
-    {
-        name: 'pose_landmarker_full.task',
-        url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
-    },
-    {
-        name: 'pose_landmarker_lite.task',
-        url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-    },
-];
+const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task';
+const MODEL_NAME = 'pose_landmarker_full.task';
 
-async function downloadModel(model, destPath) {
+async function downloadModel(destPath) {
     // Use dynamic import for fetch (Node 18+)
-    const response = await fetch(model.url);
+    const response = await fetch(MODEL_URL);
     if (!response.ok) {
         throw new Error(`Failed to download model: ${response.statusText}`);
     }
     const buffer = await response.arrayBuffer();
     fs.writeFileSync(destPath, Buffer.from(buffer));
-    console.log(`[withMediaPipeModel] Downloaded ${model.name} (${(buffer.byteLength / 1024 / 1024).toFixed(2)} MB)`);
+    console.log(`[withMediaPipeModel] Downloaded ${MODEL_NAME} (${(buffer.byteLength / 1024 / 1024).toFixed(2)} MB)`);
 }
 
 const withMediaPipeModel = (config) => {
@@ -44,35 +36,33 @@ const withMediaPipeModel = (config) => {
                 fs.mkdirSync(assetsDir, { recursive: true });
             }
 
-            for (const model of MODELS) {
-                const modelPath = path.join(assetsDir, model.name);
+            const modelPath = path.join(assetsDir, MODEL_NAME);
 
-                // Download each model if it doesn't exist
-                if (!fs.existsSync(modelPath)) {
-                    console.log(`[withMediaPipeModel] Downloading ${model.name}...`);
-                    try {
-                        await downloadModel(model, modelPath);
-                    } catch (error) {
-                        console.error(`[withMediaPipeModel] Failed to download ${model.name}:`, error.message);
+            // Download the model if it doesn't exist
+            if (!fs.existsSync(modelPath)) {
+                console.log(`[withMediaPipeModel] Downloading ${MODEL_NAME}...`);
+                try {
+                    await downloadModel(modelPath);
+                } catch (error) {
+                    console.error(`[withMediaPipeModel] Failed to download model:`, error.message);
 
-                        // Fallback: try to copy from a local android-patches directory
-                        const patchPath = path.join(projectRoot, 'scripts', 'android-patches', model.name);
-                        if (fs.existsSync(patchPath)) {
-                            console.log(`[withMediaPipeModel] Found local model at ${patchPath}. Copying to assets...`);
-                            try {
-                                fs.copyFileSync(patchPath, modelPath);
-                                console.log(`[withMediaPipeModel] Copied ${model.name} to assets`);
-                            } catch (copyErr) {
-                                console.error(`[withMediaPipeModel] Failed to copy model from android-patches:`, copyErr.message);
-                                console.log(`[withMediaPipeModel] Please manually download from: ${model.url}`);
-                            }
-                        } else {
-                            console.log(`[withMediaPipeModel] No local model at ${patchPath}. Please manually download from: ${model.url}`);
+                    // Fallback: try to copy from a local android-patches directory
+                    const patchPath = path.join(projectRoot, 'scripts', 'android-patches', MODEL_NAME);
+                    if (fs.existsSync(patchPath)) {
+                        console.log(`[withMediaPipeModel] Found local model at ${patchPath}. Copying to assets...`);
+                        try {
+                            fs.copyFileSync(patchPath, modelPath);
+                            console.log(`[withMediaPipeModel] Copied ${MODEL_NAME} to assets`);
+                        } catch (copyErr) {
+                            console.error(`[withMediaPipeModel] Failed to copy model from android-patches:`, copyErr.message);
+                            console.log(`[withMediaPipeModel] Please manually download from: ${MODEL_URL}`);
                         }
+                    } else {
+                        console.log(`[withMediaPipeModel] No local model at ${patchPath}. Please manually download from: ${MODEL_URL}`);
                     }
-                } else {
-                    console.log(`[withMediaPipeModel] ${model.name} already exists`);
                 }
+            } else {
+                console.log(`[withMediaPipeModel] ${MODEL_NAME} already exists`);
             }
 
             return config;

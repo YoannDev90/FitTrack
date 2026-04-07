@@ -12,7 +12,6 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-import * as FileSystem from 'expo-file-system/legacy';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
@@ -29,20 +28,6 @@ import {
 import { GlassCard, InputField } from '../../src/components/ui';
 import { useAppStore } from '../../src/stores';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
-
-const POSE_MODEL_LITE_FILE = 'pose_landmarker_lite.task';
-const POSE_MODEL_LITE_URL =
-  'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
-
-const getLiteModelCachePath = (): string | null => {
-  if (FileSystem.documentDirectory) {
-    return `${FileSystem.documentDirectory}${POSE_MODEL_LITE_FILE}`;
-  }
-  if (FileSystem.cacheDirectory) {
-    return `${FileSystem.cacheDirectory}${POSE_MODEL_LITE_FILE}`;
-  }
-  return null;
-};
 
 // Setting Item Component
 function SettingItem({
@@ -113,27 +98,6 @@ export default function PreferencesScreen() {
     updateSettings({ keepGoingIntervalMinutes: interval });
     Alert.alert(t('common.success'), t('settings.keepGoingSaved', { interval }));
   }, [keepGoingInput, updateSettings, t]);
-
-  const handlePoseModelToggle = useCallback(async (enabled: boolean) => {
-    updateSettings({ useLitePoseModel: enabled });
-
-    const litePath = getLiteModelCachePath();
-    if (!litePath) return;
-
-    try {
-      const info = await FileSystem.getInfoAsync(litePath);
-
-      if (enabled) {
-        if (!info.exists) {
-          await FileSystem.downloadAsync(POSE_MODEL_LITE_URL, litePath);
-        }
-      } else if (info.exists) {
-        await FileSystem.deleteAsync(litePath, { idempotent: true });
-      }
-    } catch (error) {
-      console.warn('[PoseModel] Unable to sync lite model cache', error);
-    }
-  }, [updateSettings]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -270,25 +234,6 @@ export default function PreferencesScreen() {
               />
             }
             delay={210}
-          />
-        </GlassCard>
-
-        {/* Pose model quality */}
-        <GlassCard style={styles.settingsCard}>
-          <SettingItem
-            icon={<Zap size={20} color={Colors.gold} />}
-            iconColor={Colors.gold}
-            title={t('settings.poseModelLite')}
-            subtitle={t('settings.poseModelLiteDesc')}
-            rightElement={
-              <Switch
-                value={settings.useLitePoseModel ?? false}
-                onValueChange={handlePoseModelToggle}
-                trackColor={{ false: Colors.card, true: Colors.teal }}
-                thumbColor={Colors.white}
-              />
-            }
-            delay={230}
           />
         </GlassCard>
 

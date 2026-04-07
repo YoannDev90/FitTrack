@@ -51,7 +51,7 @@ export const playSessionEndSound = async (): Promise<void> => {
             }
 
             playbackStarted = true;
-            player.seekTo(0);
+            player.currentTime = 0;
             player.play();
         };
 

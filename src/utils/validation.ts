@@ -117,7 +117,6 @@ export const SettingsSchema = z.object({
     hiddenTabs: HiddenTabsSchema.optional(),
     debugCamera: z.boolean().optional(),
     preferCameraDetection: z.boolean().optional(),
-    useLitePoseModel: z.boolean().optional(),
     debugPlank: z.boolean().optional(),
     onboardingCompleted: z.boolean().optional(),
     keepGoingIntervalSeconds: z.number().int().positive().optional(),

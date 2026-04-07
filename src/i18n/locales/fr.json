@@ -882,8 +882,6 @@
     "cameraModeDesc": "Préférer la détection de pose",
     "debugCamera": "Debug caméra",
     "debugCameraDesc": "Afficher les points de tracking",
-    "poseModelLite": "Utiliser le modèle de pose Lite",
-    "poseModelLiteDesc": "Plus rapide sur les anciens téléphones, avec une précision de détection réduite.",
     "social": "Social",
     "socialFeatures": "Fonctionnalités sociales",
     "socialEnabled": "Classement et amis activés",

@@ -142,7 +142,7 @@ const PRESENCE_THRESHOLD = 0.45;
  * Cela correspond à ~2 frames de lissage effectif à 30fps, suffisant pour
  * supprimer le bruit sans créer de décalage perceptible sur les seuils d'angle.
  */
-const LANDMARK_SMOOTHING_ALPHA = 0.55;
+const LANDMARK_SMOOTHING_ALPHA = 0.65;
 
 /**
  * Alpha EMA pour le lissage des angles calculés.
@@ -200,11 +200,10 @@ const EXERCISE_CONFIG: Record<ExerciseType, ExerciseConfig> = {
         timing: { minRepDurationMs: 500, cooldownMs: 300 },
     },
     squats: {
-        // Squats de face: seuils plus tolérants pour capter les amplitudes réelles caméra
-        downAngle: 125,
-        upAngle: 150,
-        minRangeAngle: 15,
-        timing: { minRepDurationMs: 320, cooldownMs: 200 },
+        downAngle: 100,       // squat profond de face : l'angle réel est ~95-105°
+        upAngle: 145,         // debout de face : ~150-160° mais lissé → 145 est plus sûr
+        minRangeAngle: 20,    // réduit car le lissage EMA mange de l'amplitude
+        timing: { minRepDurationMs: 350, cooldownMs: 200 },
     },
     situps: {
         // Abdos : hanche > 135° = allongé (bas), hanche < 95° = assis (haut)
@@ -985,6 +984,8 @@ export const countRepsFromPose = (
                 KnownPoseLandmarks.rightHip, KnownPoseLandmarks.rightKnee, KnownPoseLandmarks.rightAnkle
             );
             const kneeAngle = smoothAngle(state, 'knee', rawAngle);
+            // DEBUG
+            if (kneeAngle > 0) console.log(`[Squats] kneeAngle: ${kneeAngle.toFixed(1)}°`);
 
             if (kneeAngle > 0) {
                 const { downAngle, upAngle } = EXERCISE_CONFIG.squats;
@@ -1119,40 +1120,4 @@ export const isPoseValid = (landmarks: PoseLandmarks | null | undefined): boolea
     }
 
     return visibleCount >= 3;
-};
-
-export const isPoseValidForExercise = (
-    landmarks: PoseLandmarks | null | undefined,
-    exerciseType: ExerciseType
-): boolean => {
-    if (!landmarks || landmarks.length < 33) return false;
-
-    if (exerciseType === 'elliptical') {
-        const nose = landmarks[KnownPoseLandmarks.nose];
-        return !!nose && (nose.visibility ?? 1) >= 0.5;
-    }
-
-    if (exerciseType === 'squats') {
-        const lowerBodyIndices = [
-            KnownPoseLandmarks.leftHip,
-            KnownPoseLandmarks.rightHip,
-            KnownPoseLandmarks.leftKnee,
-            KnownPoseLandmarks.rightKnee,
-            KnownPoseLandmarks.leftAnkle,
-            KnownPoseLandmarks.rightAnkle,
-        ];
-
-        let visibleCount = 0;
-        for (const idx of lowerBodyIndices) {
-            const lm = landmarks[idx];
-            if (lm && (lm.visibility ?? 1) >= VISIBILITY_THRESHOLD) {
-                visibleCount++;
-            }
-        }
-
-        // At least one complete side (hip+knee+ankle) + one extra point.
-        return visibleCount >= 4;
-    }
-
-    return isPoseValid(landmarks);
 };

@@ -5,7 +5,6 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
-    Platform,
     View,
     StyleSheet,
     Text,
@@ -30,13 +29,12 @@ import Svg, { Circle, Line } from 'react-native-svg';
 
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '../../constants';
 import { useTranslation } from 'react-i18next';
-import { useAppStore } from '../../stores';
 import { 
     ExerciseType, 
     PoseLandmarks,
     countRepsFromPose,
     resetExerciseState,
-    isPoseValidForExercise,
+    isPoseValid,
     detectPlankPosition,
     detectEllipticalMovement,
     type RepEventMetadata,
@@ -149,10 +147,6 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
     const [cameraLayout, setCameraLayout] = useState({ width: 1, height: 1 });
     const [poseStatus, setPoseStatus] = useState<'detecting' | 'pose' | 'no-pose'>('detecting');
     const { t } = useTranslation();
-    const useLitePoseModel = useAppStore((state) => state.settings.useLitePoseModel ?? false);
-    const modelName = Platform.OS === 'android' && useLitePoseModel
-        ? 'pose_landmarker_lite.task'
-        : 'pose_landmarker_full.task';
     
     const countRef = useRef(currentCount);
     const exerciseTypeRef = useRef(exerciseType);
@@ -196,9 +190,10 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
                     // - result.landmarks[0]
                     const landmarks = extractPoseLandmarks(result);
                     
+                    // For elliptical, we only need the nose landmark, not full body validation
+                    const isElliptical = exerciseTypeRef.current === 'elliptical';
                     const hasValidLandmarks = !!landmarks && landmarks.length >= 33;
-                    const currentExerciseType = exerciseTypeRef.current ?? 'squats';
-                    const poseIsValid = hasValidLandmarks && isPoseValidForExercise(landmarks, currentExerciseType);
+                    const poseIsValid = hasValidLandmarks && (isElliptical || isPoseValid(landmarks));
                     
                     if (poseIsValid && landmarks) {
                         setCurrentPose(landmarks);
@@ -258,7 +253,7 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
             }, []),
         },
         RunningMode.LIVE_STREAM,
-        modelName,
+        'pose_landmarker_full.task',
         {
             numPoses: 1,
             minPoseDetectionConfidence: 0.5,
