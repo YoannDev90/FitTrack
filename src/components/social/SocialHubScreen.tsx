@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+    Linking,
     Share,
     StyleSheet,
     Text,
@@ -211,6 +212,7 @@ export default function SocialHubScreen() {
     const { t } = useTranslation();
     const { width } = useWindowDimensions();
     const challengeCardWidth = Math.max(260, width - Spacing.lg * 2);
+    const latestReleaseUrl = `${BuildConfig.githubReleasesUrl}/latest`;
 
     const challengeSheetRef = useRef<TrueSheet>(null);
     const shareWorkoutSheetRef = useRef<TrueSheet>(null);
@@ -259,6 +261,7 @@ export default function SocialHubScreen() {
         buttons: [{ text: t('common.ok') }],
         showCloseButton: true,
     });
+    const [fossModalVisible, setFossModalVisible] = useState(BuildConfig.isFoss);
 
     const { entries } = useAppStore();
     const {
@@ -350,6 +353,10 @@ export default function SocialHubScreen() {
             ],
         });
     }, [openDialog, t]);
+
+    const openLatestRelease = useCallback(() => {
+        void Linking.openURL(latestReleaseUrl);
+    }, [latestReleaseUrl]);
 
     const shareableWorkouts = useMemo(() => {
         return entries
@@ -924,13 +931,38 @@ export default function SocialHubScreen() {
         );
     }, [loadChallenges, loadFeed, profile?.id, showConfirmDialog, showSuccessDialog, showErrorDialog, t]);
 
+    if (BuildConfig.isFoss) {
+        return (
+            <SafeAreaView style={styles.container} edges={['top']}>
+                <View style={styles.centeredState}>
+                    <Users size={56} color={Colors.muted} />
+                    <Text style={styles.stateTitle}>{t('social.fossTitle')}</Text>
+                    <Text style={styles.stateSubtitle}>{t('social.fossInfo')}</Text>
+                </View>
+
+                <CustomAlertModal
+                    visible={fossModalVisible}
+                    title={t('social.fossTitle')}
+                    message={t('social.fossInfo')}
+                    type="warning"
+                    buttons={[
+                        { text: t('common.ok'), onPress: () => setFossModalVisible(false) },
+                        { text: t('social.fossUpgrade'), onPress: openLatestRelease },
+                    ]}
+                    showCloseButton={true}
+                    onClose={() => setFossModalVisible(false)}
+                />
+            </SafeAreaView>
+        );
+    }
+
     if (!isSocialAvailable()) {
         return (
             <SafeAreaView style={styles.container} edges={['top']}>
                 <View style={styles.centeredState}>
                     <Users size={56} color={Colors.muted} />
-                    <Text style={styles.stateTitle}>{BuildConfig.isFoss ? t('social.fossTitle') : t('social.notConfiguredTitle')}</Text>
-                    <Text style={styles.stateSubtitle}>{BuildConfig.isFoss ? t('social.fossInfo') : t('social.notConfiguredSubtitle')}</Text>
+                    <Text style={styles.stateTitle}>{t('social.notConfiguredTitle')}</Text>
+                    <Text style={styles.stateSubtitle}>{t('social.notConfiguredSubtitle')}</Text>
                 </View>
             </SafeAreaView>
         );

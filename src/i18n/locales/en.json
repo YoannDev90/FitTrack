@@ -305,6 +305,7 @@
     "sensor": "Sensor",
     "camera": "Camera",
     "cameraNote": "The camera uses AI to detect your movements",
+    "fossTrackingExperimental": "Tracking is experimental on FOSS and may not always work.",
     "cameraOnly": "Camera mode only",
     "cameraPosition": "Position your phone sideways for a profile view",
     "cameraSearching": "Searching for camera...",

@@ -60,7 +60,7 @@ i18n
             de: { translation: de },
         },
         lng: getInitialLanguage(),
-        fallbackLng: 'fr',
+        fallbackLng: 'en',
         interpolation: {
             escapeValue: false, // React already escapes
         },
@@ -77,7 +77,8 @@ export const changeLanguage = async (language: LanguageCode): Promise<void> => {
 
 // Get current language
 export const getCurrentLanguage = (): LanguageCode => {
-    return (i18n.language as LanguageCode) || 'fr';
+    const normalized = (i18n.language || 'en').split('-')[0].toLowerCase();
+    return isLanguageCode(normalized) ? normalized : 'en';
 };
 
 export default i18n;

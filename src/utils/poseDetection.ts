@@ -200,9 +200,10 @@ const EXERCISE_CONFIG: Record<ExerciseType, ExerciseConfig> = {
         timing: { minRepDurationMs: 500, cooldownMs: 300 },
     },
     squats: {
-        downAngle: 100,       // squat profond de face : l'angle réel est ~95-105°
-        upAngle: 145,         // debout de face : ~150-160° mais lissé → 145 est plus sûr
-        minRangeAngle: 20,    // réduit car le lissage EMA mange de l'amplitude
+        // Plus permissif pour la vue frontale mobile (angles genou souvent sous-estimés)
+        downAngle: 125,
+        upAngle: 150,
+        minRangeAngle: 15,
         timing: { minRepDurationMs: 350, cooldownMs: 200 },
     },
     situps: {
@@ -984,8 +985,6 @@ export const countRepsFromPose = (
                 KnownPoseLandmarks.rightHip, KnownPoseLandmarks.rightKnee, KnownPoseLandmarks.rightAnkle
             );
             const kneeAngle = smoothAngle(state, 'knee', rawAngle);
-            // DEBUG
-            if (kneeAngle > 0) console.log(`[Squats] kneeAngle: ${kneeAngle.toFixed(1)}°`);
 
             if (kneeAngle > 0) {
                 const { downAngle, upAngle } = EXERCISE_CONFIG.squats;

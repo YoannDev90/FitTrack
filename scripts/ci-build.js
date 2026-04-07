@@ -26,7 +26,7 @@ const BUILD_FLAVORS = {
     envVar: 'EXPO_PUBLIC_BUILD_FLAVOR=foss',
     apkSuffix: '-foss',
     includeGoogleServices: false,
-    splitByAbi: false, // F-Droid préfère souvent un APK universel ou géré différemment, ici on laisse false pour simplifier
+    splitByAbi: true,
   }
 };
 
@@ -211,6 +211,18 @@ function configureForFlavor(appJsonPath, flavor, version) {
     // On retire la ref au fichier googleServices ici, car on l'injecte manuellement via patchGoogleServices
     // pour éviter qu'Expo ne plante s'il le trouve pas au prebuild
     delete obj.expo.android.googleServicesFile;
+
+    const existingBlocked = Array.isArray(obj.expo.android.blockedPermissions)
+      ? obj.expo.android.blockedPermissions
+      : [];
+
+    const withoutInternet = existingBlocked.filter(
+      (permission) => permission !== 'android.permission.INTERNET'
+    );
+
+    obj.expo.android.blockedPermissions = flavor === 'foss'
+      ? [...withoutInternet, 'android.permission.INTERNET']
+      : withoutInternet;
     
     return obj;
   });

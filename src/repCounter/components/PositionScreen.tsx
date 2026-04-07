@@ -10,6 +10,7 @@ import { Play, Smartphone, Camera, Timer, ArrowDown, Volume2 } from 'lucide-reac
 import { useTranslation } from 'react-i18next';
 import { RC, SP, RAD, FONT, W } from '../constants';
 import type { ExerciseConfig, DetectionMode } from '../types';
+import { BuildConfig } from '@/config/buildConfig';
 
 interface PositionScreenProps {
     exercise: ExerciseConfig;
@@ -67,6 +68,10 @@ export function PositionScreen({ exercise, detectionMode, onReady }: PositionScr
                         ? t('repCounter.cameraNote')
                         : t('repCounter.whenReady')}
                 </Text>
+
+                {detectionMode === 'camera' && BuildConfig.isFoss && (
+                    <Text style={s.fossHint}>{t('repCounter.fossTrackingExperimental')}</Text>
+                )}
             </View>
 
             {/* Volume hint for plank */}
@@ -119,6 +124,12 @@ const s = StyleSheet.create({
     subtitle: {
         fontSize: FONT.md, color: RC.textMuted,
         textAlign: 'center', lineHeight: 22,
+    },
+    fossHint: {
+        fontSize: FONT.sm,
+        color: RC.emberMid,
+        textAlign: 'center',
+        lineHeight: 20,
     },
     volumeHint: {
         flexDirection: 'row', alignItems: 'center', gap: SP.sm,

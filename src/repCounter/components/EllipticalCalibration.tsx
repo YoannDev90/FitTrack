@@ -40,7 +40,7 @@ export function EllipticalCalibration({
                     exerciseType="elliptical"
                     currentCount={0}
                     onRepDetected={() => {}}
-                    isActive={phase !== 'none' && phase !== 'complete'}
+                    isActive={phase !== 'none' && phase !== 'complete' && phase !== 'intro'}
                     style={{ width: 320, height: 240 }}
                 />
             </View>

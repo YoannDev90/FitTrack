@@ -304,6 +304,7 @@
     "sensor": "Capteur",
     "camera": "Caméra",
     "cameraNote": "La caméra utilise l'IA pour détecter tes mouvements",
+    "fossTrackingExperimental": "Le tracking est expérimental sur FOSS et peut ne pas toujours fonctionner.",
     "cameraOnly": "Mode caméra uniquement",
     "cameraPosition": "Positionne le téléphone de côté pour te voir de profil",
     "cameraSearching": "Recherche de caméra...",
