@@ -39,7 +39,11 @@ echo "🔧 Downgrading Gradle wrapper to 8.10.2 (F-Droid JDK 21 compat)..."
 
 GRADLE_WRAPPER_PROPS="android/gradle/wrapper/gradle-wrapper.properties"
 if [ -f "$GRADLE_WRAPPER_PROPS" ]; then
-    sed -E -i 's|gradle-[0-9]+-(all|bin)\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    if sed --version >/dev/null 2>&1; then
+        sed -i -e 's|gradle-[0-9][0-9]*-all\.zip|gradle-8.10.2-all.zip|g; s|gradle-[0-9][0-9]*-bin\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    else
+        sed -i '' -e 's|gradle-[0-9][0-9]*-all\.zip|gradle-8.10.2-all.zip|g; s|gradle-[0-9][0-9]*-bin\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    fi
     echo "  ✅ Gradle wrapper downgraded to 8.10.2"
 else
     echo "  ⚠️ WARNING: gradle-wrapper.properties not found yet (will patch after prebuild)"
@@ -385,7 +389,11 @@ echo "🔧 Re-applying Gradle 8.10.2 downgrade after expo prebuild..."
 
 GRADLE_WRAPPER_PROPS="android/gradle/wrapper/gradle-wrapper.properties"
 if [ -f "$GRADLE_WRAPPER_PROPS" ]; then
-    sed -E -i 's|gradle-[0-9]+-(all|bin)\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    if sed --version >/dev/null 2>&1; then
+        sed -i -e 's|gradle-[0-9][0-9]*-all\.zip|gradle-8.10.2-all.zip|g; s|gradle-[0-9][0-9]*-bin\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    else
+        sed -i '' -e 's|gradle-[0-9][0-9]*-all\.zip|gradle-8.10.2-all.zip|g; s|gradle-[0-9][0-9]*-bin\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    fi
     echo "  ✅ Gradle wrapper confirmed at 8.10.2"
     echo "  Current value: $(grep distributionUrl $GRADLE_WRAPPER_PROPS)"
 else
