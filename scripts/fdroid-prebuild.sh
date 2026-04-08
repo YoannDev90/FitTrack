@@ -373,6 +373,22 @@ if [ -f "$EXPO_APP_GRADLE" ]; then
   echo "  ✅ Removed installreferrer from expo-application"
 fi
 
+echo ""
+echo "🔧 Patching MapLibre..."
+
+MAPLIBRE_FILE="node_modules/@maplibre/maplibre-react-native/android/build.gradle"
+
+if [ -f "$MAPLIBRE_FILE" ]; then
+    if ! grep -q "com.android.library" "$MAPLIBRE_FILE"; then
+        sed -i '1i apply plugin: "com.android.library"' "$MAPLIBRE_FILE"
+        echo "✅ MapLibre patched"
+    else
+        echo "ℹ️ MapLibre already patched"
+    fi
+else
+    echo "⚠️ MapLibre build.gradle not found"
+fi
+
 # ==================================================
 # 🔧 Run Expo Prebuild
 # ==================================================
