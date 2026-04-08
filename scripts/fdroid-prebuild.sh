@@ -39,7 +39,7 @@ echo "🔧 Downgrading Gradle wrapper to 8.10.2 (F-Droid JDK 21 compat)..."
 
 GRADLE_WRAPPER_PROPS="android/gradle/wrapper/gradle-wrapper.properties"
 if [ -f "$GRADLE_WRAPPER_PROPS" ]; then
-    sed -i 's|gradle-[0-9.]*-\(all\|bin\)\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    sed -E -i 's|gradle-[0-9]+-(all|bin)\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
     echo "  ✅ Gradle wrapper downgraded to 8.10.2"
 else
     echo "  ⚠️ WARNING: gradle-wrapper.properties not found yet (will patch after prebuild)"
@@ -385,7 +385,7 @@ echo "🔧 Re-applying Gradle 8.10.2 downgrade after expo prebuild..."
 
 GRADLE_WRAPPER_PROPS="android/gradle/wrapper/gradle-wrapper.properties"
 if [ -f "$GRADLE_WRAPPER_PROPS" ]; then
-    sed -i 's|gradle-[0-9.]*-\(all\|bin\)\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    sed -E -i 's|gradle-[0-9]+-(all|bin)\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
     echo "  ✅ Gradle wrapper confirmed at 8.10.2"
     echo "  Current value: $(grep distributionUrl $GRADLE_WRAPPER_PROPS)"
 else
@@ -393,27 +393,41 @@ else
 fi
 
 # ==================================================
-# 🔧 FIX F-DROID: Force Kotlin JVM toolchain to JDK 21
-# Gradle 8.x + Kotlin cherche parfois une toolchain explicite
-# On force JDK 21 pour matcher ce que F-Droid fournit
+# 🔧 FIX F-DROID: Force JDK 21 via gradle.properties
+# F-Droid uses gradlew-fdroid and ignores gradle-wrapper.properties
+# La seule façon de forcer la toolchain est via les properties JVM
 # ==================================================
 echo ""
-echo "🔧 Forcing Kotlin JVM toolchain to JDK 21..."
+echo "🔧 Forcing JDK 21 toolchain via gradle.properties..."
 
-cat >> android/build.gradle <<'EOF'
+JAVA_CMD="$(command -v java || true)"
+JAVA_HOME_DETECTED=""
 
-// F-DROID FIX: Force Kotlin JVM toolchain to match available JDK (21)
-// Prevents "Cannot find a Java installation matching languageVersion=17"
-subprojects {
-    plugins.withType(org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin.class) {
-        kotlin {
-            jvmToolchain(21)
-        }
-    }
-}
+if [ -n "$JAVA_CMD" ] && command -v readlink >/dev/null 2>&1; then
+    JAVA_HOME_DETECTED="$(dirname "$(dirname "$(readlink -f "$JAVA_CMD")")")"
+fi
+
+if [ -z "$JAVA_HOME_DETECTED" ]; then
+    JAVA_HOME_DETECTED="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
+fi
+
+echo "  Detected JAVA_HOME: $JAVA_HOME_DETECTED"
+
+if [ -f android/gradle.properties ]; then
+    sed -i -E '/^kotlin.jvm.target.validation.mode=|^org.gradle.java.home=/d' android/gradle.properties
+else
+    touch android/gradle.properties
+fi
+
+cat >> android/gradle.properties <<EOF
+
+# F-DROID FIX: Disable Kotlin toolchain auto-detection
+# Forces Kotlin to use the running JVM (JDK 21) instead of looking for JDK 17
+kotlin.jvm.target.validation.mode=ignore
+org.gradle.java.home=$JAVA_HOME_DETECTED
 EOF
 
-echo "  ✅ Kotlin JVM toolchain forced to 21"
+echo "  ✅ gradle.properties patched with JAVA_HOME=$JAVA_HOME_DETECTED"
 
 # ==================================================
 # 🔥 Verify buildFromSource is working
