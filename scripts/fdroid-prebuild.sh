@@ -30,6 +30,22 @@ export REACT_NATIVE_ENABLE_SOURCE_MAPS=false
 ROOT_DIR="$(pwd)"
 
 # ==================================================
+# 🔧 FIX F-DROID: Downgrade Gradle to 8.10.2
+# Gradle 9.0.0 cherche une toolchain JDK 17 exacte
+# mais F-Droid ne fournit que JDK 21 sans auto-provisioning
+# ==================================================
+echo ""
+echo "🔧 Downgrading Gradle wrapper to 8.10.2 (F-Droid JDK 21 compat)..."
+
+GRADLE_WRAPPER_PROPS="android/gradle/wrapper/gradle-wrapper.properties"
+if [ -f "$GRADLE_WRAPPER_PROPS" ]; then
+    sed -i 's|gradle-[0-9.]*-\(all\|bin\)\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    echo "  ✅ Gradle wrapper downgraded to 8.10.2"
+else
+    echo "  ⚠️ WARNING: gradle-wrapper.properties not found yet (will patch after prebuild)"
+fi
+
+# ==================================================
 # 2. Configure app.json for FOSS Package
 # ==================================================
 echo ""
@@ -361,6 +377,45 @@ echo "🔧 Running Expo prebuild (Clean & Generate Android)..."
 npx expo prebuild --clean --platform android
 
 # ==================================================
+# 🔧 FIX F-DROID: Downgrade Gradle wrapper AFTER prebuild
+# (expo prebuild peut réécrire gradle-wrapper.properties)
+# ==================================================
+echo ""
+echo "🔧 Re-applying Gradle 8.10.2 downgrade after expo prebuild..."
+
+GRADLE_WRAPPER_PROPS="android/gradle/wrapper/gradle-wrapper.properties"
+if [ -f "$GRADLE_WRAPPER_PROPS" ]; then
+    sed -i 's|gradle-[0-9.]*-\(all\|bin\)\.zip|gradle-8.10.2-all.zip|g' "$GRADLE_WRAPPER_PROPS"
+    echo "  ✅ Gradle wrapper confirmed at 8.10.2"
+    echo "  Current value: $(grep distributionUrl $GRADLE_WRAPPER_PROPS)"
+else
+    echo "  ❌ ERROR: gradle-wrapper.properties still not found after prebuild"
+fi
+
+# ==================================================
+# 🔧 FIX F-DROID: Force Kotlin JVM toolchain to JDK 21
+# Gradle 8.x + Kotlin cherche parfois une toolchain explicite
+# On force JDK 21 pour matcher ce que F-Droid fournit
+# ==================================================
+echo ""
+echo "🔧 Forcing Kotlin JVM toolchain to JDK 21..."
+
+cat >> android/build.gradle <<'EOF'
+
+// F-DROID FIX: Force Kotlin JVM toolchain to match available JDK (21)
+// Prevents "Cannot find a Java installation matching languageVersion=17"
+subprojects {
+    plugins.withType(org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin.class) {
+        kotlin {
+            jvmToolchain(21)
+        }
+    }
+}
+EOF
+
+echo "  ✅ Kotlin JVM toolchain forced to 21"
+
+# ==================================================
 # 🔥 Verify buildFromSource is working
 # ==================================================
 echo ""
@@ -614,6 +669,8 @@ echo "=================================================="
 echo "✅ F-Droid prebuild COMPLETED (Spix)"
 echo "=================================================="
 echo "  ✅ SOURCE_DATE_EPOCH: $SOURCE_DATE_EPOCH (from git)"
+echo "  ✅ Gradle: downgraded to 8.10.2 (JDK 21 compat)"
+echo "  ✅ Kotlin JVM toolchain: forced to 21"
 echo "  ✅ metro.config.js: Deterministic module IDs"
 echo "  ✅ Source maps: Disabled for reproducibility"
 echo "  ✅ buildFromSource: ['.*'] configured"
