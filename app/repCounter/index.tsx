@@ -33,7 +33,7 @@ export default function RepCounterScreen() {
     const rc = useRepCounter();
 
     const showCameraPreview  = rc.settings.preferCameraDetection ?? false;
-    const showDebugOverlay   = (rc.settings.developerMode ?? false) && (rc.settings.debugCamera ?? false);
+    const showDebugOverlay   = rc.settings.debugCamera ?? false;
 
     // Android back button
     useFocusEffect(
