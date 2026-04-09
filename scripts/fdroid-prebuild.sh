@@ -708,28 +708,6 @@ EOF
 fi
 
 # ==================================================
-# 🔧 FIX: Restore Hermes Compiler Permissions
-# ==================================================
-echo ""
-echo "🔧 Restoring hermesc executable permissions..."
-
-HERMESC_LINUX="node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
-
-if [ -f "$HERMESC_LINUX" ]; then
-  chmod +x "$HERMESC_LINUX"
-  echo "  ✅ hermesc permissions restored: $HERMESC_LINUX"
-  
-  # Vérifier que le binaire fonctionne
-  if "$HERMESC_LINUX" --version &>/dev/null; then
-    echo "  ✅ hermesc is working correctly"
-  else
-    echo "  ⚠️ WARNING: hermesc exists but might not work"
-  fi
-else
-  echo "  ❌ ERROR: hermesc not found at $HERMESC_LINUX"
-fi
-
-# ==================================================
 # 🧹 FINAL CLEANUP
 # ==================================================
 echo ""
