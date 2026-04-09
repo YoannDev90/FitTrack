@@ -216,6 +216,18 @@ function configureForFlavor(appJsonPath, flavor, version) {
       ? obj.expo.android.blockedPermissions
       : [];
 
+    const existingPermissions = Array.isArray(obj.expo.android.permissions)
+      ? obj.expo.android.permissions
+      : [];
+
+    const permissionsWithoutInternet = existingPermissions.filter(
+      (permission) => permission !== 'android.permission.INTERNET'
+    );
+
+    obj.expo.android.permissions = flavor === 'foss'
+      ? permissionsWithoutInternet
+      : [...new Set([...permissionsWithoutInternet, 'android.permission.INTERNET'])];
+
     const withoutInternet = existingBlocked.filter(
       (permission) => permission !== 'android.permission.INTERNET'
     );
