@@ -78,14 +78,14 @@ if (!appJson.expo.android.blockedPermissions.includes('android.permission.INTERN
   appJson.expo.android.blockedPermissions.push('android.permission.INTERNET');
 }
 
-// CRITICAL: Remove expo-notifications and expo-application plugins
+// CRITICAL: Remove plugins unavailable in FOSS
 if (appJson.expo.plugins) {
   appJson.expo.plugins = appJson.expo.plugins.filter(plugin => {
     if (typeof plugin === 'string') {
-      return plugin !== 'expo-notifications' && plugin !== 'expo-application';
+      return plugin !== 'expo-notifications' && plugin !== 'expo-application' && plugin !== '@maplibre/maplibre-react-native';
     }
     if (Array.isArray(plugin)) {
-      return plugin[0] !== 'expo-notifications' && plugin[0] !== 'expo-application';
+      return plugin[0] !== 'expo-notifications' && plugin[0] !== 'expo-application' && plugin[0] !== '@maplibre/maplibre-react-native';
     }
     return true;
   });
@@ -169,6 +169,7 @@ echo ""
 echo "📦 Creating local FOSS stubs with native Android modules..."
 mkdir -p stubs/expo-notifications/android/src/main/java/expo/modules/notifications
 mkdir -p stubs/expo-application
+mkdir -p stubs/maplibre-react-native
 
 # ==================================================
 # Stub: expo-notifications (JS + ANDROID)
@@ -307,6 +308,49 @@ export const nativeBuildVersion: string;
 export function getInstallReferrerAsync(): Promise<any>;
 EOF
 
+# ==================================================
+# Stub: @maplibre/maplibre-react-native
+# ==================================================
+cat > stubs/maplibre-react-native/package.json <<'EOF'
+{
+  "name": "@maplibre/maplibre-react-native",
+  "version": "10.4.2",
+  "main": "index.js",
+  "types": "index.d.ts"
+}
+EOF
+
+cat > stubs/maplibre-react-native/index.js <<'EOF'
+console.warn('[FOSS] MapLibre disabled');
+export const setAccessToken = () => {};
+
+const MapLibreFallback = {
+  setAccessToken,
+  MapView: null,
+  Camera: null,
+  ShapeSource: null,
+  LineLayer: null,
+  CircleLayer: null,
+};
+
+export default MapLibreFallback;
+EOF
+
+cat > stubs/maplibre-react-native/index.d.ts <<'EOF'
+export function setAccessToken(token: string | null): void;
+
+declare const MapLibreFallback: {
+  setAccessToken: typeof setAccessToken;
+  MapView: null;
+  Camera: null;
+  ShapeSource: null;
+  LineLayer: null;
+  CircleLayer: null;
+};
+
+export default MapLibreFallback;
+EOF
+
 echo "  ✅ Local stubs created in ./stubs/"
 
 # ==================================================
@@ -330,13 +374,22 @@ if (packageJson.dependencies['react-native-vision-camera']) {
 // 2. Use Local Stubs
 packageJson.dependencies['expo-notifications'] = 'file:./stubs/expo-notifications';
 packageJson.dependencies['expo-application'] = 'file:./stubs/expo-application';
+packageJson.dependencies['@maplibre/maplibre-react-native'] = 'file:./stubs/maplibre-react-native';
 console.log('✅ expo-notifications -> file:./stubs/expo-notifications');
 console.log('✅ expo-application -> file:./stubs/expo-application');
+console.log('✅ @maplibre/maplibre-react-native -> file:./stubs/maplibre-react-native');
 
 // 3. KEEP expo-notifications in autolinking (we need the stub native module)
 packageJson.expo = packageJson.expo || {};
 packageJson.expo.autolinking = packageJson.expo.autolinking || {};
-packageJson.expo.autolinking.exclude = ['expo-application'];  // Only exclude application
+const existingAutolinkingExcludes = Array.isArray(packageJson.expo.autolinking.exclude)
+  ? packageJson.expo.autolinking.exclude
+  : [];
+packageJson.expo.autolinking.exclude = Array.from(new Set([
+  ...existingAutolinkingExcludes,
+  'expo-application',
+  '@maplibre/maplibre-react-native',
+]));
 
 // 4. 🔥 CRITICAL: Force ALL Expo modules to build from source (SDK 53+)
 packageJson.expo.autolinking.android = packageJson.expo.autolinking.android || {};
@@ -374,19 +427,12 @@ if [ -f "$EXPO_APP_GRADLE" ]; then
 fi
 
 echo ""
-echo "🔧 Patching MapLibre..."
-
-MAPLIBRE_FILE="node_modules/@maplibre/maplibre-react-native/android/build.gradle"
-
-if [ -f "$MAPLIBRE_FILE" ]; then
-    if ! grep -q "com.android.library" "$MAPLIBRE_FILE"; then
-        sed -i '1i apply plugin: "com.android.library"' "$MAPLIBRE_FILE"
-        echo "✅ MapLibre patched"
-    else
-        echo "ℹ️ MapLibre already patched"
-    fi
+echo "🧭 Disabling MapLibre native module for FOSS..."
+if [ -f "stubs/maplibre-react-native/package.json" ]; then
+  echo "  ✅ MapLibre stub is ready and native autolinking is excluded"
 else
-    echo "⚠️ MapLibre build.gradle not found"
+  echo "  ❌ ERROR: MapLibre stub not found"
+  exit 1
 fi
 
 # ==================================================
