@@ -413,6 +413,18 @@ fi
 npm install --force --package-lock-only
 npm ci --force || npm install --force
 
+echo ""
+echo "🔧 Restoring missing build files after install..."
+
+HERMSC_SRC="node_modules/hermes-compiler/hermesc/linux64-bin/hermesc"
+HERMSC_DEST="node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
+if [ ! -f "$HERMSC_DEST" ] && [ -f "$HERMSC_SRC" ]; then
+  mkdir -p "$(dirname "$HERMSC_DEST")"
+  cp "$HERMSC_SRC" "$HERMSC_DEST"
+  chmod +x "$HERMSC_DEST"
+  echo "  ✅ Restored missing hermesc from $HERMSC_SRC"
+fi
+
 # ==================================================
 # 🧹 Patch Expo modules BEFORE prebuild
 # ==================================================
