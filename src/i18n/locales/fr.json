@@ -2122,6 +2122,10 @@
     "exportGPX": "Exporter GPX",
     "shareGPX": "Partager GPX",
     "tracking": "En cours",
+    "fossMapDisabled": {
+      "title": "Carte desactivee dans la version FOSS",
+      "message": "La carte de course est indisponible en FOSS (pas d'acces Internet). Le suivi GPS continue normalement."
+    },
     "objectiveReached": "Objectif atteint !",
     "objectiveMissed": "Objectif manqué",
     "summary": {

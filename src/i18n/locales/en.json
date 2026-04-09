@@ -2122,6 +2122,10 @@
     "exportGPX": "Export GPX",
     "shareGPX": "Share GPX",
     "tracking": "Tracking",
+    "fossMapDisabled": {
+      "title": "Map disabled in FOSS build",
+      "message": "The run map is unavailable in FOSS (no Internet access). GPS tracking still works normally."
+    },
     "objectiveReached": "Objective reached!",
     "objectiveMissed": "Missed objective",
     "summary": {
