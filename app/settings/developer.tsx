@@ -10,6 +10,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,6 +29,7 @@ import {
   CheckCircle,
   XCircle,
   RotateCcw,
+  Camera,
 } from 'lucide-react-native';
 import { GlassCard, CustomAlertModal, type AlertButton } from '../../src/components/ui';
 import { useAppStore, useGamificationStore } from '../../src/stores';
@@ -85,9 +87,10 @@ function SectionTitle({ title, delay = 0 }: { title: string; delay?: number }) {
 
 export default function DeveloperScreen() {
   const { t } = useTranslation();
-  const { updateSettings, entries } = useAppStore();
+  const { updateSettings, entries, settings } = useAppStore();
   const { xp, level, clearHistory, recalculateFromEntries } = useGamificationStore();
   const triggerFallCheck = useSafetyStore((state) => state.triggerFallCheck);
+  const isFossSimulationEnabled = settings.simulateFossBuild ?? false;
   
   // Pollination account info
   const [pollinationInfo, setPollinationInfo] = useState<PollinationAccountInfo | null>(null);
@@ -210,6 +213,7 @@ export default function DeveloperScreen() {
           onPress: () => {
             updateSettings({
               developerMode: false,
+              simulateFossBuild: false,
             });
             router.back();
           },
@@ -234,6 +238,10 @@ export default function DeveloperScreen() {
       title: t('settings.developer.testFallDoneTitle'),
       message: t('settings.developer.testFallDoneMessage'),
     });
+  };
+
+  const handleToggleFossSimulation = (enabled: boolean) => {
+    updateSettings({ simulateFossBuild: enabled });
   };
 
   return (
@@ -330,6 +338,23 @@ export default function DeveloperScreen() {
         <SectionTitle title={t('settings.developer.sections.interface')} delay={140} />
         <GlassCard style={styles.settingsCard}>
           <SettingItem
+            icon={<Code2 size={20} color={Colors.orange} />}
+            iconColor={Colors.orange}
+            title={t('settings.developer.simulateFossTitle')}
+            subtitle={t('settings.developer.simulateFossSubtitle')}
+            onPress={() => handleToggleFossSimulation(!isFossSimulationEnabled)}
+            rightElement={(
+              <Switch
+                value={isFossSimulationEnabled}
+                onValueChange={handleToggleFossSimulation}
+                trackColor={{ false: Colors.overlayWhite20, true: Colors.overlayOrange24 }}
+                thumbColor={isFossSimulationEnabled ? Colors.orange : Colors.muted}
+                ios_backgroundColor={Colors.overlayWhite20}
+              />
+            )}
+            delay={150}
+          />
+          <SettingItem
             icon={<Sparkles size={20} color={Colors.violet} />}
             iconColor={Colors.violet}
             title={t('settings.onboarding')}
@@ -347,6 +372,14 @@ export default function DeveloperScreen() {
             subtitle={t('settings.developer.onboardingResetSubtitle')}
             onPress={handleResetPloppyOnboarding}
             delay={180}
+          />
+          <SettingItem
+            icon={<Camera size={20} color={Colors.teal} />}
+            iconColor={Colors.teal}
+            title={t('settings.developer.poseCaptureTitle')}
+            subtitle={t('settings.developer.poseCaptureSubtitle')}
+            onPress={() => router.push('/settings/pose-debug' as never)}
+            delay={200}
           />
         </GlassCard>
 
