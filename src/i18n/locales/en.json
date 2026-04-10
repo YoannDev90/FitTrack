@@ -1664,6 +1664,8 @@
       "continued": "Continued use of Spix after a modification constitutes acceptance of the new terms."
     },
     "termination": {
+      "socialChannel": "Social activity",
+      "socialChannelDesc": "Shared workouts and likes from friends",
       "title": "Termination",
       "description": "You can stop using Spix at any time. To delete your data:",
       "items": {
@@ -1762,6 +1764,8 @@
     "encouragementsChannelDesc": "Encouragement notifications from your friends",
     "friendsChannel": "Friends",
     "friendsChannelDesc": "Friend requests and acceptances",
+    "socialChannel": "Social activity",
+    "socialChannelDesc": "Workout shares and likes from friends",
     "encouragementTitle": "{{emoji}} {{senderName}} is cheering you on!",
     "friendRequestTitle": "👋 New friend request",
     "friendRequestBody": "{{senderName}} wants to be your friend!",
@@ -2283,6 +2287,10 @@
       "noParticipants": "No participants",
       "details": "View details",
       "addSession": "Add workout",
+      "finishedLabel": "Finished",
+      "winnerLabel": "Winner: {{name}}",
+      "drawLabel": "Draw between {{count}} athletes",
+      "rankLabel": "Your rank: #{{rank}}",
       "deleteAction": "Delete",
       "leaveAction": "Leave",
       "deletingAction": "Removing...",
@@ -2294,12 +2302,31 @@
       "leaveError": "Unable to leave this challenge right now.",
       "deleteSuccess": "Challenge deleted.",
       "leaveSuccess": "You left the challenge.",
+      "finishReasons": {
+        "active": "Challenge in progress",
+        "completed": "Challenge marked as completed",
+        "expired": "Time is up",
+        "target_reached": "Goal reached",
+        "cancelled": "Challenge cancelled"
+      },
       "daysRemaining": "{{count}}d left",
       "goalTypes": {
         "workouts": "workouts",
         "distance": "km",
         "duration": "min",
         "xp": "XP"
+      },
+      "detailsSheet": {
+        "title": "Challenge details",
+        "activeSubtitle": "In progress",
+        "finishedSubtitle": "Challenge completed",
+        "openChallenges": "Open challenges tab",
+        "participantsTitle": "Participants",
+        "statsTitle": "Quick stats",
+        "targetLabel": "Target",
+        "progressLabel": "Your progress",
+        "participantsLabel": "Participants",
+        "rankTitle": "Your rank"
       },
       "sheet": {
         "title": "New challenge",
@@ -2341,7 +2368,9 @@
       "emptyTitle": "No recent activity",
       "emptySubtitle": "Share a workout to kickstart your social feed.",
       "likeAction": "Like",
+      "likedAction": "Liked",
       "likeSending": "Sending...",
+      "likedBy": "Liked by {{names}}{{extra}}",
       "deleteConfirmTitle": "Delete this share?",
       "deleteConfirmMessage": "This workout post will be removed from the social feed.",
       "deleteError": "Unable to delete this activity right now.",
@@ -2352,6 +2381,12 @@
         "hoursAgo": "{{count}} h ago",
         "daysAgo": "{{count}} d ago"
       },
+      "stats": {
+        "distance": "{{value}} km",
+        "duration": "{{value}} min",
+        "reps": "{{value}} reps"
+      },
+      "workoutCompletedTitle": "{{name}} completed a {{workout}} workout",
       "workoutTitle": "{{name}} shared a workout",
       "genericWorkoutDetail": "Workout completed",
       "challengeTitle": "{{name}} started a challenge",

@@ -1664,6 +1664,8 @@
       "continued": "L'utilisation continue de Spix après une modification vaut acceptation des nouvelles conditions."
     },
     "termination": {
+      "socialChannel": "Activite sociale",
+      "socialChannelDesc": "Partages de seances et likes de tes amis",
       "title": "Résiliation",
       "description": "Tu peux cesser d'utiliser Spix à tout moment. Pour supprimer tes données :",
       "items": {
@@ -1762,6 +1764,8 @@
     "encouragementsChannelDesc": "Notifications d'encouragement de tes amis",
     "friendsChannel": "Amis",
     "friendsChannelDesc": "Demandes d'ami et acceptations",
+    "socialChannel": "Activite sociale",
+    "socialChannelDesc": "Partages de seances et likes de tes amis",
     "encouragementTitle": "{{emoji}} {{senderName}} t'encourage !",
     "friendRequestTitle": "👋 Nouvelle demande d'ami",
     "friendRequestBody": "{{senderName}} veut être ton ami !",
@@ -2283,6 +2287,10 @@
       "noParticipants": "Aucun participant",
       "details": "Voir détail",
       "addSession": "Ajouter séance",
+      "finishedLabel": "Termine",
+      "winnerLabel": "Vainqueur : {{name}}",
+      "drawLabel": "Egalite entre {{count}} sportifs",
+      "rankLabel": "Ton rang : #{{rank}}",
       "deleteAction": "Supprimer",
       "leaveAction": "Quitter",
       "deletingAction": "Suppression...",
@@ -2294,12 +2302,31 @@
       "leaveError": "Impossible de quitter ce challenge pour le moment.",
       "deleteSuccess": "Challenge supprimé.",
       "leaveSuccess": "Tu as quitté le challenge.",
+      "finishReasons": {
+        "active": "Challenge en cours",
+        "completed": "Challenge marque comme termine",
+        "expired": "Le temps est ecoule",
+        "target_reached": "Objectif atteint",
+        "cancelled": "Challenge annule"
+      },
       "daysRemaining": "{{count}}j restants",
       "goalTypes": {
         "workouts": "séances",
         "distance": "km",
         "duration": "min",
         "xp": "XP"
+      },
+      "detailsSheet": {
+        "title": "Details du challenge",
+        "activeSubtitle": "En cours",
+        "finishedSubtitle": "Challenge termine",
+        "openChallenges": "Ouvrir l'onglet challenges",
+        "participantsTitle": "Participants",
+        "statsTitle": "Stats rapides",
+        "targetLabel": "Objectif",
+        "progressLabel": "Ta progression",
+        "participantsLabel": "Participants",
+        "rankTitle": "Ton rang"
       },
       "sheet": {
         "title": "Nouveau challenge",
@@ -2341,7 +2368,9 @@
       "emptyTitle": "Pas d'activité récente",
       "emptySubtitle": "Partage une séance pour démarrer le feed social.",
       "likeAction": "J'aime",
+      "likedAction": "Like",
       "likeSending": "Envoi...",
+      "likedBy": "Aime par {{names}}{{extra}}",
       "deleteConfirmTitle": "Supprimer ce partage ?",
       "deleteConfirmMessage": "Cette activité sera retirée du feed social.",
       "deleteError": "Impossible de supprimer cette activité pour le moment.",
@@ -2352,6 +2381,12 @@
         "hoursAgo": "Il y a {{count}} h",
         "daysAgo": "Il y a {{count}} j"
       },
+      "stats": {
+        "distance": "{{value}} km",
+        "duration": "{{value}} min",
+        "reps": "{{value}} reps"
+      },
+      "workoutCompletedTitle": "{{name}} a termine une seance de {{workout}}",
       "workoutTitle": "{{name}} a partagé une séance",
       "genericWorkoutDetail": "Séance terminée",
       "challengeTitle": "{{name}} a lancé un challenge",

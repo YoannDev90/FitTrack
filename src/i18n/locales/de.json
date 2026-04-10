@@ -305,6 +305,7 @@
     "sensor": "Sensor",
     "camera": "Kamera",
     "cameraNote": "Die Kamera nutzt KI, um deine Bewegungen zu erkennen",
+    "fossTrackingExperimental": "Tracking ist in FOSS experimentell und funktioniert nicht immer.",
     "cameraOnly": "Nur Kameramodus",
     "cameraPosition": "Stelle dein Telefon für eine Profilansicht seitlich auf",
     "cameraSearching": "Suche nach Kamera...",
@@ -1066,7 +1067,11 @@
       "testFallTitle": "Test der Sturzerkennung",
       "testFallSubtitle": "Notfall-Overlay auslösen, ohne wirklich zu stürzen",
       "testFallDoneTitle": "Sturz-Test ausgelöst",
-      "testFallDoneMessage": "Das Sicherheits-Overlay wurde zu Testzwecken ausgelöst."
+      "testFallDoneMessage": "Das Sicherheits-Overlay wurde zu Testzwecken ausgelöst.",
+      "simulateFossTitle": "FOSS-Build simulieren",
+      "simulateFossSubtitle": "FOSS-Warnungen und Feature-Checks erzwingen",
+      "poseCaptureTitle": "Pose-Capture-Debugger",
+      "poseCaptureSubtitle": "Kamera-Capture fuer Landmark-JSON-Export oeffnen"
     },
     "cameraPreview": "Kamera-Vorschau",
     "cameraPreviewDesc": "Kamerabild während des Trackings anzeigen",
@@ -1659,6 +1664,8 @@
       "continued": "Die fortgesetzte Nutzung von Spix nach einer Änderung gilt als Zustimmung zu den neuen Bedingungen."
     },
     "termination": {
+      "socialChannel": "Soziale Aktivitaet",
+      "socialChannelDesc": "Geteilte Trainings und Likes von Freunden",
       "title": "Kündigung",
       "description": "Du kannst die Nutzung von Spix jederzeit beenden. Um deine Daten zu löschen:",
       "items": {
@@ -1757,6 +1764,8 @@
     "encouragementsChannelDesc": "Anfeuerungs-Benachrichtigungen von deinen Freunden",
     "friendsChannel": "Freunde",
     "friendsChannelDesc": "Freundschaftsanfragen und -bestätigungen",
+    "socialChannel": "Soziale Aktivitaet",
+    "socialChannelDesc": "Geteilte Trainings und Likes von Freunden",
     "encouragementTitle": "{{emoji}} {{senderName}} feuert dich an!",
     "friendRequestTitle": "👋 Neue Freundschaftsanfrage",
     "friendRequestBody": "{{senderName}} möchte mit dir befreundet sein!",
@@ -2121,6 +2130,10 @@
     "exportGPX": "GPX exportieren",
     "shareGPX": "GPX teilen",
     "tracking": "Tracking",
+    "fossMapDisabled": {
+      "title": "Karte im FOSS-Build deaktiviert",
+      "message": "Die Laufkarte ist in FOSS nicht verfuegbar (kein Internetzugriff). GPS-Tracking funktioniert weiterhin normal."
+    },
     "objectiveReached": "Ziel erreicht!",
     "objectiveMissed": "Ziel verfehlt",
     "summary": {
@@ -2274,6 +2287,10 @@
       "noParticipants": "Keine Teilnehmer",
       "details": "Details",
       "addSession": "Training hinzufügen",
+      "finishedLabel": "Beendet",
+      "winnerLabel": "Sieger: {{name}}",
+      "drawLabel": "Unentschieden zwischen {{count}} Athleten",
+      "rankLabel": "Dein Rang: #{{rank}}",
       "deleteAction": "Löschen",
       "leaveAction": "Verlassen",
       "deletingAction": "Wird entfernt...",
@@ -2285,12 +2302,31 @@
       "leaveError": "Diese Challenge kann derzeit nicht verlassen werden.",
       "deleteSuccess": "Challenge gelöscht.",
       "leaveSuccess": "Du hast die Challenge verlassen.",
+      "finishReasons": {
+        "active": "Challenge laeuft",
+        "completed": "Challenge als beendet markiert",
+        "expired": "Zeit ist abgelaufen",
+        "target_reached": "Ziel erreicht",
+        "cancelled": "Challenge abgebrochen"
+      },
       "daysRemaining": "{{count}}T verbleibend",
       "goalTypes": {
         "workouts": "Trainings",
         "distance": "km",
         "duration": "Min",
         "xp": "XP"
+      },
+      "detailsSheet": {
+        "title": "Challenge-Details",
+        "activeSubtitle": "Laufend",
+        "finishedSubtitle": "Challenge beendet",
+        "openChallenges": "Challenge-Tab oeffnen",
+        "participantsTitle": "Teilnehmer",
+        "statsTitle": "Schnelle Stats",
+        "targetLabel": "Ziel",
+        "progressLabel": "Dein Fortschritt",
+        "participantsLabel": "Teilnehmer",
+        "rankTitle": "Dein Rang"
       },
       "sheet": {
         "title": "Neue Challenge",
@@ -2332,7 +2368,9 @@
       "emptyTitle": "Keine aktuelle Aktivität",
       "emptySubtitle": "Teile ein Training, um deinen Social-Feed zu starten.",
       "likeAction": "Like",
+      "likedAction": "Geliked",
       "likeSending": "Sende...",
+      "likedBy": "Geliked von {{names}}{{extra}}",
       "deleteConfirmTitle": "Diesen Beitrag löschen?",
       "deleteConfirmMessage": "Dieses Training wird aus dem Social-Feed entfernt.",
       "deleteError": "Diese Aktivität konnte derzeit nicht gelöscht werden.",
@@ -2343,6 +2381,12 @@
         "hoursAgo": "Vor {{count}} Std",
         "daysAgo": "Vor {{count}} T"
       },
+      "stats": {
+        "distance": "{{value}} km",
+        "duration": "{{value}} Min",
+        "reps": "{{value}} Wdh"
+      },
+      "workoutCompletedTitle": "{{name}} hat ein {{workout}}-Training abgeschlossen",
       "workoutTitle": "{{name}} hat ein Training geteilt",
       "genericWorkoutDetail": "Training abgeschlossen",
       "challengeTitle": "{{name}} hat eine Challenge gestartet",

@@ -305,6 +305,7 @@
     "sensor": "Sensore",
     "camera": "Fotocamera",
     "cameraNote": "La fotocamera usa l'IA per rilevare i tuoi movimenti",
+    "fossTrackingExperimental": "Il tracking su FOSS e sperimentale e potrebbe non funzionare sempre.",
     "cameraOnly": "Solo modalità fotocamera",
     "cameraPosition": "Posiziona il telefono di lato per una vista di profilo",
     "cameraSearching": "Ricerca fotocamera...",
@@ -1066,7 +1067,11 @@
       "testFallTitle": "Test rilevamento cadute",
       "testFallSubtitle": "Attiva l'overlay di emergenza senza cadere davvero",
       "testFallDoneTitle": "Test caduta attivato",
-      "testFallDoneMessage": "L'overlay di sicurezza è stato attivato per il test."
+      "testFallDoneMessage": "L'overlay di sicurezza è stato attivato per il test.",
+      "simulateFossTitle": "Simula build FOSS",
+      "simulateFossSubtitle": "Forza avvisi FOSS e controlli disponibilita funzionalita",
+      "poseCaptureTitle": "Debugger pose capture",
+      "poseCaptureSubtitle": "Apri schermata camera per esportare landmark JSON"
     },
     "cameraPreview": "Anteprima fotocamera",
     "cameraPreviewDesc": "Visualizza la fotocamera durante il tracciamento",
@@ -1659,6 +1664,8 @@
       "continued": "Continuare ad usare Spix dopo una modifica costituisce l'accettazione dei nuovi termini."
     },
     "termination": {
+      "socialChannel": "Attivita social",
+      "socialChannelDesc": "Condivisioni allenamenti e like degli amici",
       "title": "Cessazione",
       "description": "Puoi smettere di usare Spix in qualsiasi momento. Per eliminare i tuoi dati:",
       "items": {
@@ -1757,6 +1764,8 @@
     "encouragementsChannelDesc": "Notifiche di incoraggiamento dai tuoi amici",
     "friendsChannel": "Amici",
     "friendsChannelDesc": "Richieste e accettazioni di amicizia",
+    "socialChannel": "Attivita social",
+    "socialChannelDesc": "Condivisioni allenamenti e like degli amici",
     "encouragementTitle": "{{emoji}} {{senderName}} ti sta incoraggiando!",
     "friendRequestTitle": "👋 Nuova richiesta di amicizia",
     "friendRequestBody": "{{senderName}} vuole essere tuo amico!",
@@ -2121,6 +2130,10 @@
     "exportGPX": "Esporta GPX",
     "shareGPX": "Condividi GPX",
     "tracking": "Tracciamento in corso",
+    "fossMapDisabled": {
+      "title": "Mappa disabilitata nella build FOSS",
+      "message": "La mappa corsa non e disponibile in FOSS (nessun accesso Internet). Il tracciamento GPS continua a funzionare normalmente."
+    },
     "objectiveReached": "Obiettivo raggiunto!",
     "objectiveMissed": "Obiettivo mancato",
     "summary": {
@@ -2274,6 +2287,10 @@
       "noParticipants": "Nessun partecipante",
       "details": "Dettagli",
       "addSession": "Aggiungi sessione",
+      "finishedLabel": "Terminata",
+      "winnerLabel": "Vincitore: {{name}}",
+      "drawLabel": "Parita tra {{count}} atleti",
+      "rankLabel": "La tua posizione: #{{rank}}",
       "deleteAction": "Elimina",
       "leaveAction": "Esci",
       "deletingAction": "Rimozione...",
@@ -2285,12 +2302,31 @@
       "leaveError": "Impossibile uscire da questa challenge al momento.",
       "deleteSuccess": "Challenge eliminata.",
       "leaveSuccess": "Hai lasciato la challenge.",
+      "finishReasons": {
+        "active": "Challenge in corso",
+        "completed": "Challenge segnata come completata",
+        "expired": "Tempo scaduto",
+        "target_reached": "Obiettivo raggiunto",
+        "cancelled": "Challenge annullata"
+      },
       "daysRemaining": "{{count}}g rimanenti",
       "goalTypes": {
         "workouts": "sessioni",
         "distance": "km",
         "duration": "min",
         "xp": "XP"
+      },
+      "detailsSheet": {
+        "title": "Dettagli challenge",
+        "activeSubtitle": "In corso",
+        "finishedSubtitle": "Challenge completata",
+        "openChallenges": "Apri tab challenge",
+        "participantsTitle": "Partecipanti",
+        "statsTitle": "Statistiche rapide",
+        "targetLabel": "Obiettivo",
+        "progressLabel": "Il tuo progresso",
+        "participantsLabel": "Partecipanti",
+        "rankTitle": "La tua posizione"
       },
       "sheet": {
         "title": "Nuova challenge",
@@ -2332,7 +2368,9 @@
       "emptyTitle": "Nessuna attività recente",
       "emptySubtitle": "Condividi una sessione per avviare il feed social.",
       "likeAction": "Like",
+      "likedAction": "Con like",
       "likeSending": "Invio...",
+      "likedBy": "Like da {{names}}{{extra}}",
       "deleteConfirmTitle": "Eliminare questa condivisione?",
       "deleteConfirmMessage": "Questa attività verrà rimossa dal feed social.",
       "deleteError": "Impossibile eliminare questa attività al momento.",
@@ -2343,6 +2381,12 @@
         "hoursAgo": "{{count}} h fa",
         "daysAgo": "{{count}} g fa"
       },
+      "stats": {
+        "distance": "{{value}} km",
+        "duration": "{{value}} min",
+        "reps": "{{value}} rep"
+      },
+      "workoutCompletedTitle": "{{name}} ha completato una sessione di {{workout}}",
       "workoutTitle": "{{name}} ha condiviso una sessione",
       "genericWorkoutDetail": "Sessione completata",
       "challengeTitle": "{{name}} ha avviato una challenge",
