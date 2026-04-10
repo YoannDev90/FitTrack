@@ -22,6 +22,7 @@ import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../const
 import { CustomAlertModal } from '../ui';
 import type { AlertButton, AlertType } from '../ui';
 import { useAppStore, useSocialStore } from '../../stores';
+import { calculateXpForEntry } from '../../stores/gamificationStore';
 import { isSocialAvailable } from '../../services/supabase';
 import {
     createSocialChallenge,
@@ -40,6 +41,7 @@ import {
 import { ChallengesTabPage } from './hub/ChallengesTabPage';
 import { ChallengeDetailsSheet } from './hub/ChallengeDetailsSheet';
 import { CreateChallengeSheet } from './hub/CreateChallengeSheet';
+import { AddFriendSheet } from './hub/AddFriendSheet';
 import { FriendsTabPage } from './hub/FriendsTabPage';
 import { HomeTabPage } from './hub/HomeTabPage';
 import { LeaderboardTabPage } from './hub/LeaderboardTabPage';
@@ -62,8 +64,66 @@ let homeFeedCache: FeedViewItem[] = [];
 let homeHydrationCacheAt = 0;
 let homeCacheProfileId: string | null = null;
 
+interface ChallengeContributionItem {
+    id: string;
+    workoutLabel: string;
+    dateLabel: string;
+    valueLabel: string;
+}
+
 function isWorkoutEntry(entry: Entry): entry is Extract<Entry, { type: 'home' | 'run' | 'beatsaber' | 'custom' }> {
     return entry.type === 'home' || entry.type === 'run' || entry.type === 'beatsaber' || entry.type === 'custom';
+}
+
+function entryTimestampMs(entry: Entry): number {
+    const createdAtMs = new Date(entry.createdAt).getTime();
+    if (Number.isFinite(createdAtMs)) {
+        return createdAtMs;
+    }
+
+    const fallbackMs = new Date(`${entry.date}T12:00:00.000Z`).getTime();
+    return Number.isFinite(fallbackMs) ? fallbackMs : 0;
+}
+
+function isEntryInsideChallengeWindow(entry: Entry, startsAt: string, endsAt: string): boolean {
+    const challengeStartDate = startsAt.slice(0, 10);
+    const challengeEndDate = endsAt.slice(0, 10);
+
+    if (
+        /^\d{4}-\d{2}-\d{2}$/.test(entry.date) &&
+        /^\d{4}-\d{2}-\d{2}$/.test(challengeStartDate) &&
+        /^\d{4}-\d{2}-\d{2}$/.test(challengeEndDate)
+    ) {
+        return entry.date >= challengeStartDate && entry.date <= challengeEndDate;
+    }
+
+    const startsAtMs = new Date(startsAt).getTime();
+    const endsAtMs = new Date(endsAt).getTime();
+    if (!Number.isFinite(startsAtMs) || !Number.isFinite(endsAtMs)) {
+        return false;
+    }
+
+    const timestamp = entryTimestampMs(entry);
+    return timestamp >= startsAtMs && timestamp <= endsAtMs;
+}
+
+function getEntryContributionValue(entry: Extract<Entry, { type: 'home' | 'run' | 'beatsaber' | 'custom' }>, goalType: SocialChallengeGoalType): number {
+    if (goalType === 'workouts') {
+        return 1;
+    }
+
+    if (goalType === 'distance') {
+        if (entry.type === 'run' || entry.type === 'custom') {
+            return Number(entry.distanceKm || 0);
+        }
+        return 0;
+    }
+
+    if (goalType === 'duration') {
+        return Number(entry.durationMinutes || 0);
+    }
+
+    return Math.round(calculateXpForEntry(entry));
 }
 
 function formatSportEntry(entry: Extract<Entry, { type: 'home' | 'run' | 'beatsaber' | 'custom' }>, t: (key: string, options?: any) => string): ShareableWorkoutItem {
@@ -180,7 +240,7 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
                 name: event.actor_name,
                 workout: workoutTypeLabel.toLowerCase(),
             }),
-            detail: `${metadata.summary || t('socialHub.feed.genericWorkoutDetail')}`,
+            detail: stats.length > 0 ? '' : `${metadata.summary || t('socialHub.feed.genericWorkoutDetail')}`,
             stats,
             createdAt: event.created_at,
             isWorkoutShare: true,
@@ -261,6 +321,7 @@ export default function SocialHubScreen() {
     const challengeSheetRef = useRef<TrueSheet>(null);
     const shareWorkoutSheetRef = useRef<TrueSheet>(null);
     const challengeDetailsSheetRef = useRef<TrueSheet>(null);
+    const addFriendSheetRef = useRef<TrueSheet>(null);
 
     const [activeTopTab, setActiveTopTab] = useState<SocialTopTabId>('home');
     const [refreshing, setRefreshing] = useState(false);
@@ -284,7 +345,6 @@ export default function SocialHubScreen() {
     ));
     const [feedError, setFeedError] = useState<string | null>(null);
 
-    const [showAddFriendPanel, setShowAddFriendPanel] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -411,6 +471,48 @@ export default function SocialHubScreen() {
             .map(entry => formatSportEntry(entry, t));
     }, [entries, t]);
 
+    const selectedChallengeContributions = useMemo<ChallengeContributionItem[]>(() => {
+        if (!selectedChallengeForDetails) {
+            return [];
+        }
+
+        const challenge = selectedChallengeForDetails.challenge;
+        const goalType = challenge.goal_type;
+
+        return entries
+            .filter(isWorkoutEntry)
+            .filter((entry) => isEntryInsideChallengeWindow(entry, challenge.starts_at, challenge.ends_at))
+            .map((entry) => {
+                const contributionValue = getEntryContributionValue(entry, goalType);
+                if (contributionValue <= 0) return null;
+
+                const workoutLabel = (() => {
+                    if (entry.type === 'run') return t('socialHub.workoutTypes.run');
+                    if (entry.type === 'beatsaber') return t('socialHub.workoutTypes.beatsaber');
+                    if (entry.type === 'custom') return entry.name?.trim() || t('socialHub.workoutTypes.custom');
+                    return entry.name?.trim() || t('socialHub.workoutTypes.home');
+                })();
+
+                const valueLabel = (() => {
+                    if (goalType === 'workouts') return '+1';
+                    if (goalType === 'distance') return `+${contributionValue.toFixed(1)} km`;
+                    if (goalType === 'duration') return `+${Math.round(contributionValue)} min`;
+                    return `+${Math.round(contributionValue)} XP`;
+                })();
+
+                return {
+                    id: entry.id,
+                    workoutLabel,
+                    dateLabel: entry.date,
+                    valueLabel,
+                    sortKey: entryTimestampMs(entry),
+                };
+            })
+            .filter((item): item is (ChallengeContributionItem & { sortKey: number }) => !!item)
+            .sort((a, b) => b.sortKey - a.sortKey)
+            .map(({ sortKey: _sortKey, ...item }) => item);
+    }, [entries, selectedChallengeForDetails, t]);
+
     const mergeLocalChallengeProgress = useCallback((challenges: SocialChallengeProgress[]) => {
         let hasChanges = false;
 
@@ -471,7 +573,8 @@ export default function SocialHubScreen() {
             byId.set(row.id, row);
         });
 
-        if (profile) {
+        const shouldIncludeSelf = !!profile && ((profile.weekly_xp || 0) > 0 || (profile.weekly_workouts || 0) > 0);
+        if (shouldIncludeSelf && profile) {
             byId.set(profile.id, profile);
         }
 
@@ -495,7 +598,9 @@ export default function SocialHubScreen() {
     }, [friends]);
 
     const globalLeaderboardRows = useMemo(() => {
-        const rows = globalLeaderboard.slice(0, 20);
+        const rows = globalLeaderboard
+            .filter((row) => ((row.weekly_xp || 0) > 0 || (row.weekly_workouts || 0) > 0))
+            .slice(0, 20);
         return rows.map((row, index) => ({
             ...row,
             rank: row.rank || index + 1,
@@ -665,7 +770,7 @@ export default function SocialHubScreen() {
     );
 
     useEffect(() => {
-        if (!showAddFriendPanel || searchQuery.trim().length < 2) {
+        if (searchQuery.trim().length < 2) {
             searchRequestRef.current += 1;
             setSearchResults([]);
             setSearchError(null);
@@ -694,16 +799,22 @@ export default function SocialHubScreen() {
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [showAddFriendPanel, searchQuery, searchUsers, t]);
+    }, [searchQuery, searchUsers, t]);
 
     const handlePressTopTab = useCallback((tab: SocialTopTabId) => {
         setActiveTopTab(tab);
         if (tab !== 'friends') {
-            setShowAddFriendPanel(false);
             setSearchQuery('');
             setSearchResults([]);
             setSearchError(null);
         }
+    }, []);
+
+    const openAddFriendSheet = useCallback(() => {
+        setSearchQuery('');
+        setSearchResults([]);
+        setSearchError(null);
+        addFriendSheetRef.current?.present();
     }, []);
 
     const onRefresh = useCallback(async () => {
@@ -1209,6 +1320,9 @@ export default function SocialHubScreen() {
                                 drawLabel: (count) => t('socialHub.challenge.drawLabel', { count }),
                                 finishReasonLabel: (reason) => t(`socialHub.challenge.finishReasons.${reason}`),
                                 rankLabel: (rank) => t('socialHub.challenge.rankLabel', { rank }),
+                                pastChallengesTitle: (count) => t('socialHub.pages.challenges.pastTitle', { count }),
+                                showPastChallenges: t('socialHub.pages.challenges.showPast'),
+                                hidePastChallenges: t('socialHub.pages.challenges.hidePast'),
                                 deleteChallenge: t('socialHub.challenge.deleteAction'),
                                 leaveChallenge: t('socialHub.challenge.leaveAction'),
                                 deletingChallenge: t('socialHub.challenge.deletingAction'),
@@ -1223,14 +1337,7 @@ export default function SocialHubScreen() {
                             friends={friends}
                             pendingRequests={pendingRequests}
                             profileId={profile?.id}
-                            showAddFriendPanel={showAddFriendPanel}
-                            setShowAddFriendPanel={setShowAddFriendPanel}
-                            searchQuery={searchQuery}
-                            onChangeSearchQuery={setSearchQuery}
-                            isSearching={isSearching}
-                            searchError={searchError}
-                            searchResults={searchResults}
-                            onSendRequest={handleSendRequest}
+                            onPressAddFriend={openAddFriendSheet}
                             onInvite={handleInviteFriend}
                             onRespondToRequest={handleRespondToRequest}
                             onRemoveFriend={handleRemoveFriend}
@@ -1333,9 +1440,31 @@ export default function SocialHubScreen() {
                     }}
                 />
 
+                <AddFriendSheet
+                    sheetRef={addFriendSheetRef}
+                    searchQuery={searchQuery}
+                    onChangeSearchQuery={setSearchQuery}
+                    isSearching={isSearching}
+                    searchError={searchError}
+                    searchResults={searchResults}
+                    onSendRequest={handleSendRequest}
+                    labels={{
+                        title: t('socialHub.friends.sheetTitle'),
+                        subtitle: t('socialHub.friends.sheetSubtitle'),
+                        searchPlaceholder: t('socialHub.friends.searchPlaceholder'),
+                        badgeFriend: t('socialHub.friends.badgeFriend'),
+                        badgePending: t('socialHub.friends.badgePending'),
+                        addAction: t('socialHub.friends.addAction'),
+                        emptyTitle: t('socialHub.friends.searchEmptyTitle'),
+                        emptySubtitle: t('socialHub.friends.searchEmptySubtitle'),
+                        minCharsHint: t('socialHub.friends.searchHint'),
+                    }}
+                />
+
                 <ChallengeDetailsSheet
                     sheetRef={challengeDetailsSheetRef}
                     challenge={selectedChallengeForDetails}
+                    contributions={selectedChallengeContributions}
                     profileId={profile?.id}
                     onPressAddSession={() => {
                         challengeDetailsSheetRef.current?.dismiss();
@@ -1362,6 +1491,8 @@ export default function SocialHubScreen() {
                         progressLabel: t('socialHub.challenge.detailsSheet.progressLabel'),
                         participantsLabel: t('socialHub.challenge.detailsSheet.participantsLabel'),
                         rankTitle: t('socialHub.challenge.detailsSheet.rankTitle'),
+                        contributionsTitle: t('socialHub.challenge.detailsSheet.contributionsTitle'),
+                        contributionsEmpty: t('socialHub.challenge.detailsSheet.contributionsEmpty'),
                         finishedLabel: t('socialHub.challenge.finishedLabel'),
                         winnerLabel: (name) => t('socialHub.challenge.winnerLabel', { name }),
                         drawLabel: (count) => t('socialHub.challenge.drawLabel', { count }),
