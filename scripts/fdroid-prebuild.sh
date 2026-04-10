@@ -626,6 +626,15 @@ EOF
 cat >> android/app/build.gradle <<'EOF'
 
 android {
+    splits {
+        abi {
+            enable true
+            reset()
+            include "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
+            universalApk true
+        }
+    }
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
