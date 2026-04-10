@@ -16,6 +16,7 @@ interface HomeTabPageProps {
     challengeIndex: number;
     setChallengeIndex: (index: number) => void;
     onAddSession: () => void;
+    onViewChallengeDetails: (challenge: SocialChallengeProgress) => void;
     challengesError: string | null;
     feedItems: FeedViewItem[];
     isSendingLikeForId: string | null;
@@ -32,6 +33,10 @@ interface HomeTabPageProps {
             noParticipants: string;
             details: string;
             addSession: string;
+            finishedLabel: string;
+            winnerLabel: (name: string) => string;
+            drawLabel: (count: number) => string;
+            finishReasonLabel: (reason: 'active' | 'completed' | 'expired' | 'target_reached' | 'cancelled') => string;
             daysRemaining: (count: number) => string;
             goalLabel: (goalType: 'workouts' | 'distance' | 'duration' | 'xp') => string;
         };
@@ -40,7 +45,9 @@ interface HomeTabPageProps {
             emptyTitle: string;
             emptySubtitle: string;
             like: string;
+            liked: string;
             sending: string;
+            likedBy: (names: string, extra: number) => string;
             justNow: string;
             minutesAgo: (count: number) => string;
             hoursAgo: (count: number) => string;
@@ -65,6 +72,7 @@ export function HomeTabPage({
     challengeIndex,
     setChallengeIndex,
     onAddSession,
+    onViewChallengeDetails,
     challengesError,
     feedItems,
     isSendingLikeForId,
@@ -96,6 +104,7 @@ export function HomeTabPage({
                     challengeIndex={challengeIndex}
                     setChallengeIndex={setChallengeIndex}
                     onAddSession={onAddSession}
+                    onViewDetails={onViewChallengeDetails}
                     strings={labels.challenge}
                 />
                 {!!challengesError && <Text style={styles.errorText}>{challengesError}</Text>}

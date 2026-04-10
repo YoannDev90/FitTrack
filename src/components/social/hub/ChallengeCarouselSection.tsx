@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Compass, Users } from 'lucide-react-native';
+import { Compass, Crown, Users } from 'lucide-react-native';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
 import type { ChallengeSectionProps } from './types';
 
@@ -11,6 +11,7 @@ export function ChallengeCarouselSection({
     challengeIndex,
     setChallengeIndex,
     onAddSession,
+    onViewDetails,
     strings,
 }: ChallengeSectionProps) {
     if (activeChallenges.length === 0) {
@@ -42,24 +43,31 @@ export function ChallengeCarouselSection({
                     const progress = Number(item.my_progress || 0);
                     const target = Number(item.challenge.goal_target || 1);
                     const ratio = Math.min(1, progress / Math.max(target, 1));
+                    const isFinished = item.is_finished;
                     const endsAt = new Date(item.challenge.ends_at);
                     const remainingDays = Math.max(0, Math.ceil((endsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
                     const participantsPreview = item.preview_participants
                         .slice(0, 2)
                         .map(participant => `${participant.display_name || participant.username}: ${Math.round(participant.progress)}`)
                         .join(' · ');
+                    const winnerName = item.winner ? (item.winner.display_name || item.winner.username) : null;
+                    const cardColors: [string, string, string] = isFinished
+                        ? [Colors.overlaySuccess24, Colors.overlayViolet14, Colors.overlayBlack60]
+                        : [Colors.overlayViolet24, Colors.overlayViolet18, Colors.overlayBlack60];
 
                     return (
                         <LinearGradient
                             key={item.challenge.id}
-                            colors={['#3d2e65', '#271b46', '#181230']}
+                            colors={cardColors}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={[styles.challengeCard, { width: challengeCardWidth }]}
                         >
                             <View style={styles.challengeTopRow}>
-                                <View style={styles.challengeKickerPill}>
-                                    <Text style={styles.challengeKicker}>{strings.daysRemaining(remainingDays)}</Text>
+                                <View style={isFinished ? [styles.challengeKickerPill, styles.challengeKickerPillFinished] : styles.challengeKickerPill}>
+                                    <Text style={styles.challengeKicker}>
+                                        {isFinished ? strings.finishedLabel : strings.daysRemaining(remainingDays)}
+                                    </Text>
                                 </View>
                                 <View style={styles.goalPill}>
                                     <Text style={styles.goalPillText}>{strings.goalLabel(item.challenge.goal_type)}</Text>
@@ -76,6 +84,23 @@ export function ChallengeCarouselSection({
                                 {Math.round(progress)}/{Math.round(target)} ({Math.round(ratio * 100)}%)
                             </Text>
 
+                            {isFinished && (
+                                <View style={styles.winnerRow}>
+                                    <Crown size={13} color={Colors.gold} />
+                                    <Text style={styles.winnerText} numberOfLines={1}>
+                                        {item.winner
+                                            ? (item.winner.is_tie
+                                                ? strings.drawLabel(item.winner.tied_with_count)
+                                                : strings.winnerLabel(winnerName || ''))
+                                            : strings.finishReasonLabel(item.finish_reason)}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {isFinished && (
+                                <Text style={styles.finishReasonText}>{strings.finishReasonLabel(item.finish_reason)}</Text>
+                            )}
+
                             <View style={styles.challengeParticipantsRow}>
                                 <Users size={12} color={Colors.textWhite80} />
                                 <Text style={styles.challengeMetaText} numberOfLines={1}>
@@ -84,12 +109,14 @@ export function ChallengeCarouselSection({
                             </View>
 
                             <View style={styles.challengeActions}>
-                                <TouchableOpacity style={styles.challengeGhostBtn}>
+                                <TouchableOpacity style={styles.challengeGhostBtn} onPress={() => onViewDetails(item)}>
                                     <Text style={styles.challengeGhostBtnText}>{strings.details}</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.challengeSolidBtn} onPress={onAddSession}>
-                                    <Text style={styles.challengeSolidBtnText}>{strings.addSession}</Text>
-                                </TouchableOpacity>
+                                {isFinished ? null : (
+                                    <TouchableOpacity style={styles.challengeSolidBtn} onPress={onAddSession}>
+                                        <Text style={styles.challengeSolidBtnText}>{strings.addSession}</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </LinearGradient>
                     );
@@ -152,6 +179,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.sm,
         paddingVertical: 4,
     },
+    challengeKickerPillFinished: {
+        borderColor: Colors.overlaySuccess20,
+        backgroundColor: Colors.overlaySuccess10,
+    },
     goalPill: {
         borderRadius: BorderRadius.full,
         borderWidth: 1,
@@ -194,6 +225,22 @@ const styles = StyleSheet.create({
         color: Colors.textWhite80,
         fontSize: 10,
         fontWeight: FontWeight.semibold,
+    },
+    winnerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginTop: 2,
+    },
+    winnerText: {
+        flex: 1,
+        color: Colors.gold,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.semibold,
+    },
+    finishReasonText: {
+        color: Colors.textWhite80,
+        fontSize: 10,
     },
     challengeParticipantsRow: {
         flexDirection: 'row',

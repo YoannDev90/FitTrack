@@ -1,4 +1,4 @@
-import type { SocialChallengeProgress } from '../../../services/supabase/social';
+import type { SocialChallengeFinishReason, SocialChallengeProgress } from '../../../services/supabase/social';
 
 export type SocialTopTabId = 'home' | 'challenges' | 'friends' | 'leaderboard';
 
@@ -8,8 +8,13 @@ export interface FeedViewItem {
     actorName: string;
     title: string;
     detail: string;
+    stats: string[];
     createdAt: string;
     isWorkoutShare: boolean;
+    canLike: boolean;
+    likedByMe: boolean;
+    likeCount: number;
+    likedByPreview: Array<{ id: string; name: string }>;
     canDelete: boolean;
     eventId?: string;
 }
@@ -38,6 +43,10 @@ export interface ChallengeSectionStrings {
     noParticipants: string;
     details: string;
     addSession: string;
+    finishedLabel: string;
+    winnerLabel: (name: string) => string;
+    drawLabel: (count: number) => string;
+    finishReasonLabel: (reason: SocialChallengeFinishReason) => string;
     daysRemaining: (count: number) => string;
     goalLabel: (goalType: 'workouts' | 'distance' | 'duration' | 'xp') => string;
 }
@@ -48,5 +57,6 @@ export interface ChallengeSectionProps {
     challengeIndex: number;
     setChallengeIndex: (index: number) => void;
     onAddSession: () => void;
+    onViewDetails: (challenge: SocialChallengeProgress) => void;
     strings: ChallengeSectionStrings;
 }

@@ -9,6 +9,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from '
 import { LayoutDashboard, Dumbbell, ChartBar, Wrench, Settings, Trophy, Users } from 'lucide-react-native';
 import { Colors, Spacing, applyThemeFromUserSettings } from '../src/constants';
 import { ErrorBoundary } from '../src/components';
+import * as NotificationService from '../src/services/notifications';
 
 // Initialize i18n
 import '../src/i18n';
@@ -148,6 +149,30 @@ export default function Layout() {
     useEffect(() => {
         applyThemeFromUserSettings(settings);
     }, [settings.themePreset, settings.customThemeColors]);
+
+    useEffect(() => {
+        const subscription = NotificationService.addNotificationResponseListener((response: any) => {
+            const data = response?.notification?.request?.content?.data || {};
+            const explicitRoute = typeof data?.route === 'string' ? data.route : null;
+            const type = typeof data?.type === 'string' ? data.type : null;
+
+            if (explicitRoute) {
+                router.push(explicitRoute as never);
+                return;
+            }
+
+            if (
+                type === 'friend_request'
+                || type === 'encouragement'
+                || type === 'workout_shared'
+                || type === 'workout_liked'
+            ) {
+                router.push('/social' as never);
+            }
+        });
+
+        return () => subscription.remove();
+    }, [router]);
 
     // Redirect to onboarding if not completed
     useEffect(() => {

@@ -31,13 +31,14 @@ import {
     getActiveSocialChallenges,
     getSocialFeed,
     leaveSocialChallenge,
-    setSocialFeedReaction,
     shareWorkoutToFeed,
+    toggleSocialFeedReaction,
     type SocialChallengeGoalType,
     type SocialChallengeProgress,
     type SocialFeedEventItem,
 } from '../../services/supabase/social';
 import { ChallengesTabPage } from './hub/ChallengesTabPage';
+import { ChallengeDetailsSheet } from './hub/ChallengeDetailsSheet';
 import { CreateChallengeSheet } from './hub/CreateChallengeSheet';
 import { FriendsTabPage } from './hub/FriendsTabPage';
 import { HomeTabPage } from './hub/HomeTabPage';
@@ -154,14 +155,42 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
 
     if (event.event_type === 'workout') {
         const isOwnWorkout = event.actor_id === currentUserId;
+        const workoutType = `${metadata.entry_type || 'home'}` as 'home' | 'run' | 'beatsaber' | 'custom';
+        const workoutTypeLabel = t(`socialHub.workoutTypes.${workoutType}`);
+        const stats: string[] = [];
+
+        const distanceKm = Number(metadata.distance_km || 0);
+        const durationMinutes = Number(metadata.duration_minutes || 0);
+        const totalReps = Number(metadata.total_reps || 0);
+        if (distanceKm > 0) {
+            stats.push(t('socialHub.feed.stats.distance', { value: distanceKm.toFixed(1) }));
+        }
+        if (durationMinutes > 0) {
+            stats.push(t('socialHub.feed.stats.duration', { value: Math.round(durationMinutes) }));
+        }
+        if (totalReps > 0) {
+            stats.push(t('socialHub.feed.stats.reps', { value: Math.round(totalReps) }));
+        }
+
         return {
             id: event.id,
             actorId: event.actor_id,
             actorName: event.actor_name,
-            title: t('socialHub.feed.workoutTitle', { name: event.actor_name }),
-            detail: `${metadata.title || t('socialHub.workoutTypes.home')} · ${metadata.summary || t('socialHub.feed.genericWorkoutDetail')}`,
+            title: t('socialHub.feed.workoutCompletedTitle', {
+                name: event.actor_name,
+                workout: workoutTypeLabel.toLowerCase(),
+            }),
+            detail: `${metadata.summary || t('socialHub.feed.genericWorkoutDetail')}`,
+            stats,
             createdAt: event.created_at,
-            isWorkoutShare: !isOwnWorkout,
+            isWorkoutShare: true,
+            canLike: !isOwnWorkout,
+            likedByMe: event.liked_by_me,
+            likeCount: event.reactions_count,
+            likedByPreview: (event.liked_by_preview || []).map((liker) => ({
+                id: liker.id,
+                name: liker.display_name || liker.username,
+            })),
             canDelete: isOwnWorkout,
             eventId: event.id,
         };
@@ -174,8 +203,13 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
             actorName: event.actor_name,
             title: t('socialHub.feed.challengeTitle', { name: event.actor_name }),
             detail: `${metadata.challenge_title || t('socialHub.feed.challengeFallback')}`,
+            stats: [],
             createdAt: event.created_at,
             isWorkoutShare: false,
+            canLike: false,
+            likedByMe: false,
+            likeCount: 0,
+            likedByPreview: [],
             canDelete: false,
             eventId: event.id,
         };
@@ -188,8 +222,13 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
             actorName: event.actor_name,
             title: t('socialHub.feed.streakTitle', { name: event.actor_name }),
             detail: `${event.message}`,
+            stats: [],
             createdAt: event.created_at,
             isWorkoutShare: false,
+            canLike: false,
+            likedByMe: false,
+            likeCount: 0,
+            likedByPreview: [],
             canDelete: false,
             eventId: event.id,
         };
@@ -201,8 +240,13 @@ function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefi
         actorName: event.actor_name,
         title: t('socialHub.feed.encouragementTitle', { name: event.actor_name }),
         detail: event.message,
+        stats: [],
         createdAt: event.created_at,
         isWorkoutShare: false,
+        canLike: false,
+        likedByMe: false,
+        likeCount: 0,
+        likedByPreview: [],
         canDelete: false,
         eventId: event.id,
     };
@@ -216,6 +260,7 @@ export default function SocialHubScreen() {
 
     const challengeSheetRef = useRef<TrueSheet>(null);
     const shareWorkoutSheetRef = useRef<TrueSheet>(null);
+    const challengeDetailsSheetRef = useRef<TrueSheet>(null);
 
     const [activeTopTab, setActiveTopTab] = useState<SocialTopTabId>('home');
     const [refreshing, setRefreshing] = useState(false);
@@ -228,6 +273,7 @@ export default function SocialHubScreen() {
     const [challengeIndex, setChallengeIndex] = useState(0);
     const [isSendingLikeForId, setIsSendingLikeForId] = useState<string | null>(null);
     const [isSharingWorkoutId, setIsSharingWorkoutId] = useState<string | null>(null);
+    const [selectedChallengeForDetails, setSelectedChallengeForDetails] = useState<SocialChallengeProgress | null>(null);
 
     const [activeChallenges, setActiveChallenges] = useState<SocialChallengeProgress[]>(() => (
         profile?.id && homeCacheProfileId === profile.id ? homeChallengesCache : []
@@ -281,7 +327,6 @@ export default function SocialHubScreen() {
         removeFriend,
         fetchGlobalLeaderboard,
         fetchFriendsLeaderboard,
-        sendEncouragement,
         sendFriendRequest,
         searchUsers,
     } = useSocialStore();
@@ -399,6 +444,20 @@ export default function SocialHubScreen() {
             homeChallengesCache = nextChallenges;
         }
     }, [activeChallenges, mergeLocalChallengeProgress]);
+
+    useEffect(() => {
+        if (!selectedChallengeForDetails) return;
+
+        const nextChallenge = activeChallenges.find((item) => item.challenge.id === selectedChallengeForDetails.challenge.id);
+        if (!nextChallenge) {
+            setSelectedChallengeForDetails(null);
+            return;
+        }
+
+        if (nextChallenge !== selectedChallengeForDetails) {
+            setSelectedChallengeForDetails(nextChallenge);
+        }
+    }, [activeChallenges, selectedChallengeForDetails]);
 
     const friendsLeaderboardRows = useMemo(() => {
         const rows = friendsLeaderboard.length > 0
@@ -773,19 +832,24 @@ export default function SocialHubScreen() {
         challengeSheetRef.current?.present();
     }, [fetchFriends, friends.length]);
 
+    const openChallengeDetails = useCallback((challenge: SocialChallengeProgress) => {
+        setSelectedChallengeForDetails(challenge);
+        challengeDetailsSheetRef.current?.present();
+    }, []);
+
     const handleSendLike = useCallback(async (item: FeedViewItem) => {
-        if (!item.isWorkoutShare || !item.eventId || item.actorId === profile?.id) return;
+        if (!item.isWorkoutShare || !item.eventId || !item.canLike) return;
 
         setIsSendingLikeForId(item.id);
         try {
-            await setSocialFeedReaction(item.eventId, 'like');
-            await sendEncouragement(item.actorId, t('socialHub.feed.likeMessage'));
+            await toggleSocialFeedReaction(item.eventId);
+            await loadFeed();
         } catch {
             showErrorDialog(t('socialHub.errors.sendLike'));
         } finally {
             setIsSendingLikeForId(null);
         }
-    }, [profile?.id, sendEncouragement, showErrorDialog, t]);
+    }, [loadFeed, showErrorDialog, t]);
 
     const handleDeleteSharedWorkout = useCallback((item: FeedViewItem) => {
         if (!item.canDelete || !item.eventId) return;
@@ -1069,6 +1133,7 @@ export default function SocialHubScreen() {
                             challengeIndex={challengeIndex}
                             setChallengeIndex={setChallengeIndex}
                             onAddSession={() => router.push('/workout' as any)}
+                            onViewChallengeDetails={openChallengeDetails}
                             challengesError={challengesError}
                             feedItems={feedItems}
                             isSendingLikeForId={isSendingLikeForId}
@@ -1085,6 +1150,10 @@ export default function SocialHubScreen() {
                                     noParticipants: t('socialHub.challenge.noParticipants'),
                                     details: t('socialHub.challenge.details'),
                                     addSession: t('socialHub.challenge.addSession'),
+                                    finishedLabel: t('socialHub.challenge.finishedLabel'),
+                                    winnerLabel: (name) => t('socialHub.challenge.winnerLabel', { name }),
+                                    drawLabel: (count) => t('socialHub.challenge.drawLabel', { count }),
+                                    finishReasonLabel: (reason) => t(`socialHub.challenge.finishReasons.${reason}`),
                                     daysRemaining: (count) => t('socialHub.challenge.daysRemaining', { count }),
                                     goalLabel: (goalType) => t(`socialHub.challenge.goalTypes.${goalType}`),
                                 },
@@ -1093,7 +1162,12 @@ export default function SocialHubScreen() {
                                     emptyTitle: t('socialHub.feed.emptyTitle'),
                                     emptySubtitle: t('socialHub.feed.emptySubtitle'),
                                     like: t('socialHub.feed.likeAction'),
+                                    liked: t('socialHub.feed.likedAction'),
                                     sending: t('socialHub.feed.likeSending'),
+                                    likedBy: (names, extra) => t('socialHub.feed.likedBy', {
+                                        names,
+                                        extra: extra > 0 ? ` +${extra}` : '',
+                                    }),
                                     justNow: t('socialHub.feed.time.justNow'),
                                     minutesAgo: (count) => t('socialHub.feed.time.minutesAgo', { count }),
                                     hoursAgo: (count) => t('socialHub.feed.time.hoursAgo', { count }),
@@ -1118,6 +1192,7 @@ export default function SocialHubScreen() {
                             deletingChallengeId={isDeletingChallengeId}
                             onPressCreateChallenge={openChallengeSheet}
                             onPressAddSession={() => router.push('/workout' as any)}
+                            onPressDetails={openChallengeDetails}
                             onDeleteChallenge={handleDeleteChallenge}
                             labels={{
                                 pageTitle: t('socialHub.pages.challenges.title'),
@@ -1129,6 +1204,11 @@ export default function SocialHubScreen() {
                                 progressLabel: t('socialHub.pages.challenges.progressLabel'),
                                 detailsLabel: t('socialHub.challenge.details'),
                                 addSession: t('socialHub.challenge.addSession'),
+                                finishedLabel: t('socialHub.challenge.finishedLabel'),
+                                winnerLabel: (name) => t('socialHub.challenge.winnerLabel', { name }),
+                                drawLabel: (count) => t('socialHub.challenge.drawLabel', { count }),
+                                finishReasonLabel: (reason) => t(`socialHub.challenge.finishReasons.${reason}`),
+                                rankLabel: (rank) => t('socialHub.challenge.rankLabel', { rank }),
                                 deleteChallenge: t('socialHub.challenge.deleteAction'),
                                 leaveChallenge: t('socialHub.challenge.leaveAction'),
                                 deletingChallenge: t('socialHub.challenge.deletingAction'),
@@ -1250,6 +1330,44 @@ export default function SocialHubScreen() {
                         emptySubtitle: t('socialHub.shareWorkout.emptySubtitle'),
                         shareAction: t('socialHub.shareWorkout.shareAction'),
                         sharingAction: t('socialHub.shareWorkout.sharingAction'),
+                    }}
+                />
+
+                <ChallengeDetailsSheet
+                    sheetRef={challengeDetailsSheetRef}
+                    challenge={selectedChallengeForDetails}
+                    profileId={profile?.id}
+                    onPressAddSession={() => {
+                        challengeDetailsSheetRef.current?.dismiss();
+                        router.push('/workout' as any);
+                    }}
+                    onPressOpenChallenges={() => {
+                        challengeDetailsSheetRef.current?.dismiss();
+                        setActiveTopTab('challenges');
+                    }}
+                    onPressDeleteOrLeave={(challenge) => {
+                        challengeDetailsSheetRef.current?.dismiss();
+                        handleDeleteChallenge(challenge);
+                    }}
+                    labels={{
+                        title: t('socialHub.challenge.detailsSheet.title'),
+                        activeSubtitle: t('socialHub.challenge.detailsSheet.activeSubtitle'),
+                        finishedSubtitle: t('socialHub.challenge.detailsSheet.finishedSubtitle'),
+                        close: t('common.close'),
+                        openChallenges: t('socialHub.challenge.detailsSheet.openChallenges'),
+                        addSession: t('socialHub.challenge.addSession'),
+                        participantsTitle: t('socialHub.challenge.detailsSheet.participantsTitle'),
+                        statsTitle: t('socialHub.challenge.detailsSheet.statsTitle'),
+                        targetLabel: t('socialHub.challenge.detailsSheet.targetLabel'),
+                        progressLabel: t('socialHub.challenge.detailsSheet.progressLabel'),
+                        participantsLabel: t('socialHub.challenge.detailsSheet.participantsLabel'),
+                        rankTitle: t('socialHub.challenge.detailsSheet.rankTitle'),
+                        finishedLabel: t('socialHub.challenge.finishedLabel'),
+                        winnerLabel: (name) => t('socialHub.challenge.winnerLabel', { name }),
+                        drawLabel: (count) => t('socialHub.challenge.drawLabel', { count }),
+                        finishReasonLabel: (reason) => t(`socialHub.challenge.finishReasons.${reason}`),
+                        deleteChallenge: t('socialHub.challenge.deleteAction'),
+                        leaveChallenge: t('socialHub.challenge.leaveAction'),
                     }}
                 />
             </SafeAreaView>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles, Trophy, Users, X } from 'lucide-react-native';
+import { Sparkles, Trophy, Users, X, Crown } from 'lucide-react-native';
 import type { SocialChallengeProgress } from '../../../services/supabase/social';
 import { GlassCard } from '../../ui';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
@@ -13,6 +13,7 @@ interface ChallengesTabPageProps {
     deletingChallengeId: string | null;
     onPressCreateChallenge: () => void;
     onPressAddSession: () => void;
+    onPressDetails: (challenge: SocialChallengeProgress) => void;
     onDeleteChallenge: (challenge: SocialChallengeProgress) => void;
     labels: {
         pageTitle: string;
@@ -24,6 +25,11 @@ interface ChallengesTabPageProps {
         progressLabel: string;
         detailsLabel: string;
         addSession: string;
+        finishedLabel: string;
+        winnerLabel: (name: string) => string;
+        drawLabel: (count: number) => string;
+        finishReasonLabel: (reason: 'active' | 'completed' | 'expired' | 'target_reached' | 'cancelled') => string;
+        rankLabel: (rank: number) => string;
         deleteChallenge: string;
         leaveChallenge: string;
         deletingChallenge: string;
@@ -39,6 +45,7 @@ export function ChallengesTabPage({
     deletingChallengeId,
     onPressCreateChallenge,
     onPressAddSession,
+    onPressDetails,
     onDeleteChallenge,
     labels,
 }: ChallengesTabPageProps) {
@@ -76,10 +83,12 @@ export function ChallengesTabPage({
                     const progress = Number(item.my_progress || 0);
                     const target = Number(item.challenge.goal_target || 1);
                     const ratio = Math.min(1, progress / Math.max(target, 1));
+                    const isFinished = item.is_finished;
                     const endsAt = new Date(item.challenge.ends_at);
                     const remainingDays = Math.max(0, Math.ceil((endsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
                     const isOwner = item.challenge.creator_id === profileId;
                     const isDeleting = deletingChallengeId === item.challenge.id;
+                    const winnerName = item.winner ? (item.winner.display_name || item.winner.username) : null;
 
                     return (
                         <GlassCard
@@ -89,7 +98,9 @@ export function ChallengesTabPage({
                             <View style={styles.challengeTop}>
                                 <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
                                 <View style={styles.challengeTopActions}>
-                                    <Text style={styles.challengeDays}>{labels.daysRemaining(remainingDays)}</Text>
+                                    <Text style={styles.challengeDays}>
+                                        {isFinished ? labels.finishedLabel : labels.daysRemaining(remainingDays)}
+                                    </Text>
                                     <TouchableOpacity
                                         style={styles.deleteButton}
                                         onPress={() => onDeleteChallenge(item)}
@@ -131,6 +142,26 @@ export function ChallengesTabPage({
                                 <Text style={styles.progressPct}>{Math.round(ratio * 100)}%</Text>
                             </View>
 
+                            {isFinished && (
+                                <View style={styles.finishedBanner}>
+                                    <View style={styles.finishedBannerRow}>
+                                        <Crown size={13} color={Colors.gold} />
+                                        <Text style={styles.finishedBannerTitle}>
+                                            {item.winner
+                                                ? (item.winner.is_tie
+                                                    ? labels.drawLabel(item.winner.tied_with_count)
+                                                    : labels.winnerLabel(winnerName || ''))
+                                                : labels.finishReasonLabel(item.finish_reason)}
+                                        </Text>
+                                    </View>
+                                    <Text style={styles.finishedBannerSubtitle}>{labels.finishReasonLabel(item.finish_reason)}</Text>
+                                </View>
+                            )}
+
+                            {item.my_rank ? (
+                                <Text style={styles.rankText}>{labels.rankLabel(item.my_rank)}</Text>
+                            ) : null}
+
                             {item.preview_participants.length > 0 && (
                                 <View style={styles.participantRow}>
                                     {item.preview_participants.slice(0, 4).map((participant) => {
@@ -152,9 +183,17 @@ export function ChallengesTabPage({
                                 </Text>
                             )}
 
-                            <TouchableOpacity style={styles.addSessionButton} onPress={onPressAddSession}>
-                                <Text style={styles.addSessionText}>{labels.addSession}</Text>
-                            </TouchableOpacity>
+                            <View style={styles.actionRow}>
+                                <TouchableOpacity style={styles.detailsButton} onPress={() => onPressDetails(item)}>
+                                    <Text style={styles.detailsButtonText}>{labels.detailsLabel}</Text>
+                                </TouchableOpacity>
+
+                                {isFinished ? null : (
+                                    <TouchableOpacity style={styles.addSessionButton} onPress={onPressAddSession}>
+                                        <Text style={styles.addSessionText}>{labels.addSession}</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </GlassCard>
                     );
                 })
@@ -338,6 +377,35 @@ const styles = StyleSheet.create({
         fontSize: FontSize.xs,
         fontWeight: FontWeight.semibold,
     },
+    finishedBanner: {
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlaySuccess20,
+        backgroundColor: Colors.overlaySuccess10,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: Spacing.xs,
+        gap: 3,
+    },
+    finishedBannerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    finishedBannerTitle: {
+        color: Colors.gold,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.semibold,
+        flex: 1,
+    },
+    finishedBannerSubtitle: {
+        color: Colors.textSecondary,
+        fontSize: 10,
+    },
+    rankText: {
+        color: Colors.info,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.semibold,
+    },
     participantRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -364,7 +432,28 @@ const styles = StyleSheet.create({
         fontSize: FontSize.xs,
         lineHeight: 15,
     },
+    actionRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.xs,
+    },
+    detailsButton: {
+        marginTop: Spacing.xs,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite20,
+        backgroundColor: Colors.overlayBlack30,
+        alignItems: 'center',
+        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.md,
+    },
+    detailsButtonText: {
+        color: Colors.white,
+        fontWeight: FontWeight.semibold,
+        fontSize: FontSize.sm,
+    },
     addSessionButton: {
+        flex: 1,
         marginTop: Spacing.xs,
         borderRadius: BorderRadius.lg,
         borderWidth: 1,

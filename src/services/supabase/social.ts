@@ -24,6 +24,8 @@ export type FriendProfile = Profile & { friendship_id: string };
 
 export type SocialChallengeGoalType = 'workouts' | 'distance' | 'duration' | 'xp';
 
+export type SocialChallengeFinishReason = 'active' | 'completed' | 'expired' | 'target_reached' | 'cancelled';
+
 export interface SocialChallenge {
     id: string;
     title: string;
@@ -42,6 +44,25 @@ export interface SocialChallengeProgress {
     my_progress: number;
     participants_count: number;
     preview_participants: Array<{ id: string; username: string; display_name: string | null; progress: number }>;
+    participants: Array<{
+        id: string;
+        username: string;
+        display_name: string | null;
+        progress: number;
+        completed_at: string | null;
+    }>;
+    my_rank: number | null;
+    winner: {
+        id: string;
+        username: string;
+        display_name: string | null;
+        progress: number;
+        completed_at: string | null;
+        is_tie: boolean;
+        tied_with_count: number;
+    } | null;
+    is_finished: boolean;
+    finish_reason: SocialChallengeFinishReason;
 }
 
 export interface SocialFeedEventItem {
@@ -52,11 +73,23 @@ export interface SocialFeedEventItem {
     message: string;
     metadata: Record<string, any>;
     created_at: string;
+    reactions_count: number;
+    liked_by_me: boolean;
+    liked_by_preview: Array<{ id: string; username: string; display_name: string | null }>;
 }
 
 const MAX_CHALLENGE_TITLE_LENGTH = 80;
 const MAX_CHALLENGE_DESCRIPTION_LENGTH = 280;
 const CHALLENGE_PROGRESS_EPSILON = 0.01;
+const CHALLENGE_RANKING_EPSILON = 0.001;
+
+interface ChallengeParticipantSummary {
+    id: string;
+    username: string;
+    display_name: string | null;
+    progress: number;
+    completed_at: string | null;
+}
 
 function sanitizeTrimmedText(value: string, maxLength: number): string {
     return value.trim().slice(0, maxLength);
@@ -70,6 +103,56 @@ function entryTimestampMs(entry: Entry): number {
 
     const fallbackMs = new Date(`${entry.date}T12:00:00.000Z`).getTime();
     return Number.isFinite(fallbackMs) ? fallbackMs : 0;
+}
+
+function safeTimestampMs(value: string | null | undefined): number {
+    if (!value) return Number.POSITIVE_INFINITY;
+    const ms = new Date(value).getTime();
+    return Number.isFinite(ms) ? ms : Number.POSITIVE_INFINITY;
+}
+
+function getParticipantDisplayName(participant: ChallengeParticipantSummary): string {
+    return participant.display_name || participant.username;
+}
+
+function sortChallengeParticipants(a: ChallengeParticipantSummary, b: ChallengeParticipantSummary): number {
+    const progressDelta = b.progress - a.progress;
+    if (Math.abs(progressDelta) > CHALLENGE_RANKING_EPSILON) {
+        return progressDelta;
+    }
+
+    const completedAtDelta = safeTimestampMs(a.completed_at) - safeTimestampMs(b.completed_at);
+    if (completedAtDelta !== 0) {
+        return completedAtDelta;
+    }
+
+    return getParticipantDisplayName(a).localeCompare(getParticipantDisplayName(b));
+}
+
+function deriveChallengeFinishState(
+    challenge: SocialChallenge,
+    participants: ChallengeParticipantSummary[]
+): { isFinished: boolean; reason: SocialChallengeFinishReason } {
+    if (challenge.status === 'cancelled') {
+        return { isFinished: true, reason: 'cancelled' };
+    }
+
+    if (challenge.status === 'completed') {
+        return { isFinished: true, reason: 'completed' };
+    }
+
+    const goalTarget = Number(challenge.goal_target || 0);
+    const topProgress = participants[0]?.progress || 0;
+    if (goalTarget > 0 && topProgress >= goalTarget) {
+        return { isFinished: true, reason: 'target_reached' };
+    }
+
+    const endsAtMs = new Date(challenge.ends_at).getTime();
+    if (Number.isFinite(endsAtMs) && Date.now() >= endsAtMs) {
+        return { isFinished: true, reason: 'expired' };
+    }
+
+    return { isFinished: false, reason: 'active' };
 }
 
 function isEntryInsideChallengeWindow(entry: Entry, startsAt: string, endsAt: string): boolean {
@@ -413,7 +496,11 @@ export async function sendFriendRequest(addresseeId: string) {
     if (error) throw error;
     
     // Call edge function to send push notification
-    await sendPushNotification(addresseeId, 'friend_request');
+    await sendPushNotification(addresseeId, 'friend_request', {
+        route: '/social',
+        rate_limit_key: `friend-request:${addresseeId}`,
+        rate_limit_seconds: 30 * 60,
+    });
 }
 
 export async function respondToFriendRequest(friendshipId: string, accept: boolean) {
@@ -487,6 +574,24 @@ export async function getFriends(): Promise<FriendProfile[]> {
     ) as FriendProfile[];
 }
 
+async function getFriendIdsForUser(userId: string): Promise<string[]> {
+    if (!supabase) return [];
+
+    const { data, error } = await (supabase as any)
+        .from('friendships')
+        .select('requester_id, addressee_id')
+        .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+        .eq('status', 'accepted');
+
+    if (error) throw error;
+
+    return Array.from(new Set(
+        ((data || []) as any[])
+            .map((row) => (row.requester_id === userId ? row.addressee_id : row.requester_id))
+            .filter((id) => !!id && id !== userId)
+    ));
+}
+
 // ============================================================================
 // ENCOURAGEMENTS
 // ============================================================================
@@ -524,6 +629,9 @@ export async function sendEncouragement(receiverId: string, customMessage?: stri
     await sendPushNotification(receiverId, 'encouragement', {
         message: customMessage || random.message,
         emoji: random.emoji,
+        route: '/social',
+        rate_limit_key: `encouragement:${receiverId}`,
+        rate_limit_seconds: 60 * 60,
     });
 }
 
@@ -595,12 +703,7 @@ export async function getActiveSocialChallenges(): Promise<SocialChallengeProgre
     if (error) throw error;
 
     const rows = ((data || []) as any[])
-        .filter(row => row.challenge?.status === 'active')
-        .sort((a, b) => {
-            const aTime = new Date(a.challenge?.ends_at || 0).getTime();
-            const bTime = new Date(b.challenge?.ends_at || 0).getTime();
-            return aTime - bTime;
-        });
+        .filter(row => !!row.challenge);
 
     const challengeIds = rows
         .map(row => row.challenge_id as string)
@@ -608,63 +711,105 @@ export async function getActiveSocialChallenges(): Promise<SocialChallengeProgre
 
     if (challengeIds.length === 0) return [];
 
-    const { data: allParticipants, error: participantsError } = await (supabase as any)
-        .from('social_challenge_participants')
-        .select('challenge_id, user_id, progress_value')
-        .in('challenge_id', challengeIds);
-
-    if (participantsError) throw participantsError;
-
-    const { data: participantsWithProfiles, error: previewError } = await (supabase as any)
+    const { data: participantsWithProfiles, error: participantsError } = await (supabase as any)
         .from('social_challenge_participants')
         .select(`
             challenge_id,
             progress_value,
+            completed_at,
             user:profiles(id, username, display_name)
         `)
         .in('challenge_id', challengeIds)
-        .order('progress_value', { ascending: false });
+        .order('progress_value', { ascending: false })
+        .order('completed_at', { ascending: true, nullsFirst: false });
 
-    if (previewError) throw previewError;
+    if (participantsError) throw participantsError;
 
-    const countByChallengeId = new Map<string, number>();
-    ((allParticipants || []) as any[]).forEach(item => {
-        const challengeId = item.challenge_id as string;
-        countByChallengeId.set(challengeId, (countByChallengeId.get(challengeId) || 0) + 1);
-    });
-
-    const previewByChallengeId = new Map<string, Array<{ id: string; username: string; display_name: string | null; progress: number }>>();
+    const participantsByChallengeId = new Map<string, ChallengeParticipantSummary[]>();
     ((participantsWithProfiles || []) as any[]).forEach(item => {
         const challengeId = item.challenge_id as string;
         const userProfile = item.user;
         if (!challengeId || !userProfile) return;
 
-        const current = previewByChallengeId.get(challengeId) || [];
-        if (current.length >= 3) return;
-        previewByChallengeId.set(challengeId, [
+        const current = participantsByChallengeId.get(challengeId) || [];
+        participantsByChallengeId.set(challengeId, [
             ...current,
             {
                 id: userProfile.id,
                 username: userProfile.username,
                 display_name: userProfile.display_name,
-                progress: item.progress_value || 0,
+                progress: Number(item.progress_value || 0),
+                completed_at: item.completed_at || null,
             },
         ]);
     });
 
-    return rows
+    const enriched = rows
         .map(row => {
             const challenge = row.challenge as SocialChallenge;
             if (!challenge) return null;
 
+            const participants = [...(participantsByChallengeId.get(challenge.id) || [])]
+                .sort(sortChallengeParticipants);
+            const previewParticipants = participants
+                .slice(0, 3)
+                .map((participant) => ({
+                    id: participant.id,
+                    username: participant.username,
+                    display_name: participant.display_name,
+                    progress: participant.progress,
+                }));
+            const finishState = deriveChallengeFinishState(challenge, participants);
+            const myRank = participants.findIndex((participant) => participant.id === user.id);
+
+            const winner = participants.length > 0 && finishState.isFinished
+                ? (() => {
+                    const topProgress = participants[0].progress;
+                    const tiedParticipants = participants.filter((participant) => (
+                        Math.abs(participant.progress - topProgress) <= CHALLENGE_RANKING_EPSILON
+                    ));
+                    const leadingParticipant = tiedParticipants[0] || participants[0];
+
+                    return {
+                        id: leadingParticipant.id,
+                        username: leadingParticipant.username,
+                        display_name: leadingParticipant.display_name,
+                        progress: leadingParticipant.progress,
+                        completed_at: leadingParticipant.completed_at,
+                        is_tie: tiedParticipants.length > 1,
+                        tied_with_count: tiedParticipants.length,
+                    };
+                })()
+                : null;
+
             return {
                 challenge,
-                my_progress: row.progress_value || 0,
-                participants_count: countByChallengeId.get(challenge.id) || 0,
-                preview_participants: previewByChallengeId.get(challenge.id) || [],
+                my_progress: Number(row.progress_value || 0),
+                participants_count: participants.length,
+                preview_participants: previewParticipants,
+                participants,
+                my_rank: myRank >= 0 ? myRank + 1 : null,
+                winner,
+                is_finished: finishState.isFinished,
+                finish_reason: finishState.reason,
             } as SocialChallengeProgress;
         })
         .filter(Boolean) as SocialChallengeProgress[];
+
+    return enriched.sort((a, b) => {
+        if (a.is_finished !== b.is_finished) {
+            return a.is_finished ? 1 : -1;
+        }
+
+        const aEndsAt = new Date(a.challenge.ends_at).getTime();
+        const bEndsAt = new Date(b.challenge.ends_at).getTime();
+
+        if (!a.is_finished) {
+            return aEndsAt - bEndsAt;
+        }
+
+        return bEndsAt - aEndsAt;
+    });
 }
 
 export async function createSocialChallenge(input: {
@@ -860,7 +1005,7 @@ export async function shareWorkoutToFeed(input: {
         throw new Error('Invalid workout payload');
     }
 
-    const { error } = await (client as any)
+    const { data: insertedEvent, error } = await (client as any)
         .from('social_feed_events')
         .insert({
             actor_id: user.id,
@@ -874,9 +1019,30 @@ export async function shareWorkoutToFeed(input: {
                 source_created_at: input.createdAtIso,
                 ...(input.metadata || {}),
             },
-        });
+        })
+        .select('id')
+        .single();
 
     if (error) throw error;
+
+    const eventId = insertedEvent?.id as string | undefined;
+    if (!eventId) return;
+
+    const friendIds = await getFriendIdsForUser(user.id);
+    if (friendIds.length === 0) return;
+
+    const notificationSummary = `${safeTitle} · ${safeSummary}`.slice(0, 140);
+
+    await Promise.allSettled(friendIds.map((friendId) => (
+        sendPushNotification(friendId, 'workout_shared', {
+            route: '/social',
+            message: notificationSummary,
+            social_event_id: eventId,
+            workout_type: input.entryType,
+            rate_limit_key: `workout-shared:${friendId}`,
+            rate_limit_seconds: 20 * 60,
+        })
+    )));
 }
 
 export async function getSocialFeed(limit = 10): Promise<SocialFeedEventItem[]> {
@@ -893,7 +1059,12 @@ export async function getSocialFeed(limit = 10): Promise<SocialFeedEventItem[]> 
             message,
             metadata,
             created_at,
-            actor:profiles!social_feed_events_actor_id_fkey(id, username, display_name)
+            actor:profiles!social_feed_events_actor_id_fkey(id, username, display_name),
+            reactions:social_feed_reactions(
+                user_id,
+                reaction,
+                user:profiles!social_feed_reactions_user_id_fkey(id, username, display_name)
+            )
         `)
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -908,6 +1079,19 @@ export async function getSocialFeed(limit = 10): Promise<SocialFeedEventItem[]> 
         message: item.message,
         metadata: item.metadata || {},
         created_at: item.created_at,
+        reactions_count: ((item.reactions || []) as any[])
+            .filter((reactionItem: any) => reactionItem?.reaction === 'like')
+            .length,
+        liked_by_me: ((item.reactions || []) as any[])
+            .some((reactionItem: any) => reactionItem?.reaction === 'like' && reactionItem?.user_id === user.id),
+        liked_by_preview: ((item.reactions || []) as any[])
+            .filter((reactionItem: any) => reactionItem?.reaction === 'like' && reactionItem?.user)
+            .map((reactionItem: any) => ({
+                id: reactionItem.user.id,
+                username: reactionItem.user.username,
+                display_name: reactionItem.user.display_name,
+            }))
+            .slice(0, 4),
     })) as SocialFeedEventItem[];
 }
 
@@ -949,14 +1133,69 @@ export async function setSocialFeedReaction(eventId: string, reaction: string): 
     if (error) throw error;
 }
 
+export async function toggleSocialFeedReaction(eventId: string): Promise<{ liked: boolean }> {
+    const client = getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: existingReaction, error: existingReactionError } = await (client as any)
+        .from('social_feed_reactions')
+        .select('id')
+        .eq('event_id', eventId)
+        .eq('user_id', user.id)
+        .eq('reaction', 'like')
+        .maybeSingle();
+
+    if (existingReactionError) throw existingReactionError;
+
+    if (existingReaction?.id) {
+        const { error: removeError } = await (client as any)
+            .from('social_feed_reactions')
+            .delete()
+            .eq('id', existingReaction.id);
+
+        if (removeError) throw removeError;
+        return { liked: false };
+    }
+
+    await setSocialFeedReaction(eventId, 'like');
+
+    const { data: feedEvent, error: feedEventError } = await (client as any)
+        .from('social_feed_events')
+        .select('id, actor_id, metadata')
+        .eq('id', eventId)
+        .single();
+
+    if (!feedEventError && feedEvent?.actor_id && feedEvent.actor_id !== user.id) {
+        const workoutTitle = (feedEvent.metadata?.title as string | undefined)?.slice(0, 80);
+        await sendPushNotification(feedEvent.actor_id as string, 'workout_liked', {
+            route: '/social',
+            message: workoutTitle,
+            social_event_id: eventId,
+            rate_limit_key: `workout-liked:${eventId}:${user.id}`,
+            rate_limit_seconds: 12 * 60 * 60,
+        });
+    }
+
+    return { liked: true };
+}
+
 // ============================================================================
 // PUSH NOTIFICATIONS via Edge Function
 // ============================================================================
 
 async function sendPushNotification(
-    receiverId: string, 
-    type: 'friend_request' | 'encouragement',
-    data?: { message?: string; emoji?: string }
+    receiverId: string,
+    type: 'friend_request' | 'encouragement' | 'workout_shared' | 'workout_liked',
+    data?: {
+        message?: string;
+        emoji?: string;
+        route?: string;
+        rate_limit_key?: string;
+        rate_limit_seconds?: number;
+        social_event_id?: string;
+        workout_type?: string;
+    }
 ) {
     if (!supabase) return;
     
@@ -972,10 +1211,16 @@ async function sendPushNotification(
     
     if (type === 'friend_request') {
         title = '👋 Nouvelle demande d\'ami';
-        body = `${senderName} veut être ton ami !`;
-    } else {
+        body = `${senderName} veut etre ton ami !`;
+    } else if (type === 'encouragement') {
         title = `${data?.emoji || '💪'} ${senderName} t'encourage !`;
-        body = data?.message || 'Continue comme ça !';
+        body = data?.message || 'Continue comme ca !';
+    } else if (type === 'workout_shared') {
+        title = 'Nouveau partage sport';
+        body = `${senderName} vient de terminer une seance`;
+    } else {
+        title = 'Nouveau like';
+        body = `${senderName} vous a encourage !`;
     }
     
     try {
@@ -984,7 +1229,16 @@ async function sendPushNotification(
                 receiver_id: receiverId,
                 title,
                 body,
-                data: { type, sender_id: user.id },
+                data: {
+                    type,
+                    sender_id: user.id,
+                    route: data?.route,
+                    social_event_id: data?.social_event_id,
+                    workout_type: data?.workout_type,
+                    workout_summary: data?.message,
+                    rate_limit_key: data?.rate_limit_key,
+                    rate_limit_seconds: data?.rate_limit_seconds,
+                },
             },
         });
     } catch (error) {

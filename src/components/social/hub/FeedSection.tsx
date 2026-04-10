@@ -17,7 +17,9 @@ interface FeedSectionProps {
         emptyTitle: string;
         emptySubtitle: string;
         like: string;
+        liked: string;
         sending: string;
+        likedBy: (names: string, extra: number) => string;
         justNow: string;
         minutesAgo: (count: number) => string;
         hoursAgo: (count: number) => string;
@@ -61,7 +63,7 @@ export function FeedSection({
                     </View>
                 ) : (
                     items.map((item, index) => (
-                        <View key={item.id} style={[styles.feedRow, index < items.length - 1 && styles.feedRowBorder]}>
+                        <View key={item.id} style={index < items.length - 1 ? [styles.feedRow, styles.feedRowBorder] : styles.feedRow}>
                             <View style={styles.feedAvatar}>
                                 <Text style={styles.feedAvatarText}>{item.actorName.charAt(0).toUpperCase()}</Text>
                             </View>
@@ -74,17 +76,47 @@ export function FeedSection({
 
                                 <Text style={styles.feedDetail} numberOfLines={2}>{item.detail}</Text>
 
+                                {item.stats.length > 0 ? (
+                                    <View style={styles.statsRow}>
+                                        {item.stats.map((stat) => (
+                                            <View key={`${item.id}:${stat}`} style={styles.statPill}>
+                                                <Text style={styles.statPillText}>{stat}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                ) : null}
+
+                                {item.likeCount > 0 && item.likedByPreview.length > 0 ? (
+                                    <Text style={styles.likesPreview}>
+                                        {labels.likedBy(
+                                            item.likedByPreview.map((liker) => liker.name).join(', '),
+                                            Math.max(0, item.likeCount - item.likedByPreview.length)
+                                        )}
+                                    </Text>
+                                ) : null}
+
                                 <View style={styles.feedActionsRow}>
-                                    {item.isWorkoutShare && (
+                                    {item.isWorkoutShare && item.canLike && (
                                         <TouchableOpacity
-                                            style={styles.feedLikeBtn}
+                                            style={item.likedByMe ? [styles.feedLikeBtn, styles.feedLikeBtnActive] : styles.feedLikeBtn}
                                             onPress={() => onSendLike(item)}
                                             disabled={isSendingLikeForId === item.id}
                                         >
-                                            <Heart size={14} color={Colors.cta} />
-                                            <Text style={styles.feedLikeText}>
-                                                {isSendingLikeForId === item.id ? labels.sending : labels.like}
+                                            <Heart
+                                                size={14}
+                                                color={item.likedByMe ? Colors.white : Colors.cta}
+                                                fill={item.likedByMe ? Colors.cta2 : 'transparent'}
+                                            />
+                                            <Text style={item.likedByMe ? [styles.feedLikeText, styles.feedLikeTextActive] : styles.feedLikeText}>
+                                                {isSendingLikeForId === item.id
+                                                    ? labels.sending
+                                                    : (item.likedByMe ? labels.liked : labels.like)}
                                             </Text>
+                                            {item.likeCount > 0 ? (
+                                                <Text style={item.likedByMe ? [styles.feedLikeCount, styles.feedLikeCountActive] : styles.feedLikeCount}>
+                                                    {item.likeCount}
+                                                </Text>
+                                            ) : null}
                                         </TouchableOpacity>
                                     )}
 
@@ -185,6 +217,31 @@ const styles = StyleSheet.create({
         marginTop: 2,
         lineHeight: 15,
     },
+    statsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 6,
+        marginTop: Spacing.xs,
+    },
+    statPill: {
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayInfo35,
+        backgroundColor: Colors.overlayInfo12,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+    },
+    statPillText: {
+        color: Colors.info,
+        fontSize: 10,
+        fontWeight: FontWeight.semibold,
+    },
+    likesPreview: {
+        color: Colors.muted,
+        fontSize: 10,
+        marginTop: 6,
+    },
     feedActionsRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -207,10 +264,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 4,
     },
+    feedLikeBtnActive: {
+        borderColor: Colors.overlayCozyWarm40,
+        backgroundColor: Colors.overlayCozyWarm40,
+    },
     feedLikeText: {
         color: Colors.cta,
         fontSize: 10,
         fontWeight: FontWeight.semibold,
+    },
+    feedLikeTextActive: {
+        color: Colors.white,
+    },
+    feedLikeCount: {
+        color: Colors.cta,
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+    },
+    feedLikeCountActive: {
+        color: Colors.white,
     },
     emptyFeed: {
         paddingVertical: Spacing.lg,

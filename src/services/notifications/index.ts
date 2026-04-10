@@ -109,6 +109,15 @@ export async function registerForPushNotifications(): Promise<PushTokenResult> {
             vibrationPattern: [0, 200],
             lightColor: '#4ade80',
         });
+
+        // Canal pour les activites sociales (partages, likes)
+        await Notifications.setNotificationChannelAsync('social', {
+            name: i18n.t('notifications.socialChannel') || 'Social',
+            description: i18n.t('notifications.socialChannelDesc') || 'Partages de seances et encouragements',
+            importance: Notifications.AndroidImportance.HIGH,
+            vibrationPattern: [0, 120, 120, 120],
+            lightColor: '#22d3ee',
+        });
     }
 
     // Obtenir le token Expo avec retry logic
