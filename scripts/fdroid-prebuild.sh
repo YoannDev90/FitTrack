@@ -240,7 +240,7 @@ cat > stubs/expo-notifications/expo-module.config.json <<'EOF'
 {
   "platforms": ["android"],
   "android": {
-    "modules": ["expo.modules.notifications.NotificationsPackage"]
+    "modules": ["expo.modules.notifications.ExpoPushTokenManagerModule"]
   }
 }
 EOF
@@ -249,30 +249,26 @@ EOF
 cat > stubs/expo-notifications/android/src/main/java/expo/modules/notifications/NotificationsPackage.kt <<'EOF'
 package expo.modules.notifications
 
-import expo.modules.core.BasePackage
+import expo.modules.kotlin.modules.Module
 
-class NotificationsPackage : BasePackage() {
-  override fun createExportedModules(context: android.content.Context) = listOf(
-    ExpoPushTokenManagerModule(context)
-  )
-}
+// Stub vide — le module est enregistré via expo-module.config.json
+class NotificationsPackage
 EOF
 
 # ExpoPushTokenManagerModule.kt (le module qui manque)
 cat > stubs/expo-notifications/android/src/main/java/expo/modules/notifications/ExpoPushTokenManagerModule.kt <<'EOF'
 package expo.modules.notifications
 
-import android.content.Context
-import expo.modules.core.ExportedModule
-import expo.modules.core.interfaces.ExpoMethod
-import expo.modules.core.Promise
+import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.modules.ModuleDefinition
 
-class ExpoPushTokenManagerModule(context: Context) : ExportedModule(context) {
-  override fun getName() = "ExpoPushTokenManager"
-  
-  @ExpoMethod
-  fun getDevicePushTokenAsync(promise: Promise) {
-    promise.reject("ERR_UNAVAILABLE", "[FOSS] Push notifications are disabled")
+class ExpoPushTokenManagerModule : Module() {
+  override fun definition() = ModuleDefinition {
+    Name("ExpoPushTokenManager")
+
+    AsyncFunction("getDevicePushTokenAsync") {
+      throw Exception("[FOSS] Push notifications are disabled")
+    }
   }
 }
 EOF
@@ -510,6 +506,16 @@ org.gradle.java.home=$JAVA_HOME_DETECTED
 EOF
 
 echo "  ✅ gradle.properties patched with JAVA_HOME=$JAVA_HOME_DETECTED"
+
+echo ""
+echo "🔧 Adding KSP Metaspace increase for expo-image..."
+cat >> android/gradle.properties <<'EOF'
+
+# F-DROID FIX: Increase Metaspace for KSP (expo-image)
+org.gradle.jvmargs=-Xms1g -Xmx5g -XX:+UseParallelGC -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=1g
+EOF
+
+echo "  ✅ gradle.properties updated for expo-image KSP" 
 
 # ==================================================
 # 🔥 Verify buildFromSource is working
