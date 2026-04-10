@@ -32,6 +32,7 @@ export interface Database {
                     level: number;
                     is_public: boolean;
                     social_enabled: boolean;
+                    accepts_friend_requests: boolean;
                     push_token: string | null;
                     created_at: string;
                     updated_at: string;
@@ -52,6 +53,7 @@ export interface Database {
                     level?: number;
                     is_public?: boolean;
                     social_enabled?: boolean;
+                    accepts_friend_requests?: boolean;
                     push_token?: string | null;
                 };
                 Update: {
@@ -69,6 +71,7 @@ export interface Database {
                     level?: number;
                     is_public?: boolean;
                     social_enabled?: boolean;
+                    accepts_friend_requests?: boolean;
                     push_token?: string | null;
                 };
             };
@@ -124,6 +127,69 @@ export interface Database {
                 };
                 Update: {
                     read_at?: string | null;
+                };
+            };
+            social_feature_flags: {
+                Row: {
+                    flag_key: string;
+                    is_enabled: boolean;
+                    config: Json;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    flag_key: string;
+                    is_enabled?: boolean;
+                    config?: Json;
+                };
+                Update: {
+                    is_enabled?: boolean;
+                    config?: Json;
+                };
+            };
+            social_leaderboard_bots: {
+                Row: {
+                    id: string;
+                    username: string;
+                    display_name: string;
+                    avatar_url: string | null;
+                    weekly_workouts: number;
+                    weekly_distance: number;
+                    weekly_duration: number;
+                    weekly_xp: number;
+                    current_streak: number;
+                    total_xp: number;
+                    level: number;
+                    is_enabled: boolean;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    username: string;
+                    display_name: string;
+                    avatar_url?: string | null;
+                    weekly_workouts?: number;
+                    weekly_distance?: number;
+                    weekly_duration?: number;
+                    weekly_xp?: number;
+                    current_streak?: number;
+                    total_xp?: number;
+                    level?: number;
+                    is_enabled?: boolean;
+                };
+                Update: {
+                    username?: string;
+                    display_name?: string;
+                    avatar_url?: string | null;
+                    weekly_workouts?: number;
+                    weekly_distance?: number;
+                    weekly_duration?: number;
+                    weekly_xp?: number;
+                    current_streak?: number;
+                    total_xp?: number;
+                    level?: number;
+                    is_enabled?: boolean;
                 };
             };
         };
