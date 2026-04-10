@@ -91,6 +91,104 @@ interface ChallengeParticipantSummary {
     completed_at: string | null;
 }
 
+interface SocialLeaderboardBotsFlag {
+    is_enabled: boolean;
+    config: {
+        maxBots?: number;
+    };
+}
+
+interface SocialLeaderboardBotRow {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+    weekly_workouts: number;
+    weekly_distance: number;
+    weekly_duration: number;
+    weekly_xp: number;
+    current_streak: number;
+    total_xp: number;
+    level: number;
+    is_enabled: boolean;
+}
+
+function toNumberOrZero(value: unknown): number {
+    const parsed = Number(value || 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function sortLeaderboardRows(a: LeaderboardEntry, b: LeaderboardEntry): number {
+    const xpDelta = (b.weekly_xp || 0) - (a.weekly_xp || 0);
+    if (xpDelta !== 0) return xpDelta;
+
+    const totalXpDelta = (b.total_xp || 0) - (a.total_xp || 0);
+    if (totalXpDelta !== 0) return totalXpDelta;
+
+    return (b.weekly_workouts || 0) - (a.weekly_workouts || 0);
+}
+
+function isActiveLeaderboardEntry(entry: Pick<LeaderboardEntry, 'weekly_xp' | 'weekly_workouts'>): boolean {
+    return (entry.weekly_xp || 0) > 0 || (entry.weekly_workouts || 0) > 0;
+}
+
+async function getLeaderboardBots(): Promise<LeaderboardEntry[]> {
+    if (!supabase) return [];
+
+    const { data: flagRow, error: flagError } = await (supabase as any)
+        .from('social_feature_flags')
+        .select('is_enabled, config')
+        .eq('flag_key', 'global_leaderboard_bots')
+        .maybeSingle();
+
+    if (flagError) {
+        serviceLogger.warn('Unable to load leaderboard bot settings', flagError);
+        return [];
+    }
+
+    const featureFlag = (flagRow || {
+        is_enabled: true,
+        config: {},
+    }) as SocialLeaderboardBotsFlag;
+
+    if (!featureFlag.is_enabled) {
+        return [];
+    }
+
+    const maxBots = Math.max(0, Math.min(50, Number(featureFlag.config?.maxBots || 8)));
+    if (maxBots === 0) {
+        return [];
+    }
+
+    const { data: botRows, error: botError } = await (supabase as any)
+        .from('social_leaderboard_bots')
+        .select('*')
+        .eq('is_enabled', true)
+        .limit(maxBots);
+
+    if (botError) {
+        serviceLogger.warn('Unable to load leaderboard bots', botError);
+        return [];
+    }
+
+    return ((botRows || []) as SocialLeaderboardBotRow[])
+        .map((bot) => ({
+            id: bot.id,
+            username: bot.username,
+            display_name: bot.display_name,
+            avatar_url: bot.avatar_url,
+            weekly_workouts: toNumberOrZero(bot.weekly_workouts),
+            weekly_distance: toNumberOrZero(bot.weekly_distance),
+            weekly_duration: toNumberOrZero(bot.weekly_duration),
+            weekly_xp: toNumberOrZero(bot.weekly_xp),
+            current_streak: toNumberOrZero(bot.current_streak),
+            total_xp: toNumberOrZero(bot.total_xp),
+            level: Math.max(1, toNumberOrZero(bot.level)),
+            rank: 0,
+        }))
+        .filter(isActiveLeaderboardEntry);
+}
+
 function sanitizeTrimmedText(value: string, maxLength: number): string {
     return value.trim().slice(0, maxLength);
 }
@@ -389,6 +487,20 @@ export async function updateLeaderboardVisibility(isPublic: boolean): Promise<vo
         .eq('id', user.id);
 }
 
+/**
+ * Met a jour la preference "accepter les demandes d'ami"
+ */
+export async function updateFriendRequestAcceptance(acceptsFriendRequests: boolean): Promise<void> {
+    if (!supabase) return;
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    await (supabase as any)
+        .from('profiles')
+        .update({ accepts_friend_requests: acceptsFriendRequests })
+        .eq('id', user.id);
+}
+
 // ============================================================================
 // SYNC STATS
 // ============================================================================
@@ -429,25 +541,35 @@ export async function syncWeeklyStats(stats: {
 export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     if (!supabase) return [];
     const user = await getCurrentUser();
-    
+
     const { data, error } = await (supabase as any)
         .from('weekly_leaderboard')
         .select('*')
-        .limit(MAX_LEADERBOARD_RESULTS);
+        .limit(MAX_LEADERBOARD_RESULTS * 3);
 
     if (error) {
         errorLogger.error('Error fetching global leaderboard:', error);
         throw error;
     }
-    
-    // If not authenticated, return all
-    if (!user) return (data || []) as LeaderboardEntry[];
-    
-    // Filter out blocked users (but keep current user in the list)
-    const blockedIds = await getBlockedUserIds();
-    return ((data || []) as LeaderboardEntry[]).filter(
-        entry => !blockedIds.includes(entry.id)
-    );
+
+    const realRows = ((data || []) as LeaderboardEntry[])
+        .filter(isActiveLeaderboardEntry);
+
+    let visibleRealRows = realRows;
+    if (user) {
+        const blockedIds = await getBlockedUserIds();
+        visibleRealRows = realRows.filter((entry) => !blockedIds.includes(entry.id));
+    }
+
+    const botRows = await getLeaderboardBots();
+
+    return [...visibleRealRows, ...botRows]
+        .sort(sortLeaderboardRows)
+        .slice(0, MAX_LEADERBOARD_RESULTS)
+        .map((entry, index) => ({
+            ...entry,
+            rank: index + 1,
+        }));
 }
 
 export async function getFriendsLeaderboard(): Promise<LeaderboardEntry[]> {
@@ -459,7 +581,14 @@ export async function getFriendsLeaderboard(): Promise<LeaderboardEntry[]> {
         .rpc('get_friends_leaderboard', { user_id: user.id });
 
     if (error) throw error;
-    return (data || []) as LeaderboardEntry[];
+
+    return ((data || []) as LeaderboardEntry[])
+        .filter(isActiveLeaderboardEntry)
+        .sort(sortLeaderboardRows)
+        .map((entry, index) => ({
+            ...entry,
+            rank: index + 1,
+        }));
 }
 
 // ============================================================================
@@ -1211,16 +1340,16 @@ async function sendPushNotification(
     
     if (type === 'friend_request') {
         title = '👋 Nouvelle demande d\'ami';
-        body = `${senderName} veut etre ton ami !`;
+        body = `${senderName} veut être ton ami !`;
     } else if (type === 'encouragement') {
         title = `${data?.emoji || '💪'} ${senderName} t'encourage !`;
-        body = data?.message || 'Continue comme ca !';
+        body = data?.message || 'Continue comme ça !';
     } else if (type === 'workout_shared') {
-        title = 'Nouveau partage sport';
-        body = `${senderName} vient de terminer une seance`;
+        title = 'Nouveau partage sportif';
+        body = `${senderName} vient de terminer une séance`;
     } else {
         title = 'Nouveau like';
-        body = `${senderName} vous a encourage !`;
+        body = `${senderName} a aimé ta séance`;
     }
     
     try {

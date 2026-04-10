@@ -66,6 +66,7 @@ interface SocialState {
     // Actions - RGPD
     disableSocialAndDeleteData: () => Promise<void>;
     updateLeaderboardVisibility: (isPublic: boolean) => Promise<void>;
+    updateFriendRequestAcceptance: (acceptsFriendRequests: boolean) => Promise<void>;
     
     // Actions - Sync
     syncStats: (stats: {
@@ -332,6 +333,14 @@ export const useSocialStore = create<SocialState>()(
                 const profile = get().profile;
                 if (profile) {
                     set({ profile: { ...profile, is_public: isPublic } });
+                }
+            },
+
+            updateFriendRequestAcceptance: async (acceptsFriendRequests) => {
+                await SocialService.updateFriendRequestAcceptance(acceptsFriendRequests);
+                const profile = get().profile;
+                if (profile) {
+                    set({ profile: { ...profile, accepts_friend_requests: acceptsFriendRequests } });
                 }
             },
 
