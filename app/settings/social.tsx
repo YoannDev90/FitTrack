@@ -21,6 +21,7 @@ import {
   Users,
   Globe,
   Eye,
+  UserCheck,
   UserX,
   ChevronRight,
 } from 'lucide-react-native';
@@ -81,6 +82,7 @@ export default function SocialSettingsScreen() {
     profile,
     disableSocialAndDeleteData,
     updateLeaderboardVisibility,
+    updateFriendRequestAcceptance,
   } = useSocialStore();
 
   const [isDisablingSocial, setIsDisablingSocial] = useState(false);
@@ -128,6 +130,15 @@ export default function SocialSettingsScreen() {
       Alert.alert(t('common.error'), t('settings.visibilityError'));
     }
   }, [profile, updateLeaderboardVisibility, t]);
+
+  const handleToggleFriendRequests = useCallback(async () => {
+    const newValue = !(profile?.accepts_friend_requests ?? true);
+    try {
+      await updateFriendRequestAcceptance(newValue);
+    } catch (error) {
+      Alert.alert(t('common.error'), t('settings.visibilityError'));
+    }
+  }, [profile, updateFriendRequestAcceptance, t]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -205,6 +216,22 @@ export default function SocialSettingsScreen() {
               }
               delay={150}
             />
+
+            <SettingItem
+              icon={<UserCheck size={20} color={Colors.info} />}
+              iconColor={Colors.info}
+              title={t('settings.acceptFriendRequests')}
+              subtitle={profile?.accepts_friend_requests !== false ? t('settings.acceptFriendRequestsOn') : t('settings.acceptFriendRequestsOff')}
+              rightElement={
+                <Switch
+                  value={profile?.accepts_friend_requests !== false}
+                  onValueChange={handleToggleFriendRequests}
+                  trackColor={{ false: Colors.card, true: Colors.teal }}
+                  thumbColor={Colors.white}
+                />
+              }
+              delay={170}
+            />
             
             {/* View Profile */}
             <SettingItem
@@ -214,7 +241,7 @@ export default function SocialSettingsScreen() {
               subtitle={`@${profile?.username || t('profile.notLoggedIn')}`}
               onPress={() => router.push('/social')}
               showChevron
-              delay={200}
+              delay={210}
             />
           </GlassCard>
         )}
