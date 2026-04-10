@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Compass, Crown, Users } from 'lucide-react-native';
+import { Compass, Crown, Sparkles, Users } from 'lucide-react-native';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
 import type { ChallengeSectionProps } from './types';
 
@@ -54,6 +54,11 @@ export function ChallengeCarouselSection({
                     const cardColors: [string, string, string] = isFinished
                         ? [Colors.overlaySuccess24, Colors.overlayViolet14, Colors.overlayBlack60]
                         : [Colors.overlayViolet24, Colors.overlayViolet18, Colors.overlayBlack60];
+                    const winnerText = item.winner
+                        ? (item.winner.is_tie
+                            ? strings.drawLabel(item.winner.tied_with_count)
+                            : strings.winnerLabel(winnerName || ''))
+                        : strings.finishReasonLabel(item.finish_reason);
 
                     return (
                         <LinearGradient
@@ -63,42 +68,59 @@ export function ChallengeCarouselSection({
                             end={{ x: 1, y: 1 }}
                             style={[styles.challengeCard, { width: challengeCardWidth }]}
                         >
-                            <View style={styles.challengeTopRow}>
-                                <View style={isFinished ? [styles.challengeKickerPill, styles.challengeKickerPillFinished] : styles.challengeKickerPill}>
-                                    <Text style={styles.challengeKicker}>
-                                        {isFinished ? strings.finishedLabel : strings.daysRemaining(remainingDays)}
-                                    </Text>
+                            {isFinished ? (
+                                <View style={styles.finishedTopRow}>
+                                    <View style={[styles.challengeKickerPill, styles.challengeKickerPillFinished]}>
+                                        <Text style={styles.challengeKicker}>{strings.finishedLabel}</Text>
+                                    </View>
+                                    <View style={styles.finishedWinnerPill}>
+                                        <Crown size={12} color={Colors.gold} />
+                                        <Text style={styles.finishedWinnerText} numberOfLines={1}>{winnerText}</Text>
+                                    </View>
+                                    <View style={styles.goalPill}>
+                                        <Text style={styles.goalPillText}>{strings.goalLabel(item.challenge.goal_type)}</Text>
+                                    </View>
                                 </View>
-                                <View style={styles.goalPill}>
-                                    <Text style={styles.goalPillText}>{strings.goalLabel(item.challenge.goal_type)}</Text>
-                                </View>
-                            </View>
-
-                            <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
-
-                            <View style={styles.progressTrack}>
-                                <View style={[styles.progressFill, { width: `${ratio * 100}%` }]} />
-                            </View>
-
-                            <Text style={styles.progressLabel}>
-                                {Math.round(progress)}/{Math.round(target)} ({Math.round(ratio * 100)}%)
-                            </Text>
-
-                            {isFinished && (
-                                <View style={styles.winnerRow}>
-                                    <Crown size={13} color={Colors.gold} />
-                                    <Text style={styles.winnerText} numberOfLines={1}>
-                                        {item.winner
-                                            ? (item.winner.is_tie
-                                                ? strings.drawLabel(item.winner.tied_with_count)
-                                                : strings.winnerLabel(winnerName || ''))
-                                            : strings.finishReasonLabel(item.finish_reason)}
-                                    </Text>
+                            ) : (
+                                <View style={styles.challengeTopRow}>
+                                    <View style={styles.challengeKickerPill}>
+                                        <Text style={styles.challengeKicker}>{strings.daysRemaining(remainingDays)}</Text>
+                                    </View>
+                                    <View style={styles.goalPill}>
+                                        <Text style={styles.goalPillText}>{strings.goalLabel(item.challenge.goal_type)}</Text>
+                                    </View>
                                 </View>
                             )}
 
-                            {isFinished && (
-                                <Text style={styles.finishReasonText}>{strings.finishReasonLabel(item.finish_reason)}</Text>
+                            <Text style={isFinished ? [styles.challengeTitle, styles.challengeTitleFinished] : styles.challengeTitle}>
+                                {item.challenge.title}
+                            </Text>
+
+                            {isFinished ? (
+                                <View style={styles.quickStatsRow}>
+                                    <View style={styles.quickStatPill}>
+                                        <Sparkles size={11} color={Colors.info} />
+                                        <Text style={styles.quickStatText}>{Math.round(progress)}/{Math.round(target)}</Text>
+                                    </View>
+                                    <View style={styles.quickStatPill}>
+                                        <Users size={11} color={Colors.textWhite80} />
+                                        <Text style={styles.quickStatText}>{item.participants_count}</Text>
+                                    </View>
+                                    <View style={styles.quickStatPill}>
+                                        <Crown size={11} color={Colors.gold} />
+                                        <Text style={styles.quickStatText}>{item.my_rank ? `#${item.my_rank}` : '-'}</Text>
+                                    </View>
+                                </View>
+                            ) : (
+                                <>
+                                    <View style={styles.progressTrack}>
+                                        <View style={[styles.progressFill, { width: `${ratio * 100}%` }]} />
+                                    </View>
+
+                                    <Text style={styles.progressLabel}>
+                                        {Math.round(progress)}/{Math.round(target)} ({Math.round(ratio * 100)}%)
+                                    </Text>
+                                </>
                             )}
 
                             <View style={styles.challengeParticipantsRow}>
@@ -171,6 +193,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 2,
     },
+    finishedTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: Spacing.xs,
+        marginBottom: 2,
+    },
     challengeKickerPill: {
         borderRadius: BorderRadius.full,
         borderWidth: 1,
@@ -211,6 +240,28 @@ const styles = StyleSheet.create({
         marginTop: 2,
         marginBottom: Spacing.xs,
     },
+    challengeTitleFinished: {
+        textAlign: 'center',
+        marginTop: Spacing.xs,
+    },
+    finishedWinnerPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        flex: 1,
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayGold20,
+        backgroundColor: Colors.overlayGold10,
+        paddingHorizontal: Spacing.xs,
+        paddingVertical: 4,
+    },
+    finishedWinnerText: {
+        flex: 1,
+        color: Colors.gold,
+        fontSize: 10,
+        fontWeight: FontWeight.semibold,
+    },
     progressTrack: {
         height: 10,
         borderRadius: 4,
@@ -226,21 +277,28 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: FontWeight.semibold,
     },
-    winnerRow: {
+    quickStatsRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        marginTop: 2,
+        justifyContent: 'center',
+        gap: Spacing.xs,
+        marginBottom: 2,
     },
-    winnerText: {
-        flex: 1,
-        color: Colors.gold,
-        fontSize: FontSize.xs,
-        fontWeight: FontWeight.semibold,
+    quickStatPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        borderRadius: BorderRadius.full,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite20,
+        backgroundColor: Colors.overlayWhite10,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 4,
     },
-    finishReasonText: {
+    quickStatText: {
         color: Colors.textWhite80,
         fontSize: 10,
+        fontWeight: FontWeight.semibold,
     },
     challengeParticipantsRow: {
         flexDirection: 'row',
