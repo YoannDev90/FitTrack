@@ -3,12 +3,19 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Crown, Sparkles, Target, Users } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
 import type { SocialChallengeFinishReason, SocialChallengeProgress } from '../../../services/supabase/social';
 
 interface ChallengeDetailsSheetProps {
     sheetRef: React.RefObject<TrueSheet | null>;
     challenge: SocialChallengeProgress | null;
+    contributions: Array<{
+        id: string;
+        workoutLabel: string;
+        dateLabel: string;
+        valueLabel: string;
+    }>;
     profileId?: string;
     onPressAddSession: () => void;
     onPressOpenChallenges: () => void;
@@ -26,6 +33,8 @@ interface ChallengeDetailsSheetProps {
         progressLabel: string;
         participantsLabel: string;
         rankTitle: string;
+        contributionsTitle: string;
+        contributionsEmpty: string;
         finishedLabel: string;
         winnerLabel: (name: string) => string;
         drawLabel: (count: number) => string;
@@ -38,12 +47,14 @@ interface ChallengeDetailsSheetProps {
 export function ChallengeDetailsSheet({
     sheetRef,
     challenge,
+    contributions,
     profileId,
     onPressAddSession,
     onPressOpenChallenges,
     onPressDeleteOrLeave,
     labels,
 }: ChallengeDetailsSheetProps) {
+    const insets = useSafeAreaInsets();
     const isFinished = challenge?.is_finished ?? false;
     const isOwner = challenge?.challenge.creator_id === profileId;
     const winnerName = challenge?.winner ? (challenge.winner.display_name || challenge.winner.username) : null;
@@ -59,7 +70,7 @@ export function ChallengeDetailsSheet({
             grabber={false}
             scrollable={true}
         >
-            <View style={styles.container}>
+            <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, Spacing.sm) }]}>
                 <View style={styles.grabberWrap}>
                     <View style={styles.grabber} />
                 </View>
@@ -154,6 +165,25 @@ export function ChallengeDetailsSheet({
                                         );
                                     })}
                                 </View>
+                            </View>
+
+                            <View style={styles.sectionCard}>
+                                <Text style={styles.sectionTitle}>{labels.contributionsTitle}</Text>
+                                {contributions.length === 0 ? (
+                                    <Text style={styles.emptyContributionsText}>{labels.contributionsEmpty}</Text>
+                                ) : (
+                                    <View style={styles.contributionList}>
+                                        {contributions.map((item) => (
+                                            <View key={item.id} style={styles.contributionRow}>
+                                                <View style={styles.contributionTextWrap}>
+                                                    <Text style={styles.contributionTitle} numberOfLines={1}>{item.workoutLabel}</Text>
+                                                    <Text style={styles.contributionDate}>{item.dateLabel}</Text>
+                                                </View>
+                                                <Text style={styles.contributionValue}>{item.valueLabel}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                )}
                             </View>
 
                             <View style={styles.scrollBottomSpacer} />
@@ -349,6 +379,42 @@ const styles = StyleSheet.create({
         color: Colors.cta,
         fontSize: FontSize.xs,
         fontWeight: FontWeight.bold,
+    },
+    contributionList: {
+        gap: 6,
+    },
+    contributionRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: Spacing.sm,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite10,
+        backgroundColor: Colors.overlayBlack30,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: Spacing.xs,
+    },
+    contributionTextWrap: {
+        flex: 1,
+    },
+    contributionTitle: {
+        color: Colors.text,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.semibold,
+    },
+    contributionDate: {
+        color: Colors.muted2,
+        fontSize: 10,
+    },
+    contributionValue: {
+        color: Colors.cta,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.bold,
+    },
+    emptyContributionsText: {
+        color: Colors.muted2,
+        fontSize: FontSize.xs,
     },
     actionsRow: {
         flexDirection: 'row',
