@@ -1,3 +1,5 @@
+import { BuildConfig } from '../config/buildConfig';
+
 type MapLibreModule = {
   setAccessToken?: (token: string | null) => void;
   MapView: any;
@@ -11,6 +13,11 @@ let cachedMapLibre: MapLibreModule | null | undefined;
 
 export function getMapLibreModule(): MapLibreModule | null {
   if (cachedMapLibre !== undefined) return cachedMapLibre;
+
+  if (BuildConfig.isFoss) {
+    cachedMapLibre = null;
+    return cachedMapLibre;
+  }
 
   try {
     // Use require so apps without the native module do not crash at import time.

@@ -32,6 +32,7 @@ import {
   Play,
   Pause,
   Square,
+  X,
   ArrowLeft,
   Navigation,
   Clock3,
@@ -45,6 +46,7 @@ import { useRunStore, type LatLng, type RunSegment } from '../../stores/runStore
 import { useAppStore } from '../../stores';
 import { useSafetyStore, type SafetyAutoAlertType } from '../../stores/safetyStore';
 import { getMapLibreModule } from '../../services/maplibre';
+import { BuildConfig } from '../../config/buildConfig';
 import {
   startTracking,
   stopTracking,
@@ -396,6 +398,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
     confirmLabel: string; confirmColor?: string;
   }>({ visible: false, title: '', onConfirm: () => {}, confirmLabel: '' });
   const [showSafetyConfig, setShowSafetyConfig] = useState(false);
+  const [showFossMapNotice, setShowFossMapNotice] = useState(BuildConfig.isFoss);
   const [iosSendPromptVisible, setIosSendPromptVisible] = useState(false);
   const sendingRef = useRef(false);
 
@@ -897,6 +900,10 @@ export function RunTracker({ mode }: RunTrackerProps) {
     : [2.3522, 48.8566];
 
   const markerGeoJSON = buildPointGeoJSON(lastCoord);
+  const mapModule = BuildConfig.isFoss ? null : MapLibreRN;
+  const shouldShowFossMapNotice = BuildConfig.isFoss && showFossMapNotice;
+  const planTopOffset = shouldShowFossMapNotice ? 174 : 100;
+  const segmentTopOffset = shouldShowFossMapNotice ? 222 : 148;
 
   // Initial position marker (shown before run starts)
   const initialMarkerGeoJSON: GeoJSON.FeatureCollection = (!lastCoord && initialPos) ? {
@@ -911,15 +918,15 @@ export function RunTracker({ mode }: RunTrackerProps) {
   return (
     <View style={styles.container}>
       {/* MAP — Full screen background */}
-      {MapLibreRN ? (
-        <MapLibreRN.MapView
+      {mapModule ? (
+        <mapModule.MapView
           style={StyleSheet.absoluteFill}
           mapStyle={MAP_STYLE}
           logoEnabled={false}
           attributionEnabled={false}
           compassEnabled={false}
         >
-          <MapLibreRN.Camera
+          <mapModule.Camera
             ref={cameraRef}
             defaultSettings={{
               centerCoordinate: mapCenter as [number, number],
@@ -928,8 +935,8 @@ export function RunTracker({ mode }: RunTrackerProps) {
           />
 
           {/* Route polyline */}
-          <MapLibreRN.ShapeSource ref={routeSourceRef} id="routeSource" shape={routeGeoJSON}>
-            <MapLibreRN.LineLayer
+          <mapModule.ShapeSource ref={routeSourceRef} id="routeSource" shape={routeGeoJSON}>
+            <mapModule.LineLayer
               id="routeLine"
               style={{
                 lineColor: C.blue,
@@ -938,12 +945,12 @@ export function RunTracker({ mode }: RunTrackerProps) {
                 lineCap: 'round',
               }}
             />
-          </MapLibreRN.ShapeSource>
+          </mapModule.ShapeSource>
 
           {/* Current position marker */}
           {lastCoord && (
-            <MapLibreRN.ShapeSource ref={markerSourceRef} id="markerSource" shape={markerGeoJSON}>
-              <MapLibreRN.CircleLayer
+            <mapModule.ShapeSource ref={markerSourceRef} id="markerSource" shape={markerGeoJSON}>
+              <mapModule.CircleLayer
                 id="markerOuter"
                 style={{
                   circleRadius: 12,
@@ -951,7 +958,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
                   circleStrokeWidth: 0,
                 }}
               />
-              <MapLibreRN.CircleLayer
+              <mapModule.CircleLayer
                 id="markerInner"
                 style={{
                   circleRadius: 6,
@@ -960,13 +967,13 @@ export function RunTracker({ mode }: RunTrackerProps) {
                   circleStrokeColor: '#fff',
                 }}
               />
-            </MapLibreRN.ShapeSource>
+            </mapModule.ShapeSource>
           )}
 
           {/* Initial position marker (pulsing, before run starts) */}
           {!lastCoord && initialPos && (
-            <MapLibreRN.ShapeSource id="initialMarkerSource" shape={initialMarkerGeoJSON}>
-              <MapLibreRN.CircleLayer
+            <mapModule.ShapeSource id="initialMarkerSource" shape={initialMarkerGeoJSON}>
+              <mapModule.CircleLayer
                 id="initialMarkerOuter"
                 style={{
                   circleRadius: 16,
@@ -974,7 +981,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
                   circleStrokeWidth: 0,
                 }}
               />
-              <MapLibreRN.CircleLayer
+              <mapModule.CircleLayer
                 id="initialMarkerInner"
                 style={{
                   circleRadius: 7,
@@ -983,9 +990,9 @@ export function RunTracker({ mode }: RunTrackerProps) {
                   circleStrokeColor: '#fff',
                 }}
               />
-            </MapLibreRN.ShapeSource>
+            </mapModule.ShapeSource>
           )}
-        </MapLibreRN.MapView>
+        </mapModule.MapView>
       ) : (
         <LinearGradient
           colors={['#06070b', '#0a0e18', '#111827']}
@@ -1042,9 +1049,29 @@ export function RunTracker({ mode }: RunTrackerProps) {
         </TouchableOpacity>
       </SafeAreaView>
 
+      {shouldShowFossMapNotice ? (
+        <Animated.View entering={FadeIn.duration(220)} style={styles.fossMapNotice}>
+          <View style={styles.fossMapNoticeIconBox}>
+            <TriangleAlert size={16} color={C.orange} />
+          </View>
+          <View style={styles.fossMapNoticeTextWrap}>
+            <Text style={styles.fossMapNoticeTitle}>{t('run.fossMapDisabled.title')}</Text>
+            <Text style={styles.fossMapNoticeBody}>{t('run.fossMapDisabled.message')}</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => setShowFossMapNotice(false)}
+            style={styles.fossMapNoticeCloseBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.close')}
+          >
+            <X size={16} color={C.textSub} />
+          </TouchableOpacity>
+        </Animated.View>
+      ) : null}
+
       {/* Plan objective banner */}
       {plan && (
-        <Animated.View entering={FadeIn.delay(200)} style={styles.planBanner}>
+        <Animated.View entering={FadeIn.delay(200)} style={[styles.planBanner, { top: planTopOffset }]}>
           <Text style={styles.planBannerText}>
             🎯 {plan.targetDistanceKm ? `${plan.targetDistanceKm} km` : ''}
             {plan.targetDurationMinutes ? ` · ~${plan.targetDurationMinutes} min` : ''}
@@ -1067,7 +1094,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
 
       {/* Current segment indicator */}
       {segments.length > 0 && store.currentSegmentIndex < segments.length && (
-        <Animated.View entering={FadeIn.delay(300)} style={styles.segmentBannerWrap}>
+        <Animated.View entering={FadeIn.delay(300)} style={[styles.segmentBannerWrap, { top: segmentTopOffset }]}>
           <SegmentIndicator
             segment={segments[store.currentSegmentIndex]}
             index={store.currentSegmentIndex}
@@ -1385,6 +1412,55 @@ const styles = StyleSheet.create({
     color: C.textSub,
     fontSize: T.xs,
     fontWeight: W.bold,
+  },
+  fossMapNotice: {
+    position: 'absolute',
+    top: 96,
+    left: S.lg,
+    right: S.lg,
+    zIndex: 22,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: S.sm,
+    paddingVertical: S.sm,
+    paddingHorizontal: S.md,
+    borderRadius: R.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(245,166,35,0.28)',
+    backgroundColor: 'rgba(16,12,6,0.86)',
+  },
+  fossMapNoticeIconBox: {
+    width: 26,
+    height: 26,
+    borderRadius: R.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(245,166,35,0.16)',
+    marginTop: 1,
+  },
+  fossMapNoticeTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  fossMapNoticeTitle: {
+    color: '#ffd7a3',
+    fontSize: T.xs,
+    fontWeight: W.bold,
+  },
+  fossMapNoticeBody: {
+    color: C.textSub,
+    fontSize: T.nano,
+    lineHeight: 14,
+  },
+  fossMapNoticeCloseBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: R.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: C.border,
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   safetyCountdownBottomWrap: {
     position: 'absolute',

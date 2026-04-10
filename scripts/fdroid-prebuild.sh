@@ -78,14 +78,14 @@ if (!appJson.expo.android.blockedPermissions.includes('android.permission.INTERN
   appJson.expo.android.blockedPermissions.push('android.permission.INTERNET');
 }
 
-// CRITICAL: Remove expo-notifications and expo-application plugins
+// CRITICAL: Remove plugins unavailable in FOSS
 if (appJson.expo.plugins) {
   appJson.expo.plugins = appJson.expo.plugins.filter(plugin => {
     if (typeof plugin === 'string') {
-      return plugin !== 'expo-notifications' && plugin !== 'expo-application';
+      return plugin !== 'expo-notifications' && plugin !== 'expo-application' && plugin !== '@maplibre/maplibre-react-native';
     }
     if (Array.isArray(plugin)) {
-      return plugin[0] !== 'expo-notifications' && plugin[0] !== 'expo-application';
+      return plugin[0] !== 'expo-notifications' && plugin[0] !== 'expo-application' && plugin[0] !== '@maplibre/maplibre-react-native';
     }
     return true;
   });
@@ -169,6 +169,7 @@ echo ""
 echo "📦 Creating local FOSS stubs with native Android modules..."
 mkdir -p stubs/expo-notifications/android/src/main/java/expo/modules/notifications
 mkdir -p stubs/expo-application
+mkdir -p stubs/maplibre-react-native
 
 # ==================================================
 # Stub: expo-notifications (JS + ANDROID)
@@ -239,7 +240,7 @@ cat > stubs/expo-notifications/expo-module.config.json <<'EOF'
 {
   "platforms": ["android"],
   "android": {
-    "modules": ["expo.modules.notifications.NotificationsPackage"]
+    "modules": ["expo.modules.notifications.ExpoPushTokenManagerModule"]
   }
 }
 EOF
@@ -248,30 +249,26 @@ EOF
 cat > stubs/expo-notifications/android/src/main/java/expo/modules/notifications/NotificationsPackage.kt <<'EOF'
 package expo.modules.notifications
 
-import expo.modules.core.BasePackage
+import expo.modules.kotlin.modules.Module
 
-class NotificationsPackage : BasePackage() {
-  override fun createExportedModules(context: android.content.Context) = listOf(
-    ExpoPushTokenManagerModule(context)
-  )
-}
+// Stub vide — le module est enregistré via expo-module.config.json
+class NotificationsPackage
 EOF
 
 # ExpoPushTokenManagerModule.kt (le module qui manque)
 cat > stubs/expo-notifications/android/src/main/java/expo/modules/notifications/ExpoPushTokenManagerModule.kt <<'EOF'
 package expo.modules.notifications
 
-import android.content.Context
-import expo.modules.core.ExportedModule
-import expo.modules.core.interfaces.ExpoMethod
-import expo.modules.core.Promise
+import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.modules.ModuleDefinition
 
-class ExpoPushTokenManagerModule(context: Context) : ExportedModule(context) {
-  override fun getName() = "ExpoPushTokenManager"
-  
-  @ExpoMethod
-  fun getDevicePushTokenAsync(promise: Promise) {
-    promise.reject("ERR_UNAVAILABLE", "[FOSS] Push notifications are disabled")
+class ExpoPushTokenManagerModule : Module() {
+  override fun definition() = ModuleDefinition {
+    Name("ExpoPushTokenManager")
+
+    AsyncFunction("getDevicePushTokenAsync") {
+      throw Exception("[FOSS] Push notifications are disabled")
+    }
   }
 }
 EOF
@@ -307,6 +304,49 @@ export const nativeBuildVersion: string;
 export function getInstallReferrerAsync(): Promise<any>;
 EOF
 
+# ==================================================
+# Stub: @maplibre/maplibre-react-native
+# ==================================================
+cat > stubs/maplibre-react-native/package.json <<'EOF'
+{
+  "name": "@maplibre/maplibre-react-native",
+  "version": "10.4.2",
+  "main": "index.js",
+  "types": "index.d.ts"
+}
+EOF
+
+cat > stubs/maplibre-react-native/index.js <<'EOF'
+console.warn('[FOSS] MapLibre disabled');
+export const setAccessToken = () => {};
+
+const MapLibreFallback = {
+  setAccessToken,
+  MapView: null,
+  Camera: null,
+  ShapeSource: null,
+  LineLayer: null,
+  CircleLayer: null,
+};
+
+export default MapLibreFallback;
+EOF
+
+cat > stubs/maplibre-react-native/index.d.ts <<'EOF'
+export function setAccessToken(token: string | null): void;
+
+declare const MapLibreFallback: {
+  setAccessToken: typeof setAccessToken;
+  MapView: null;
+  Camera: null;
+  ShapeSource: null;
+  LineLayer: null;
+  CircleLayer: null;
+};
+
+export default MapLibreFallback;
+EOF
+
 echo "  ✅ Local stubs created in ./stubs/"
 
 # ==================================================
@@ -330,13 +370,22 @@ if (packageJson.dependencies['react-native-vision-camera']) {
 // 2. Use Local Stubs
 packageJson.dependencies['expo-notifications'] = 'file:./stubs/expo-notifications';
 packageJson.dependencies['expo-application'] = 'file:./stubs/expo-application';
+packageJson.dependencies['@maplibre/maplibre-react-native'] = 'file:./stubs/maplibre-react-native';
 console.log('✅ expo-notifications -> file:./stubs/expo-notifications');
 console.log('✅ expo-application -> file:./stubs/expo-application');
+console.log('✅ @maplibre/maplibre-react-native -> file:./stubs/maplibre-react-native');
 
 // 3. KEEP expo-notifications in autolinking (we need the stub native module)
 packageJson.expo = packageJson.expo || {};
 packageJson.expo.autolinking = packageJson.expo.autolinking || {};
-packageJson.expo.autolinking.exclude = ['expo-application'];  // Only exclude application
+const existingAutolinkingExcludes = Array.isArray(packageJson.expo.autolinking.exclude)
+  ? packageJson.expo.autolinking.exclude
+  : [];
+packageJson.expo.autolinking.exclude = Array.from(new Set([
+  ...existingAutolinkingExcludes,
+  'expo-application',
+  '@maplibre/maplibre-react-native',
+]));
 
 // 4. 🔥 CRITICAL: Force ALL Expo modules to build from source (SDK 53+)
 packageJson.expo.autolinking.android = packageJson.expo.autolinking.android || {};
@@ -360,6 +409,18 @@ fi
 npm install --force --package-lock-only
 npm ci --force || npm install --force
 
+echo ""
+echo "🔧 Restoring missing build files after install..."
+
+HERMSC_SRC="node_modules/hermes-compiler/hermesc/linux64-bin/hermesc"
+HERMSC_DEST="node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
+if [ ! -f "$HERMSC_DEST" ] && [ -f "$HERMSC_SRC" ]; then
+  mkdir -p "$(dirname "$HERMSC_DEST")"
+  cp "$HERMSC_SRC" "$HERMSC_DEST"
+  chmod +x "$HERMSC_DEST"
+  echo "  ✅ Restored missing hermesc from $HERMSC_SRC"
+fi
+
 # ==================================================
 # 🧹 Patch Expo modules BEFORE prebuild
 # ==================================================
@@ -374,19 +435,12 @@ if [ -f "$EXPO_APP_GRADLE" ]; then
 fi
 
 echo ""
-echo "🔧 Patching MapLibre..."
-
-MAPLIBRE_FILE="node_modules/@maplibre/maplibre-react-native/android/build.gradle"
-
-if [ -f "$MAPLIBRE_FILE" ]; then
-    if ! grep -q "com.android.library" "$MAPLIBRE_FILE"; then
-        sed -i '1i apply plugin: "com.android.library"' "$MAPLIBRE_FILE"
-        echo "✅ MapLibre patched"
-    else
-        echo "ℹ️ MapLibre already patched"
-    fi
+echo "🧭 Disabling MapLibre native module for FOSS..."
+if [ -f "stubs/maplibre-react-native/package.json" ]; then
+  echo "  ✅ MapLibre stub is ready and native autolinking is excluded"
 else
-    echo "⚠️ MapLibre build.gradle not found"
+  echo "  ❌ ERROR: MapLibre stub not found"
+  exit 1
 fi
 
 # ==================================================
@@ -452,6 +506,16 @@ org.gradle.java.home=$JAVA_HOME_DETECTED
 EOF
 
 echo "  ✅ gradle.properties patched with JAVA_HOME=$JAVA_HOME_DETECTED"
+
+echo ""
+echo "🔧 Adding KSP Metaspace increase for expo-image..."
+cat >> android/gradle.properties <<'EOF'
+
+# F-DROID FIX: Increase Metaspace for KSP (expo-image)
+org.gradle.jvmargs=-Xms1g -Xmx5g -XX:+UseParallelGC -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=1g
+EOF
+
+echo "  ✅ gradle.properties updated for expo-image KSP" 
 
 # ==================================================
 # 🔥 Verify buildFromSource is working
@@ -562,6 +626,15 @@ EOF
 cat >> android/app/build.gradle <<'EOF'
 
 android {
+    splits {
+        abi {
+            enable true
+            reset()
+            include "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
+            universalApk true
+        }
+    }
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
@@ -582,6 +655,15 @@ android {
         exclude 'META-INF/NOTICE.txt'
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/ASL2.0'
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def fileName = output.outputFileName
+            if (fileName != null && fileName.contains("universal")) {
+                output.outputFileName = "app-${variant.name}.apk"
+            }
+        }
     }
 }
 
@@ -647,28 +729,6 @@ project(':react-native-vision-camera').projectDir = new File(rootProject.project
 EOF
         echo "  ✅ Vision Camera registered"
     fi
-fi
-
-# ==================================================
-# 🔧 FIX: Restore Hermes Compiler Permissions
-# ==================================================
-echo ""
-echo "🔧 Restoring hermesc executable permissions..."
-
-HERMESC_LINUX="node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
-
-if [ -f "$HERMESC_LINUX" ]; then
-  chmod +x "$HERMESC_LINUX"
-  echo "  ✅ hermesc permissions restored: $HERMESC_LINUX"
-  
-  # Vérifier que le binaire fonctionne
-  if "$HERMESC_LINUX" --version &>/dev/null; then
-    echo "  ✅ hermesc is working correctly"
-  else
-    echo "  ⚠️ WARNING: hermesc exists but might not work"
-  fi
-else
-  echo "  ❌ ERROR: hermesc not found at $HERMESC_LINUX"
 fi
 
 # ==================================================
