@@ -74,7 +74,9 @@ export function FeedSection({
                                     <Text style={styles.feedTime}>{relativeTimeLabel(item.createdAt, labels)}</Text>
                                 </View>
 
-                                <Text style={styles.feedDetail} numberOfLines={2}>{item.detail}</Text>
+                                {item.detail ? (
+                                    <Text style={styles.feedDetail} numberOfLines={2}>{item.detail}</Text>
+                                ) : null}
 
                                 {item.stats.length > 0 ? (
                                     <View style={styles.statsRow}>
