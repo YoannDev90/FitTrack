@@ -1,25 +1,17 @@
 import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Search, UserMinus, UserPlus, Users } from 'lucide-react-native';
+import { UserMinus, UserPlus, Users } from 'lucide-react-native';
 import type { FriendProfile } from '../../../services/supabase/social';
 import type { Friendship, Profile } from '../../../services/supabase/database.types';
 import { GlassCard } from '../../ui';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
-import type { SearchResult } from './types';
 
 interface FriendsTabPageProps {
     friends: FriendProfile[];
     pendingRequests: (Friendship & { requester: Profile })[];
     profileId?: string;
-    showAddFriendPanel: boolean;
-    setShowAddFriendPanel: (next: boolean) => void;
-    searchQuery: string;
-    onChangeSearchQuery: (value: string) => void;
-    isSearching: boolean;
-    searchError: string | null;
-    searchResults: SearchResult[];
-    onSendRequest: (userId: string) => void;
+    onPressAddFriend: () => void;
     onInvite: () => void;
     onRespondToRequest: (friendshipId: string, accept: boolean) => void;
     onRemoveFriend: (friendshipId: string, friendName: string) => void;
@@ -50,14 +42,7 @@ export function FriendsTabPage({
     friends,
     pendingRequests,
     profileId,
-    showAddFriendPanel,
-    setShowAddFriendPanel,
-    searchQuery,
-    onChangeSearchQuery,
-    isSearching,
-    searchError,
-    searchResults,
-    onSendRequest,
+    onPressAddFriend,
     onInvite,
     onRespondToRequest,
     onRemoveFriend,
@@ -81,7 +66,7 @@ export function FriendsTabPage({
                 <Text style={styles.pageSubtitle}>{labels.pageSubtitle}</Text>
 
                 <View style={styles.headerActions}>
-                    <TouchableOpacity style={styles.headerPrimaryBtn} onPress={() => setShowAddFriendPanel(!showAddFriendPanel)}>
+                    <TouchableOpacity style={styles.headerPrimaryBtn} onPress={onPressAddFriend}>
                         <UserPlus size={14} color={Colors.cta} />
                         <Text style={styles.headerPrimaryBtnText}>{labels.addFriend}</Text>
                     </TouchableOpacity>
@@ -90,40 +75,6 @@ export function FriendsTabPage({
                     </TouchableOpacity>
                 </View>
             </LinearGradient>
-
-            {showAddFriendPanel && (
-                <GlassCard style={styles.searchCard}>
-                    <View style={styles.searchInputWrap}>
-                        <Search size={16} color={Colors.muted} />
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder={labels.searchPlaceholder}
-                            placeholderTextColor={Colors.muted2}
-                            value={searchQuery}
-                            onChangeText={onChangeSearchQuery}
-                        />
-                    </View>
-                    {isSearching && <ActivityIndicator size="small" color={Colors.cta} style={styles.searchLoader} />}
-                    {searchError && <Text style={styles.errorText}>{searchError}</Text>}
-                    {searchResults.map(user => (
-                        <View key={user.id} style={styles.searchResultRow}>
-                            <View style={styles.searchResultInfo}>
-                                <Text style={styles.searchResultName}>{user.display_name || user.username}</Text>
-                                <Text style={styles.searchResultSub}>@{user.username}</Text>
-                            </View>
-                            {user.friendship_status === 'accepted' ? (
-                                <Text style={styles.searchResultBadge}>{labels.badgeFriend}</Text>
-                            ) : user.friendship_status === 'pending' ? (
-                                <Text style={styles.searchResultBadge}>{labels.badgePending}</Text>
-                            ) : (
-                                <TouchableOpacity style={styles.addResultBtn} onPress={() => onSendRequest(user.id)}>
-                                    <Text style={styles.searchResultAction}>{labels.addAction}</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    ))}
-                </GlassCard>
-            )}
 
             <GlassCard style={styles.requestCard}>
                 <Text style={styles.sectionTitle}>{labels.pendingTitle(pendingRequests.length)}</Text>
@@ -261,79 +212,6 @@ const styles = StyleSheet.create({
         color: Colors.text,
         fontWeight: FontWeight.semibold,
         fontSize: FontSize.sm,
-    },
-    searchCard: {
-        padding: Spacing.md,
-        gap: Spacing.xs,
-        borderRadius: BorderRadius.xxl,
-    },
-    searchInputWrap: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        borderRadius: BorderRadius.lg,
-        borderWidth: 1,
-        borderColor: Colors.stroke,
-        backgroundColor: Colors.overlayBlack30,
-        paddingHorizontal: Spacing.sm,
-    },
-    searchInput: {
-        flex: 1,
-        color: Colors.text,
-        fontSize: FontSize.sm,
-        paddingVertical: 10,
-    },
-    searchLoader: {
-        marginTop: 8,
-    },
-    errorText: {
-        color: Colors.error,
-        fontSize: FontSize.xs,
-    },
-    searchResultRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderRadius: BorderRadius.lg,
-        borderWidth: 1,
-        borderColor: Colors.overlayWhite08,
-        backgroundColor: Colors.overlayBlack25,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: 8,
-    },
-    searchResultInfo: {
-        flex: 1,
-        gap: 1,
-    },
-    searchResultName: {
-        color: Colors.text,
-        fontSize: FontSize.sm,
-        fontWeight: FontWeight.semibold,
-    },
-    searchResultSub: {
-        color: Colors.muted2,
-        fontSize: 10,
-    },
-    searchResultAction: {
-        color: Colors.cta,
-        fontSize: FontSize.xs,
-        fontWeight: FontWeight.semibold,
-    },
-    searchResultBadge: {
-        color: Colors.muted2,
-        fontSize: FontSize.xs,
-        backgroundColor: Colors.overlayWhite08,
-        borderRadius: BorderRadius.full,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: 4,
-    },
-    addResultBtn: {
-        borderRadius: BorderRadius.full,
-        borderWidth: 1,
-        borderColor: Colors.overlayCozyWarm40,
-        backgroundColor: Colors.overlayCozyWarm15,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: 5,
     },
     requestCard: {
         padding: Spacing.md,
