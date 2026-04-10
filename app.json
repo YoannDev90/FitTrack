@@ -2,7 +2,7 @@
   "expo": {
     "name": "Spix",
     "slug": "spix-app",
-    "version": "11.1.0",
+    "version": "11.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,7 @@
           "location"
         ]
       },
-      "buildNumber": "11.1.0"
+      "buildNumber": "11.2.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,7 +33,6 @@
       },
       "package": "com.spix.app",
       "permissions": [
-        "android.permission.INTERNET",
         "android.permission.CAMERA",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -50,12 +49,13 @@
         "android.permission.health.READ_STEPS",
         "android.permission.health.READ_TOTAL_CALORIES_BURNED",
         "android.permission.health.READ_WEIGHT",
-        "android.permission.health.READ_BODY_FAT"
+        "android.permission.health.READ_BODY_FAT",
+        "android.permission.INTERNET"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
       ],
-      "versionCode": 110100,
+      "versionCode": 110200,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
