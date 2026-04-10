@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles, Trophy, Users, X, Crown } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Sparkles, Trophy, Users, X, Crown } from 'lucide-react-native';
 import type { SocialChallengeProgress } from '../../../services/supabase/social';
 import { GlassCard } from '../../ui';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../../constants';
@@ -30,6 +30,9 @@ interface ChallengesTabPageProps {
         drawLabel: (count: number) => string;
         finishReasonLabel: (reason: 'active' | 'completed' | 'expired' | 'target_reached' | 'cancelled') => string;
         rankLabel: (rank: number) => string;
+        pastChallengesTitle: (count: number) => string;
+        showPastChallenges: string;
+        hidePastChallenges: string;
         deleteChallenge: string;
         leaveChallenge: string;
         deletingChallenge: string;
@@ -49,6 +52,129 @@ export function ChallengesTabPage({
     onDeleteChallenge,
     labels,
 }: ChallengesTabPageProps) {
+    const [showPastChallenges, setShowPastChallenges] = React.useState(false);
+    const activeChallenges = challenges.filter((item) => !item.is_finished);
+    const pastChallenges = challenges.filter((item) => item.is_finished);
+
+    const renderChallengeCard = (item: SocialChallengeProgress, index: number) => {
+        const progress = Number(item.my_progress || 0);
+        const target = Number(item.challenge.goal_target || 1);
+        const ratio = Math.min(1, progress / Math.max(target, 1));
+        const isFinished = item.is_finished;
+        const endsAt = new Date(item.challenge.ends_at);
+        const remainingDays = Math.max(0, Math.ceil((endsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+        const isOwner = item.challenge.creator_id === profileId;
+        const isDeleting = deletingChallengeId === item.challenge.id;
+        const winnerName = item.winner ? (item.winner.display_name || item.winner.username) : null;
+
+        return (
+            <GlassCard
+                key={item.challenge.id}
+                style={index === 0 ? [styles.challengeCard, styles.challengeCardFeatured] : styles.challengeCard}
+            >
+                <View style={styles.challengeTop}>
+                    <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
+                    <View style={styles.challengeTopActions}>
+                        <Text style={styles.challengeDays}>
+                            {isFinished ? labels.finishedLabel : labels.daysRemaining(remainingDays)}
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => onDeleteChallenge(item)}
+                            disabled={isDeleting}
+                        >
+                            <X size={12} color={Colors.error} />
+                            <Text style={styles.deleteButtonText}>
+                                {isDeleting
+                                    ? labels.deletingChallenge
+                                    : (isOwner ? labels.deleteChallenge : labels.leaveChallenge)}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {!!item.challenge.description && (
+                    <Text style={styles.challengeDescription}>{item.challenge.description}</Text>
+                )}
+
+                <View style={styles.metaChipRow}>
+                    <View style={styles.metaChip}>
+                        <Sparkles size={12} color={Colors.cta} />
+                        <Text style={styles.metaChipText}>{labels.goalLabel(item.challenge.goal_type)}</Text>
+                    </View>
+                    <View style={styles.metaChip}>
+                        <Users size={12} color={Colors.info} />
+                        <Text style={styles.metaChipText}>{item.participants_count}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.progressTrack}>
+                    <View style={[styles.progressFill, { width: `${ratio * 100}%` }]} />
+                </View>
+
+                <View style={styles.progressLabelRow}>
+                    <Text style={styles.metaText}>
+                        {labels.progressLabel}: {Math.round(progress)}/{Math.round(target)} ({Math.round(ratio * 100)}%)
+                    </Text>
+                    <Text style={styles.progressPct}>{Math.round(ratio * 100)}%</Text>
+                </View>
+
+                {isFinished && (
+                    <View style={styles.finishedBanner}>
+                        <View style={styles.finishedBannerRow}>
+                            <Crown size={13} color={Colors.gold} />
+                            <Text style={styles.finishedBannerTitle}>
+                                {item.winner
+                                    ? (item.winner.is_tie
+                                        ? labels.drawLabel(item.winner.tied_with_count)
+                                        : labels.winnerLabel(winnerName || ''))
+                                    : labels.finishReasonLabel(item.finish_reason)}
+                            </Text>
+                        </View>
+                        <Text style={styles.finishedBannerSubtitle}>{labels.finishReasonLabel(item.finish_reason)}</Text>
+                    </View>
+                )}
+
+                {item.my_rank ? (
+                    <Text style={styles.rankText}>{labels.rankLabel(item.my_rank)}</Text>
+                ) : null}
+
+                {item.preview_participants.length > 0 && (
+                    <View style={styles.participantRow}>
+                        {item.preview_participants.slice(0, 4).map((participant) => {
+                            const displayName = participant.display_name || participant.username;
+                            return (
+                                <View key={participant.id} style={styles.participantAvatar}>
+                                    <Text style={styles.participantAvatarText}>{displayName.charAt(0).toUpperCase()}</Text>
+                                </View>
+                            );
+                        })}
+                    </View>
+                )}
+
+                {item.preview_participants.length > 0 && (
+                    <Text style={styles.detailText}>
+                        {labels.detailsLabel}: {item.preview_participants
+                            .map((participant) => `${participant.display_name || participant.username} (${Math.round(participant.progress)})`)
+                            .join(' · ')}
+                    </Text>
+                )}
+
+                <View style={styles.actionRow}>
+                    <TouchableOpacity style={styles.detailsButton} onPress={() => onPressDetails(item)}>
+                        <Text style={styles.detailsButtonText}>{labels.detailsLabel}</Text>
+                    </TouchableOpacity>
+
+                    {isFinished ? null : (
+                        <TouchableOpacity style={styles.addSessionButton} onPress={onPressAddSession}>
+                            <Text style={styles.addSessionText}>{labels.addSession}</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </GlassCard>
+        );
+    };
+
     return (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
             <LinearGradient
@@ -79,124 +205,32 @@ export function ChallengesTabPage({
                     <Text style={styles.emptySubtitle}>{labels.noChallengesSubtitle}</Text>
                 </GlassCard>
             ) : (
-                challenges.map((item, index) => {
-                    const progress = Number(item.my_progress || 0);
-                    const target = Number(item.challenge.goal_target || 1);
-                    const ratio = Math.min(1, progress / Math.max(target, 1));
-                    const isFinished = item.is_finished;
-                    const endsAt = new Date(item.challenge.ends_at);
-                    const remainingDays = Math.max(0, Math.ceil((endsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
-                    const isOwner = item.challenge.creator_id === profileId;
-                    const isDeleting = deletingChallengeId === item.challenge.id;
-                    const winnerName = item.winner ? (item.winner.display_name || item.winner.username) : null;
+                <>
+                    {activeChallenges.map((item, index) => renderChallengeCard(item, index))}
 
-                    return (
-                        <GlassCard
-                            key={item.challenge.id}
-                            style={index === 0 ? [styles.challengeCard, styles.challengeCardFeatured] : styles.challengeCard}
+                    {pastChallenges.length > 0 && (
+                        <TouchableOpacity
+                            style={styles.pastHeaderButton}
+                            onPress={() => setShowPastChallenges((prev) => !prev)}
                         >
-                            <View style={styles.challengeTop}>
-                                <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
-                                <View style={styles.challengeTopActions}>
-                                    <Text style={styles.challengeDays}>
-                                        {isFinished ? labels.finishedLabel : labels.daysRemaining(remainingDays)}
-                                    </Text>
-                                    <TouchableOpacity
-                                        style={styles.deleteButton}
-                                        onPress={() => onDeleteChallenge(item)}
-                                        disabled={isDeleting}
-                                    >
-                                        <X size={12} color={Colors.error} />
-                                        <Text style={styles.deleteButtonText}>
-                                            {isDeleting
-                                                ? labels.deletingChallenge
-                                                : (isOwner ? labels.deleteChallenge : labels.leaveChallenge)}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-
-                            {!!item.challenge.description && (
-                                <Text style={styles.challengeDescription}>{item.challenge.description}</Text>
-                            )}
-
-                            <View style={styles.metaChipRow}>
-                                <View style={styles.metaChip}>
-                                    <Sparkles size={12} color={Colors.cta} />
-                                    <Text style={styles.metaChipText}>{labels.goalLabel(item.challenge.goal_type)}</Text>
-                                </View>
-                                <View style={styles.metaChip}>
-                                    <Users size={12} color={Colors.info} />
-                                    <Text style={styles.metaChipText}>{item.participants_count}</Text>
-                                </View>
-                            </View>
-
-                            <View style={styles.progressTrack}>
-                                <View style={[styles.progressFill, { width: `${ratio * 100}%` }]} />
-                            </View>
-
-                            <View style={styles.progressLabelRow}>
-                                <Text style={styles.metaText}>
-                                    {labels.progressLabel}: {Math.round(progress)}/{Math.round(target)} ({Math.round(ratio * 100)}%)
+                            <Text style={styles.pastHeaderTitle}>{labels.pastChallengesTitle(pastChallenges.length)}</Text>
+                            <View style={styles.pastHeaderToggleRow}>
+                                <Text style={styles.pastHeaderToggleText}>
+                                    {showPastChallenges ? labels.hidePastChallenges : labels.showPastChallenges}
                                 </Text>
-                                <Text style={styles.progressPct}>{Math.round(ratio * 100)}%</Text>
-                            </View>
-
-                            {isFinished && (
-                                <View style={styles.finishedBanner}>
-                                    <View style={styles.finishedBannerRow}>
-                                        <Crown size={13} color={Colors.gold} />
-                                        <Text style={styles.finishedBannerTitle}>
-                                            {item.winner
-                                                ? (item.winner.is_tie
-                                                    ? labels.drawLabel(item.winner.tied_with_count)
-                                                    : labels.winnerLabel(winnerName || ''))
-                                                : labels.finishReasonLabel(item.finish_reason)}
-                                        </Text>
-                                    </View>
-                                    <Text style={styles.finishedBannerSubtitle}>{labels.finishReasonLabel(item.finish_reason)}</Text>
-                                </View>
-                            )}
-
-                            {item.my_rank ? (
-                                <Text style={styles.rankText}>{labels.rankLabel(item.my_rank)}</Text>
-                            ) : null}
-
-                            {item.preview_participants.length > 0 && (
-                                <View style={styles.participantRow}>
-                                    {item.preview_participants.slice(0, 4).map((participant) => {
-                                        const displayName = participant.display_name || participant.username;
-                                        return (
-                                            <View key={participant.id} style={styles.participantAvatar}>
-                                                <Text style={styles.participantAvatarText}>{displayName.charAt(0).toUpperCase()}</Text>
-                                            </View>
-                                        );
-                                    })}
-                                </View>
-                            )}
-
-                            {item.preview_participants.length > 0 && (
-                                <Text style={styles.detailText}>
-                                    {labels.detailsLabel}: {item.preview_participants
-                                        .map((participant) => `${participant.display_name || participant.username} (${Math.round(participant.progress)})`)
-                                        .join(' · ')}
-                                </Text>
-                            )}
-
-                            <View style={styles.actionRow}>
-                                <TouchableOpacity style={styles.detailsButton} onPress={() => onPressDetails(item)}>
-                                    <Text style={styles.detailsButtonText}>{labels.detailsLabel}</Text>
-                                </TouchableOpacity>
-
-                                {isFinished ? null : (
-                                    <TouchableOpacity style={styles.addSessionButton} onPress={onPressAddSession}>
-                                        <Text style={styles.addSessionText}>{labels.addSession}</Text>
-                                    </TouchableOpacity>
+                                {showPastChallenges ? (
+                                    <ChevronUp size={14} color={Colors.muted} />
+                                ) : (
+                                    <ChevronDown size={14} color={Colors.muted} />
                                 )}
                             </View>
-                        </GlassCard>
-                    );
-                })
+                        </TouchableOpacity>
+                    )}
+
+                    {showPastChallenges && pastChallenges.map((item, index) => (
+                        renderChallengeCard(item, index + activeChallenges.length)
+                    ))}
+                </>
             )}
 
             <View style={styles.bottomSpacer} />
@@ -273,6 +307,35 @@ const styles = StyleSheet.create({
     emptySubtitle: {
         color: Colors.muted2,
         fontSize: FontSize.sm,
+    },
+    pastHeaderButton: {
+        marginTop: Spacing.xs,
+        marginBottom: 2,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite12,
+        backgroundColor: Colors.overlayBlack25,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: Spacing.sm,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: Spacing.xs,
+    },
+    pastHeaderTitle: {
+        color: Colors.text,
+        fontSize: FontSize.sm,
+        fontWeight: FontWeight.semibold,
+    },
+    pastHeaderToggleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    pastHeaderToggleText: {
+        color: Colors.muted,
+        fontSize: FontSize.xs,
+        fontWeight: FontWeight.semibold,
     },
     challengeCard: {
         padding: Spacing.md,
