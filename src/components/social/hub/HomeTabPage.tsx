@@ -17,6 +17,7 @@ interface HomeTabPageProps {
     setChallengeIndex: (index: number) => void;
     onAddSession: () => void;
     onViewChallengeDetails: (challenge: SocialChallengeProgress) => void;
+    onDismissChallenge: (challengeId: string) => void;
     challengesError: string | null;
     feedItems: FeedViewItem[];
     isSendingLikeForId: string | null;
@@ -73,6 +74,7 @@ export function HomeTabPage({
     setChallengeIndex,
     onAddSession,
     onViewChallengeDetails,
+    onDismissChallenge,
     challengesError,
     feedItems,
     isSendingLikeForId,
@@ -105,6 +107,7 @@ export function HomeTabPage({
                     setChallengeIndex={setChallengeIndex}
                     onAddSession={onAddSession}
                     onViewDetails={onViewChallengeDetails}
+                    onDismissChallenge={onDismissChallenge}
                     strings={labels.challenge}
                 />
                 {!!challengesError && <Text style={styles.errorText}>{challengesError}</Text>}

@@ -58,5 +58,6 @@ export interface ChallengeSectionProps {
     setChallengeIndex: (index: number) => void;
     onAddSession: () => void;
     onViewDetails: (challenge: SocialChallengeProgress) => void;
+    onDismissChallenge: (challengeId: string) => void;
     strings: ChallengeSectionStrings;
 }

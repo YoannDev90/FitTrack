@@ -332,6 +332,7 @@ export default function SocialHubScreen() {
     const [isGlobalLeaderboardActive, setIsGlobalLeaderboardActive] = useState(false);
     const [isLoadingGlobalLeaderboard, setIsLoadingGlobalLeaderboard] = useState(false);
     const [challengeIndex, setChallengeIndex] = useState(0);
+    const [dismissedChallengeIds, setDismissedChallengeIds] = useState<Set<string>>(new Set());
     const [isSendingLikeForId, setIsSendingLikeForId] = useState<string | null>(null);
     const [isSharingWorkoutId, setIsSharingWorkoutId] = useState<string | null>(null);
     const [selectedChallengeForDetails, setSelectedChallengeForDetails] = useState<SocialChallengeProgress | null>(null);
@@ -606,6 +607,19 @@ export default function SocialHubScreen() {
             rank: row.rank || index + 1,
         }));
     }, [globalLeaderboard]);
+
+    const handleDismissChallenge = useCallback((challengeId: string) => {
+        setDismissedChallengeIds((prev) => {
+            const next = new Set(prev);
+            next.add(challengeId);
+            return next;
+        });
+    }, []);
+
+    const visibleChallenges = useMemo(() =>
+        activeChallenges.filter((item) => !dismissedChallengeIds.has(item.challenge.id)),
+        [activeChallenges, dismissedChallengeIds]
+    );
 
     const loadChallenges = useCallback(async () => {
         try {
@@ -1239,12 +1253,13 @@ export default function SocialHubScreen() {
                             refreshing={refreshing}
                             onRefresh={onRefresh}
                             isHydrating={isHydratingHub}
-                            activeChallenges={activeChallenges}
+                            activeChallenges={visibleChallenges}
                             challengeCardWidth={challengeCardWidth}
                             challengeIndex={challengeIndex}
                             setChallengeIndex={setChallengeIndex}
                             onAddSession={() => router.push('/workout' as any)}
                             onViewChallengeDetails={openChallengeDetails}
+                            onDismissChallenge={handleDismissChallenge}
                             challengesError={challengesError}
                             feedItems={feedItems}
                             isSendingLikeForId={isSendingLikeForId}

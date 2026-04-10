@@ -36,11 +36,30 @@ interface LeaderboardTabPageProps {
     };
 }
 
+const AVATAR_PALETTES = [
+    { bg: 'rgba(167,139,250,0.2)', border: 'rgba(167,139,250,0.35)', text: '#a78bfa' },
+    { bg: 'rgba(215,150,134,0.2)', border: 'rgba(215,150,134,0.35)', text: '#d79686' },
+    { bg: 'rgba(34,211,238,0.15)', border: 'rgba(34,211,238,0.28)', text: '#22d3ee' },
+    { bg: 'rgba(74,222,128,0.15)', border: 'rgba(74,222,128,0.28)', text: '#4ade80' },
+    { bg: 'rgba(245,200,66,0.15)', border: 'rgba(245,200,66,0.28)', text: '#f5c842' },
+];
+
+function paletteForName(name: string) {
+    return AVATAR_PALETTES[name.charCodeAt(0) % AVATAR_PALETTES.length];
+}
+
 function medalColorForRank(rank: number): string {
     if (rank === 1) return Colors.gold;
     if (rank === 2) return Colors.silver;
     if (rank === 3) return Colors.bronze;
     return Colors.muted2;
+}
+
+function rankBgColorsForRank(rank: number): [string, string] {
+    if (rank === 1) return [Colors.overlayGold14, Colors.overlayGold10];
+    if (rank === 2) return ['rgba(148, 163, 184, 0.12)', 'rgba(148, 163, 184, 0.06)'];
+    if (rank === 3) return ['rgba(205, 127, 50, 0.12)', 'rgba(205, 127, 50, 0.06)'];
+    return [Colors.overlayBlack25, Colors.overlayBlack25];
 }
 
 export function LeaderboardTabPage({
@@ -55,6 +74,7 @@ export function LeaderboardTabPage({
 }: LeaderboardTabPageProps) {
     return (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+            {/* Header */}
             <LinearGradient
                 colors={[Colors.overlayInfo12, Colors.overlayViolet12]}
                 start={{ x: 0, y: 0 }}
@@ -63,24 +83,33 @@ export function LeaderboardTabPage({
             >
                 <View style={styles.headerTop}>
                     <View style={styles.headerIconWrap}>
-                        <Trophy size={16} color={Colors.cta} />
+                        <Trophy size={16} color={Colors.gold} />
                     </View>
-                    <Text style={styles.pageTitle}>{labels.pageTitle}</Text>
+                    <View style={styles.headerTextWrap}>
+                        <Text style={styles.pageTitle}>{labels.pageTitle}</Text>
+                        <Text style={styles.pageSubtitle}>{labels.pageSubtitle}</Text>
+                    </View>
                 </View>
-                <Text style={styles.pageSubtitle}>{labels.pageSubtitle}</Text>
 
-                <View style={styles.segmentedRow}>
+                {/* Segmented control */}
+                <View style={styles.segmentShell}>
                     <TouchableOpacity
-                        style={[styles.segmentedBtn, !isGlobal && styles.segmentedBtnActive]}
+                        style={[styles.segmentBtn, !isGlobal && styles.segmentBtnActive]}
                         onPress={onShowFriends}
+                        activeOpacity={0.8}
                     >
-                        <Text style={[styles.segmentedText, !isGlobal && styles.segmentedTextActive]}>{labels.friendsTab}</Text>
+                        <Text style={[styles.segmentText, !isGlobal && styles.segmentTextActive]}>
+                            {labels.friendsTab}
+                        </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.segmentedBtn, isGlobal && styles.segmentedBtnActive]}
+                        style={[styles.segmentBtn, isGlobal && styles.segmentBtnActive]}
                         onPress={onShowGlobal}
+                        activeOpacity={0.8}
                     >
-                        <Text style={[styles.segmentedText, isGlobal && styles.segmentedTextActive]}>{labels.globalTab}</Text>
+                        <Text style={[styles.segmentText, isGlobal && styles.segmentTextActive]}>
+                            {labels.globalTab}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </LinearGradient>
@@ -89,43 +118,93 @@ export function LeaderboardTabPage({
 
             <GlassCard style={styles.listCard}>
                 {isGlobal && loadingGlobal ? (
-                    <Text style={styles.loadingText}>{labels.loadingGlobal}</Text>
+                    <View style={styles.centerWrap}>
+                        <Text style={styles.loadingText}>{labels.loadingGlobal}</Text>
+                    </View>
                 ) : rows.length === 0 ? (
-                    <Text style={styles.emptyText}>{isGlobal ? labels.emptyGlobal : labels.emptyFriends}</Text>
+                    <View style={styles.centerWrap}>
+                        <Trophy size={24} color={Colors.muted2} />
+                        <Text style={styles.emptyText}>
+                            {isGlobal ? labels.emptyGlobal : labels.emptyFriends}
+                        </Text>
+                    </View>
                 ) : (
-                    rows.map((entry, index) => (
-                        <View
-                            key={`${entry.id}-${index}`}
-                            style={[
-                                styles.rankRow,
-                                index < rows.length - 1 && styles.rankRowBorder,
-                                entry.rank <= 3 && styles.rankRowTop,
-                            ]}
-                        >
-                            <View style={styles.rankBadgeWrap}>
-                                {entry.rank === 1 ? (
-                                    <Crown size={16} color={medalColorForRank(entry.rank)} />
-                                ) : entry.rank <= 3 ? (
-                                    <Medal size={15} color={medalColorForRank(entry.rank)} />
-                                ) : (
-                                    <Text style={styles.rankNumber}>{entry.rank}</Text>
-                                )}
+                    rows.map((entry, index) => {
+                        const palette = paletteForName(entry.display_name || entry.username);
+                        const isTop3 = entry.rank <= 3;
+                        const isMe = entry.id === profileId;
+                        const podiumColors = rankBgColorsForRank(entry.rank);
+
+                        return (
+                            <View key={`${entry.id}-${index}`}>
+                                <LinearGradient
+                                    colors={isTop3 ? podiumColors : ['transparent', 'transparent']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.rankRow}
+                                >
+                                    {/* Rank indicator */}
+                                    <View style={styles.rankBadgeWrap}>
+                                        {entry.rank === 1 ? (
+                                            <Crown size={17} color={Colors.gold} />
+                                        ) : entry.rank === 2 ? (
+                                            <Medal size={16} color={Colors.silver} />
+                                        ) : entry.rank === 3 ? (
+                                            <Medal size={16} color={Colors.bronze} />
+                                        ) : (
+                                            <Text style={styles.rankNumber}>#{entry.rank}</Text>
+                                        )}
+                                    </View>
+
+                                    {/* Avatar */}
+                                    <View style={[styles.rankAvatar, {
+                                        backgroundColor: isTop3
+                                            ? `rgba(0,0,0,0.15)`
+                                            : palette.bg,
+                                        borderColor: isTop3
+                                            ? medalColorForRank(entry.rank) + '44'
+                                            : palette.border,
+                                    }]}>
+                                        <Text style={[styles.rankAvatarText, {
+                                            color: isTop3 ? medalColorForRank(entry.rank) : palette.text,
+                                        }]}>
+                                            {(entry.display_name || entry.username).charAt(0).toUpperCase()}
+                                        </Text>
+                                    </View>
+
+                                    {/* Name + workouts */}
+                                    <View style={styles.rankInfo}>
+                                        <View style={styles.rankNameRow}>
+                                            <Text style={[
+                                                styles.rankName,
+                                                isTop3 && { color: isMe ? Colors.cta : Colors.text },
+                                            ]} numberOfLines={1}>
+                                                {entry.display_name || entry.username}
+                                            </Text>
+                                            {isMe && (
+                                                <View style={styles.meBadge}>
+                                                    <Text style={styles.meBadgeText}>{labels.meBadge}</Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                        <Text style={styles.rankSub}>
+                                            {labels.workoutsWeek(entry.weekly_workouts || 0)}
+                                        </Text>
+                                    </View>
+
+                                    {/* XP */}
+                                    <Text style={[
+                                        styles.rankXp,
+                                        isTop3 && { color: medalColorForRank(entry.rank) },
+                                    ]}>
+                                        {entry.weekly_xp || 0}
+                                        <Text style={styles.rankXpSuffix}> {labels.xpSuffix}</Text>
+                                    </Text>
+                                </LinearGradient>
+                                {index < rows.length - 1 && <View style={styles.divider} />}
                             </View>
-                            <View style={styles.rankAvatar}>
-                                <Text style={styles.rankAvatarText}>
-                                    {(entry.display_name || entry.username).charAt(0).toUpperCase()}
-                                </Text>
-                            </View>
-                            <View style={styles.rankInfo}>
-                                <View style={styles.rankNameRow}>
-                                    <Text style={styles.rankName}>{entry.display_name || entry.username}</Text>
-                                    {entry.id === profileId && <Text style={styles.rankMeBadge}>{labels.meBadge}</Text>}
-                                </View>
-                                <Text style={styles.rankSub}>{labels.workoutsWeek(entry.weekly_workouts || 0)}</Text>
-                            </View>
-                            <Text style={styles.rankXp}>{entry.weekly_xp || 0} {labels.xpSuffix}</Text>
-                        </View>
-                    ))
+                        );
+                    })
                 )}
             </GlassCard>
 
@@ -139,27 +218,33 @@ const styles = StyleSheet.create({
         paddingBottom: 24,
         gap: Spacing.sm,
     },
+
+    // Header
     headerCard: {
         borderRadius: BorderRadius.xxl,
         borderWidth: 1,
         borderColor: Colors.overlayWhite12,
-        padding: Spacing.md,
-        gap: Spacing.xs,
+        padding: Spacing.lg,
+        gap: Spacing.sm,
     },
     headerTop: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: Spacing.xs,
+        gap: Spacing.sm,
     },
     headerIconWrap: {
-        width: 30,
-        height: 30,
+        width: 36,
+        height: 36,
         borderRadius: BorderRadius.md,
-        backgroundColor: Colors.overlayCozyWarm15,
+        backgroundColor: Colors.overlayGold12,
         borderWidth: 1,
-        borderColor: Colors.overlayCozyWarm40,
+        borderColor: Colors.overlayGold20,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    headerTextWrap: {
+        flex: 1,
+        gap: 2,
     },
     pageTitle: {
         color: Colors.text,
@@ -169,93 +254,107 @@ const styles = StyleSheet.create({
     },
     pageSubtitle: {
         color: Colors.muted2,
-        fontSize: FontSize.sm,
-        lineHeight: 16,
+        fontSize: FontSize.xs,
+        lineHeight: 15,
     },
-    segmentedRow: {
-        marginTop: Spacing.xs,
+
+    // Segmented control
+    segmentShell: {
         flexDirection: 'row',
         gap: Spacing.xs,
-    },
-    segmentedBtn: {
-        flex: 1,
-        borderRadius: BorderRadius.full,
-        borderWidth: 1,
-        borderColor: Colors.stroke,
         backgroundColor: Colors.overlayBlack25,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlayWhite10,
+        padding: 3,
+    },
+    segmentBtn: {
+        flex: 1,
         alignItems: 'center',
-        paddingVertical: 8,
+        paddingVertical: 7,
+        borderRadius: BorderRadius.md,
     },
-    segmentedBtnActive: {
-        borderColor: Colors.overlayCozyWarm40,
+    segmentBtnActive: {
         backgroundColor: Colors.overlayCozyWarm15,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
     },
-    segmentedText: {
-        color: Colors.muted,
+    segmentText: {
+        color: Colors.muted2,
         fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
     },
-    segmentedTextActive: {
+    segmentTextActive: {
         color: Colors.cta,
     },
+
     errorText: {
         color: Colors.error,
         fontSize: FontSize.xs,
     },
+
+    // List card
     listCard: {
-        padding: Spacing.sm,
+        padding: 0,
         borderRadius: BorderRadius.xxl,
+        overflow: 'hidden',
+    },
+    centerWrap: {
+        padding: Spacing.xl,
+        alignItems: 'center',
+        gap: Spacing.sm,
     },
     loadingText: {
         color: Colors.muted2,
         fontSize: FontSize.sm,
+        textAlign: 'center',
     },
     emptyText: {
         color: Colors.muted2,
         fontSize: FontSize.sm,
+        textAlign: 'center',
     },
+    divider: {
+        height: 1,
+        backgroundColor: Colors.overlayWhite08,
+        marginHorizontal: Spacing.md,
+    },
+
+    // Rank row
     rankRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: Spacing.sm,
-        paddingVertical: Spacing.sm,
-        paddingHorizontal: Spacing.sm,
-        borderRadius: BorderRadius.lg,
-    },
-    rankRowBorder: {
-        marginBottom: 2,
-    },
-    rankRowTop: {
-        backgroundColor: Colors.overlayGold10,
-        borderWidth: 1,
-        borderColor: Colors.overlayGold20,
-    },
-    rankNumber: {
-        color: Colors.muted,
-        fontWeight: FontWeight.semibold,
-        textAlign: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: Spacing.md,
     },
     rankBadgeWrap: {
-        width: 24,
+        width: 26,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    rankNumber: {
+        color: Colors.muted2,
+        fontWeight: FontWeight.bold,
+        fontSize: FontSize.xs,
+        textAlign: 'center',
     },
     rankAvatar: {
-        width: 34,
-        height: 34,
-        borderRadius: 17,
-        backgroundColor: Colors.overlayViolet20,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         borderWidth: 1,
-        borderColor: Colors.overlayViolet35,
         alignItems: 'center',
         justifyContent: 'center',
+        flexShrink: 0,
     },
     rankAvatarText: {
-        color: Colors.violet,
         fontWeight: FontWeight.bold,
+        fontSize: FontSize.md,
     },
     rankInfo: {
         flex: 1,
+        gap: 2,
     },
     rankNameRow: {
         flexDirection: 'row',
@@ -265,15 +364,23 @@ const styles = StyleSheet.create({
     rankName: {
         color: Colors.text,
         fontWeight: FontWeight.semibold,
-        fontSize: FontSize.md,
+        fontSize: FontSize.sm,
+        flex: 1,
     },
-    rankMeBadge: {
-        fontSize: 10,
-        color: Colors.violetDeep,
-        backgroundColor: Colors.overlayWhite20,
+    meBadge: {
         borderRadius: BorderRadius.full,
+        backgroundColor: Colors.overlayViolet20,
+        borderWidth: 1,
+        borderColor: Colors.overlayViolet35,
         paddingHorizontal: 6,
         paddingVertical: 2,
+    },
+    meBadgeText: {
+        color: Colors.violet,
+        fontSize: 9,
+        fontWeight: FontWeight.bold,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     rankSub: {
         color: Colors.muted2,
@@ -281,9 +388,16 @@ const styles = StyleSheet.create({
     },
     rankXp: {
         color: Colors.text,
-        fontWeight: FontWeight.semibold,
+        fontWeight: FontWeight.bold,
         fontSize: FontSize.sm,
+        flexShrink: 0,
     },
+    rankXpSuffix: {
+        color: Colors.muted2,
+        fontWeight: FontWeight.regular,
+        fontSize: FontSize.xs,
+    },
+
     bottomSpacer: {
         height: 96,
     },

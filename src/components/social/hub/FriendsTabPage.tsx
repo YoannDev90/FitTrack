@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { UserMinus, UserPlus, Users } from 'lucide-react-native';
+import { Share2, UserMinus, UserPlus, Users } from 'lucide-react-native';
 import type { FriendProfile } from '../../../services/supabase/social';
 import type { Friendship, Profile } from '../../../services/supabase/database.types';
 import { GlassCard } from '../../ui';
@@ -38,6 +38,18 @@ interface FriendsTabPageProps {
     };
 }
 
+const AVATAR_PALETTES = [
+    { bg: 'rgba(167,139,250,0.2)', border: 'rgba(167,139,250,0.35)', text: '#a78bfa' },
+    { bg: 'rgba(215,150,134,0.2)', border: 'rgba(215,150,134,0.35)', text: '#d79686' },
+    { bg: 'rgba(34,211,238,0.15)', border: 'rgba(34,211,238,0.28)', text: '#22d3ee' },
+    { bg: 'rgba(74,222,128,0.15)', border: 'rgba(74,222,128,0.28)', text: '#4ade80' },
+    { bg: 'rgba(245,200,66,0.15)', border: 'rgba(245,200,66,0.28)', text: '#f5c842' },
+];
+
+function paletteForName(name: string) {
+    return AVATAR_PALETTES[name.charCodeAt(0) % AVATAR_PALETTES.length];
+}
+
 export function FriendsTabPage({
     friends,
     pendingRequests,
@@ -50,6 +62,7 @@ export function FriendsTabPage({
 }: FriendsTabPageProps) {
     return (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+            {/* Header */}
             <LinearGradient
                 colors={[Colors.overlayTeal15, Colors.overlayViolet12]}
                 start={{ x: 0, y: 0 }}
@@ -58,79 +71,134 @@ export function FriendsTabPage({
             >
                 <View style={styles.headerTop}>
                     <View style={styles.headerIconWrap}>
-                        <Users size={16} color={Colors.cta} />
+                        <Users size={16} color={Colors.info} />
                     </View>
-                    <Text style={styles.pageTitle}>{labels.pageTitle}</Text>
+                    <View style={styles.headerTextWrap}>
+                        <Text style={styles.pageTitle}>{labels.pageTitle}</Text>
+                        <Text style={styles.pageSubtitle}>{labels.pageSubtitle}</Text>
+                    </View>
                 </View>
 
-                <Text style={styles.pageSubtitle}>{labels.pageSubtitle}</Text>
-
                 <View style={styles.headerActions}>
-                    <TouchableOpacity style={styles.headerPrimaryBtn} onPress={onPressAddFriend}>
-                        <UserPlus size={14} color={Colors.cta} />
+                    <TouchableOpacity style={styles.headerPrimaryBtn} onPress={onPressAddFriend} activeOpacity={0.85}>
+                        <UserPlus size={13} color={Colors.cta} />
                         <Text style={styles.headerPrimaryBtnText}>{labels.addFriend}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.headerGhostBtn} onPress={onInvite}>
+                    <TouchableOpacity style={styles.headerGhostBtn} onPress={onInvite} activeOpacity={0.85}>
+                        <Share2 size={13} color={Colors.muted} />
                         <Text style={styles.headerGhostBtnText}>{labels.invite}</Text>
                     </TouchableOpacity>
                 </View>
             </LinearGradient>
 
-            <GlassCard style={styles.requestCard}>
-                <Text style={styles.sectionTitle}>{labels.pendingTitle(pendingRequests.length)}</Text>
-                {pendingRequests.length === 0 ? (
-                    <Text style={styles.emptyText}>{labels.noRequests}</Text>
-                ) : (
-                    pendingRequests.map((request) => (
-                        <View key={request.id} style={styles.requestRow}>
-                            <View style={styles.requestInfo}>
-                                <Text style={styles.requestName}>{request.requester.display_name || request.requester.username}</Text>
-                                <Text style={styles.requestSub}>@{request.requester.username}</Text>
-                            </View>
-                            <View style={styles.requestActions}>
-                                <TouchableOpacity style={styles.acceptBtn} onPress={() => onRespondToRequest(request.id, true)}>
-                                    <Text style={styles.acceptBtnText}>{labels.accept}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.declineBtn} onPress={() => onRespondToRequest(request.id, false)}>
-                                    <Text style={styles.declineBtnText}>{labels.decline}</Text>
-                                </TouchableOpacity>
-                            </View>
+            {/* Pending requests */}
+            {pendingRequests.length > 0 && (
+                <GlassCard style={styles.section}>
+                    <View style={styles.sectionHeaderRow}>
+                        <Text style={styles.sectionTitle}>{labels.pendingTitle(pendingRequests.length)}</Text>
+                        <View style={styles.pendingBadge}>
+                            <Text style={styles.pendingBadgeText}>{pendingRequests.length}</Text>
                         </View>
-                    ))
-                )}
-            </GlassCard>
+                    </View>
+                    {pendingRequests.map((request, idx) => (
+                        <View key={request.id}>
+                            <View style={styles.requestRow}>
+                                <View style={styles.requestAvatar}>
+                                    <Text style={styles.requestAvatarText}>
+                                        {(request.requester.display_name || request.requester.username).charAt(0).toUpperCase()}
+                                    </Text>
+                                </View>
+                                <View style={styles.requestInfo}>
+                                    <Text style={styles.requestName}>
+                                        {request.requester.display_name || request.requester.username}
+                                    </Text>
+                                    <Text style={styles.requestSub}>@{request.requester.username}</Text>
+                                </View>
+                                <View style={styles.requestActions}>
+                                    <TouchableOpacity
+                                        style={styles.acceptBtn}
+                                        onPress={() => onRespondToRequest(request.id, true)}
+                                    >
+                                        <Text style={styles.acceptBtnText}>{labels.accept}</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.declineBtn}
+                                        onPress={() => onRespondToRequest(request.id, false)}
+                                    >
+                                        <Text style={styles.declineBtnText}>{labels.decline}</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            {idx < pendingRequests.length - 1 && <View style={styles.divider} />}
+                        </View>
+                    ))}
+                </GlassCard>
+            )}
 
-            <GlassCard style={styles.friendsCard}>
+            {/* Friends list */}
+            <GlassCard style={styles.section}>
                 <Text style={styles.sectionTitle}>{labels.myFriendsTitle(friends.length)}</Text>
+
                 {friends.length === 0 ? (
                     <View style={styles.emptyWrap}>
+                        <Users size={24} color={Colors.muted2} />
                         <Text style={styles.emptyTitle}>{labels.noFriendsTitle}</Text>
                         <Text style={styles.emptyText}>{labels.noFriendsSubtitle}</Text>
                     </View>
                 ) : (
-                    friends.map((friend) => (
-                        <View key={friend.id} style={styles.friendRow}>
-                            <View style={styles.friendAvatar}>
-                                <Text style={styles.friendAvatarText}>
-                                    {(friend.display_name || friend.username).charAt(0).toUpperCase()}
-                                </Text>
-                            </View>
-                            <View style={styles.friendInfo}>
-                                <View style={styles.friendNameRow}>
-                                    <Text style={styles.friendName}>{friend.display_name || friend.username}</Text>
-                                    {friend.id === profileId && <Text style={styles.meBadge}>{labels.meBadge}</Text>}
+                    friends.map((friend, idx) => {
+                        const palette = paletteForName(friend.display_name || friend.username);
+                        const isMe = friend.id === profileId;
+                        return (
+                            <View key={friend.id}>
+                                <View style={styles.friendRow}>
+                                    <View style={[styles.friendAvatar, {
+                                        backgroundColor: palette.bg,
+                                        borderColor: palette.border,
+                                    }]}>
+                                        <Text style={[styles.friendAvatarText, { color: palette.text }]}>
+                                            {(friend.display_name || friend.username).charAt(0).toUpperCase()}
+                                        </Text>
+                                    </View>
+
+                                    <View style={styles.friendInfo}>
+                                        <View style={styles.friendNameRow}>
+                                            <Text style={styles.friendName} numberOfLines={1}>
+                                                {friend.display_name || friend.username}
+                                            </Text>
+                                            {isMe && (
+                                                <View style={styles.meBadge}>
+                                                    <Text style={styles.meBadgeText}>{labels.meBadge}</Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                        <Text style={styles.friendSub}>
+                                            {labels.workoutsWeek(friend.weekly_workouts || 0)}
+                                        </Text>
+                                    </View>
+
+                                    <View style={styles.friendRight}>
+                                        <Text style={styles.friendXp}>
+                                            {friend.weekly_xp || 0}
+                                            <Text style={styles.friendXpSuffix}> {labels.xpSuffix}</Text>
+                                        </Text>
+                                        {!isMe && (
+                                            <TouchableOpacity
+                                                style={styles.removeBtn}
+                                                onPress={() => onRemoveFriend(
+                                                    friend.friendship_id,
+                                                    friend.display_name || friend.username
+                                                )}
+                                            >
+                                                <UserMinus size={11} color={Colors.error} />
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                 </View>
-                                <Text style={styles.friendSub}>{labels.workoutsWeek(friend.weekly_workouts || 0)}</Text>
+                                {idx < friends.length - 1 && <View style={styles.divider} />}
                             </View>
-                            <View style={styles.friendActions}>
-                                <Text style={styles.friendXp}>{friend.weekly_xp || 0} {labels.xpSuffix}</Text>
-                                <TouchableOpacity style={styles.removeBtn} onPress={() => onRemoveFriend(friend.friendship_id, friend.display_name || friend.username)}>
-                                    <UserMinus size={12} color={Colors.error} />
-                                    <Text style={styles.removeBtnText}>{labels.remove}</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    ))
+                        );
+                    })
                 )}
             </GlassCard>
 
@@ -144,27 +212,33 @@ const styles = StyleSheet.create({
         paddingBottom: 24,
         gap: Spacing.sm,
     },
+
+    // Header
     headerCard: {
         borderRadius: BorderRadius.xxl,
         borderWidth: 1,
         borderColor: Colors.overlayWhite12,
-        padding: Spacing.md,
-        gap: Spacing.xs,
+        padding: Spacing.lg,
+        gap: Spacing.sm,
     },
     headerTop: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: Spacing.xs,
+        gap: Spacing.sm,
     },
     headerIconWrap: {
-        width: 30,
-        height: 30,
+        width: 36,
+        height: 36,
         borderRadius: BorderRadius.md,
-        backgroundColor: Colors.overlayCozyWarm15,
+        backgroundColor: Colors.overlayInfo12,
         borderWidth: 1,
-        borderColor: Colors.overlayCozyWarm40,
+        borderColor: Colors.overlayInfo15,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    headerTextWrap: {
+        flex: 1,
+        gap: 2,
     },
     pageTitle: {
         color: Colors.text,
@@ -174,25 +248,24 @@ const styles = StyleSheet.create({
     },
     pageSubtitle: {
         color: Colors.muted2,
-        fontSize: FontSize.sm,
-        lineHeight: 16,
+        fontSize: FontSize.xs,
+        lineHeight: 15,
     },
     headerActions: {
         flexDirection: 'row',
         gap: Spacing.xs,
-        marginTop: Spacing.xs,
     },
     headerPrimaryBtn: {
         flex: 1,
-        borderRadius: BorderRadius.lg,
-        borderWidth: 1,
-        borderColor: Colors.overlayCozyWarm40,
-        backgroundColor: Colors.overlayCozyWarm15,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
-        paddingVertical: Spacing.sm,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        borderColor: Colors.overlayCozyWarm40,
+        backgroundColor: Colors.overlayCozyWarm15,
+        paddingVertical: 9,
     },
     headerPrimaryBtnText: {
         color: Colors.cta,
@@ -200,39 +273,87 @@ const styles = StyleSheet.create({
         fontSize: FontSize.sm,
     },
     headerGhostBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
         borderRadius: BorderRadius.lg,
         borderWidth: 1,
         borderColor: Colors.stroke,
         backgroundColor: Colors.overlayBlack25,
-        alignItems: 'center',
-        justifyContent: 'center',
         paddingHorizontal: Spacing.md,
+        paddingVertical: 9,
     },
     headerGhostBtnText: {
-        color: Colors.text,
+        color: Colors.muted,
         fontWeight: FontWeight.semibold,
         fontSize: FontSize.sm,
     },
-    requestCard: {
-        padding: Spacing.md,
-        gap: Spacing.xs,
+
+    // Section card
+    section: {
+        padding: 0,
         borderRadius: BorderRadius.xxl,
+        overflow: 'hidden',
+    },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.xs,
+        paddingHorizontal: Spacing.md,
+        paddingTop: Spacing.md,
+        paddingBottom: Spacing.xs,
     },
     sectionTitle: {
         color: Colors.text,
-        fontSize: FontSize.md,
+        fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
+        paddingHorizontal: Spacing.md,
+        paddingTop: Spacing.md,
+        paddingBottom: Spacing.xs,
     },
+    pendingBadge: {
+        height: 18,
+        minWidth: 18,
+        borderRadius: 9,
+        backgroundColor: Colors.overlayCozyWarm40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 5,
+    },
+    pendingBadgeText: {
+        color: Colors.cta,
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: Colors.overlayWhite08,
+        marginHorizontal: Spacing.md,
+    },
+
+    // Request row
     requestRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
         gap: Spacing.sm,
-        borderRadius: BorderRadius.lg,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: 10,
+    },
+    requestAvatar: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: Colors.overlayWarning10,
         borderWidth: 1,
-        borderColor: Colors.overlayWhite08,
-        backgroundColor: Colors.overlayBlack25,
-        padding: Spacing.sm,
+        borderColor: Colors.overlayWarning20,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    requestAvatarText: {
+        color: Colors.warning,
+        fontWeight: FontWeight.bold,
+        fontSize: FontSize.sm,
     },
     requestInfo: {
         flex: 1,
@@ -248,13 +369,11 @@ const styles = StyleSheet.create({
     },
     requestActions: {
         flexDirection: 'row',
-        gap: 8,
+        gap: Spacing.xs,
     },
     acceptBtn: {
         borderRadius: BorderRadius.full,
         backgroundColor: Colors.cta,
-        borderWidth: 1,
-        borderColor: Colors.overlayCozyWarm40,
         paddingHorizontal: Spacing.sm,
         paddingVertical: 5,
     },
@@ -267,7 +386,7 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.full,
         borderWidth: 1,
         borderColor: Colors.stroke,
-        backgroundColor: Colors.overlayWhite05,
+        backgroundColor: Colors.overlayBlack25,
         paddingHorizontal: Spacing.sm,
         paddingVertical: 5,
     },
@@ -276,37 +395,31 @@ const styles = StyleSheet.create({
         fontSize: FontSize.xs,
         fontWeight: FontWeight.semibold,
     },
-    friendsCard: {
-        padding: Spacing.md,
-        gap: Spacing.xs,
-        borderRadius: BorderRadius.xxl,
-    },
+
+    // Friend row
     friendRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: Spacing.sm,
-        borderRadius: BorderRadius.lg,
-        borderWidth: 1,
-        borderColor: Colors.overlayWhite08,
-        backgroundColor: Colors.overlayBlack25,
-        padding: Spacing.sm,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: 10,
     },
     friendAvatar: {
         width: 38,
         height: 38,
         borderRadius: 19,
-        backgroundColor: Colors.overlayViolet20,
         borderWidth: 1,
-        borderColor: Colors.overlayViolet35,
         alignItems: 'center',
         justifyContent: 'center',
+        flexShrink: 0,
     },
     friendAvatarText: {
-        color: Colors.violet,
         fontWeight: FontWeight.bold,
+        fontSize: FontSize.md,
     },
     friendInfo: {
         flex: 1,
+        gap: 2,
     },
     friendNameRow: {
         flexDirection: 'row',
@@ -317,57 +430,73 @@ const styles = StyleSheet.create({
         color: Colors.text,
         fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
+        flex: 1,
     },
     meBadge: {
-        fontSize: 10,
-        color: Colors.violetDeep,
-        backgroundColor: Colors.overlayWhite20,
         borderRadius: BorderRadius.full,
+        backgroundColor: Colors.overlayViolet20,
+        borderWidth: 1,
+        borderColor: Colors.overlayViolet35,
         paddingHorizontal: 6,
         paddingVertical: 2,
+    },
+    meBadgeText: {
+        color: Colors.violet,
+        fontSize: 9,
+        fontWeight: FontWeight.bold,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     friendSub: {
         color: Colors.muted2,
         fontSize: FontSize.xs,
     },
-    friendActions: {
+    friendRight: {
         alignItems: 'flex-end',
         gap: 6,
+        flexShrink: 0,
     },
     friendXp: {
         color: Colors.text,
+        fontSize: FontSize.sm,
+        fontWeight: FontWeight.bold,
+    },
+    friendXpSuffix: {
+        color: Colors.muted2,
+        fontWeight: FontWeight.regular,
         fontSize: FontSize.xs,
-        fontWeight: FontWeight.semibold,
     },
     removeBtn: {
-        flexDirection: 'row',
+        width: 26,
+        height: 26,
+        borderRadius: 13,
         alignItems: 'center',
-        gap: 4,
-        borderRadius: BorderRadius.full,
+        justifyContent: 'center',
+        backgroundColor: Colors.overlayError10,
         borderWidth: 1,
-        borderColor: Colors.error,
-        backgroundColor: Colors.overlayRose08,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: 4,
+        borderColor: Colors.overlayError20,
     },
-    removeBtnText: {
-        color: Colors.error,
-        fontSize: 10,
-        fontWeight: FontWeight.semibold,
-    },
+
+    // Empty state
     emptyWrap: {
+        paddingHorizontal: Spacing.lg,
+        paddingVertical: Spacing.xl,
+        alignItems: 'center',
         gap: Spacing.xs,
-        paddingVertical: Spacing.xs,
     },
     emptyTitle: {
         color: Colors.text,
         fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
+        textAlign: 'center',
     },
     emptyText: {
         color: Colors.muted2,
         fontSize: FontSize.xs,
+        textAlign: 'center',
+        lineHeight: 16,
     },
+
     bottomSpacer: {
         height: 96,
     },
