@@ -3,6 +3,7 @@
 // ============================================================================
 
 import Constants from 'expo-constants';
+import { useAppStore } from '../stores/appStore';
 
 /**
  * Détecte automatiquement le type de build basé sur:
@@ -33,34 +34,67 @@ function detectBuildFlavor(): 'standard' | 'foss' {
  */
 export const BUILD_FLAVOR = detectBuildFlavor();
 
+function shouldSimulateFossBuild(): boolean {
+    try {
+        const settings = useAppStore.getState().settings;
+        return settings.developerMode === true && settings.simulateFossBuild === true;
+    } catch {
+        return false;
+    }
+}
+
+export function getEffectiveBuildFlavor(): 'standard' | 'foss' {
+    if (shouldSimulateFossBuild()) {
+        return 'foss';
+    }
+    return BUILD_FLAVOR;
+}
+
 /**
  * Configuration basée sur le flavor
  */
 export const BuildConfig = {
-    /** Type de build: 'standard' (Google Play) ou 'foss' (F-Droid) */
-    flavor: BUILD_FLAVOR,
+    /** Type de build réel détecté (sans override développeur) */
+    baseFlavor: BUILD_FLAVOR,
+
+    /** Type de build effectif: peut être overridé en mode développeur */
+    get flavor(): 'standard' | 'foss' {
+        return getEffectiveBuildFlavor();
+    },
 
     /** Est-ce un build FOSS (sans Firebase/FCM) */
-    isFoss: BUILD_FLAVOR === 'foss',
+    get isFoss(): boolean {
+        return getEffectiveBuildFlavor() === 'foss';
+    },
 
     /** Est-ce un build standard (avec toutes les fonctionnalités) */
-    isStandard: BUILD_FLAVOR === 'standard',
+    get isStandard(): boolean {
+        return getEffectiveBuildFlavor() === 'standard';
+    },
 
     /** Notifications push activées (uniquement sur standard) */
-    pushNotificationsEnabled: BUILD_FLAVOR === 'standard',
+    get pushNotificationsEnabled(): boolean {
+        return getEffectiveBuildFlavor() === 'standard';
+    },
 
     /** FCM activé (uniquement sur standard) */
-    fcmEnabled: BUILD_FLAVOR === 'standard',
+    get fcmEnabled(): boolean {
+        return getEffectiveBuildFlavor() === 'standard';
+    },
 
     /** Expo Push Tokens (uniquement sur standard) */
-    expoPushEnabled: BUILD_FLAVOR === 'standard',
+    get expoPushEnabled(): boolean {
+        return getEffectiveBuildFlavor() === 'standard';
+    },
 
     /** URL GitHub Releases pour télécharger la version complète */
     githubReleasesUrl: 'https://github.com/LuckyTheCookie/FitTrack/releases',
 
     /** Nom d'affichage du flavor */
-    flavorDisplayName: BUILD_FLAVOR === 'foss' ? 'FOSS Edition' : 'Standard',
-} as const;
+    get flavorDisplayName(): 'FOSS Edition' | 'Standard' {
+        return getEffectiveBuildFlavor() === 'foss' ? 'FOSS Edition' : 'Standard';
+    },
+};
 
 /**
  * Vérifie si les notifications push sont disponibles pour ce build

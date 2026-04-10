@@ -287,6 +287,8 @@ export interface UserSettings {
   keepGoingIntervalMinutes?: number; // Minutes between "keep going" sounds (default: 5)
   // Developer mode (hidden by default, activated by tapping About 10 times)
   developerMode?: boolean;
+  // Developer mode: simulate FOSS build behavior in standard builds
+  simulateFossBuild?: boolean;
   // Skip sensor/camera selection screen in rep counter (go directly to position screen)
   skipSensorSelection?: boolean;
   // Labs: Enhanced meal page with AI analysis

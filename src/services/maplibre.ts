@@ -10,11 +10,16 @@ type MapLibreModule = {
 };
 
 let cachedMapLibre: MapLibreModule | null | undefined;
+let cachedForFossMode: boolean | undefined;
 
 export function getMapLibreModule(): MapLibreModule | null {
-  if (cachedMapLibre !== undefined) return cachedMapLibre;
+  const isFossMode = BuildConfig.isFoss;
+  if (cachedMapLibre !== undefined && cachedForFossMode === isFossMode) {
+    return cachedMapLibre;
+  }
+  cachedForFossMode = isFossMode;
 
-  if (BuildConfig.isFoss) {
+  if (isFossMode) {
     cachedMapLibre = null;
     return cachedMapLibre;
   }

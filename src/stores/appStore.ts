@@ -121,6 +121,7 @@ const defaultSettings: UserSettings = {
     preferCameraDetection: true,
     debugPlank: false,
     developerMode: false,
+    simulateFossBuild: false,
     skipSensorSelection: true,
     gender: undefined,
     heightCm: undefined,

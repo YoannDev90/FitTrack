@@ -1067,7 +1067,11 @@
       "testFallTitle": "Test de détection de chute",
       "testFallSubtitle": "Déclencher l'overlay d'urgence sans chute réelle",
       "testFallDoneTitle": "Test chute déclenché",
-      "testFallDoneMessage": "L'overlay de sécurité a été déclenché pour test."
+      "testFallDoneMessage": "L'overlay de sécurité a été déclenché pour test.",
+      "simulateFossTitle": "Simuler un build FOSS",
+      "simulateFossSubtitle": "Force les avertissements et vérifications de disponibilité FOSS",
+      "poseCaptureTitle": "Debug capture de pose",
+      "poseCaptureSubtitle": "Ouvrir l'écran caméra pour exporter les landmarks en JSON"
     },
     "cameraPreview": "Aperçu caméra",
     "cameraPreviewDesc": "Voir le flux caméra lors du tracking",

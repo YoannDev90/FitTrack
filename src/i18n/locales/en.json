@@ -1067,7 +1067,11 @@
       "testFallTitle": "Fall detection test",
       "testFallSubtitle": "Trigger emergency overlay without actually falling",
       "testFallDoneTitle": "Fall test triggered",
-      "testFallDoneMessage": "Safety overlay has been triggered for testing."
+      "testFallDoneMessage": "Safety overlay has been triggered for testing.",
+      "simulateFossTitle": "Simulate FOSS build",
+      "simulateFossSubtitle": "Force FOSS warnings and feature availability checks",
+      "poseCaptureTitle": "Pose capture debugger",
+      "poseCaptureSubtitle": "Open camera capture screen for landmarks JSON export"
     },
     "cameraPreview": "Camera preview",
     "cameraPreviewDesc": "See camera feed during tracking",
