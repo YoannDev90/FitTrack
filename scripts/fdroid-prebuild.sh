@@ -656,6 +656,15 @@ android {
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/ASL2.0'
     }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def fileName = output.outputFileName
+            if (fileName != null && fileName.contains("universal")) {
+                output.outputFileName = "app-${variant.name}.apk"
+            }
+        }
+    }
 }
 
 // REPRODUCIBLE BUILD: Configuration React Native
