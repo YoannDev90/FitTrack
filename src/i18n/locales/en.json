@@ -891,6 +891,9 @@
     "leaderboardVisibility": "Appear in Leaderboard",
     "leaderboardPublic": "Publicly visible",
     "leaderboardHidden": "Hidden from global leaderboard",
+    "acceptFriendRequests": "Accept friend requests",
+    "acceptFriendRequestsOn": "People can find and add you",
+    "acceptFriendRequestsOff": "You are hidden from add-friend search",
     "myPublicProfile": "My Public Profile",
     "data": "Data",
     "backup": "Full Backup",
@@ -2254,7 +2257,10 @@
         "emptyTitle": "No active challenges",
         "emptySubtitle": "Start a challenge to begin.",
         "participantsLabel": "Participants",
-        "progressLabel": "Progress"
+        "progressLabel": "Progress",
+        "pastTitle": "Past challenges ({{count}})",
+        "showPast": "Show",
+        "hidePast": "Hide"
       },
       "friends": {
         "title": "My friends",
@@ -2326,7 +2332,9 @@
         "targetLabel": "Target",
         "progressLabel": "Your progress",
         "participantsLabel": "Participants",
-        "rankTitle": "Your rank"
+        "rankTitle": "Your rank",
+        "contributionsTitle": "Contributing workouts",
+        "contributionsEmpty": "No tracked workout contributed points yet."
       },
       "sheet": {
         "title": "New challenge",
@@ -2354,7 +2362,12 @@
       "emptySubtitle": "Add a friend or send an invite to start your first challenges.",
       "addFriend": "Add friend",
       "invite": "Invite",
+      "sheetTitle": "Add a friend",
+      "sheetSubtitle": "Search by username and send requests.",
       "searchPlaceholder": "Search for a user",
+      "searchHint": "Type at least 2 characters to search.",
+      "searchEmptyTitle": "No profile found",
+      "searchEmptySubtitle": "Try another username or ask your friend to enable requests.",
       "badgeFriend": "Friend",
       "badgePending": "Pending",
       "addAction": "Add",

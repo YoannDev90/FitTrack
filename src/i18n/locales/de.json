@@ -891,6 +891,9 @@
     "leaderboardVisibility": "In der Bestenliste erscheinen",
     "leaderboardPublic": "Öffentlich sichtbar",
     "leaderboardHidden": "Aus der globalen Bestenliste verborgen",
+    "acceptFriendRequests": "Freundschaftsanfragen akzeptieren",
+    "acceptFriendRequestsOn": "Andere können dich finden und hinzufügen",
+    "acceptFriendRequestsOff": "Du wirst in der Freundesuche ausgeblendet",
     "myPublicProfile": "Mein öffentliches Profil",
     "data": "Daten",
     "backup": "Vollständiges Backup",
@@ -2254,7 +2257,10 @@
         "emptyTitle": "Keine aktive Challenge",
         "emptySubtitle": "Starte eine Challenge, um zu beginnen.",
         "participantsLabel": "Teilnehmer",
-        "progressLabel": "Fortschritt"
+        "progressLabel": "Fortschritt",
+        "pastTitle": "Vergangene Challenges ({{count}})",
+        "showPast": "Anzeigen",
+        "hidePast": "Ausblenden"
       },
       "friends": {
         "title": "Meine Freunde",
@@ -2326,7 +2332,9 @@
         "targetLabel": "Ziel",
         "progressLabel": "Dein Fortschritt",
         "participantsLabel": "Teilnehmer",
-        "rankTitle": "Dein Rang"
+        "rankTitle": "Dein Rang",
+        "contributionsTitle": "Beitragende Einheiten",
+        "contributionsEmpty": "Noch keine Einheit hat Punkte zu dieser Challenge beigetragen."
       },
       "sheet": {
         "title": "Neue Challenge",
@@ -2354,7 +2362,12 @@
       "emptySubtitle": "Füge Freunde hinzu oder sende eine Einladung, um erste Challenges zu starten.",
       "addFriend": "Freund hinzufügen",
       "invite": "Einladen",
+      "sheetTitle": "Freund hinzufügen",
+      "sheetSubtitle": "Per Benutzername suchen und Anfrage senden.",
       "searchPlaceholder": "Benutzer suchen",
+      "searchHint": "Mindestens 2 Zeichen eingeben, um zu suchen.",
+      "searchEmptyTitle": "Kein Profil gefunden",
+      "searchEmptySubtitle": "Versuche einen anderen Namen oder bitte deinen Freund, Anfragen zu aktivieren.",
       "badgeFriend": "Freund",
       "badgePending": "Ausstehend",
       "addAction": "Hinzufügen",

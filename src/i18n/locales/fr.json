@@ -891,6 +891,9 @@
     "leaderboardVisibility": "Apparaître dans le classement",
     "leaderboardPublic": "Visible publiquement",
     "leaderboardHidden": "Masqué du classement global",
+    "acceptFriendRequests": "Accepter les demandes d'ami",
+    "acceptFriendRequestsOn": "Les autres peuvent te trouver et t'ajouter",
+    "acceptFriendRequestsOff": "Ton profil est masqué de la recherche d'amis",
     "myPublicProfile": "Mon profil public",
     "data": "Données",
     "backup": "Sauvegarde complète",
@@ -1664,8 +1667,8 @@
       "continued": "L'utilisation continue de Spix après une modification vaut acceptation des nouvelles conditions."
     },
     "termination": {
-      "socialChannel": "Activite sociale",
-      "socialChannelDesc": "Partages de seances et likes de tes amis",
+      "socialChannel": "Activité sociale",
+      "socialChannelDesc": "Partages de séances et likes de tes amis",
       "title": "Résiliation",
       "description": "Tu peux cesser d'utiliser Spix à tout moment. Pour supprimer tes données :",
       "items": {
@@ -1764,8 +1767,8 @@
     "encouragementsChannelDesc": "Notifications d'encouragement de tes amis",
     "friendsChannel": "Amis",
     "friendsChannelDesc": "Demandes d'ami et acceptations",
-    "socialChannel": "Activite sociale",
-    "socialChannelDesc": "Partages de seances et likes de tes amis",
+    "socialChannel": "Activité sociale",
+    "socialChannelDesc": "Partages de séances et likes de tes amis",
     "encouragementTitle": "{{emoji}} {{senderName}} t'encourage !",
     "friendRequestTitle": "👋 Nouvelle demande d'ami",
     "friendRequestBody": "{{senderName}} veut être ton ami !",
@@ -2254,7 +2257,10 @@
         "emptyTitle": "Aucun challenge actif",
         "emptySubtitle": "Lance un challenge pour démarrer.",
         "participantsLabel": "Participants",
-        "progressLabel": "Progression"
+        "progressLabel": "Progression",
+        "pastTitle": "Challenges passés ({{count}})",
+        "showPast": "Afficher",
+        "hidePast": "Masquer"
       },
       "friends": {
         "title": "Mes amis",
@@ -2285,11 +2291,11 @@
       "sectionTitle": "Challenge en cours",
       "swipeHint": "Swipe",
       "noParticipants": "Aucun participant",
-      "details": "Voir détail",
-      "addSession": "Ajouter séance",
-      "finishedLabel": "Termine",
+      "details": "Voir les détails",
+      "addSession": "Ajouter une séance",
+      "finishedLabel": "Terminé",
       "winnerLabel": "Vainqueur : {{name}}",
-      "drawLabel": "Egalite entre {{count}} sportifs",
+      "drawLabel": "Égalité entre {{count}} sportifs",
       "rankLabel": "Ton rang : #{{rank}}",
       "deleteAction": "Supprimer",
       "leaveAction": "Quitter",
@@ -2304,10 +2310,10 @@
       "leaveSuccess": "Tu as quitté le challenge.",
       "finishReasons": {
         "active": "Challenge en cours",
-        "completed": "Challenge marque comme termine",
-        "expired": "Le temps est ecoule",
+        "completed": "Challenge marqué comme terminé",
+        "expired": "Le temps est écoulé",
         "target_reached": "Objectif atteint",
-        "cancelled": "Challenge annule"
+        "cancelled": "Challenge annulé"
       },
       "daysRemaining": "{{count}}j restants",
       "goalTypes": {
@@ -2317,16 +2323,18 @@
         "xp": "XP"
       },
       "detailsSheet": {
-        "title": "Details du challenge",
+        "title": "Détails du challenge",
         "activeSubtitle": "En cours",
-        "finishedSubtitle": "Challenge termine",
+        "finishedSubtitle": "Challenge terminé",
         "openChallenges": "Ouvrir l'onglet challenges",
         "participantsTitle": "Participants",
         "statsTitle": "Stats rapides",
         "targetLabel": "Objectif",
         "progressLabel": "Ta progression",
         "participantsLabel": "Participants",
-        "rankTitle": "Ton rang"
+        "rankTitle": "Ton rang",
+        "contributionsTitle": "Séances contributrices",
+        "contributionsEmpty": "Aucune séance n'a encore rapporté de points pour ce challenge."
       },
       "sheet": {
         "title": "Nouveau challenge",
@@ -2354,7 +2362,12 @@
       "emptySubtitle": "Ajoute un ami ou envoie une invitation pour lancer tes premiers challenges.",
       "addFriend": "Ajouter un ami",
       "invite": "Inviter",
+      "sheetTitle": "Ajouter un ami",
+      "sheetSubtitle": "Recherche par pseudo puis envoie une demande.",
       "searchPlaceholder": "Rechercher un utilisateur",
+      "searchHint": "Tape au moins 2 caractères pour lancer la recherche.",
+      "searchEmptyTitle": "Aucun profil trouvé",
+      "searchEmptySubtitle": "Essaie un autre pseudo ou demande à ton ami d'activer les demandes.",
       "badgeFriend": "Ami",
       "badgePending": "En attente",
       "addAction": "Ajouter",
@@ -2370,7 +2383,7 @@
       "likeAction": "J'aime",
       "likedAction": "Like",
       "likeSending": "Envoi...",
-      "likedBy": "Aime par {{names}}{{extra}}",
+      "likedBy": "Aimé par {{names}}{{extra}}",
       "deleteConfirmTitle": "Supprimer ce partage ?",
       "deleteConfirmMessage": "Cette activité sera retirée du feed social.",
       "deleteError": "Impossible de supprimer cette activité pour le moment.",
@@ -2386,7 +2399,7 @@
         "duration": "{{value}} min",
         "reps": "{{value}} reps"
       },
-      "workoutCompletedTitle": "{{name}} a termine une seance de {{workout}}",
+      "workoutCompletedTitle": "{{name}} a terminé une séance de {{workout}}",
       "workoutTitle": "{{name}} a partagé une séance",
       "genericWorkoutDetail": "Séance terminée",
       "challengeTitle": "{{name}} a lancé un challenge",

@@ -891,6 +891,9 @@
     "leaderboardVisibility": "Appari in Classifica",
     "leaderboardPublic": "Visibile pubblicamente",
     "leaderboardHidden": "Nascosto dalla classifica globale",
+    "acceptFriendRequests": "Accetta richieste di amicizia",
+    "acceptFriendRequestsOn": "Gli altri possono trovarti e aggiungerti",
+    "acceptFriendRequestsOff": "Sei nascosto dalla ricerca amici",
     "myPublicProfile": "Il mio Profilo Pubblico",
     "data": "Dati",
     "backup": "Backup Completo",
@@ -2254,7 +2257,10 @@
         "emptyTitle": "Nessuna challenge attiva",
         "emptySubtitle": "Lancia una challenge per iniziare.",
         "participantsLabel": "Partecipanti",
-        "progressLabel": "Progresso"
+        "progressLabel": "Progresso",
+        "pastTitle": "Challenge passate ({{count}})",
+        "showPast": "Mostra",
+        "hidePast": "Nascondi"
       },
       "friends": {
         "title": "I miei amici",
@@ -2289,7 +2295,7 @@
       "addSession": "Aggiungi sessione",
       "finishedLabel": "Terminata",
       "winnerLabel": "Vincitore: {{name}}",
-      "drawLabel": "Parita tra {{count}} atleti",
+      "drawLabel": "Parità tra {{count}} atleti",
       "rankLabel": "La tua posizione: #{{rank}}",
       "deleteAction": "Elimina",
       "leaveAction": "Esci",
@@ -2326,7 +2332,9 @@
         "targetLabel": "Obiettivo",
         "progressLabel": "Il tuo progresso",
         "participantsLabel": "Partecipanti",
-        "rankTitle": "La tua posizione"
+        "rankTitle": "La tua posizione",
+        "contributionsTitle": "Sessioni che contribuiscono",
+        "contributionsEmpty": "Nessuna sessione ha ancora portato punti a questa challenge."
       },
       "sheet": {
         "title": "Nuova challenge",
@@ -2354,7 +2362,12 @@
       "emptySubtitle": "Aggiungi un amico o invia un invito per iniziare le prime challenge.",
       "addFriend": "Aggiungi amico",
       "invite": "Invita",
+      "sheetTitle": "Aggiungi un amico",
+      "sheetSubtitle": "Cerca per username e invia una richiesta.",
       "searchPlaceholder": "Cerca un utente",
+      "searchHint": "Digita almeno 2 caratteri per cercare.",
+      "searchEmptyTitle": "Nessun profilo trovato",
+      "searchEmptySubtitle": "Prova un altro username o chiedi al tuo amico di attivare le richieste.",
       "badgeFriend": "Amico",
       "badgePending": "In attesa",
       "addAction": "Aggiungi",
