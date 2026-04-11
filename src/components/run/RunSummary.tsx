@@ -123,6 +123,7 @@ export function RunSummary() {
   const { t } = useTranslation();
   const store = useRunStore();
   const { entries, settings, addRun } = useAppStore();
+  const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [discardModalVisible, setDiscardModalVisible] = useState(false);
@@ -168,7 +169,7 @@ export function RunSummary() {
 
   // Fetch AI summary
   useEffect(() => {
-    if (store.mode !== 'ai' || !(settings as any).runSettings?.coachingEnabled) return;
+    if (!aiFeaturesEnabled || store.mode !== 'ai' || !(settings as any).runSettings?.coachingEnabled) return;
     let cancelled = false;
 
     (async () => {
@@ -196,7 +197,7 @@ Donne un bilan motivant et personnalisé.`,
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [aiFeaturesEnabled, settings, store.mode, summary]);
 
   // Save run
   const handleSave = async () => {
@@ -307,7 +308,7 @@ Donne un bilan motivant et personnalisé.`,
           )}
 
           {/* AI Summary */}
-          {store.mode === 'ai' && (
+          {store.mode === 'ai' && aiFeaturesEnabled && (
             <Animated.View entering={FadeInDown.delay(400)} style={[styles.card, { borderColor: C.violetBorder }]}>
               <View style={styles.aiHeader}>
                 <Bot size={16} color={C.violet} />

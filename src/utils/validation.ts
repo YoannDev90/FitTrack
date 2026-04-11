@@ -115,6 +115,7 @@ export const SettingsSchema = z.object({
     weeklyGoal: z.number().int().positive().max(14),
     units: UnitsSchema.optional(),
     hiddenTabs: HiddenTabsSchema.optional(),
+    aiFeaturesEnabled: z.boolean().optional(),
     debugCamera: z.boolean().optional(),
     preferCameraDetection: z.boolean().optional(),
     debugPlank: z.boolean().optional(),

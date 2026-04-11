@@ -187,30 +187,24 @@ export default function SettingsMainScreen() {
                     }}
                 />
 
-                {/* ── Profile & Account ── */}
-                <SectionLabel title={t('settings.personalInfo')} delay={120} />
-                <SettingsGroup delay={130}>
-                    <CategoryRow
-                        icon={<Users size={19} color={C.teal} strokeWidth={2.2} />}
-                        iconColor={C.teal}
-                        title={t('settings.personalInfo')}
-                        subtitle={t('settings.personalInfoDesc')}
-                        onPress={() => router.push('/settings/personal')}
-                        delay={140}
-                        isLast={!isSocialAvailable()}
-                    />
-                    {isSocialAvailable() && (
-                        <CategoryRow
-                            icon={<Users size={19} color={C.teal} strokeWidth={2.2} />}
-                            iconColor={C.teal}
-                            title={t('settings.socialFeatures')}
-                            subtitle={socialEnabled ? t('settings.socialEnabled') : t('settings.socialDisabled')}
-                            onPress={() => router.push('/settings/social')}
-                            badge={socialEnabled ? '✓' : undefined}
-                            delay={150} isLast
-                        />
-                    )}
-                </SettingsGroup>
+                {/* ── Social ── */}
+                {isSocialAvailable() && (
+                    <>
+                        <SectionLabel title={t('settings.social')} delay={120} />
+                        <SettingsGroup delay={130}>
+                            <CategoryRow
+                                icon={<Users size={19} color={C.teal} strokeWidth={2.2} />}
+                                iconColor={C.teal}
+                                title={t('settings.socialFeatures')}
+                                subtitle={socialEnabled ? t('settings.socialEnabled') : t('settings.socialDisabled')}
+                                onPress={() => router.push('/settings/social')}
+                                badge={socialEnabled ? '✓' : undefined}
+                                delay={140}
+                                isLast
+                            />
+                        </SettingsGroup>
+                    </>
+                )}
 
                 {/* ── Preferences ── */}
                 <SectionLabel title={t('settings.preferences')} delay={150} />

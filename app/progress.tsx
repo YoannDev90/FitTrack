@@ -1089,7 +1089,7 @@ function getWeekStats(entries: Entry[]) {
 
 function PloppyWeeklySummary({ entries, settings }: {
     entries: Entry[];
-    settings: { aiProgressEnabled?: boolean; aiModel?: string; aiTone?: string };
+    settings: { aiFeaturesEnabled?: boolean; aiProgressEnabled?: boolean; aiModel?: string; aiTone?: string };
 }) {
     const { t } = useTranslation();
     const [analysis, setAnalysis] = useState<string | null>(null);
@@ -1100,6 +1100,7 @@ function PloppyWeeklySummary({ entries, settings }: {
     const weekStats = useMemo(() => getWeekStats(entries), [entries]);
 
     const fetchSummary = useCallback(async (force: boolean = false) => {
+        if (!settings.aiFeaturesEnabled) return;
         if (!settings.aiProgressEnabled || !connected) return;
         if (weekStats.totalWorkouts === 0) return;
 
@@ -1150,18 +1151,22 @@ function PloppyWeeklySummary({ entries, settings }: {
         } finally {
             setLoading(false);
         }
-    }, [settings.aiProgressEnabled, connected, weekStats, settings.aiModel, settings.aiTone]);
+    }, [settings.aiFeaturesEnabled, settings.aiProgressEnabled, connected, weekStats, settings.aiModel, settings.aiTone]);
 
     useEffect(() => {
+        if (!settings.aiFeaturesEnabled) {
+            setConnected(false);
+            return;
+        }
         isPollinationConnected().then(setConnected);
-    }, []);
+    }, [settings.aiFeaturesEnabled]);
 
     useEffect(() => {
         fetchSummary();
     }, [fetchSummary]);
 
 
-    if (!settings.aiProgressEnabled) return null;
+    if (!settings.aiFeaturesEnabled || !settings.aiProgressEnabled) return null;
 
     if (!connected) {
         return (

@@ -305,6 +305,7 @@ export interface UserSettings {
   openFoodFactsEnabled?: boolean;
 
   // AI – Ploppy settings
+  aiFeaturesEnabled?: boolean; // Global master flag for all AI features
   aiProgressEnabled?: boolean; // Show AI weekly summary in Progress
   aiWorkoutEnabled?: boolean; // Show AI analysis in workout detail
   aiModel?: string; // Pollinations model name (default: 'openai')

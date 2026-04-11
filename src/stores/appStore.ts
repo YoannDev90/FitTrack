@@ -123,6 +123,7 @@ const defaultSettings: UserSettings = {
     developerMode: false,
     simulateFossBuild: false,
     skipSensorSelection: true,
+    aiFeaturesEnabled: false,
     gender: undefined,
     heightCm: undefined,
     bodyWeightKg: undefined,

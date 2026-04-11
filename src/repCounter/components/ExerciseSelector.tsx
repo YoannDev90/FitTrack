@@ -241,6 +241,14 @@ export function ExerciseSelector({
     const router = useRouter();
     const entries = useAppStore(s => s.entries);
     const settings = useAppStore(s => s.settings);
+    const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
+
+    const visibleExercises = useMemo(() => {
+        if (aiFeaturesEnabled) {
+            return EXERCISES;
+        }
+        return EXERCISES.filter((exercise) => exercise.id !== 'run_ai');
+    }, [aiFeaturesEnabled]);
 
     const recentSportCards = useMemo<RecentSportCard[]>(() => {
         const cards: RecentSportCard[] = [];
@@ -305,6 +313,10 @@ export function ExerciseSelector({
     const showDetectionModeSelector = selectedExercise ? !(settings.skipSensorSelection ?? false) : false;
 
     const handleRecentCardPress = (card: RecentSportCard) => {
+        if (!aiFeaturesEnabled && card.targetRoute === '/run/ai') {
+            return;
+        }
+
         if (card.targetRoute) {
             router.push(card.targetRoute as any);
             return;
@@ -353,7 +365,7 @@ export function ExerciseSelector({
             </Animated.View>
 
             <View style={s.exerciseList}>
-                {EXERCISES.map((ex: ExerciseConfig, i: number) => (
+                {visibleExercises.map((ex: ExerciseConfig, i: number) => (
                     <ExerciseListItem
                         key={ex.id}
                         exercise={ex}

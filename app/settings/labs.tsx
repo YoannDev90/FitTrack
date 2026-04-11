@@ -43,6 +43,7 @@ import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/c
 export default function LabsScreen() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useAppStore();
+  const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
   const [pollinationStatus, setPollinationStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
   // Check Pollination connection status
@@ -234,14 +235,18 @@ export default function LabsScreen() {
               <TouchableOpacity
                 style={[
                   styles.connectButton,
-                  pollinationStatus === 'connected' && styles.disconnectButton
+                  pollinationStatus === 'connected' && styles.disconnectButton,
+                  !aiFeaturesEnabled && styles.connectButtonDisabled,
                 ]}
                 onPress={pollinationStatus === 'connected' 
                   ? handleDisconnectPollination 
                   : handleConnectPollination
                 }
+                disabled={!aiFeaturesEnabled}
               >
-                {pollinationStatus === 'connected' ? (
+                {!aiFeaturesEnabled ? (
+                  <Text style={styles.connectButtonText}>Indisponible</Text>
+                ) : pollinationStatus === 'connected' ? (
                   <Text style={styles.disconnectButtonText}>
                     {t('settings.pollination.disconnect')}
                   </Text>
@@ -260,7 +265,9 @@ export default function LabsScreen() {
             <View style={styles.warningBox}>
               <AlertTriangle size={16} color={Colors.warning} />
               <Text style={styles.warningText}>
-                {t('settings.pollination.betaWarning')}
+                {aiFeaturesEnabled
+                  ? t('settings.pollination.betaWarning')
+                  : 'Fonctionnalites IA en pause pour le moment (budget etudiant).'}
               </Text>
             </View>
           </Animated.View>
@@ -463,6 +470,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.lg,
+  },
+  connectButtonDisabled: {
+    opacity: 0.6,
   },
   connectButtonText: {
     fontSize: FontSize.sm,

@@ -30,6 +30,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   Bot,
+  Lock,
   Send,
   Play,
   Navigation,
@@ -79,6 +80,7 @@ export default function AiRunConfigScreen() {
   const { t } = useTranslation();
   const store = useRunStore();
   const { entries, settings } = useAppStore();
+  const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
 
   // Phases: input → qcm → plan → track → summary
   const [phase, setPhase] = useState<'input' | 'qcm' | 'plan' | 'track' | 'summary'>('input');
@@ -110,6 +112,44 @@ export default function AiRunConfigScreen() {
 
   const aiModel = (settings as any).runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai';
   const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
+
+  if (!aiFeaturesEnabled) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[Colors.overlayViolet12, C.bg, C.bg]}
+          style={StyleSheet.absoluteFill}
+        />
+        <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => { store.reset(); router.back(); }} style={styles.backBtn}>
+              <ArrowLeft size={22} color={C.text} />
+            </TouchableOpacity>
+            <View style={{ width: 42 }} />
+            <View style={{ width: 42 }} />
+          </View>
+
+          <View style={styles.inputContent}>
+            <View style={styles.mascotWrap}>
+              <Lock size={28} color={C.violet} />
+            </View>
+            <Text style={styles.stepTitle}>Course IA desactivee</Text>
+            <Text style={styles.stepHint}>
+              Cette fonctionnalite reviendra plus tard. Pour le moment, les options IA sont coupees faute de budget API.
+            </Text>
+            <TouchableOpacity
+              style={[styles.nextBtn, { backgroundColor: C.violetSoft, borderWidth: 1, borderColor: C.violetBorder }]}
+              onPress={() => router.replace('/run/simple' as any)}
+              activeOpacity={0.85}
+            >
+              <Play size={16} color={C.text} />
+              <Text style={[styles.nextBtnText, { color: C.text }]}>Passer en mode course simple</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   /** Sanitize user input to prevent prompt injection */
   const sanitizeInput = (text: string): string => {

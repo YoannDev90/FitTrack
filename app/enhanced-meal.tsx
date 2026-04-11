@@ -3,7 +3,7 @@
 // Design premium avec contraste noir/blanc et animations fluides
 // ============================================================================
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -51,12 +51,9 @@ import {
     Info,
     ChevronRight,
     Zap,
-    Settings,
 } from 'lucide-react-native';
-import { CustomAlertModal, PloppyOnboardingModal } from '../src/components/ui';
+import { CustomAlertModal } from '../src/components/ui';
 import type { AlertButton } from '../src/components/ui';
-import { PloppySettingsSheet } from '../src/components/sheets';
-import type { PloppySettingsSheetRef } from '../src/components/sheets';
 import { useAppStore } from '../src/stores';
 import { 
     isPollinationConnected, 
@@ -202,15 +199,11 @@ export default function EnhancedMealScreen() {
         { key: 'proteinRich', emoji: '🍖', label: t('enhancedMeal.detailsTags.proteinRich') },
     ], [t]);
     
-    // Refs
-    const settingsSheetRef = useRef<PloppySettingsSheetRef>(null);
-    
-    // Ploppy settings
-    const ploppyEnabled = settings.ploppyEnabled ?? false;
-    const ploppyOnboardingShown = settings.ploppyOnboardingShown ?? false;
-    
+    // Global AI lock: Ploppy stays disabled while IA is unavailable.
+    const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
+    const ploppyEnabled = aiFeaturesEnabled && (settings.ploppyEnabled ?? false);
+
     // State
-    const [showOnboarding, setShowOnboarding] = useState(!ploppyOnboardingShown);
     const [selectedTime, setSelectedTime] = useState<MealTime>(() => {
         const hour = new Date().getHours();
         return getMealTimeFromHour(hour);
@@ -223,7 +216,6 @@ export default function EnhancedMealScreen() {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [analysis, setAnalysis] = useState<MealAnalysis | null>(null);
-    const [isPlopEnabled, setIsPlopEnabled] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     
     // Custom Alert State
@@ -278,10 +270,12 @@ export default function EnhancedMealScreen() {
 
     // Check if Pollination is connected
     const checkPollinationConnection = useCallback(async () => {
+        if (!aiFeaturesEnabled) {
+            return false;
+        }
         const connected = await isPollinationConnected();
-        setIsPlopEnabled(connected);
         return connected;
-    }, []);
+    }, [aiFeaturesEnabled]);
 
     // Initial check
     React.useEffect(() => {
@@ -518,15 +512,7 @@ export default function EnhancedMealScreen() {
                                 </View>
                             )}
                         </View>
-                        <TouchableOpacity
-                            style={styles.settingsButton}
-                            onPress={() => {
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                settingsSheetRef.current?.present();
-                            }}
-                        >
-                            <Settings size={20} color={PREMIUM.white} strokeWidth={2} />
-                        </TouchableOpacity>
+                        <View style={styles.headerRight} />
                     </Animated.View>
 
                     {/* Meal Time Selection - 2x2 Grid */}
@@ -858,16 +844,6 @@ export default function EnhancedMealScreen() {
                 buttons={alertState.buttons}
                 onClose={hideAlert}
             />
-            
-            {/* Ploppy Onboarding Modal */}
-            <PloppyOnboardingModal
-                visible={showOnboarding}
-                onAccept={() => setShowOnboarding(false)}
-                onDecline={() => setShowOnboarding(false)}
-            />
-            
-            {/* Ploppy Settings Sheet */}
-            <PloppySettingsSheet ref={settingsSheetRef} />
         </View>
     );
 }

@@ -1106,7 +1106,33 @@
       "consentMessage": "Abilitando le funzioni IA, accetti che alcuni dati (profilo, cronologia sport, dati della sessione) possano essere inviati a Pollinations.ai per generare consigli personalizzati. Nessun dato viene conservato in modo permanente.",
       "acceptConsent": "Accetto",
       "declineConsent": "No grazie",
-      "movedToAiTab": "Le impostazioni dell'IA sono state spostate in Impostazioni > IA"
+      "movedToAiTab": "Le impostazioni dell'IA sono state spostate in Impostazioni > IA",
+      "screenBrand": "SPIX",
+      "screenTitle": "IA",
+      "hero": {
+        "title": "Funzionalità IA temporaneamente disattivate",
+        "description": "Sono uno studente e i costi delle API sono troppo elevati da sostenere al momento. La maggior parte delle funzionalità IA è disattivata finché non sarà disponibile un budget sostenibile.",
+        "note": "Grazie per la tua pazienza, le riattiveremo non appena possibile."
+      },
+      "switchTitle": "Abilita funzionalità IA",
+      "switchSubtitle": "Questo interruttore è bloccato per ora",
+      "featuresTitle": "Funzionalità IA in arrivo",
+      "featureTitles": {
+        "runAnalysis": "Analisi corsa",
+        "workoutAnalysis": "Analisi allenamento",
+        "mealAnalysis": "Analisi pasti",
+        "weeklySummary": "Riepilogo settimanale",
+        "coaching": "Coaching & recupero"
+      },
+      "featureDescriptions": {
+        "runAnalysis": "Revisione corsa personalizzata: ritmo, volume, coerenza, suggerimenti per il progresso.",
+        "workoutAnalysis": "Analisi intelligente delle tue sessioni con raccomandazioni su misura.",
+        "mealAnalysis": "Valutazione nutrizionale, punti di forza/debolezza e consigli pratici.",
+        "weeklySummary": "Riepilogo settimanale automatico con il prossimo obiettivo.",
+        "coaching": "Consigli contestuali per mantenere la regolarità e migliorare il recupero."
+      },
+      "disabledChip": "Disattivato",
+      "statusBadge": "PAUSE"
     },
     "pollination": {
       "sectionTitle": "ANALISI IA",
@@ -1415,7 +1441,7 @@
   "privacyPolicy": {
     "title": "Informativa sulla Privacy",
     "intro": "Spix rispetta la tua privacy. Questa politica spiega come gestiamo i tuoi dati in conformità con il GDPR (Regolamento Generale sulla Protezione dei Dati).",
-    "lastUpdate": "Ultimo aggiornamento: 22 Gennaio 2026",
+    "lastUpdate": "Ultimo aggiornamento: 11 aprile 2026",
     "localMode": {
       "title": "Modalità Locale (predefinita)",
       "description": "Di default, Spix funziona al 100% localmente. I tuoi dati restano solo sul tuo dispositivo.",
@@ -1450,6 +1476,7 @@
         "openFoodFacts": "Scanner OpenFoodFacts"
       },
       "note": "🌿 Questa edizione è priva al 100% di tracker proprietari e servizi cloud.",
+      "simulatedNote": "🧪 La modalità FOSS simulata è attiva su questa installazione. Le limitazioni FOSS qui sopra si applicano finché la simulazione resta attiva.",
       "removedTitle": "Servizi rimossi:",
       "unavailableTitle": "Funzioni non disponibili:",
       "stillWorkingTitle": "Funzioni ancora disponibili:"
@@ -1468,6 +1495,11 @@
       "accountData": {
         "email": "Email (solo per l'accesso)",
         "password": "Password (crittografata, mai accessibile)"
+      },
+      "infrastructureTitle": "Infrastruttura e localizzazione:",
+      "infrastructure": {
+        "region": "Il database Supabase utilizzato da Spix è localizzato in Francia.",
+        "crossBorder": "In base al luogo di utilizzo, alcuni trattamenti possono essere effettuati al di fuori del tuo paese di origine."
       },
       "warning": "⚠️ Il contenuto dettagliato delle tue sessioni (esercizi, note, pasti) NON VIENE MAI sincronizzato.",
       "syncedDataTitle": "Dati sincronizzati:",
@@ -1548,13 +1580,15 @@
     },
     "contact": {
       "title": "Contatti",
-      "text": "Per domande sui tuoi dati personali, contattaci tramite le impostazioni dell'app."
+      "text": "Per domande sui tuoi dati personali, contattaci tramite le impostazioni dell'app.",
+      "repository": "Repository GitHub",
+      "support": "Supporto / Issues"
     }
   },
   "termsOfService": {
     "title": "Termini di Servizio",
     "intro": "Benvenuto su Spix! Utilizzando questa applicazione, accetti i seguenti termini.",
-    "lastUpdate": "Ultimo aggiornamento: 1 Gennaio 2026",
+    "lastUpdate": "Ultimo aggiornamento: 11 aprile 2026",
     "license": {
       "title": "Licenza e Open Source",
       "description": "Spix è software libero sotto la licenza GNU Affero General Public License versione 3 (AGPLv3). Il codice sorgente è disponibile su GitHub.",
@@ -1600,7 +1634,8 @@
         "noPush": "Nessuna notifica push remota",
         "fullLocal": "Funzionante al 100% in modalità locale"
       },
-      "currentFoss": "🌿 Stai attualmente utilizzando la versione FOSS."
+      "currentFoss": "🌿 Stai attualmente utilizzando la versione FOSS.",
+      "currentFossSimulated": "🧪 La modalità FOSS simulata è attiva: le limitazioni FOSS si applicano finché la simulazione resta attiva."
     },
     "optionalServices": {
       "title": "Servizi Opzionali",
@@ -1615,7 +1650,9 @@
         "title": "Modalità Social",
         "account": "Richiede un account Spix",
         "rules": "Soggetta alle linee guida della community",
-        "delete": "I dati possono essere cancellati su richiesta"
+        "delete": "I dati possono essere cancellati su richiesta",
+        "hosting": "Il database Supabase utilizzato da Spix è localizzato in Francia",
+        "crossBorder": "In base al luogo di utilizzo, alcuni trattamenti possono essere effettuati al di fuori del tuo paese di origine"
       },
       "aiCoaching": {
         "title": "Coach di Corsa IA (Beta)",

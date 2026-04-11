@@ -1106,7 +1106,33 @@
       "consentMessage": "By enabling AI features, you agree that certain data (profile, sports history, session data) may be sent to Pollinations.ai to generate personalized advice. No data is permanently stored.",
       "acceptConsent": "I accept",
       "declineConsent": "No thanks",
-      "movedToAiTab": "AI settings have moved to Settings > AI"
+      "movedToAiTab": "AI settings have moved to Settings > AI",
+      "screenBrand": "SPIX",
+      "screenTitle": "AI",
+      "hero": {
+        "title": "AI features temporarily disabled",
+        "description": "I am a student and API costs are too high to support right now. Most AI features are disabled until a sustainable budget is available.",
+        "note": "Thank you for your patience; we will bring them back as soon as possible."
+      },
+      "switchTitle": "Enable AI features",
+      "switchSubtitle": "This switch is locked for now",
+      "featuresTitle": "AI capabilities coming soon",
+      "featureTitles": {
+        "runAnalysis": "Run analysis",
+        "workoutAnalysis": "Workout analysis",
+        "mealAnalysis": "Meal analysis",
+        "weeklySummary": "Weekly summary",
+        "coaching": "Coaching & recovery"
+      },
+      "featureDescriptions": {
+        "runAnalysis": "Personalized run review: pace, volume, consistency, progress cues.",
+        "workoutAnalysis": "Smart breakdown of your sessions with tailored recommendations.",
+        "mealAnalysis": "Nutrition score, strengths and weaknesses, and practical tips.",
+        "weeklySummary": "Automatic weekly recap with your next target.",
+        "coaching": "Contextual advice to maintain consistency and improve recovery."
+      },
+      "disabledChip": "Disabled",
+      "statusBadge": "PAUSE"
     },
     "pollination": {
       "sectionTitle": "AI ANALYSIS",
@@ -1415,7 +1441,7 @@
   "privacyPolicy": {
     "title": "Privacy Policy",
     "intro": "Spix respects your privacy. This policy explains how we handle your data in accordance with GDPR (General Data Protection Regulation).",
-    "lastUpdate": "Last updated: January 22, 2026",
+    "lastUpdate": "Last updated: April 11, 2026",
     "localMode": {
       "title": "Local Mode (default)",
       "description": "By default Spix runs 100% locally. Your data remains only on your device.",
@@ -1450,6 +1476,7 @@
         "openFoodFacts": "OpenFoodFacts scanner"
       },
       "note": "🌿 This edition is 100% free of proprietary trackers and cloud services.",
+      "simulatedNote": "🧪 FOSS simulation mode is enabled on this installation. The FOSS limitations above apply while this simulation remains enabled.",
       "removedTitle": "Removed services:",
       "unavailableTitle": "Unavailable features:",
       "stillWorkingTitle": "Still available features:"
@@ -1468,6 +1495,11 @@
       "accountData": {
         "email": "Email (for sign-in only)",
         "password": "Password (encrypted, never accessible)"
+      },
+      "infrastructureTitle": "Infrastructure and location:",
+      "infrastructure": {
+        "region": "The Supabase database used by Spix is located in France.",
+        "crossBorder": "Depending on your usage location, some processing may occur outside your country of origin."
       },
       "warning": "⚠️ The detailed content of your sessions (exercises, notes, meals) is NEVER synced.",
       "syncedDataTitle": "Synced data:",
@@ -1548,13 +1580,15 @@
     },
     "contact": {
       "title": "Contact",
-      "text": "For questions regarding your personal data, contact us via the app settings."
+      "text": "For questions regarding your personal data, contact us via the app settings.",
+      "repository": "GitHub Repository",
+      "support": "Support / Issues"
     }
   },
   "termsOfService": {
     "title": "Terms of Service",
     "intro": "Welcome to Spix! By using this application, you agree to the following terms.",
-    "lastUpdate": "Last updated: January 1, 2026",
+    "lastUpdate": "Last updated: April 11, 2026",
     "license": {
       "title": "License & Open Source",
       "description": "Spix is free software under the GNU Affero General Public License version 3 (AGPLv3). The source code is available on GitHub.",
@@ -1600,7 +1634,8 @@
         "noPush": "No remote push notifications",
         "fullLocal": "100% functional in local mode"
       },
-      "currentFoss": "🌿 You are currently using the FOSS version."
+      "currentFoss": "🌿 You are currently using the FOSS version.",
+      "currentFossSimulated": "🧪 FOSS simulation mode is enabled: FOSS limitations apply while the simulation remains active."
     },
     "optionalServices": {
       "title": "Optional Services",
@@ -1615,7 +1650,9 @@
         "title": "Social Mode",
         "account": "Requires a Spix account",
         "rules": "Subject to community guidelines",
-        "delete": "Data can be deleted on request"
+        "delete": "Data can be deleted on request",
+        "hosting": "The Supabase database used by Spix is located in France",
+        "crossBorder": "Depending on your usage location, some processing may occur outside your country of origin"
       },
       "aiCoaching": {
         "title": "AI Run Coaching (Beta)",

@@ -281,6 +281,7 @@ export default function WorkoutDetailScreen() {
   const { t } = useTranslation();
   const { entries, deleteEntry } = useAppStore();
   const settings = useSettings();
+  const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
   const sportsConfig = useSportsConfig();
   const { xp, level } = useGamificationStore();
 
@@ -463,6 +464,7 @@ export default function WorkoutDetailScreen() {
   }, []);
 
   const fetchAnalysis = useCallback(async (force: boolean = false) => {
+    if (!aiFeaturesEnabled) return;
     if (!entry || !settings.aiWorkoutEnabled || !isConnected) return;
     if (!['home', 'run', 'beatsaber', 'custom'].includes(entry.type)) return;
     if (!sessionStats) return;
@@ -542,19 +544,23 @@ export default function WorkoutDetailScreen() {
     } finally {
       setAiLoading(false);
     }
-  }, [entry?.id, settings.aiWorkoutEnabled, isConnected, sessionStats, t, settings.aiModel, settings.aiTone]);
+  }, [aiFeaturesEnabled, entry?.id, settings.aiWorkoutEnabled, isConnected, sessionStats, t, settings.aiModel, settings.aiTone]);
 
   // Check Pollination connection
   useEffect(() => {
+    if (!aiFeaturesEnabled) {
+      setIsConnected(false);
+      return;
+    }
     isPollinationConnected().then(setIsConnected);
-  }, []);
+  }, [aiFeaturesEnabled]);
 
   // Fetch AI analysis whenever dependencies change
   useEffect(() => {
-    if (entry && settings.aiWorkoutEnabled && isConnected && isSport && sessionStats) {
+    if (aiFeaturesEnabled && entry && settings.aiWorkoutEnabled && isConnected && isSport && sessionStats) {
       fetchAnalysis();
     }
-  }, [entry?.id, settings.aiWorkoutEnabled, isConnected, sessionStats, settings.aiModel, settings.aiTone, i18n.language]);
+  }, [aiFeaturesEnabled, entry?.id, settings.aiWorkoutEnabled, isConnected, sessionStats, settings.aiModel, settings.aiTone, i18n.language]);
 
 
   if (!entry || !typeConfig) {
@@ -1094,7 +1100,7 @@ export default function WorkoutDetailScreen() {
         )}
 
         {/* AI Analysis Section */}
-        {isSport && settings.aiWorkoutEnabled && (
+        {isSport && aiFeaturesEnabled && settings.aiWorkoutEnabled && (
           <Animated.View entering={FadeInDown.delay(350)} style={styles.aiSection}>
             <View style={[styles.aiHeader, { justifyContent: 'space-between' }]}>  
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.sm }}>
