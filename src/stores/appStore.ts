@@ -23,6 +23,7 @@ import {
     getTodayDateString,
     getNowISO,
     calculateStreak,
+    calculateConsecutiveWeeklyGoalsMet,
     isInCurrentWeek,
     getLastSixMonths,
 } from '../utils/date';
@@ -558,13 +559,17 @@ export const useAppStore = create<AppState>()(
                     .filter((e) => isSportEntryType(e.type))
                     .map((e) => e.date);
                 const streak = calculateStreak(sportDates);
+                const weeklyGoalsMet = calculateConsecutiveWeeklyGoalsMet(
+                    sportDates,
+                    get().settings.weeklyGoal
+                );
                 
                 // Get all badges that should be unlocked based on current state
                 const shouldHaveBadges = checkBadges(
                     entries,
                     streak.current,
                     streak.best,
-                    0 // TODO: calculate consecutive weeks
+                    weeklyGoalsMet
                 );
                 
                 // Update badges - this can remove badges if conditions no longer met

@@ -70,7 +70,14 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
 }
 
 // Bouton principal avec dégradé
-const PrimaryButton = ({ onPress, title, disabled = false, icon }: any) => (
+interface PrimaryButtonProps {
+  onPress: () => void;
+  title: string;
+  disabled?: boolean;
+  icon?: string;
+}
+
+const PrimaryButton = ({ onPress, title, disabled = false, icon }: PrimaryButtonProps) => (
   <TouchableOpacity 
     onPress={onPress} 
     activeOpacity={0.9} 
@@ -78,7 +85,7 @@ const PrimaryButton = ({ onPress, title, disabled = false, icon }: any) => (
     style={[styles.buttonWrapper, disabled && styles.buttonDisabled]}
   >
     <LinearGradient
-      colors={disabled ? [Colors.card, Colors.card] : (Gradients.cta || [Colors.teal, Colors.cta])}  // Where is this button used? TODO FIX
+      colors={disabled ? [Colors.card, Colors.card] : (Gradients.cta || [Colors.teal, Colors.cta])}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.primaryButton}
@@ -109,7 +116,7 @@ export default function OnboardingScreen() {
   const [wantsSocial, setWantsSocial] = useState(true);
   const [wantsGamification, setWantsGamification] = useState(true);
 
-  const handleComplete = useCallback(() => {
+  const handleComplete = useCallback(async () => {
     // Update settings with all choices
     updateSettings({
       onboardingCompleted: true,
@@ -124,7 +131,11 @@ export default function OnboardingScreen() {
     updateWeeklyGoal(weeklyGoal);
     
     // Enable/disable social features
-    setSocialEnabled(wantsSocial);
+    try {
+      await setSocialEnabled(wantsSocial);
+    } catch {
+      // Continue onboarding completion even if social preference sync fails remotely.
+    }
     
     router.replace('/');
   }, [selectedGoal, selectedLevel, weeklyGoal, wantsSocial, wantsGamification, updateSettings, updateWeeklyGoal, setSocialEnabled, router]);

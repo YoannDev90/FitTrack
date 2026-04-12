@@ -168,6 +168,54 @@ export function calculateStreak(activityDates: string[]): { current: number; bes
   return { current, best };
 }
 
+export function calculateConsecutiveWeeklyGoalsMet(activityDates: string[], weeklyGoal: number): number {
+  if (!Number.isFinite(weeklyGoal) || weeklyGoal <= 0) {
+    return 0;
+  }
+
+  const normalizedDates = Array.from(new Set(
+    activityDates.filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date))
+  ));
+
+  if (normalizedDates.length === 0) {
+    return 0;
+  }
+
+  const weekCounts = new Map<string, number>();
+
+  normalizedDates.forEach((dateString) => {
+    const date = parseISO(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return;
+    }
+
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekKey = format(weekStart, 'yyyy-MM-dd');
+    weekCounts.set(weekKey, (weekCounts.get(weekKey) || 0) + 1);
+  });
+
+  let cursorWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const currentWeekKey = format(cursorWeek, 'yyyy-MM-dd');
+  if ((weekCounts.get(currentWeekKey) || 0) < weeklyGoal) {
+    cursorWeek = subWeeks(cursorWeek, 1);
+  }
+
+  let consecutiveWeeks = 0;
+
+  while (consecutiveWeeks < 260) {
+    const weekKey = format(cursorWeek, 'yyyy-MM-dd');
+    const workoutsThisWeek = weekCounts.get(weekKey) || 0;
+    if (workoutsThisWeek < weeklyGoal) {
+      break;
+    }
+
+    consecutiveWeeks += 1;
+    cursorWeek = subWeeks(cursorWeek, 1);
+  }
+
+  return consecutiveWeeks;
+}
+
 // Obtenir les dates de la semaine pour export
 export function getWeekExportRange(): { start: string; end: string } {
   return {

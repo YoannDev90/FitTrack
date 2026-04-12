@@ -3,6 +3,7 @@
 // ============================================================================
 
 import type { Badge, BadgeId, Entry } from '../types';
+import { isSportEntryType } from '../constants/values';
 
 // Définitions des badges
 export const BADGE_DEFINITIONS: Record<BadgeId, Omit<Badge, 'unlockedAt'>> = {
@@ -71,8 +72,7 @@ export function checkBadges(
 ): BadgeId[] {
   const unlockedBadges: BadgeId[] = [];
   
-  // Inclure beatsaber dans les entrées sport
-  const sportEntries = entries.filter(e => e.type === 'home' || e.type === 'run' || e.type === 'beatsaber');
+  const sportEntries = entries.filter(e => isSportEntryType(e.type));
   const runEntries = entries.filter(e => e.type === 'run');
   
   const totalWorkouts = sportEntries.length;

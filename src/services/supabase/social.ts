@@ -15,8 +15,8 @@ import type { Entry } from '../../types';
 import { serviceLogger, errorLogger } from '../../utils/logger';
 import { MAX_LEADERBOARD_RESULTS } from '../../constants/values';
 import { isSportEntryType } from '../../constants/values';
-import { calculateXpForEntry } from '../../stores/gamificationStore';
 import { fetchWithRetry } from '../network/httpClient';
+import { computeChallengeProgressValueFromEntries } from '../../utils/socialChallenges';
 
 // Supabase URL for Edge Functions
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -194,16 +194,6 @@ function sanitizeTrimmedText(value: string, maxLength: number): string {
     return value.trim().slice(0, maxLength);
 }
 
-function entryTimestampMs(entry: Entry): number {
-    const createdAtMs = new Date(entry.createdAt).getTime();
-    if (Number.isFinite(createdAtMs)) {
-        return createdAtMs;
-    }
-
-    const fallbackMs = new Date(`${entry.date}T12:00:00.000Z`).getTime();
-    return Number.isFinite(fallbackMs) ? fallbackMs : 0;
-}
-
 function safeTimestampMs(value: string | null | undefined): number {
     if (!value) return Number.POSITIVE_INFINITY;
     const ms = new Date(value).getTime();
@@ -254,59 +244,11 @@ function deriveChallengeFinishState(
     return { isFinished: false, reason: 'active' };
 }
 
-function isEntryInsideChallengeWindow(entry: Entry, startsAt: string, endsAt: string): boolean {
-    const challengeStartDate = startsAt.slice(0, 10);
-    const challengeEndDate = endsAt.slice(0, 10);
-
-    if (
-        /^\d{4}-\d{2}-\d{2}$/.test(entry.date) &&
-        /^\d{4}-\d{2}-\d{2}$/.test(challengeStartDate) &&
-        /^\d{4}-\d{2}-\d{2}$/.test(challengeEndDate)
-    ) {
-        return entry.date >= challengeStartDate && entry.date <= challengeEndDate;
-    }
-
-    const startsAtMs = new Date(startsAt).getTime();
-    const endsAtMs = new Date(endsAt).getTime();
-    if (!Number.isFinite(startsAtMs) || !Number.isFinite(endsAtMs)) {
-        return false;
-    }
-
-    const timestamp = entryTimestampMs(entry);
-    return timestamp >= startsAtMs && timestamp <= endsAtMs;
-}
-
 export function computeChallengeProgressValue(
     entries: Entry[],
     challenge: Pick<SocialChallenge, 'goal_type' | 'starts_at' | 'ends_at'>
 ): number {
-    const relevantEntries = entries.filter((entry) => (
-        isSportEntryType(entry.type) && isEntryInsideChallengeWindow(entry, challenge.starts_at, challenge.ends_at)
-    ));
-
-    if (challenge.goal_type === 'workouts') {
-        return relevantEntries.length;
-    }
-
-    if (challenge.goal_type === 'distance') {
-        return relevantEntries.reduce((sum, entry) => {
-            if (entry.type === 'run' || entry.type === 'custom') {
-                return sum + (entry.distanceKm || 0);
-            }
-            return sum;
-        }, 0);
-    }
-
-    if (challenge.goal_type === 'duration') {
-        return relevantEntries.reduce((sum, entry) => {
-            if (entry.type === 'run' || entry.type === 'beatsaber' || entry.type === 'custom' || entry.type === 'home') {
-                return sum + (entry.durationMinutes || 0);
-            }
-            return sum;
-        }, 0);
-    }
-
-    return relevantEntries.reduce((sum, entry) => sum + calculateXpForEntry(entry), 0);
+    return computeChallengeProgressValueFromEntries(entries, challenge);
 }
 
 // ============================================================================

@@ -61,7 +61,7 @@ interface SocialState {
     updateUsername: (username: string) => Promise<void>;
     
     // Actions - Social toggle
-    setSocialEnabled: (enabled: boolean) => void;
+    setSocialEnabled: (enabled: boolean) => Promise<void>;
     
     // Actions - RGPD
     disableSocialAndDeleteData: () => Promise<void>;
@@ -282,14 +282,32 @@ export const useSocialStore = create<SocialState>()(
             // SOCIAL TOGGLE
             // ========================================
 
-            setSocialEnabled: (enabled) => {
+            setSocialEnabled: async (enabled) => {
+                const previousEnabled = get().socialEnabled;
+
                 set({ socialEnabled: enabled });
                 if (!enabled) {
                     get().cleanupSubscriptions();
                 }
-                // Also update profile if authenticated
-                if (get().isAuthenticated) {
-                    SocialService.updateProfile({ social_enabled: enabled });
+
+                if (!get().isAuthenticated) {
+                    return;
+                }
+
+                try {
+                    await SocialService.updateProfile({ social_enabled: enabled });
+                    const profile = await SocialService.getMyProfile();
+                    if (profile) {
+                        set({ profile });
+                    }
+                } catch (error) {
+                    set({ socialEnabled: previousEnabled });
+                    if (previousEnabled) {
+                        get().setupRealtimeSubscriptions();
+                    } else {
+                        get().cleanupSubscriptions();
+                    }
+                    throw error;
                 }
             },
 

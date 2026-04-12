@@ -90,7 +90,9 @@ export default function SocialSettingsScreen() {
   // Handle disable social
   const handleDisableSocial = useCallback(() => {
     if (!isAuthenticated) {
-      setSocialEnabled(false);
+      void setSocialEnabled(false).catch(() => {
+        Alert.alert(t('common.error'), t('settings.deleteDataError'));
+      });
       return;
     }
 
@@ -183,7 +185,9 @@ export default function SocialSettingsScreen() {
                   value={socialEnabled}
                   onValueChange={(value) => {
                     if (value) {
-                      setSocialEnabled(true);
+                      void setSocialEnabled(true).catch(() => {
+                        Alert.alert(t('common.error'), t('settings.visibilityError'));
+                      });
                     } else {
                       handleDisableSocial();
                     }

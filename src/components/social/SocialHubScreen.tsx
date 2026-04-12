@@ -16,14 +16,18 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { Bell, Sparkles, UserCircle2, Users } from 'lucide-react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import type { Entry } from '../../types';
 import { BuildConfig } from '../../config';
 import { BorderRadius, Colors, FontSize, FontWeight, Spacing } from '../../constants';
 import { CustomAlertModal } from '../ui';
 import type { AlertButton, AlertType } from '../ui';
 import { useAppStore, useSocialStore } from '../../stores';
-import { calculateXpForEntry } from '../../stores/gamificationStore';
 import { isSocialAvailable } from '../../services/supabase';
+import {
+    entryTimestampMs,
+    getEntryContributionValue,
+    isEntryInsideChallengeWindow,
+    isWorkoutEntry,
+} from '../../utils/socialChallenges';
 import {
     createSocialChallenge,
     deleteSocialChallenge,
@@ -36,7 +40,6 @@ import {
     toggleSocialFeedReaction,
     type SocialChallengeGoalType,
     type SocialChallengeProgress,
-    type SocialFeedEventItem,
 } from '../../services/supabase/social';
 import { ChallengesTabPage } from './hub/ChallengesTabPage';
 import { ChallengeDetailsSheet } from './hub/ChallengeDetailsSheet';
@@ -48,6 +51,7 @@ import { LeaderboardTabPage } from './hub/LeaderboardTabPage';
 import { ShareWorkoutSheet } from './hub/ShareWorkoutSheet';
 import { TopTabs } from './hub/TopTabs';
 import type { FeedViewItem, SearchResult, ShareableWorkoutItem, SocialTopTabId } from './hub/types';
+import { buildShareableWorkouts, mapFeedEvent } from './hub/socialHubMappers';
 
 interface HubDialogState {
     visible: boolean;
@@ -82,246 +86,6 @@ interface ChallengeContributionItem {
     valueLabel: string;
 }
 
-function isWorkoutEntry(entry: Entry): entry is Extract<Entry, { type: 'home' | 'run' | 'beatsaber' | 'custom' }> {
-    return entry.type === 'home' || entry.type === 'run' || entry.type === 'beatsaber' || entry.type === 'custom';
-}
-
-function entryTimestampMs(entry: Entry): number {
-    const createdAtMs = new Date(entry.createdAt).getTime();
-    if (Number.isFinite(createdAtMs)) {
-        return createdAtMs;
-    }
-
-    const fallbackMs = new Date(`${entry.date}T12:00:00.000Z`).getTime();
-    return Number.isFinite(fallbackMs) ? fallbackMs : 0;
-}
-
-function isEntryInsideChallengeWindow(entry: Entry, startsAt: string, endsAt: string): boolean {
-    const challengeStartDate = startsAt.slice(0, 10);
-    const challengeEndDate = endsAt.slice(0, 10);
-
-    if (
-        /^\d{4}-\d{2}-\d{2}$/.test(entry.date) &&
-        /^\d{4}-\d{2}-\d{2}$/.test(challengeStartDate) &&
-        /^\d{4}-\d{2}-\d{2}$/.test(challengeEndDate)
-    ) {
-        return entry.date >= challengeStartDate && entry.date <= challengeEndDate;
-    }
-
-    const startsAtMs = new Date(startsAt).getTime();
-    const endsAtMs = new Date(endsAt).getTime();
-    if (!Number.isFinite(startsAtMs) || !Number.isFinite(endsAtMs)) {
-        return false;
-    }
-
-    const timestamp = entryTimestampMs(entry);
-    return timestamp >= startsAtMs && timestamp <= endsAtMs;
-}
-
-function getEntryContributionValue(entry: Extract<Entry, { type: 'home' | 'run' | 'beatsaber' | 'custom' }>, goalType: SocialChallengeGoalType): number {
-    if (goalType === 'workouts') {
-        return 1;
-    }
-
-    if (goalType === 'distance') {
-        if (entry.type === 'run' || entry.type === 'custom') {
-            return Number(entry.distanceKm || 0);
-        }
-        return 0;
-    }
-
-    if (goalType === 'duration') {
-        return Number(entry.durationMinutes || 0);
-    }
-
-    return Math.round(calculateXpForEntry(entry));
-}
-
-function formatSportEntry(entry: Extract<Entry, { type: 'home' | 'run' | 'beatsaber' | 'custom' }>, t: (key: string, options?: any) => string): ShareableWorkoutItem {
-    const base = {
-        id: entry.id,
-        entryId: entry.id,
-        createdAt: entry.createdAt,
-    };
-
-    if (entry.type === 'run') {
-        const title = t('socialHub.workoutTypes.run');
-        const summary = t('socialHub.shareWorkout.runSummary', {
-            distance: entry.distanceKm.toFixed(1),
-            duration: entry.durationMinutes,
-        });
-
-        return {
-            ...base,
-            entryType: 'run',
-            title,
-            summary,
-            metadata: {
-                distance_km: entry.distanceKm,
-                duration_minutes: entry.durationMinutes,
-            },
-        };
-    }
-
-    if (entry.type === 'beatsaber') {
-        const title = t('socialHub.workoutTypes.beatsaber');
-        const summary = t('socialHub.shareWorkout.durationSummary', { duration: entry.durationMinutes || 0 });
-
-        return {
-            ...base,
-            entryType: 'beatsaber',
-            title,
-            summary,
-            metadata: {
-                duration_minutes: entry.durationMinutes || 0,
-            },
-        };
-    }
-
-    if (entry.type === 'custom') {
-        const title = entry.name?.trim() || t('socialHub.workoutTypes.custom');
-        const summary = entry.distanceKm
-            ? t('socialHub.shareWorkout.runSummary', {
-                distance: Number(entry.distanceKm).toFixed(1),
-                duration: entry.durationMinutes || 0,
-            })
-            : t('socialHub.shareWorkout.customSummary', {
-                duration: entry.durationMinutes || 0,
-                reps: entry.totalReps || 0,
-            });
-
-        return {
-            ...base,
-            entryType: 'custom',
-            title,
-            summary,
-            metadata: {
-                duration_minutes: entry.durationMinutes || 0,
-                distance_km: entry.distanceKm || 0,
-                total_reps: entry.totalReps || 0,
-            },
-        };
-    }
-
-    const title = entry.name?.trim() || t('socialHub.workoutTypes.home');
-    const summary = t('socialHub.shareWorkout.homeSummary', {
-        duration: entry.durationMinutes || 0,
-        reps: entry.totalReps || 0,
-    });
-
-    return {
-        ...base,
-        entryType: 'home',
-        title,
-        summary,
-        metadata: {
-            duration_minutes: entry.durationMinutes || 0,
-            total_reps: entry.totalReps || 0,
-        },
-    };
-}
-
-function mapFeedEvent(event: SocialFeedEventItem, currentUserId: string | undefined, t: (key: string, options?: any) => string): FeedViewItem {
-    const metadata = event.metadata || {};
-
-    if (event.event_type === 'workout') {
-        const isOwnWorkout = event.actor_id === currentUserId;
-        const workoutType = `${metadata.entry_type || 'home'}` as 'home' | 'run' | 'beatsaber' | 'custom';
-        const workoutTypeLabel = t(`socialHub.workoutTypes.${workoutType}`);
-        const stats: string[] = [];
-
-        const distanceKm = Number(metadata.distance_km || 0);
-        const durationMinutes = Number(metadata.duration_minutes || 0);
-        const totalReps = Number(metadata.total_reps || 0);
-        if (distanceKm > 0) {
-            stats.push(t('socialHub.feed.stats.distance', { value: distanceKm.toFixed(1) }));
-        }
-        if (durationMinutes > 0) {
-            stats.push(t('socialHub.feed.stats.duration', { value: Math.round(durationMinutes) }));
-        }
-        if (totalReps > 0) {
-            stats.push(t('socialHub.feed.stats.reps', { value: Math.round(totalReps) }));
-        }
-
-        return {
-            id: event.id,
-            actorId: event.actor_id,
-            actorName: event.actor_name,
-            title: t('socialHub.feed.workoutCompletedTitle', {
-                name: event.actor_name,
-                workout: workoutTypeLabel.toLowerCase(),
-            }),
-            detail: stats.length > 0 ? '' : `${metadata.summary || t('socialHub.feed.genericWorkoutDetail')}`,
-            stats,
-            createdAt: event.created_at,
-            isWorkoutShare: true,
-            canLike: !isOwnWorkout,
-            likedByMe: event.liked_by_me,
-            likeCount: event.reactions_count,
-            likedByPreview: (event.liked_by_preview || []).map((liker) => ({
-                id: liker.id,
-                name: liker.display_name || liker.username,
-            })),
-            canDelete: isOwnWorkout,
-            eventId: event.id,
-        };
-    }
-
-    if (event.event_type === 'challenge_progress') {
-        return {
-            id: event.id,
-            actorId: event.actor_id,
-            actorName: event.actor_name,
-            title: t('socialHub.feed.challengeTitle', { name: event.actor_name }),
-            detail: `${metadata.challenge_title || t('socialHub.feed.challengeFallback')}`,
-            stats: [],
-            createdAt: event.created_at,
-            isWorkoutShare: false,
-            canLike: false,
-            likedByMe: false,
-            likeCount: 0,
-            likedByPreview: [],
-            canDelete: false,
-            eventId: event.id,
-        };
-    }
-
-    if (event.event_type === 'streak') {
-        return {
-            id: event.id,
-            actorId: event.actor_id,
-            actorName: event.actor_name,
-            title: t('socialHub.feed.streakTitle', { name: event.actor_name }),
-            detail: `${event.message}`,
-            stats: [],
-            createdAt: event.created_at,
-            isWorkoutShare: false,
-            canLike: false,
-            likedByMe: false,
-            likeCount: 0,
-            likedByPreview: [],
-            canDelete: false,
-            eventId: event.id,
-        };
-    }
-
-    return {
-        id: event.id,
-        actorId: event.actor_id,
-        actorName: event.actor_name,
-        title: t('socialHub.feed.encouragementTitle', { name: event.actor_name }),
-        detail: event.message,
-        stats: [],
-        createdAt: event.created_at,
-        isWorkoutShare: false,
-        canLike: false,
-        likedByMe: false,
-        likeCount: 0,
-        likedByPreview: [],
-        canDelete: false,
-        eventId: event.id,
-    };
-}
 
 export default function SocialHubScreen() {
     const { t } = useTranslation();
@@ -476,11 +240,7 @@ export default function SocialHubScreen() {
     }, [latestReleaseUrl]);
 
     const shareableWorkouts = useMemo(() => {
-        return entries
-            .filter(isWorkoutEntry)
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, 12)
-            .map(entry => formatSportEntry(entry, t));
+        return buildShareableWorkouts(entries, t);
     }, [entries, t]);
 
     const selectedChallengeContributions = useMemo<ChallengeContributionItem[]>(() => {
