@@ -89,6 +89,7 @@ export function useRepCounter() {
     const repTimelineRef = useRef<RepEventMetadata[]>([]);
     const sessionStartedAtRef = useRef<number>(Date.now());
     const lastRepEndRef = useRef<number | null>(null);
+    const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     // ── Animations ─────────────────────────────────────────────────────────────
     const countScale = useSharedValue(1);
@@ -109,6 +110,21 @@ export function useRepCounter() {
     const playKeepGoing      = useCallback(() => playSound(keepGoingSound), [keepGoingSound, playSound]);
     const playSeconds        = useCallback(() => playSound(secondsSound), [secondsSound, playSound]);
     const playNewRecord      = useCallback(() => playSound(newRecordSound), [newRecordSound, playSound]);
+
+    const scheduleTimeout = useCallback((fn: () => void, delayMs: number) => {
+        const timeoutId = setTimeout(() => {
+            timeoutRefs.current = timeoutRefs.current.filter((existingId) => existingId !== timeoutId);
+            fn();
+        }, delayMs);
+
+        timeoutRefs.current.push(timeoutId);
+        return timeoutId;
+    }, []);
+
+    const clearPendingTimeouts = useCallback(() => {
+        timeoutRefs.current.forEach((timeoutId) => clearTimeout(timeoutId));
+        timeoutRefs.current = [];
+    }, []);
 
     // ── Session recovery ───────────────────────────────────────────────────────
     useEffect(() => {
@@ -195,9 +211,9 @@ export function useRepCounter() {
             setShowNewRecord(true);
             playNewRecord();
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            setTimeout(() => setShowNewRecord(false), 3000);
+            scheduleTimeout(() => setShowNewRecord(false), 3000);
         }
-    }, [repCount, plankSeconds, ellipticalSeconds, personalBest, hasExistingRecord, selectedExercise, playNewRecord]);
+    }, [repCount, plankSeconds, ellipticalSeconds, personalBest, hasExistingRecord, selectedExercise, playNewRecord, scheduleTimeout]);
 
     // ── Motivational messages ──────────────────────────────────────────────────
     const showMotivationalMessage = useCallback((feedback?: string) => {
@@ -211,8 +227,8 @@ export function useRepCounter() {
             withTiming(1, { duration: 1500 }),
             withTiming(0, { duration: 300 })
         );
-        setTimeout(() => { setMotivationalMessage(null); setAiFeedback(null); }, 2000);
-    }, [selectedExercise, t]);
+        scheduleTimeout(() => { setMotivationalMessage(null); setAiFeedback(null); }, 2000);
+    }, [selectedExercise, t, scheduleTimeout]);
 
     // ── Rep animation ──────────────────────────────────────────────────────────
     const animateRep = useCallback(() => {
@@ -355,7 +371,7 @@ export function useRepCounter() {
             setEllipticalCalibrationPhase('complete');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             playNewRecord();
-            setTimeout(() => {
+            scheduleTimeout(() => {
                 setStep('counting'); setIsTracking(true);
                 setEllipticalSeconds(0); setIsEllipticalActive(false);
                 lastKeepGoingTime.current = 0;
@@ -364,12 +380,12 @@ export function useRepCounter() {
             setEllipticalCalibrationPhase('intro'); setEllipticalCalibrationFailed(true);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         }
-    }, [playNewRecord]);
+    }, [playNewRecord, scheduleTimeout]);
 
     const startPedalingCountdown = useCallback(() => {
         resetEllipticalSamples();
         setCalibrationCountdown(7);
-        setTimeout(() => {
+        scheduleTimeout(() => {
             countdownIntervalRef.current = setInterval(() => {
                 setCalibrationCountdown(p => {
                     if (p <= 1) { clearInterval(countdownIntervalRef.current!); completePedalingPhase(); return 0; }
@@ -377,7 +393,7 @@ export function useRepCounter() {
                 });
             }, 1000);
         }, 1000);
-    }, [completePedalingPhase]);
+    }, [completePedalingPhase, scheduleTimeout]);
 
     const waitForUserToStartPedaling = useCallback(() => {
         setEllipticalCalibrationPhase('pedaling');
@@ -400,12 +416,12 @@ export function useRepCounter() {
         if (variance >= 0) {
             setCalibrationFunnyPhrase(getRandomPhrase('funnyStillDone'));
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            setTimeout(() => waitForUserToStartPedaling(), 1500);
+            scheduleTimeout(() => waitForUserToStartPedaling(), 1500);
         } else {
             setEllipticalCalibrationPhase('intro'); setEllipticalCalibrationFailed(true);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         }
-    }, [getRandomPhrase, waitForUserToStartPedaling]);
+    }, [getRandomPhrase, waitForUserToStartPedaling, scheduleTimeout]);
 
     const startStillPhase = useCallback(() => {
         setEllipticalCalibrationPhase('still');
@@ -413,7 +429,7 @@ export function useRepCounter() {
         startEllipticalStillFirstCalibration();
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setCalibrationCountdown(5);
-        setTimeout(() => {
+        scheduleTimeout(() => {
             countdownIntervalRef.current = setInterval(() => {
                 setCalibrationCountdown(p => {
                     if (p <= 1) { clearInterval(countdownIntervalRef.current!); completeStillPhase(); return 0; }
@@ -421,13 +437,13 @@ export function useRepCounter() {
                 });
             }, 1000);
         }, 1000);
-    }, [getRandomPhrase, completeStillPhase]);
+    }, [getRandomPhrase, completeStillPhase, scheduleTimeout]);
 
     const beginCalibrationSequence = useCallback(() => {
         setEllipticalCalibrationPhase('get_ready');
         setCalibrationCountdown(3);
         playSeconds();
-        setTimeout(() => {
+        scheduleTimeout(() => {
             countdownIntervalRef.current = setInterval(() => {
                 setCalibrationCountdown(p => {
                     if (p <= 1) { clearInterval(countdownIntervalRef.current!); startStillPhase(); return 0; }
@@ -435,7 +451,7 @@ export function useRepCounter() {
                 });
             }, 1000);
         }, 1000);
-    }, [playSeconds, startStillPhase]);
+    }, [playSeconds, startStillPhase, scheduleTimeout]);
 
     const startEllipticalCalibration = useCallback(() => {
         setEllipticalCalibrationFailed(false);
@@ -447,8 +463,9 @@ export function useRepCounter() {
     useEffect(() => {
         return () => {
             [countdownIntervalRef, movementDetectionRef].forEach(r => { if (r.current) clearInterval(r.current); });
+            clearPendingTimeouts();
         };
-    }, []);
+    }, [clearPendingTimeouts]);
 
     // ── Start tracking ─────────────────────────────────────────────────────────
     const startTracking = useCallback(async () => {
@@ -548,7 +565,8 @@ export function useRepCounter() {
         [plankTimerRef, ellipticalTimerRef, calibrationTimerRef].forEach(r => {
             if (r.current) { clearInterval(r.current); r.current = null; }
         });
-    }, []);
+        clearPendingTimeouts();
+    }, [clearPendingTimeouts]);
 
     // ── Save workout ───────────────────────────────────────────────────────────
     const saveWorkout = useCallback(async () => {
@@ -596,7 +614,7 @@ export function useRepCounter() {
     // ── Reset after save ───────────────────────────────────────────────────────
     useEffect(() => {
         if (!workoutSaved) return;
-        setTimeout(() => {
+        scheduleTimeout(() => {
             setRepCount(0); setElapsedTime(0); setPlankSeconds(0); setEllipticalSeconds(0);
             setIsPlankActive(false); setIsEllipticalActive(false);
             setEllipticalCalibrationPhase('none'); resetEllipticalState();
@@ -607,7 +625,7 @@ export function useRepCounter() {
             lastRepEndRef.current = null;
             setStep('select'); setSelectedExercise(null);
         }, 200);
-    }, [workoutSaved]);
+    }, [workoutSaved, scheduleTimeout]);
 
     const finishWorkout = useCallback(() => { stopTracking(); setStep('done'); }, [stopTracking]);
 
@@ -649,9 +667,9 @@ export function useRepCounter() {
         resetEllipticalState(); setEllipticalCalibrationPhase('none');
 
         if (shouldSkipSelection) {
-            setTimeout(() => setStep('position'), 100);
+            scheduleTimeout(() => setStep('position'), 100);
         }
-    }, [settings.skipSensorSelection, settings.preferCameraDetection]);
+    }, [settings.skipSensorSelection, settings.preferCameraDetection, scheduleTimeout]);
 
     const handleNext = useCallback(() => {
         if (step === 'select' && selectedExercise) {
@@ -667,6 +685,7 @@ export function useRepCounter() {
         setIsTracking(false);
         subscriptionRef.current?.remove(); subscriptionRef.current = null;
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+        clearPendingTimeouts();
         await stopSessionTracking();
         setShowExitModal(false); setStep('select'); setSelectedExercise(null);
         setRepCount(0); setElapsedTime(0);
@@ -674,7 +693,7 @@ export function useRepCounter() {
         repTimelineRef.current = [];
         activeRepStartTime.current = null;
         lastRepEndRef.current = null;
-    }, []);
+    }, [clearPendingTimeouts]);
 
     const toggleEllipticalManual = useCallback(() => {
         if (detectionMode !== 'manual') return;
@@ -706,8 +725,9 @@ export function useRepCounter() {
             [timerRef, plankTimerRef, ellipticalTimerRef, calibrationTimerRef].forEach(r => {
                 if (r.current) clearInterval(r.current);
             });
+            clearPendingTimeouts();
         };
-    }, []);
+    }, [clearPendingTimeouts]);
 
     return {
         // State

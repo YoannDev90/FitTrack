@@ -2,7 +2,10 @@
 // OPENFOODFACTS API SERVICE - Récupération des infos produits via code-barres
 // ============================================================================
 
+import { fetchWithRetry, getOrSetMemoryCache } from '../network/httpClient';
+
 const OPENFOODFACTS_API_URL = 'https://world.openfoodfacts.org/api/v2/product';
+const OPENFOODFACTS_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 
 // ============================================================================
 // TYPES
@@ -96,80 +99,92 @@ interface OpenFoodFactsApiResponse {
  * @returns Informations du produit ou null si non trouvé
  */
 export async function getProductByBarcode(barcode: string): Promise<ProductInfo> {
-  try {
-    console.log('[OpenFoodFacts] Searching for barcode:', barcode);
-    
-    const response = await fetch(
-      `${OPENFOODFACTS_API_URL}/${barcode}.json?fields=code,product_name,product_name_fr,brands,quantity,image_url,image_front_url,image_front_small_url,nutriscore_grade,nutriscore_score,nova_group,ecoscore_grade,categories,ingredients_text,ingredients_text_fr,allergens_tags,nutriments,nutrient_levels,serving_size`,
-      {
-        headers: {
-          'User-Agent': 'Spix-FitnessApp/1.0 (contact@spix.app)',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      console.error('[OpenFoodFacts] API error:', response.status);
-      return createNotFoundProduct(barcode);
-    }
-
-    const data: OpenFoodFactsApiResponse = await response.json();
-
-    if (data.status !== 1 || !data.product) {
-      console.log('[OpenFoodFacts] Product not found');
-      return createNotFoundProduct(barcode);
-    }
-
-    const product = data.product;
-
-    // Parse nutrient levels
-    const nutrientLevels: NutrientLevels = {};
-    if (product.nutrient_levels) {
-      nutrientLevels.fat = parseNutrientLevel(product.nutrient_levels.fat);
-      nutrientLevels.saturatedFat = parseNutrientLevel(product.nutrient_levels['saturated-fat']);
-      nutrientLevels.sugars = parseNutrientLevel(product.nutrient_levels.sugars);
-      nutrientLevels.salt = parseNutrientLevel(product.nutrient_levels.salt);
-    }
-
-    // Parse nutriments
-    const nutriments: Nutriments = {};
-    if (product.nutriments) {
-      nutriments.energyKcal100g = product.nutriments['energy-kcal_100g'];
-      nutriments.proteins100g = product.nutriments.proteins_100g;
-      nutriments.carbohydrates100g = product.nutriments.carbohydrates_100g;
-      nutriments.fat100g = product.nutriments.fat_100g;
-      nutriments.fiber100g = product.nutriments.fiber_100g;
-      nutriments.sugars100g = product.nutriments.sugars_100g;
-      nutriments.salt100g = product.nutriments.salt_100g;
-      nutriments.saturatedFat100g = product.nutriments['saturated-fat_100g'];
-    }
-
-    const productInfo: ProductInfo = {
-      barcode,
-      name: product.product_name_fr || product.product_name || 'Produit inconnu',
-      brands: product.brands,
-      quantity: product.quantity,
-      imageUrl: product.image_url,
-      imageFrontUrl: product.image_front_url || product.image_front_small_url,
-      nutriscoreGrade: parseNutriscore(product.nutriscore_grade),
-      nutriscoreScore: product.nutriscore_score,
-      novaGroup: parseNovaGroup(product.nova_group),
-      ecoScore: parseEcoScore(product.ecoscore_grade),
-      categories: product.categories,
-      ingredients: product.ingredients_text_fr || product.ingredients_text,
-      allergens: product.allergens_tags?.map(a => a.replace('en:', '').replace('fr:', '')),
-      nutriments,
-      nutrientLevels,
-      servingSize: product.serving_size,
-      found: true,
-    };
-
-    console.log('[OpenFoodFacts] Product found:', productInfo.name);
-    return productInfo;
-  } catch (error) {
-    console.error('[OpenFoodFacts] Error fetching product:', error);
+  const normalizedBarcode = barcode.trim();
+  if (!normalizedBarcode) {
     return createNotFoundProduct(barcode);
   }
+
+  const cacheKey = `openfoodfacts:${normalizedBarcode}`;
+
+  return getOrSetMemoryCache(cacheKey, OPENFOODFACTS_CACHE_TTL_MS, async () => {
+    try {
+      console.log('[OpenFoodFacts] Searching for barcode:', normalizedBarcode);
+
+      const response = await fetchWithRetry(
+        `${OPENFOODFACTS_API_URL}/${normalizedBarcode}.json?fields=code,product_name,product_name_fr,brands,quantity,image_url,image_front_url,image_front_small_url,nutriscore_grade,nutriscore_score,nova_group,ecoscore_grade,categories,ingredients_text,ingredients_text_fr,allergens_tags,nutriments,nutrient_levels,serving_size`,
+        {
+          headers: {
+            'User-Agent': 'Spix-FitnessApp/1.0 (contact@spix.app)',
+          },
+        },
+        {
+          timeoutMs: 10000,
+          retries: 2,
+          retryDelayMs: 500,
+        }
+      );
+
+      if (!response.ok) {
+        console.error('[OpenFoodFacts] API error:', response.status);
+        return createNotFoundProduct(normalizedBarcode);
+      }
+
+      const data: OpenFoodFactsApiResponse = await response.json();
+
+      if (data.status !== 1 || !data.product) {
+        console.log('[OpenFoodFacts] Product not found');
+        return createNotFoundProduct(normalizedBarcode);
+      }
+
+      const product = data.product;
+
+      const nutrientLevels: NutrientLevels = {};
+      if (product.nutrient_levels) {
+        nutrientLevels.fat = parseNutrientLevel(product.nutrient_levels.fat);
+        nutrientLevels.saturatedFat = parseNutrientLevel(product.nutrient_levels['saturated-fat']);
+        nutrientLevels.sugars = parseNutrientLevel(product.nutrient_levels.sugars);
+        nutrientLevels.salt = parseNutrientLevel(product.nutrient_levels.salt);
+      }
+
+      const nutriments: Nutriments = {};
+      if (product.nutriments) {
+        nutriments.energyKcal100g = product.nutriments['energy-kcal_100g'];
+        nutriments.proteins100g = product.nutriments.proteins_100g;
+        nutriments.carbohydrates100g = product.nutriments.carbohydrates_100g;
+        nutriments.fat100g = product.nutriments.fat_100g;
+        nutriments.fiber100g = product.nutriments.fiber_100g;
+        nutriments.sugars100g = product.nutriments.sugars_100g;
+        nutriments.salt100g = product.nutriments.salt_100g;
+        nutriments.saturatedFat100g = product.nutriments['saturated-fat_100g'];
+      }
+
+      const productInfo: ProductInfo = {
+        barcode: normalizedBarcode,
+        name: product.product_name_fr || product.product_name || 'Produit inconnu',
+        brands: product.brands,
+        quantity: product.quantity,
+        imageUrl: product.image_url,
+        imageFrontUrl: product.image_front_url || product.image_front_small_url,
+        nutriscoreGrade: parseNutriscore(product.nutriscore_grade),
+        nutriscoreScore: product.nutriscore_score,
+        novaGroup: parseNovaGroup(product.nova_group),
+        ecoScore: parseEcoScore(product.ecoscore_grade),
+        categories: product.categories,
+        ingredients: product.ingredients_text_fr || product.ingredients_text,
+        allergens: product.allergens_tags?.map(a => a.replace('en:', '').replace('fr:', '')),
+        nutriments,
+        nutrientLevels,
+        servingSize: product.serving_size,
+        found: true,
+      };
+
+      console.log('[OpenFoodFacts] Product found:', productInfo.name);
+      return productInfo;
+    } catch (error) {
+      console.error('[OpenFoodFacts] Error fetching product:', error);
+      return createNotFoundProduct(normalizedBarcode);
+    }
+  });
 }
 
 // ============================================================================

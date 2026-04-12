@@ -4,10 +4,27 @@
 
 import * as Linking from 'expo-linking';
 import * as SecureStore from 'expo-secure-store';
+import { fetchWithRetry, getOrSetMemoryCache } from '../network/httpClient';
 
 const POLLINATION_AUTH_URL = 'https://enter.pollinations.ai/authorize';
 const POLLINATION_API_URL = 'https://gen.pollinations.ai/v1/chat/completions';
 const STORAGE_KEY = 'pollination_api_key';
+const POLLINATION_ACCOUNT_CACHE_TTL_MS = 60 * 1000;
+const POLLINATION_MEAL_CACHE_TTL_MS = 2 * 60 * 1000;
+
+function hashText(input: string): string {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = ((hash << 5) - hash) + input.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+function buildMealAnalysisCacheKey(imageUrl: string, additionalContext?: string): string {
+  const contextHash = hashText((additionalContext || '').trim());
+  return `pollination:meal:${hashText(imageUrl)}:${contextHash}`;
+}
 
 // ============================================================================
 // TYPES
@@ -84,34 +101,39 @@ export const getPollinationAccountInfo = async (): Promise<PollinationAccountInf
   if (!apiKey) {
     return { connected: false };
   }
-  
-  try {
-    // Essayer de récupérer la balance via l'API
-    const response = await fetch('https://gen.pollinations.ai/account/balance', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
+
+  const cacheKey = `pollination:account:${apiKey.slice(-12)}`;
+
+  return getOrSetMemoryCache(cacheKey, POLLINATION_ACCOUNT_CACHE_TTL_MS, async () => {
+    try {
+      const response = await fetchWithRetry('https://gen.pollinations.ai/account/balance', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }, {
+        timeoutMs: 10000,
+        retries: 1,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          connected: true,
+          balance: data.balance ?? data.pollen ?? data.credits,
+        };
+      }
+
+      return { connected: true };
+    } catch (error) {
+      console.error('[Pollination] Error getting account info:', error);
       return {
         connected: true,
-        balance: data.balance ?? data.pollen ?? data.credits,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
-    
-    // Si l'endpoint balance n'existe pas, on retourne juste connected
-    return { connected: true };
-  } catch (error) {
-    console.error('[Pollination] Error getting account info:', error);
-    return { 
-      connected: true, 
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
+  });
 };
 
 // ============================================================================
@@ -225,110 +247,112 @@ export const analyzeMealImage = async (imageUrl: string, additionalContext?: str
   if (additionalContext && additionalContext.trim()) {
     userMessage += `\n\nInformations complémentaires de l'utilisateur: ${additionalContext.trim()}`;
   }
-  
-  const response = await fetch(POLLINATION_API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-fast',
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT,
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: userMessage,
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageUrl,
+
+  const cacheKey = buildMealAnalysisCacheKey(imageUrl, additionalContext);
+
+  return getOrSetMemoryCache(cacheKey, POLLINATION_MEAL_CACHE_TTL_MS, async () => {
+    const response = await fetchWithRetry(POLLINATION_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-fast',
+        messages: [
+          {
+            role: 'system',
+            content: SYSTEM_PROMPT,
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: userMessage,
               },
-            },
-          ],
-        },
-      ],
-    }),
+              {
+                type: 'image_url',
+                image_url: {
+                  url: imageUrl,
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    }, {
+      timeoutMs: 20000,
+      retries: 1,
+      retryDelayMs: 800,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Pollination] API error:', response.status, errorText);
+      throw new Error(`Pollination API error: ${response.status}`);
+    }
+
+    const data: PollinationResponse = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('No response from Pollination API');
+    }
+
+    if (__DEV__) {
+      console.log('[Pollination] Raw response:', content);
+    }
+
+    try {
+      let cleanContent = content.trim();
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+
+      let jsonContent = jsonMatch[0];
+
+      let braceCount = (jsonContent.match(/\{/g) || []).length - (jsonContent.match(/\}/g) || []).length;
+      for (let i = 0; i < braceCount; i++) {
+        jsonContent += '}';
+      }
+
+      let bracketCount = (jsonContent.match(/\[/g) || []).length - (jsonContent.match(/\]/g) || []).length;
+      for (let i = 0; i < bracketCount; i++) {
+        jsonContent += ']';
+      }
+
+      const analysis: MealAnalysis = JSON.parse(jsonContent);
+
+      if (typeof analysis.score !== 'number' || analysis.score < 0 || analysis.score > 100) {
+        analysis.score = 50;
+      }
+      if (!analysis.title) {
+        analysis.title = 'Repas analysé';
+      }
+      if (!analysis.description) {
+        analysis.description = 'Analyse en cours...';
+      }
+      if (!Array.isArray(analysis.suggestions)) {
+        analysis.suggestions = [];
+      }
+
+      return analysis;
+    } catch (parseError) {
+      console.error('[Pollination] Error parsing response:', parseError);
+      return {
+        score: 50,
+        title: 'Repas',
+        description: content.substring(0, 200),
+        suggestions: ['Impossible d\'analyser le repas en détail'],
+      };
+    }
   });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[Pollination] API error:', response.status, errorText);
-    throw new Error(`Pollination API error: ${response.status}`);
-  }
-  
-  const data: PollinationResponse = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  
-  if (!content) {
-    throw new Error('No response from Pollination API');
-  }
-  
-  if (__DEV__) {
-    console.log('[Pollination] Raw response:', content);
-  }
-  
-  // Parse le JSON de la réponse
-  try {
-    // Nettoyer la réponse si elle contient des backticks markdown
-    let cleanContent = content.trim();
-    if (cleanContent.startsWith('```json')) {
-      cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanContent.startsWith('```')) {
-      cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-    
-    // Extraire le JSON valide en cas de contenu supplémentaire
-    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in response');
-    }
-    
-    let jsonContent = jsonMatch[0];
-    
-    // Réparer les JSON incomplètement fermés (fermer les structures ouvertes)
-    let braceCount = (jsonContent.match(/\{/g) || []).length - (jsonContent.match(/\}/g) || []).length;
-    for (let i = 0; i < braceCount; i++) {
-      jsonContent += '}';
-    }
-    
-    let bracketCount = (jsonContent.match(/\[/g) || []).length - (jsonContent.match(/\]/g) || []).length;
-    for (let i = 0; i < bracketCount; i++) {
-      jsonContent += ']';
-    }
-    
-    const analysis: MealAnalysis = JSON.parse(jsonContent);
-    
-    // Validation basique
-    if (typeof analysis.score !== 'number' || analysis.score < 0 || analysis.score > 100) {
-      analysis.score = 50;
-    }
-    if (!analysis.title) {
-      analysis.title = 'Repas analysé';
-    }
-    if (!analysis.description) {
-      analysis.description = 'Analyse en cours...';
-    }
-    if (!Array.isArray(analysis.suggestions)) {
-      analysis.suggestions = [];
-    }
-    
-    return analysis;
-  } catch (parseError) {
-    console.error('[Pollination] Error parsing response:', parseError);
-    // Retourner une analyse par défaut en cas d'erreur de parsing
-    return {
-      score: 50,
-      title: 'Repas',
-      description: content.substring(0, 200),
-      suggestions: ['Impossible d\'analyser le repas en détail'],
-    };
-  }
 };

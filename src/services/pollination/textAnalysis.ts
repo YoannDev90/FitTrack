@@ -4,8 +4,19 @@
 // ============================================================================
 
 import { getPollinationApiKey } from './index';
+import { fetchWithRetry, getOrSetMemoryCache } from '../network/httpClient';
 
 const POLLINATION_TEXT_URL = 'https://text.pollinations.ai/';
+const TEXT_ANALYSIS_CACHE_TTL_MS = 2 * 60 * 1000;
+
+function hashText(input: string): string {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = ((hash << 5) - hash) + input.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+}
 
 // ============================================================================
 // AVAILABLE MODELS
@@ -54,29 +65,37 @@ export const generateTextAnalysis = async ({
     headers['Authorization'] = `Bearer ${apiKey}`;
   }
 
-  const response = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    }),
+  const cacheKey = `pollination:text:${model}:${hashText(systemPrompt)}:${hashText(userPrompt)}`;
+
+  return getOrSetMemoryCache(cacheKey, TEXT_ANALYSIS_CACHE_TTL_MS, async () => {
+    const response = await fetchWithRetry('https://gen.pollinations.ai/v1/chat/completions', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    }, {
+      timeoutMs: 20000,
+      retries: 1,
+      retryDelayMs: 800,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Pollinations API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('No response from Pollinations API');
+    }
+
+    return content.trim();
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Pollinations API error: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new Error('No response from Pollinations API');
-  }
-
-  return content.trim();
 };

@@ -16,6 +16,7 @@ import { serviceLogger, errorLogger } from '../../utils/logger';
 import { MAX_LEADERBOARD_RESULTS } from '../../constants/values';
 import { isSportEntryType } from '../../constants/values';
 import { calculateXpForEntry } from '../../stores/gamificationStore';
+import { fetchWithRetry } from '../network/httpClient';
 
 // Supabase URL for Edge Functions
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -428,9 +429,32 @@ export async function savePushToken(token: string): Promise<void> {
     const user = await getCurrentUser();
     if (!user) return;
 
+    const sanitizedToken = token.trim();
+    if (!sanitizedToken) return;
+
+    const nowIso = new Date().toISOString();
+    const { error: privateError } = await (supabase as any)
+        .from('profile_private')
+        .upsert({
+            id: user.id,
+            push_token: sanitizedToken,
+            updated_at: nowIso,
+        }, { onConflict: 'id' });
+
+    if (privateError) {
+        serviceLogger.warn('profile_private unavailable, using legacy profiles.push_token fallback', privateError);
+        const { error: legacyError } = await (supabase as any)
+            .from('profiles')
+            .update({ push_token: sanitizedToken })
+            .eq('id', user.id);
+        if (legacyError) throw legacyError;
+        return;
+    }
+
+    // Best effort cleanup of legacy public token column.
     await (supabase as any)
         .from('profiles')
-        .update({ push_token: token })
+        .update({ push_token: null })
         .eq('id', user.id);
 }
 
@@ -452,7 +476,7 @@ export async function deleteAllUserData(): Promise<void> {
 
     // Appeler l'Edge Function qui a accès à service_role
     const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-    const response = await fetch(
+    const response = await fetchWithRetry(
         `${SUPABASE_URL}/functions/v1/delete-account`,
         {
             method: 'POST',
@@ -461,12 +485,23 @@ export async function deleteAllUserData(): Promise<void> {
                 'apikey': SUPABASE_ANON_KEY || '',
                 'Content-Type': 'application/json',
             },
+        },
+        {
+            timeoutMs: 15000,
+            retries: 1,
+            retryDelayMs: 700,
         }
     );
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete account');
+        let errorMessage = 'Failed to delete account';
+        try {
+            const error = await response.json();
+            errorMessage = error?.error || errorMessage;
+        } catch {
+            // Ignore malformed error payloads.
+        }
+        throw new Error(errorMessage);
     }
 
     // Déconnecter localement (le token est maintenant invalide)
@@ -542,10 +577,17 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     if (!supabase) return [];
     const user = await getCurrentUser();
 
+    const [botRows, blockedIds] = await Promise.all([
+        getLeaderboardBots(),
+        user ? getBlockedUserIds() : Promise.resolve([]),
+    ]);
+
+    const overfetchAllowance = Math.min(30, blockedIds.length + botRows.length + 5);
+
     const { data, error } = await (supabase as any)
         .from('weekly_leaderboard')
         .select('*')
-        .limit(MAX_LEADERBOARD_RESULTS * 3);
+        .limit(MAX_LEADERBOARD_RESULTS + overfetchAllowance);
 
     if (error) {
         errorLogger.error('Error fetching global leaderboard:', error);
@@ -555,13 +597,9 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     const realRows = ((data || []) as LeaderboardEntry[])
         .filter(isActiveLeaderboardEntry);
 
-    let visibleRealRows = realRows;
-    if (user) {
-        const blockedIds = await getBlockedUserIds();
-        visibleRealRows = realRows.filter((entry) => !blockedIds.includes(entry.id));
-    }
-
-    const botRows = await getLeaderboardBots();
+    const visibleRealRows = blockedIds.length > 0
+        ? realRows.filter((entry) => !blockedIds.includes(entry.id))
+        : realRows;
 
     return [...visibleRealRows, ...botRows]
         .sort(sortLeaderboardRows)
@@ -1160,10 +1198,19 @@ export async function shareWorkoutToFeed(input: {
     const friendIds = await getFriendIdsForUser(user.id);
     if (friendIds.length === 0) return;
 
+    let senderName = 'Quelqu\'un';
+    try {
+        const senderProfile = await getProfile(user.id);
+        senderName = senderProfile?.display_name || senderProfile?.username || senderName;
+    } catch {
+        // Keep fallback name when profile lookup fails.
+    }
+
     const notificationSummary = `${safeTitle} · ${safeSummary}`.slice(0, 140);
 
     await Promise.allSettled(friendIds.map((friendId) => (
         sendPushNotification(friendId, 'workout_shared', {
+            sender_name: senderName,
             route: '/social',
             message: notificationSummary,
             social_event_id: eventId,
@@ -1313,10 +1360,33 @@ export async function toggleSocialFeedReaction(eventId: string): Promise<{ liked
 // PUSH NOTIFICATIONS via Edge Function
 // ============================================================================
 
+let senderNameCache: { userId: string; name: string; expiresAt: number } | null = null;
+
+async function resolveSenderName(userId: string, explicitName?: string): Promise<string> {
+    if (explicitName && explicitName.trim()) {
+        return explicitName.trim();
+    }
+
+    const now = Date.now();
+    if (senderNameCache && senderNameCache.userId === userId && senderNameCache.expiresAt > now) {
+        return senderNameCache.name;
+    }
+
+    const senderProfile = await getProfile(userId);
+    const senderName = senderProfile?.display_name || senderProfile?.username || 'Quelqu\'un';
+    senderNameCache = {
+        userId,
+        name: senderName,
+        expiresAt: now + 60 * 1000,
+    };
+    return senderName;
+}
+
 async function sendPushNotification(
     receiverId: string,
     type: 'friend_request' | 'encouragement' | 'workout_shared' | 'workout_liked',
     data?: {
+        sender_name?: string;
         message?: string;
         emoji?: string;
         route?: string;
@@ -1330,10 +1400,13 @@ async function sendPushNotification(
     
     const user = await getCurrentUser();
     if (!user) return;
-    
-    // Get sender profile for the notification title
-    const senderProfile = await getProfile(user.id);
-    const senderName = senderProfile?.display_name || senderProfile?.username || 'Quelqu\'un';
+
+    let senderName = 'Quelqu\'un';
+    try {
+        senderName = await resolveSenderName(user.id, data?.sender_name);
+    } catch {
+        // Keep fallback sender name if profile resolution fails.
+    }
     
     let title: string;
     let body: string;

@@ -64,6 +64,17 @@ let homeFeedCache: FeedViewItem[] = [];
 let homeHydrationCacheAt = 0;
 let homeCacheProfileId: string | null = null;
 
+function invalidateHomeHydrationCache(): void {
+    homeChallengesCache = [];
+    homeFeedCache = [];
+    homeHydrationCacheAt = 0;
+}
+
+function invalidateHomeFeedCache(): void {
+    homeFeedCache = [];
+    homeHydrationCacheAt = 0;
+}
+
 interface ChallengeContributionItem {
     id: string;
     workoutLabel: string;
@@ -872,6 +883,7 @@ export default function SocialHubScreen() {
     const handleSendRequest = useCallback(async (userId: string) => {
         try {
             await sendFriendRequest(userId);
+            invalidateHomeHydrationCache();
             setSearchResults(prev => prev.map(result => (
                 result.id === userId ? { ...result, friendship_status: 'pending' } : result
             )));
@@ -896,6 +908,7 @@ export default function SocialHubScreen() {
     const handleRespondToRequest = useCallback(async (friendshipId: string, accept: boolean) => {
         try {
             await respondToRequest(friendshipId, accept);
+            invalidateHomeHydrationCache();
             await loadFriendsTabData();
         } catch {
             showErrorDialog(t('socialHub.errors.sendFriendRequest'));
@@ -910,6 +923,7 @@ export default function SocialHubScreen() {
             async () => {
                 try {
                     await removeFriend(friendshipId);
+                    invalidateHomeHydrationCache();
                     await Promise.allSettled([loadFriendsTabData(), loadFriendsLeaderboardData()]);
                     showSuccessDialog(`${t('social.friendRemoved')} · ${friendName}`);
                 } catch {
@@ -968,6 +982,7 @@ export default function SocialHubScreen() {
         setIsSendingLikeForId(item.id);
         try {
             await toggleSocialFeedReaction(item.eventId);
+            invalidateHomeFeedCache();
             await loadFeed();
         } catch {
             showErrorDialog(t('socialHub.errors.sendLike'));
@@ -987,6 +1002,7 @@ export default function SocialHubScreen() {
                 setIsDeletingFeedItemId(item.id);
                 try {
                     await deleteMySharedWorkoutEvent(item.eventId as string);
+                    invalidateHomeFeedCache();
                     await loadFeed();
                 } catch {
                     showErrorDialog(t('socialHub.feed.deleteError'));
@@ -1008,6 +1024,7 @@ export default function SocialHubScreen() {
                 createdAtIso: workout.createdAt,
                 metadata: workout.metadata,
             });
+            invalidateHomeFeedCache();
             shareWorkoutSheetRef.current?.dismiss();
             await loadFeed();
             showSuccessDialog(t('socialHub.shareWorkout.sharedSuccess'));
@@ -1052,6 +1069,7 @@ export default function SocialHubScreen() {
                 durationDays,
                 invitedFriendIds: selectedFriendIdsForChallenge,
             });
+            invalidateHomeHydrationCache();
             challengeSheetRef.current?.dismiss();
             setChallengeTitle('');
             setChallengeGoalType('workouts');
@@ -1101,6 +1119,7 @@ export default function SocialHubScreen() {
                         await leaveSocialChallenge(challengeId);
                     }
 
+                    invalidateHomeHydrationCache();
                     await Promise.all([loadChallenges(), loadFeed()]);
                     showSuccessDialog(
                         isOwner

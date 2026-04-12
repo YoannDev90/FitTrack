@@ -501,7 +501,7 @@ export const useSocialStore = create<SocialState>()(
                 try {
                     const result = await Notifications.registerForPushNotifications();
                     if (result.success) {
-                        storeLogger.debug('Push token obtained:', result.token?.slice(0, 20) + '...');
+                        storeLogger.debug('Push token obtained successfully');
                         // Optionally save token to backend for remote push
                     } else if (result.reason !== 'permission_denied') {
                         // Only log non-permission errors (user chose to deny = silent)
@@ -562,20 +562,16 @@ export const useSocialStore = create<SocialState>()(
                 const state = get();
                 if (!state.isAuthenticated) return;
 
-                const profilePushToken = (state.profile as any)?.push_token || null;
-                if (token === state.lastPushToken || token === profilePushToken) {
+                if (token === state.lastPushToken) {
                     storeLogger.debug('Push token unchanged locally, skipping backend save');
                     return;
                 }
 
                 try {
                     await SocialService.savePushToken(token);
-                    set(prev => ({
+                    set({
                         lastPushToken: token,
-                        profile: prev.profile
-                            ? ({ ...(prev.profile as any), push_token: token } as Profile)
-                            : prev.profile,
-                    }));
+                    });
                     storeLogger.debug('Push token saved successfully');
                 } catch (error) {
                     errorLogger.error('Failed to save push token:', error);
@@ -604,9 +600,8 @@ export const useSocialStore = create<SocialState>()(
                     const result = await Notifications.registerForPushNotifications();
                     if (result.success) {
                         const latest = get();
-                        const profilePushToken = (latest.profile as any)?.push_token || null;
 
-                        if (result.token === latest.lastPushToken || result.token === profilePushToken) {
+                        if (result.token === latest.lastPushToken) {
                             set({ lastPushToken: result.token });
                             storeLogger.debug('Push token unchanged, skipping backend update');
                             return;
