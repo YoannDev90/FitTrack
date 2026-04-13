@@ -625,6 +625,8 @@ EOF
 
 cat >> android/app/build.gradle <<'EOF'
 
+import com.android.build.gradle.internal.api.ApkVariantOutputImpl
+
 android {
     splits {
         abi {
@@ -658,7 +660,19 @@ android {
     }
 
     applicationVariants.all { variant ->
+        def abiCodes = [
+            "armeabi-v7a": 1,
+            "arm64-v8a": 2,
+            "x86_64": 3,
+            "x86": 4
+        ]
+
         variant.outputs.all { output ->
+            def abiVersionCode = abiCodes[output.filters.find { it.filterType == "ABI" }?.identifier]
+            if (abiVersionCode != null) {
+                (output as ApkVariantOutputImpl).versionCodeOverride = variant.versionCode * 10 + abiVersionCode
+            }
+
             def fileName = output.outputFileName
             if (fileName != null && fileName.contains("universal")) {
                 output.outputFileName = "app-${variant.name}.apk"
