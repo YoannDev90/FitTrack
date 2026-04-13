@@ -1379,6 +1379,7 @@ async function sendPushNotification(
                 apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
             },
             body: {
+                access_token: session.access_token,
                 receiver_id: receiverId,
                 title,
                 body,
