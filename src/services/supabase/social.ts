@@ -1368,7 +1368,16 @@ async function sendPushNotification(
     }
     
     try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+            return;
+        }
+
         await supabase.functions.invoke('send-push-notification', {
+            headers: {
+                Authorization: `Bearer ${session.access_token}`,
+                apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
+            },
             body: {
                 receiver_id: receiverId,
                 title,
