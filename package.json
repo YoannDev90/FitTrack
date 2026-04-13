@@ -13,7 +13,7 @@
     "newrelease": "node scripts/newrelease.js"
   },
   "dependencies": {
-    "@blazejkustra/react-native-onboarding": "^1.0.0",
+    "@blazejkustra/react-native-onboarding": "^1.0.1",
     "@expo-google-fonts/syne": "^0.4.2",
     "@expo/config-plugins": "~55.0.8",
     "@expo/vector-icons": "^15.1.1",
