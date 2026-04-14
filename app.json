@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Spix",
-    "slug": "spix-app",
+    "slug": "fittrack-app",
     "version": "11.4.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

@@ -30,7 +30,7 @@ import {
 import { checkBadges } from '../utils/badges';
 import { useGamificationStore, calculateQuestTotals, calculateXpForEntry } from './gamificationStore';
 import { useSocialStore } from './socialStore';
-import { syncActiveChallengeProgressFromEntries } from '../services/supabase/social';
+import { shareSportEntryToFeed, syncActiveChallengeProgressFromEntries } from '../services/supabase/social';
 import { storeLogger } from '../utils/logger';
 import { 
     SPORT_ENTRY_TYPES, 
@@ -273,6 +273,34 @@ function scheduleSocialSync(entries: Entry[]) {
     scheduleSocialChallengeProgressSync(entries);
 }
 
+function scheduleAutoWorkoutShare(
+    entry: HomeWorkoutEntry | RunEntry | BeatSaberEntry | CustomSportEntry,
+    customCreatedAt?: string
+) {
+    // Skip social notifications for imported/backfilled historical workouts.
+    if (customCreatedAt) {
+        return;
+    }
+
+    const createdAtMs = new Date(entry.createdAt).getTime();
+    if (!Number.isFinite(createdAtMs) || Math.abs(Date.now() - createdAtMs) > 5 * 60 * 1000) {
+        return;
+    }
+
+    setTimeout(async () => {
+        const socialStore = useSocialStore.getState();
+        if (!socialStore.isAuthenticated || !socialStore.socialEnabled) {
+            return;
+        }
+
+        try {
+            await shareSportEntryToFeed(entry);
+        } catch (error) {
+            storeLogger.warn('Failed to auto-share workout entry', error);
+        }
+    }, 700);
+}
+
 // ============================================================================
 // STORE
 // ============================================================================
@@ -310,6 +338,7 @@ export const useAppStore = create<AppState>()(
                 gamificationStore.syncQuestsWithEntries(get().entries);
                 get().recheckBadges(get().entries);
                 scheduleSocialSync(get().entries);
+                scheduleAutoWorkoutShare(entry, customCreatedAt);
                 storeLogger.debug('Added home workout', entry.id);
             },
 
@@ -339,6 +368,7 @@ export const useAppStore = create<AppState>()(
                 gamificationStore.syncQuestsWithEntries(get().entries);
                 get().recheckBadges(get().entries);
                 scheduleSocialSync(get().entries);
+                scheduleAutoWorkoutShare(entry, customCreatedAt);
                 storeLogger.debug('Added run', entry.id);
             },
 
@@ -362,6 +392,7 @@ export const useAppStore = create<AppState>()(
                 gamificationStore.syncQuestsWithEntries(get().entries);
                 get().recheckBadges(get().entries);
                 scheduleSocialSync(get().entries);
+                scheduleAutoWorkoutShare(entry, customCreatedAt);
                 storeLogger.debug('Added BeatSaber session', entry.id);
             },
 
@@ -413,6 +444,7 @@ export const useAppStore = create<AppState>()(
                 gamificationStore.syncQuestsWithEntries(get().entries);
                 get().recheckBadges(get().entries);
                 scheduleSocialSync(get().entries);
+                scheduleAutoWorkoutShare(entry, customCreatedAt);
                 storeLogger.debug('Added custom sport', entry.id);
             },
 

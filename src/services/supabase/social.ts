@@ -11,15 +11,20 @@ import type {
     LeaderboardEntry,
     BlockedUser,
 } from './database.types';
-import type { Entry } from '../../types';
+import type { Entry, HomeWorkoutEntry, RunEntry, BeatSaberEntry, CustomSportEntry } from '../../types';
 import { serviceLogger, errorLogger } from '../../utils/logger';
 import { MAX_LEADERBOARD_RESULTS } from '../../constants/values';
 import { isSportEntryType } from '../../constants/values';
 import { fetchWithRetry } from '../network/httpClient';
 import { computeChallengeProgressValueFromEntries } from '../../utils/socialChallenges';
 
+function normalizeEnvValue(value: string | undefined): string {
+    return `${value || ''}`.trim().replace(/^['"]|['"]$/g, '');
+}
+
 // Supabase URL for Edge Functions
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_URL = normalizeEnvValue(process.env.EXPO_PUBLIC_SUPABASE_URL);
+const SUPABASE_ANON_KEY = normalizeEnvValue(process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
 
 export type FriendProfile = Profile & { friendship_id: string };
 
@@ -314,6 +319,33 @@ export async function getCurrentUser() {
     return user;
 }
 
+async function getFreshAccessToken(client = getSupabaseClient()): Promise<string | null> {
+    const { data: { session }, error: sessionError } = await client.auth.getSession();
+    if (sessionError) {
+        serviceLogger.warn('Unable to read auth session before edge function call', sessionError);
+    }
+
+    if (!session) {
+        return null;
+    }
+
+    const nowEpoch = Math.floor(Date.now() / 1000);
+    const expiresAt = Number(session.expires_at || 0);
+    const isExpiringSoon = !expiresAt || expiresAt - nowEpoch <= 45;
+
+    if (!isExpiringSoon) {
+        return session.access_token || null;
+    }
+
+    const { data: refreshData, error: refreshError } = await client.auth.refreshSession();
+    if (refreshError) {
+        serviceLogger.warn('Failed to refresh auth session before edge function call', refreshError);
+        return session.access_token || null;
+    }
+
+    return refreshData.session?.access_token || session.access_token || null;
+}
+
 export async function getProfile(userId: string): Promise<Profile | null> {
     if (!supabase) return null;
     
@@ -410,23 +442,29 @@ export async function savePushToken(token: string): Promise<void> {
  */
 export async function deleteAllUserData(): Promise<void> {
     const client = getSupabaseClient();
-    const { data: { session } } = await client.auth.getSession();
-    
-    if (!session?.access_token) {
+
+    const accessToken = await getFreshAccessToken(client);
+    if (!accessToken) {
         throw new Error('Not authenticated');
     }
 
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        throw new Error('Supabase Edge function configuration is missing');
+    }
+
     // Appeler l'Edge Function qui a accès à service_role
-    const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
     const response = await fetchWithRetry(
         `${SUPABASE_URL}/functions/v1/delete-account`,
         {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${session.access_token}`,
-                'apikey': SUPABASE_ANON_KEY || '',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY,
                 'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+                access_token: accessToken,
+            }),
         },
         {
             timeoutMs: 15000,
@@ -1163,6 +1201,92 @@ export async function shareWorkoutToFeed(input: {
     )));
 }
 
+function buildWorkoutShareSummary(entry: HomeWorkoutEntry | RunEntry | BeatSaberEntry | CustomSportEntry): {
+    entryType: 'home' | 'run' | 'beatsaber' | 'custom';
+    title: string;
+    summary: string;
+    metadata?: Record<string, unknown>;
+} {
+    if (entry.type === 'run') {
+        const distance = Number(entry.distanceKm || 0).toFixed(2);
+        const duration = Math.max(0, Math.round(Number(entry.durationMinutes || 0)));
+        return {
+            entryType: 'run',
+            title: 'Sortie running',
+            summary: `${distance} km en ${duration} min`,
+        };
+    }
+
+    if (entry.type === 'beatsaber') {
+        const duration = Math.max(0, Math.round(Number(entry.durationMinutes || 0)));
+        return {
+            entryType: 'beatsaber',
+            title: 'Session Beat Saber',
+            summary: `Session de ${duration} min`,
+        };
+    }
+
+    if (entry.type === 'custom') {
+        const customName = sanitizeTrimmedText(entry.name || 'Séance personnalisée', 80) || 'Séance personnalisée';
+
+        const customParts: string[] = [];
+        if (Number(entry.distanceKm || 0) > 0) {
+            customParts.push(`${Number(entry.distanceKm).toFixed(2)} km`);
+        }
+        if (Number(entry.durationMinutes || 0) > 0) {
+            customParts.push(`${Math.round(Number(entry.durationMinutes))} min`);
+        }
+        if (Number(entry.totalReps || 0) > 0) {
+            customParts.push(`${Math.round(Number(entry.totalReps))} reps`);
+        }
+
+        return {
+            entryType: 'custom',
+            title: customName,
+            summary: customParts.join(' · ') || 'Nouvelle séance enregistrée',
+            metadata: {
+                sport_id: entry.sportId,
+            },
+        };
+    }
+
+    const title = sanitizeTrimmedText(entry.name || 'Séance maison', 80) || 'Séance maison';
+    const reps = Math.max(0, Math.round(Number(entry.totalReps || 0)));
+    const duration = Math.max(0, Math.round(Number(entry.durationMinutes || 0)));
+
+    let summary = '';
+    if (reps > 0 && duration > 0) {
+        summary = `${reps} reps en ${duration} min`;
+    } else if (reps > 0) {
+        summary = `${reps} reps`;
+    } else if (duration > 0) {
+        summary = `Session de ${duration} min`;
+    } else {
+        const firstExerciseLine = sanitizeTrimmedText((entry.exercises || '').split('\n')[0] || '', 120);
+        summary = firstExerciseLine || 'Nouvelle séance enregistrée';
+    }
+
+    return {
+        entryType: 'home',
+        title,
+        summary,
+    };
+}
+
+export async function shareSportEntryToFeed(
+    entry: HomeWorkoutEntry | RunEntry | BeatSaberEntry | CustomSportEntry
+): Promise<void> {
+    const shareData = buildWorkoutShareSummary(entry);
+    await shareWorkoutToFeed({
+        entryId: entry.id,
+        entryType: shareData.entryType,
+        title: shareData.title,
+        summary: shareData.summary,
+        createdAtIso: entry.createdAt,
+        metadata: shareData.metadata,
+    });
+}
+
 export async function getSocialFeed(limit = 10): Promise<SocialFeedEventItem[]> {
     if (!supabase) return [];
     const user = await getCurrentUser();
@@ -1368,18 +1492,18 @@ async function sendPushNotification(
     }
     
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) {
+        const accessToken = await getFreshAccessToken();
+        if (!accessToken) {
             return;
         }
 
-        await supabase.functions.invoke('send-push-notification', {
+        const { data: invokeData, error: invokeError } = await supabase.functions.invoke('send-push-notification', {
             headers: {
-                Authorization: `Bearer ${session.access_token}`,
-                apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+                apikey: SUPABASE_ANON_KEY,
             },
             body: {
-                access_token: session.access_token,
+                access_token: accessToken,
                 receiver_id: receiverId,
                 title,
                 body,
@@ -1395,6 +1519,24 @@ async function sendPushNotification(
                 },
             },
         });
+
+        if (invokeError) {
+            console.warn('[push] Edge function call failed', {
+                type,
+                receiverId,
+                message: invokeError.message,
+            });
+            return;
+        }
+
+        if (invokeData && typeof invokeData === 'object' && (invokeData as any).success === false) {
+            console.warn('[push] Provider rejected notification', {
+                type,
+                receiverId,
+                providerError: (invokeData as any).provider_error,
+                providerMessage: (invokeData as any).provider_message,
+            });
+        }
     } catch (error) {
         // Fail silently - notifications are optional
         console.log('Push notification failed:', error);
