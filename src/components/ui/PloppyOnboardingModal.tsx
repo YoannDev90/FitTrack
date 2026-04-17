@@ -3,11 +3,11 @@
 // ============================================================================
 
 import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Sparkles, Shield, Clock, Check, X } from 'lucide-react-native';
+import { Sparkles, Shield, Clock, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppStore } from '../../stores';
 import { BuildConfig } from '../../config/buildConfig';
@@ -105,7 +105,7 @@ export function PloppyOnboardingModal({ visible, onAccept, onDecline }: PloppyOn
           {/* Features */}
           <Animated.View entering={FadeInDown.delay(300)} style={styles.features}>
             {features.map((feature, index) => (
-              <View key={index} style={styles.featureItem}>
+              <View key={`${feature.text}-${index}`} style={styles.featureItem}>
                 <Text style={styles.featureIcon}>{feature.icon}</Text>
                 <Text style={styles.featureText}>{feature.text}</Text>
               </View>
@@ -119,7 +119,7 @@ export function PloppyOnboardingModal({ visible, onAccept, onDecline }: PloppyOn
               <Text style={styles.privacyTitle}>{t('settings.ploppy.onboarding.privacyTitle')}</Text>
             </View>
             {privacyPoints.map((point, index) => (
-              <View key={index} style={styles.privacyItem}>
+              <View key={`${point.text}-${index}`} style={styles.privacyItem}>
                 {point.icon}
                 <Text style={styles.privacyText}>{point.text}</Text>
               </View>

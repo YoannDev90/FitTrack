@@ -38,7 +38,10 @@ function shouldSimulateFossBuild(): boolean {
     try {
         const settings = useAppStore.getState().settings;
         return settings.developerMode === true && settings.simulateFossBuild === true;
-    } catch {
+    } catch (error) {
+        if (__DEV__) {
+            console.warn('[BuildConfig] Failed to read developer override settings', error);
+        }
         return false;
     }
 }

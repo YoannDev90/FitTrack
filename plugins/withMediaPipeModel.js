@@ -2,9 +2,19 @@
 const { withDangerousMod, withPlugins } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
+const fsp = fs.promises;
 
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task';
 const MODEL_NAME = 'pose_landmarker_full.task';
+
+async function pathExists(targetPath) {
+    try {
+        await fsp.access(targetPath);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 async function downloadModel(destPath) {
     // Use dynamic import for fetch (Node 18+)
@@ -13,7 +23,7 @@ async function downloadModel(destPath) {
         throw new Error(`Failed to download model: ${response.statusText}`);
     }
     const buffer = await response.arrayBuffer();
-    fs.writeFileSync(destPath, Buffer.from(buffer));
+    await fsp.writeFile(destPath, Buffer.from(buffer));
     console.log(`[withMediaPipeModel] Downloaded ${MODEL_NAME} (${(buffer.byteLength / 1024 / 1024).toFixed(2)} MB)`);
 }
 
@@ -32,14 +42,14 @@ const withMediaPipeModel = (config) => {
             );
 
             // Create assets directory if it doesn't exist
-            if (!fs.existsSync(assetsDir)) {
-                fs.mkdirSync(assetsDir, { recursive: true });
+            if (!(await pathExists(assetsDir))) {
+                await fsp.mkdir(assetsDir, { recursive: true });
             }
 
             const modelPath = path.join(assetsDir, MODEL_NAME);
 
             // Download the model if it doesn't exist
-            if (!fs.existsSync(modelPath)) {
+            if (!(await pathExists(modelPath))) {
                 console.log(`[withMediaPipeModel] Downloading ${MODEL_NAME}...`);
                 try {
                     await downloadModel(modelPath);
@@ -48,10 +58,10 @@ const withMediaPipeModel = (config) => {
 
                     // Fallback: try to copy from a local android-patches directory
                     const patchPath = path.join(projectRoot, 'scripts', 'android-patches', MODEL_NAME);
-                    if (fs.existsSync(patchPath)) {
+                    if (await pathExists(patchPath)) {
                         console.log(`[withMediaPipeModel] Found local model at ${patchPath}. Copying to assets...`);
                         try {
-                            fs.copyFileSync(patchPath, modelPath);
+                            await fsp.copyFile(patchPath, modelPath);
                             console.log(`[withMediaPipeModel] Copied ${MODEL_NAME} to assets`);
                         } catch (copyErr) {
                             console.error(`[withMediaPipeModel] Failed to copy model from android-patches:`, copyErr.message);

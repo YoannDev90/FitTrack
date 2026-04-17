@@ -507,7 +507,7 @@ export default function AppearanceScreen() {
                   <Text style={[styles.themeEmoji, { color: '#c084fc' }]}>✦✦</Text>
                   <View style={styles.themeSwatches}>
                     {['#f472b6', '#c084fc', '#818cf8'].map((c, i) => (
-                      <View key={i} style={[styles.themeSwatchDot, { backgroundColor: c }]} />
+                      <View key={`${c}-${i}`} style={[styles.themeSwatchDot, { backgroundColor: c }]} />
                     ))}
                   </View>
                   <Text style={styles.themeCardLabel}>{t('settings.appearanceCustomCardLabel')}</Text>

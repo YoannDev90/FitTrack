@@ -73,10 +73,10 @@ const T = {
   nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20,
   xxl: 26, xxxl: 34, display: 48,
 };
-const W: Record<string, any> = {
+const W = {
   light: '300', reg: '400', med: '500',
   semi: '600', bold: '700', xbold: '800', black: '900',
-};
+} as const;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type FilterType = 'all' | 'home' | 'run' | 'beatsaber' | 'meal' | 'measure';
@@ -98,7 +98,7 @@ const FILTER_DEFINITIONS = [
   { value: 'measure',   icon: <Ruler     size={14} color={C.teal}  />,         color: C.teal,   glow: C.tealSoft   },
 ];
 
-const getEntryStyle = (type: string, sportConfig?: any) => {
+const getEntryStyle = (type: string, sportConfig?: SportConfig) => {
   switch (type) {
     case 'home':      return { icon: <Home size={18} color={C.green}  />, color: C.green,  bg: C.greenSoft,  border: C.greenBorder  };
     case 'run':       return { icon: <Footprints size={18} color={C.blue}  />, color: C.blue,   bg: C.blueSoft,  border: C.blueBorder   };
@@ -271,6 +271,8 @@ const EntryCard = React.memo(({
           </View>
         );
       }
+      default:
+        return null;
     }
   }, [entry, sportConfig]);
 

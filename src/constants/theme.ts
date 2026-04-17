@@ -910,7 +910,7 @@ const applyGradients = (theme: ThemeCustomColors) => {
 };
 
 const applyShadows = (theme: ThemeCustomColors) => {
-    const shadows = Shadows as unknown as Record<string, Record<string, any>>;
+    const shadows = Shadows as unknown as Record<string, { shadowColor: string } & Record<string, unknown>>;
     shadows.card.shadowColor = darken(theme.bg, 0.6);
     shadows.cta.shadowColor = theme.primary;
 };
@@ -935,7 +935,7 @@ const restoreDefaults = () => {
         });
     });
 
-    const shadowsTarget = Shadows as unknown as Record<string, Record<string, any>>;
+    const shadowsTarget = Shadows as unknown as Record<string, Record<string, unknown>>;
     Object.keys(DEFAULT_SHADOWS_SNAPSHOT).forEach((token) => {
         shadowsTarget[token] = { ...DEFAULT_SHADOWS_SNAPSHOT[token] };
     });
@@ -987,7 +987,10 @@ const readStoredSettings = (): Partial<UserSettings> | null => {
         const persistedState = parsed?.state;
         const settings = persistedState?.settings ?? parsed?.settings;
         return settings ?? null;
-    } catch {
+    } catch (error) {
+        if (__DEV__) {
+            console.warn('[Theme] Failed to read settings from storage', error);
+        }
         return null;
     }
 };

@@ -4,7 +4,7 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Calendar, Clock } from 'lucide-react-native';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -20,8 +20,8 @@ interface DateTimeSelectorProps {
     showTimePicker: boolean;
     onShowDatePicker: () => void;
     onShowTimePicker: () => void;
-    onDateChange: (event: any, date?: Date) => void;
-    onTimeChange: (event: any, date?: Date) => void;
+    onDateChange: (event: DateTimePickerEvent, date?: Date) => void;
+    onTimeChange: (event: DateTimePickerEvent, date?: Date) => void;
 }
 
 export function DateTimeSelector({

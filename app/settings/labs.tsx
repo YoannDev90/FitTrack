@@ -50,11 +50,11 @@ export default function LabsScreen() {
   const checkPollinationStatus = useCallback(async () => {
     const connected = await isPollinationConnected();
     setPollinationStatus(connected ? 'connected' : 'disconnected');
-    updateSettings({ pollinationConnected: connected });
+    void updateSettings({ pollinationConnected: connected });
   }, [updateSettings]);
 
   useEffect(() => {
-    checkPollinationStatus();
+    void checkPollinationStatus();
   }, [checkPollinationStatus]);
 
   // Handle deep link callback from Pollination
@@ -70,7 +70,7 @@ export default function LabsScreen() {
         if (apiKey) {
           await savePollinationApiKey(apiKey);
           setPollinationStatus('connected');
-          updateSettings({ pollinationConnected: true });
+          void updateSettings({ pollinationConnected: true });
           
           Alert.alert(
             t('settings.pollination.successTitle'),
@@ -86,9 +86,17 @@ export default function LabsScreen() {
     };
 
     // Get initial URL if app was opened via deep link
-    ExpoLinking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
-    });
+    void ExpoLinking.getInitialURL()
+      .then((url) => {
+        if (url) {
+          void handleDeepLink({ url });
+        }
+      })
+      .catch((error) => {
+        if (__DEV__) {
+          console.warn('[Labs] Failed to read initial URL', error);
+        }
+      });
 
     // Listen for deep links while app is running
     const subscription = ExpoLinking.addEventListener('url', handleDeepLink);
@@ -132,7 +140,7 @@ export default function LabsScreen() {
           onPress: async () => {
             await removePollinationApiKey();
             setPollinationStatus('disconnected');
-            updateSettings({ pollinationConnected: false });
+            void updateSettings({ pollinationConnected: false });
           }
         },
       ]

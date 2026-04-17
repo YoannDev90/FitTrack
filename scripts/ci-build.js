@@ -260,7 +260,7 @@ async function buildFlavor(rootDir, flavor, version) {
 
   // 3. Patching
   injectGradleConfig(rootDir, flavorConfig.splitByAbi);
-  patchHealthConnect(rootDir);
+  void patchHealthConnect(rootDir);
   if (flavorConfig.includeGoogleServices) patchGoogleServices(rootDir);
 
   // 4. Build Gradle
@@ -305,7 +305,7 @@ async function main() {
     if (OVERRIDE_VERSION && OVERRIDE_VERSION.trim() !== "") {
         finalVersion = OVERRIDE_VERSION.trim();
         console.log(`🆙 Overriding version to: ${finalVersion}`);
-        updateJsonFile(path.join(rootDir, VERSION_FILE), o => { o.version = finalVersion; return o; });
+      void updateJsonFile(path.join(rootDir, VERSION_FILE), o => { o.version = finalVersion; return o; });
     } else {
         console.log(`ℹ️ Using current package.json version: ${finalVersion}`);
     }

@@ -39,10 +39,9 @@ import {
   calculateRunXP,
   calculateAvgPace,
 } from '../../services/runTracker';
-import { generateGPX, saveGPXFile, shareGPXFile } from '../../services/gpxExport';
+import { generateGPX, saveGPXFile } from '../../services/gpxExport';
 import { generateTextAnalysis } from '../../services/pollination/textAnalysis';
 import { isPollinationConnected } from '../../services/pollination';
-import { getTodayDateString, getNowISO } from '../../utils/date';
 import i18n from '../../i18n';
 import type { RunEntry } from '../../types';
 
@@ -72,7 +71,7 @@ const C = {
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, full: 999 };
 const T = { nano: 9, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, xxxl: 34 };
-const W: Record<string, any> = { reg: '400', med: '500', semi: '600', bold: '700', xbold: '800', black: '900' };
+const W = { reg: '400', med: '500', semi: '600', bold: '700', xbold: '800', black: '900' } as const;
 
 function formatPace(secPerKm: number): string {
   if (secPerKm <= 0 || !isFinite(secPerKm)) return '--:--';
@@ -124,6 +123,7 @@ export function RunSummary() {
   const store = useRunStore();
   const { entries, settings, addRun } = useAppStore();
   const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
+  const runSettings = settings as { runSettings?: { coachingEnabled?: boolean; pollinationsModel?: string } };
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [discardModalVisible, setDiscardModalVisible] = useState(false);
@@ -169,7 +169,7 @@ export function RunSummary() {
 
   // Fetch AI summary
   useEffect(() => {
-    if (!aiFeaturesEnabled || store.mode !== 'ai' || !(settings as any).runSettings?.coachingEnabled) return;
+    if (!aiFeaturesEnabled || store.mode !== 'ai' || !runSettings.runSettings?.coachingEnabled) return;
     let cancelled = false;
 
     (async () => {
@@ -189,15 +189,19 @@ export function RunSummary() {
 ${summary.vsTarget ? `- Objectif : ${summary.vsTarget.achieved ? 'atteint ✅' : 'non atteint ⚠️'}` : ''}
 ${summary.isDistancePR ? '- 🏆 Nouveau record de distance !' : ''}
 Donne un bilan motivant et personnalisé.`,
-          model: (settings as any).runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai',
+          model: runSettings.runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai',
         });
         if (!cancelled) setAiSummary(result);
-      } catch { /* silent */ }
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('[RunSummary] AI summary generation failed', error);
+        }
+      }
       finally { if (!cancelled) setAiLoading(false); }
     })();
 
     return () => { cancelled = true; };
-  }, [aiFeaturesEnabled, settings, store.mode, summary]);
+  }, [aiFeaturesEnabled, runSettings, settings, store.mode, summary]);
 
   // Save run
   const handleSave = async () => {
@@ -216,7 +220,11 @@ Donne un bilan motivant et personnalisé.`,
           avgPaceSecPerKm: summary.avgPaceSecPerKm,
         });
         gpxPath = await saveGPXFile(gpxContent, `run_${dateStr}_${Date.now()}`);
-      } catch { /* GPX save is optional */ }
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('[RunSummary] GPX export failed (optional)', error);
+        }
+      }
     }
 
     addRun({
@@ -230,7 +238,7 @@ Donne un bilan motivant et personnalisé.`,
       gpxFilePath: gpxPath,
       plan: store.plan ?? undefined,
       aiCoachMessages: store.currentAiConversation,
-    } as any);
+    });
 
     store.reset();
     router.dismissAll();

@@ -77,7 +77,7 @@ export interface SocialFeedEventItem {
     actor_name: string;
     event_type: 'workout' | 'challenge_progress' | 'streak' | 'encouragement';
     message: string;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
     created_at: string;
     reactions_count: number;
     liked_by_me: boolean;
@@ -141,7 +141,7 @@ function isActiveLeaderboardEntry(entry: Pick<LeaderboardEntry, 'weekly_xp' | 'w
 async function getLeaderboardBots(): Promise<LeaderboardEntry[]> {
     if (!supabase) return [];
 
-    const { data: flagRow, error: flagError } = await (supabase as any)
+    const { data: flagRow, error: flagError } = await (supabase as NonNullable<typeof supabase>)
         .from('social_feature_flags')
         .select('is_enabled, config')
         .eq('flag_key', 'global_leaderboard_bots')
@@ -166,7 +166,7 @@ async function getLeaderboardBots(): Promise<LeaderboardEntry[]> {
         return [];
     }
 
-    const { data: botRows, error: botError } = await (supabase as any)
+    const { data: botRows, error: botError } = await (supabase as NonNullable<typeof supabase>)
         .from('social_leaderboard_bots')
         .select('*')
         .eq('is_enabled', true)
@@ -264,7 +264,7 @@ export async function signUp(email: string, password: string, username: string) 
     const client = getSupabaseClient();
     
     // Check username availability
-    const { data: existing } = await (client as any)
+    const { data: existing } = await client
         .from('profiles')
         .select('id')
         .eq('username', username.toLowerCase())
@@ -283,7 +283,7 @@ export async function signUp(email: string, password: string, username: string) 
     if (!authData.user) throw new Error('Erreur lors de la création du compte');
 
     // Create profile
-    const { error: profileError } = await (client as any)
+    const { error: profileError } = await client
         .from('profiles')
         .insert({
             id: authData.user.id,
@@ -349,7 +349,7 @@ async function getFreshAccessToken(client = getSupabaseClient()): Promise<string
 export async function getProfile(userId: string): Promise<Profile | null> {
     if (!supabase) return null;
     
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -370,7 +370,7 @@ export async function updateProfile(updates: ProfileUpdate): Promise<Profile | n
     const user = await getCurrentUser();
     if (!user) return null;
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('profiles')
         .update(updates)
         .eq('id', user.id)
@@ -385,7 +385,7 @@ export async function updateUsername(newUsername: string): Promise<void> {
     const client = getSupabaseClient();
     
     // Check availability
-    const { data: existing } = await (client as any)
+    const { data: existing } = await client
         .from('profiles')
         .select('id')
         .eq('username', newUsername.toLowerCase())
@@ -407,7 +407,7 @@ export async function savePushToken(token: string): Promise<void> {
     if (!sanitizedToken) return;
 
     const nowIso = new Date().toISOString();
-    const { error: privateError } = await (supabase as any)
+    const { error: privateError } = await (supabase as NonNullable<typeof supabase>)
         .from('profile_private')
         .upsert({
             id: user.id,
@@ -417,7 +417,7 @@ export async function savePushToken(token: string): Promise<void> {
 
     if (privateError) {
         serviceLogger.warn('profile_private unavailable, using legacy profiles.push_token fallback', privateError);
-        const { error: legacyError } = await (supabase as any)
+        const { error: legacyError } = await (supabase as NonNullable<typeof supabase>)
             .from('profiles')
             .update({ push_token: sanitizedToken })
             .eq('id', user.id);
@@ -426,7 +426,7 @@ export async function savePushToken(token: string): Promise<void> {
     }
 
     // Best effort cleanup of legacy public token column.
-    await (supabase as any)
+    await (supabase as NonNullable<typeof supabase>)
         .from('profiles')
         .update({ push_token: null })
         .eq('id', user.id);
@@ -478,8 +478,10 @@ export async function deleteAllUserData(): Promise<void> {
         try {
             const error = await response.json();
             errorMessage = error?.error || errorMessage;
-        } catch {
-            // Ignore malformed error payloads.
+        } catch (error) {
+            if (__DEV__) {
+                console.warn('[SocialService] Failed to parse delete-account error payload', error);
+            }
         }
         throw new Error(errorMessage);
     }
@@ -496,7 +498,7 @@ export async function updateLeaderboardVisibility(isPublic: boolean): Promise<vo
     const user = await getCurrentUser();
     if (!user) return;
 
-    await (supabase as any)
+    await (supabase as NonNullable<typeof supabase>)
         .from('profiles')
         .update({ is_public: isPublic })
         .eq('id', user.id);
@@ -510,7 +512,7 @@ export async function updateFriendRequestAcceptance(acceptsFriendRequests: boole
     const user = await getCurrentUser();
     if (!user) return;
 
-    await (supabase as any)
+    await (supabase as NonNullable<typeof supabase>)
         .from('profiles')
         .update({ accepts_friend_requests: acceptsFriendRequests })
         .eq('id', user.id);
@@ -534,7 +536,7 @@ export async function syncWeeklyStats(stats: {
     const user = await getCurrentUser();
     if (!user) return;
 
-    await (supabase as any)
+    await (supabase as NonNullable<typeof supabase>)
         .from('profiles')
         .update({
             weekly_workouts: stats.workouts,
@@ -564,7 +566,7 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
 
     const overfetchAllowance = Math.min(30, blockedIds.length + botRows.length + 5);
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('weekly_leaderboard')
         .select('*')
         .limit(MAX_LEADERBOARD_RESULTS + overfetchAllowance);
@@ -595,7 +597,7 @@ export async function getFriendsLeaderboard(): Promise<LeaderboardEntry[]> {
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .rpc('get_friends_leaderboard', { user_id: user.id });
 
     if (error) throw error;
@@ -618,7 +620,7 @@ export async function searchUsers(query: string) {
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .rpc('search_users', { 
             search_query: query, 
             current_user_id: user.id 
@@ -633,7 +635,7 @@ export async function sendFriendRequest(addresseeId: string) {
     const user = await getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('friendships')
         .insert({
             requester_id: user.id,
@@ -653,7 +655,7 @@ export async function sendFriendRequest(addresseeId: string) {
 export async function respondToFriendRequest(friendshipId: string, accept: boolean) {
     const client = getSupabaseClient();
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('friendships')
         .update({ status: accept ? 'accepted' : 'rejected' })
         .eq('id', friendshipId);
@@ -666,7 +668,7 @@ export async function removeFriend(friendshipId: string) {
     const user = await getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('friendships')
         .delete()
         .or(
@@ -682,7 +684,7 @@ export async function getPendingRequests(): Promise<(Friendship & { requester: P
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('friendships')
         .select(`
             *,
@@ -700,7 +702,7 @@ export async function getFriends(): Promise<FriendProfile[]> {
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('friendships')
         .select(`
             id,
@@ -711,9 +713,16 @@ export async function getFriends(): Promise<FriendProfile[]> {
         .eq('status', 'accepted');
 
     if (error) throw error;
+
+    type FriendshipRowWithProfiles = {
+        id: string;
+        requester: Profile;
+        addressee: Profile;
+    };
+    const rows = (data || []) as FriendshipRowWithProfiles[];
     
     // Extract friend profiles
-    return ((data || []) as any[]).map((f: any) => 
+    return rows.map((f) => 
         ({
             ...(f.requester.id === user.id ? f.addressee : f.requester),
             friendship_id: f.id,
@@ -724,7 +733,7 @@ export async function getFriends(): Promise<FriendProfile[]> {
 async function getFriendIdsForUser(userId: string): Promise<string[]> {
     if (!supabase) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('friendships')
         .select('requester_id, addressee_id')
         .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
@@ -732,10 +741,16 @@ async function getFriendIdsForUser(userId: string): Promise<string[]> {
 
     if (error) throw error;
 
+    type FriendshipPairRow = {
+        requester_id?: string;
+        addressee_id?: string;
+    };
+    const rows = (data || []) as FriendshipPairRow[];
+
     return Array.from(new Set(
-        ((data || []) as any[])
+        rows
             .map((row) => (row.requester_id === userId ? row.addressee_id : row.requester_id))
-            .filter((id) => !!id && id !== userId)
+            .filter((id): id is string => Boolean(id) && id !== userId)
     ));
 }
 
@@ -761,7 +776,7 @@ export async function sendEncouragement(receiverId: string, customMessage?: stri
 
     const random = ENCOURAGEMENT_MESSAGES[Math.floor(Math.random() * ENCOURAGEMENT_MESSAGES.length)];
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('encouragements')
         .insert({
             sender_id: user.id,
@@ -787,7 +802,7 @@ export async function getUnreadEncouragements(): Promise<(Encouragement & { send
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('encouragements')
         .select(`
             *,
@@ -804,7 +819,7 @@ export async function getUnreadEncouragements(): Promise<(Encouragement & { send
 export async function markEncouragementAsRead(encouragementId: string) {
     if (!supabase) return;
 
-    await (supabase as any)
+    await (supabase as NonNullable<typeof supabase>)
         .from('encouragements')
         .update({ read_at: new Date().toISOString() })
         .eq('id', encouragementId);
@@ -815,7 +830,7 @@ export async function getRecentEncouragements(limit = 10): Promise<(Encouragemen
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('encouragements')
         .select(`
             *,
@@ -838,7 +853,7 @@ export async function getActiveSocialChallenges(): Promise<SocialChallengeProgre
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('social_challenge_participants')
         .select(`
             challenge_id,
@@ -849,7 +864,12 @@ export async function getActiveSocialChallenges(): Promise<SocialChallengeProgre
 
     if (error) throw error;
 
-    const rows = ((data || []) as any[])
+    type MyChallengeProgressRow = {
+        challenge_id?: string;
+        progress_value?: number;
+        challenge?: SocialChallenge | null;
+    };
+    const rows = ((data || []) as MyChallengeProgressRow[])
         .filter(row => !!row.challenge);
 
     const challengeIds = rows
@@ -858,7 +878,7 @@ export async function getActiveSocialChallenges(): Promise<SocialChallengeProgre
 
     if (challengeIds.length === 0) return [];
 
-    const { data: participantsWithProfiles, error: participantsError } = await (supabase as any)
+    const { data: participantsWithProfiles, error: participantsError } = await (supabase as NonNullable<typeof supabase>)
         .from('social_challenge_participants')
         .select(`
             challenge_id,
@@ -873,7 +893,17 @@ export async function getActiveSocialChallenges(): Promise<SocialChallengeProgre
     if (participantsError) throw participantsError;
 
     const participantsByChallengeId = new Map<string, ChallengeParticipantSummary[]>();
-    ((participantsWithProfiles || []) as any[]).forEach(item => {
+    type ParticipantWithProfileRow = {
+        challenge_id?: string;
+        progress_value?: number;
+        completed_at?: string | null;
+        user?: {
+            id: string;
+            username: string;
+            display_name: string | null;
+        } | null;
+    };
+    ((participantsWithProfiles || []) as ParticipantWithProfileRow[]).forEach(item => {
         const challengeId = item.challenge_id as string;
         const userProfile = item.user;
         if (!challengeId || !userProfile) return;
@@ -989,7 +1019,7 @@ export async function createSocialChallenge(input: {
         throw new Error('At least one invited friend is required');
     }
 
-    const { data: challenge, error: challengeError } = await (client as any)
+    const { data: challenge, error: challengeError } = await client
         .from('social_challenges')
         .insert({
             creator_id: user.id,
@@ -1021,14 +1051,14 @@ export async function createSocialChallenge(input: {
         })),
     ];
 
-    const { error: participantError } = await (client as any)
+    const { error: participantError } = await client
         .from('social_challenge_participants')
         .insert(participantRows);
 
     if (participantError) throw participantError;
 
     // Create a feed event for visibility in the social hub.
-    await (client as any)
+    await client
         .from('social_feed_events')
         .insert({
             actor_id: user.id,
@@ -1049,7 +1079,7 @@ export async function deleteSocialChallenge(challengeId: string): Promise<void> 
     const user = await getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('social_challenges')
         .delete()
         .eq('id', challengeId)
@@ -1063,7 +1093,7 @@ export async function leaveSocialChallenge(challengeId: string): Promise<void> {
     const user = await getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('social_challenge_participants')
         .delete()
         .eq('challenge_id', challengeId)
@@ -1076,14 +1106,17 @@ export async function syncActiveChallengeProgressFromEntries(entries: Entry[]): 
     let client;
     try {
         client = getSupabaseClient();
-    } catch {
+    } catch (error) {
+        if (__DEV__) {
+            console.warn('[SocialService] Supabase client unavailable for challenge sync', error);
+        }
         return;
     }
 
     const user = await getCurrentUser();
     if (!user) return;
 
-    const { data, error } = await (client as any)
+    const { data, error } = await client
         .from('social_challenge_participants')
         .select(`
             challenge_id,
@@ -1095,7 +1128,12 @@ export async function syncActiveChallengeProgressFromEntries(entries: Entry[]): 
 
     if (error) throw error;
 
-    const rows = ((data || []) as any[])
+    type ParticipantSyncRow = {
+        challenge?: (SocialChallenge & { status?: string }) | null;
+        progress_value?: number;
+        completed_at?: string | null;
+    };
+    const rows = ((data || []) as ParticipantSyncRow[])
         .filter(row => row.challenge?.status === 'active');
 
     if (rows.length === 0) return;
@@ -1120,7 +1158,7 @@ export async function syncActiveChallengeProgressFromEntries(entries: Entry[]): 
             return;
         }
 
-        const { error: updateError } = await (client as any)
+        const { error: updateError } = await client
             .from('social_challenge_participants')
             .update({
                 progress_value: safeProgress,
@@ -1152,7 +1190,7 @@ export async function shareWorkoutToFeed(input: {
         throw new Error('Invalid workout payload');
     }
 
-    const { data: insertedEvent, error } = await (client as any)
+    const { data: insertedEvent, error } = await client
         .from('social_feed_events')
         .insert({
             actor_id: user.id,
@@ -1182,8 +1220,10 @@ export async function shareWorkoutToFeed(input: {
     try {
         const senderProfile = await getProfile(user.id);
         senderName = senderProfile?.display_name || senderProfile?.username || senderName;
-    } catch {
-        // Keep fallback name when profile lookup fails.
+    } catch (error) {
+        if (__DEV__) {
+            console.warn('[SocialService] Failed to resolve sender profile for workout share notification', error);
+        }
     }
 
     const notificationSummary = `${safeTitle} · ${safeSummary}`.slice(0, 140);
@@ -1292,7 +1332,7 @@ export async function getSocialFeed(limit = 10): Promise<SocialFeedEventItem[]> 
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('social_feed_events')
         .select(`
             id,
@@ -1313,7 +1353,35 @@ export async function getSocialFeed(limit = 10): Promise<SocialFeedEventItem[]> 
 
     if (error) throw error;
 
-    return ((data || []) as any[]).map(item => ({
+    type FeedReactionRow = {
+        user_id?: string;
+        reaction?: string;
+        user?: {
+            id: string;
+            username: string;
+            display_name: string | null;
+        } | null;
+    };
+
+    type FeedEventRow = {
+        id: string;
+        actor_id: string;
+        actor?: {
+            display_name?: string | null;
+            username?: string | null;
+        } | null;
+        event_type: SocialFeedEventItem['event_type'];
+        message: string;
+        metadata?: Record<string, unknown>;
+        created_at: string;
+        reactions?: FeedReactionRow[];
+    };
+
+    return ((data || []) as FeedEventRow[]).map(item => {
+        const reactions = item.reactions || [];
+        const likes = reactions.filter((reactionItem) => reactionItem?.reaction === 'like');
+
+        return {
         id: item.id,
         actor_id: item.actor_id,
         actor_name: item.actor?.display_name || item.actor?.username || 'Utilisateur',
@@ -1321,20 +1389,18 @@ export async function getSocialFeed(limit = 10): Promise<SocialFeedEventItem[]> 
         message: item.message,
         metadata: item.metadata || {},
         created_at: item.created_at,
-        reactions_count: ((item.reactions || []) as any[])
-            .filter((reactionItem: any) => reactionItem?.reaction === 'like')
-            .length,
-        liked_by_me: ((item.reactions || []) as any[])
-            .some((reactionItem: any) => reactionItem?.reaction === 'like' && reactionItem?.user_id === user.id),
-        liked_by_preview: ((item.reactions || []) as any[])
-            .filter((reactionItem: any) => reactionItem?.reaction === 'like' && reactionItem?.user)
-            .map((reactionItem: any) => ({
+        reactions_count: likes.length,
+        liked_by_me: likes.some((reactionItem) => reactionItem?.user_id === user.id),
+        liked_by_preview: likes
+            .filter((reactionItem) => reactionItem?.user)
+            .map((reactionItem) => ({
                 id: reactionItem.user.id,
                 username: reactionItem.user.username,
                 display_name: reactionItem.user.display_name,
             }))
             .slice(0, 4),
-    })) as SocialFeedEventItem[];
+    };
+    }) as SocialFeedEventItem[];
 }
 
 export async function deleteMySharedWorkoutEvent(eventId: string): Promise<void> {
@@ -1342,7 +1408,7 @@ export async function deleteMySharedWorkoutEvent(eventId: string): Promise<void>
     const user = await getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('social_feed_events')
         .delete()
         .eq('id', eventId)
@@ -1361,7 +1427,7 @@ export async function setSocialFeedReaction(eventId: string, reaction: string): 
         throw new Error('Unsupported reaction');
     }
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('social_feed_reactions')
         .upsert(
             {
@@ -1380,7 +1446,7 @@ export async function toggleSocialFeedReaction(eventId: string): Promise<{ liked
     const user = await getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data: existingReaction, error: existingReactionError } = await (client as any)
+    const { data: existingReaction, error: existingReactionError } = await client
         .from('social_feed_reactions')
         .select('id')
         .eq('event_id', eventId)
@@ -1391,7 +1457,7 @@ export async function toggleSocialFeedReaction(eventId: string): Promise<{ liked
     if (existingReactionError) throw existingReactionError;
 
     if (existingReaction?.id) {
-        const { error: removeError } = await (client as any)
+        const { error: removeError } = await client
             .from('social_feed_reactions')
             .delete()
             .eq('id', existingReaction.id);
@@ -1402,7 +1468,7 @@ export async function toggleSocialFeedReaction(eventId: string): Promise<{ liked
 
     await setSocialFeedReaction(eventId, 'like');
 
-    const { data: feedEvent, error: feedEventError } = await (client as any)
+    const { data: feedEvent, error: feedEventError } = await client
         .from('social_feed_events')
         .select('id, actor_id, metadata')
         .eq('id', eventId)
@@ -1470,8 +1536,10 @@ async function sendPushNotification(
     let senderName = 'Quelqu\'un';
     try {
         senderName = await resolveSenderName(user.id, data?.sender_name);
-    } catch {
-        // Keep fallback sender name if profile resolution fails.
+    } catch (error) {
+        if (__DEV__) {
+            console.warn('[SocialService] Failed to resolve sender name for push notification', error);
+        }
     }
     
     let title: string;
@@ -1529,12 +1597,20 @@ async function sendPushNotification(
             return;
         }
 
-        if (invokeData && typeof invokeData === 'object' && (invokeData as any).success === false) {
+        const invokePayload = (invokeData && typeof invokeData === 'object')
+            ? (invokeData as {
+                success?: boolean;
+                provider_error?: unknown;
+                provider_message?: unknown;
+            })
+            : null;
+
+        if (invokePayload?.success === false) {
             console.warn('[push] Provider rejected notification', {
                 type,
                 receiverId,
-                providerError: (invokeData as any).provider_error,
-                providerMessage: (invokeData as any).provider_message,
+                providerError: invokePayload.provider_error,
+                providerMessage: invokePayload.provider_message,
             });
         }
     } catch (error) {
@@ -1569,13 +1645,16 @@ export function subscribeToEncouragements(
             },
             async (payload) => {
                 // Fetch the complete encouragement with sender info
-                const { data } = await (client as any)
+                const insertedId = (payload.new as { id?: string }).id;
+                if (!insertedId) return;
+
+                const { data } = await client
                     .from('encouragements')
                     .select(`
                         *,
                         sender:profiles!encouragements_sender_id_fkey(id, username, display_name)
                     `)
-                    .eq('id', (payload.new as any).id)
+                    .eq('id', insertedId)
                     .single();
                 
                 if (data) {
@@ -1609,13 +1688,16 @@ export function subscribeToFriendRequests(
             },
             async (payload) => {
                 // Fetch the complete friendship with requester info
-                const { data } = await (client as any)
+                const insertedId = (payload.new as { id?: string }).id;
+                if (!insertedId) return;
+
+                const { data } = await client
                     .from('friendships')
                     .select(`
                         *,
                         requester:profiles!friendships_requester_id_fkey(id, username, display_name)
                     `)
-                    .eq('id', (payload.new as any).id)
+                    .eq('id', insertedId)
                     .single();
                 
                 if (data) {
@@ -1648,7 +1730,7 @@ export async function blockUser(blockedUserId: string): Promise<void> {
     if (!user) throw new Error('Not authenticated');
 
     // Insert blocked_users record
-    const { error } = await (client as any)
+    const { error } = await client
         .from('blocked_users')
         .insert({
             blocker_id: user.id,
@@ -1658,7 +1740,7 @@ export async function blockUser(blockedUserId: string): Promise<void> {
     if (error) throw error;
 
     // Also remove any existing friendship
-    await (client as any)
+    await client
         .from('friendships')
         .delete()
         .or(`and(requester_id.eq.${user.id},addressee_id.eq.${blockedUserId}),and(requester_id.eq.${blockedUserId},addressee_id.eq.${user.id})`);
@@ -1672,7 +1754,7 @@ export async function unblockUser(blockedUserId: string): Promise<void> {
     const user = await getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { error } = await (client as any)
+    const { error } = await client
         .from('blocked_users')
         .delete()
         .eq('blocker_id', user.id)
@@ -1689,7 +1771,7 @@ export async function getBlockedUsers(): Promise<Profile[]> {
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('blocked_users')
         .select(`
             blocked:profiles!blocked_users_blocked_id_fkey(*)
@@ -1697,7 +1779,14 @@ export async function getBlockedUsers(): Promise<Profile[]> {
         .eq('blocker_id', user.id);
 
     if (error) return [];
-    return ((data || []) as any[]).map((item: any) => item.blocked) as Profile[];
+
+    type BlockedUserRow = {
+        blocked?: Profile | null;
+    };
+
+    return ((data || []) as BlockedUserRow[])
+        .map((item) => item.blocked)
+        .filter((blocked): blocked is Profile => Boolean(blocked));
 }
 
 /**
@@ -1708,13 +1797,20 @@ export async function getBlockedUserIds(): Promise<string[]> {
     const user = await getCurrentUser();
     if (!user) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('blocked_users')
         .select('blocked_id')
         .eq('blocker_id', user.id);
 
     if (error) return [];
-    return ((data || []) as any[]).map((item: any) => item.blocked_id);
+
+    type BlockedIdRow = {
+        blocked_id?: string | null;
+    };
+
+    return ((data || []) as BlockedIdRow[])
+        .map((item) => item.blocked_id)
+        .filter((blockedId): blockedId is string => Boolean(blockedId));
 }
 
 /**
@@ -1725,7 +1821,7 @@ export async function isUserBlocked(userId: string): Promise<boolean> {
     const user = await getCurrentUser();
     if (!user) return false;
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as NonNullable<typeof supabase>)
         .from('blocked_users')
         .select('id')
         .eq('blocker_id', user.id)

@@ -79,6 +79,12 @@ function invalidateHomeFeedCache(): void {
     homeHydrationCacheAt = 0;
 }
 
+function logSocialHubError(context: string, error: unknown): void {
+    if (__DEV__) {
+        console.warn(`[SocialHub] ${context}`, error);
+    }
+}
+
 interface ChallengeContributionItem {
     id: string;
     workoutLabel: string;
@@ -400,7 +406,8 @@ export default function SocialHubScreen() {
             homeChallengesCache = mergedChallenges;
             setChallengeIndex(0);
             setChallengesError(null);
-        } catch {
+        } catch (error) {
+            logSocialHubError('Failed to load active challenges', error);
             if (homeChallengesCache.length === 0) {
                 setActiveChallenges([]);
             }
@@ -416,7 +423,8 @@ export default function SocialHubScreen() {
             setFeedItems(mapped);
             homeFeedCache = mapped;
             setFeedError(null);
-        } catch {
+        } catch (error) {
+            logSocialHubError('Failed to load social feed', error);
             if (homeFeedCache.length === 0) {
                 setFeedItems([]);
             }
@@ -431,11 +439,10 @@ export default function SocialHubScreen() {
         }
 
         try {
-            await Promise.allSettled([
-                fetchFriends(),
-                loadChallenges(),
-                loadFeed(),
-            ]);
+            const friendsTask = fetchFriends();
+            const challengesTask = loadChallenges();
+            const feedTask = loadFeed();
+            await Promise.allSettled([friendsTask, challengesTask, feedTask]);
             homeCacheProfileId = profile?.id ?? null;
             homeHydrationCacheAt = Date.now();
         } finally {
@@ -448,10 +455,9 @@ export default function SocialHubScreen() {
     const loadFriendsTabData = useCallback(async () => {
         setIsHydratingFriendsTab(true);
         try {
-            await Promise.allSettled([
-                fetchFriends(),
-                fetchPendingRequests(),
-            ]);
+            const friendsTask = fetchFriends();
+            const pendingTask = fetchPendingRequests();
+            await Promise.allSettled([friendsTask, pendingTask]);
         } finally {
             setIsHydratingFriendsTab(false);
         }
@@ -572,7 +578,8 @@ export default function SocialHubScreen() {
                 const results = await searchUsers(searchQuery.trim());
                 if (requestId !== searchRequestRef.current) return;
                 setSearchResults(results as SearchResult[]);
-            } catch {
+            } catch (error) {
+                logSocialHubError('User search failed', error);
                 if (requestId !== searchRequestRef.current) return;
                 setSearchResults([]);
                 setSearchError(t('socialHub.errors.searchUnavailable'));
@@ -648,7 +655,8 @@ export default function SocialHubScreen() {
                 result.id === userId ? { ...result, friendship_status: 'pending' } : result
             )));
             showSuccessDialog(t('social.requestSent'));
-        } catch {
+        } catch (error) {
+            logSocialHubError('Failed to send friend request', error);
             showErrorDialog(t('socialHub.errors.sendFriendRequest'));
         }
     }, [sendFriendRequest, showErrorDialog, showSuccessDialog, t]);
@@ -660,7 +668,8 @@ export default function SocialHubScreen() {
                 title: t('socialHub.invite.shareTitle'),
                 message: t('socialHub.invite.shareMessage', { username }),
             });
-        } catch {
+        } catch (error) {
+            logSocialHubError('Failed to share invite', error);
             showErrorDialog(t('socialHub.errors.shareInvite'));
         }
     }, [profile?.username, showErrorDialog, t]);
@@ -670,7 +679,8 @@ export default function SocialHubScreen() {
             await respondToRequest(friendshipId, accept);
             invalidateHomeHydrationCache();
             await loadFriendsTabData();
-        } catch {
+        } catch (error) {
+            logSocialHubError('Failed to respond to friend request', error);
             showErrorDialog(t('socialHub.errors.sendFriendRequest'));
         }
     }, [respondToRequest, loadFriendsTabData, showErrorDialog, t]);
@@ -686,7 +696,8 @@ export default function SocialHubScreen() {
                     invalidateHomeHydrationCache();
                     await Promise.allSettled([loadFriendsTabData(), loadFriendsLeaderboardData()]);
                     showSuccessDialog(`${t('social.friendRemoved')} · ${friendName}`);
-                } catch {
+                } catch (error) {
+                    logSocialHubError('Failed to remove friend', error);
                     showErrorDialog(t('socialHub.errors.sendFriendRequest'));
                 }
             }
@@ -724,8 +735,11 @@ export default function SocialHubScreen() {
         if (friends.length === 0) {
             try {
                 await fetchFriends();
-            } catch {
+            } catch (error) {
                 // Keep opening the sheet even if preloading friends fails.
+                if (__DEV__) {
+                    console.warn('[SocialHub] Failed to preload friends before opening challenge sheet', error);
+                }
             }
         }
         challengeSheetRef.current?.present();
@@ -744,7 +758,8 @@ export default function SocialHubScreen() {
             await toggleSocialFeedReaction(item.eventId);
             invalidateHomeFeedCache();
             await loadFeed();
-        } catch {
+        } catch (error) {
+            logSocialHubError('Failed to toggle workout like', error);
             showErrorDialog(t('socialHub.errors.sendLike'));
         } finally {
             setIsSendingLikeForId(null);
@@ -764,7 +779,8 @@ export default function SocialHubScreen() {
                     await deleteMySharedWorkoutEvent(item.eventId as string);
                     invalidateHomeFeedCache();
                     await loadFeed();
-                } catch {
+                } catch (error) {
+                    logSocialHubError('Failed to delete shared workout', error);
                     showErrorDialog(t('socialHub.feed.deleteError'));
                 } finally {
                     setIsDeletingFeedItemId(null);
@@ -788,7 +804,8 @@ export default function SocialHubScreen() {
             shareWorkoutSheetRef.current?.dismiss();
             await loadFeed();
             showSuccessDialog(t('socialHub.shareWorkout.sharedSuccess'));
-        } catch {
+        } catch (error) {
+            logSocialHubError('Failed to share workout to feed', error);
             showErrorDialog(t('socialHub.errors.shareWorkout'));
         } finally {
             setIsSharingWorkoutId(null);
@@ -838,7 +855,8 @@ export default function SocialHubScreen() {
             setSelectedFriendIdsForChallenge([]);
             await Promise.all([loadChallenges(), loadFeed(), loadFriendsTabData()]);
             showSuccessDialog(t('socialHub.challenge.createSuccess'));
-        } catch {
+        } catch (error) {
+            logSocialHubError('Failed to create social challenge', error);
             showErrorDialog(t('socialHub.errors.createChallenge'));
         } finally {
             setIsCreatingChallenge(false);
@@ -886,7 +904,8 @@ export default function SocialHubScreen() {
                             ? t('socialHub.challenge.deleteSuccess')
                             : t('socialHub.challenge.leaveSuccess')
                     );
-                } catch {
+                } catch (error) {
+                    logSocialHubError('Failed to delete/leave challenge', error);
                     showErrorDialog(
                         isOwner
                             ? t('socialHub.challenge.deleteError')
@@ -954,7 +973,7 @@ export default function SocialHubScreen() {
                     <Users size={56} color={Colors.muted} />
                     <Text style={styles.stateTitle}>{t('social.authTitle')}</Text>
                     <Text style={styles.stateSubtitle}>{t('social.authSubtitle')}</Text>
-                    <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/auth' as any)}>
+                    <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/auth' as never)}>
                         <Text style={styles.primaryButtonText}>{t('profile.signIn')}</Text>
                     </TouchableOpacity>
                 </View>
@@ -969,7 +988,7 @@ export default function SocialHubScreen() {
                     <Users size={56} color={Colors.muted} />
                     <Text style={styles.stateTitle}>{t('social.disabledTitle')}</Text>
                     <Text style={styles.stateSubtitle}>{t('social.disabledSubtitle')}</Text>
-                    <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/settings/social' as any)}>
+                    <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/settings/social' as never)}>
                         <Text style={styles.primaryButtonText}>{t('settings.social')}</Text>
                     </TouchableOpacity>
                 </View>
@@ -1005,10 +1024,10 @@ export default function SocialHubScreen() {
                         </View>
 
                         <View style={styles.topbarActions}>
-                            <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/settings/notifications' as any)}>
+                            <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/settings/notifications' as never)}>
                                 <Bell size={18} color={Colors.text} />
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/profile' as any)}>
+                            <TouchableOpacity style={styles.notifButton} onPress={() => router.push('/profile' as never)}>
                                 <UserCircle2 size={18} color={Colors.text} />
                             </TouchableOpacity>
                         </View>
@@ -1036,7 +1055,7 @@ export default function SocialHubScreen() {
                             challengeCardWidth={challengeCardWidth}
                             challengeIndex={challengeIndex}
                             setChallengeIndex={setChallengeIndex}
-                            onAddSession={() => router.push('/workout' as any)}
+                            onAddSession={() => router.push('/workout' as never)}
                             onViewChallengeDetails={openChallengeDetails}
                             onDismissChallenge={handleDismissChallenge}
                             challengesError={challengesError}
@@ -1096,7 +1115,7 @@ export default function SocialHubScreen() {
                             profileId={profile?.id}
                             deletingChallengeId={isDeletingChallengeId}
                             onPressCreateChallenge={openChallengeSheet}
-                            onPressAddSession={() => router.push('/workout' as any)}
+                            onPressAddSession={() => router.push('/workout' as never)}
                             onPressDetails={openChallengeDetails}
                             onDeleteChallenge={handleDeleteChallenge}
                             labels={{
@@ -1262,7 +1281,7 @@ export default function SocialHubScreen() {
                     profileId={profile?.id}
                     onPressAddSession={() => {
                         challengeDetailsSheetRef.current?.dismiss();
-                        router.push('/workout' as any);
+                        router.push('/workout' as never);
                     }}
                     onPressOpenChallenges={() => {
                         challengeDetailsSheetRef.current?.dismiss();

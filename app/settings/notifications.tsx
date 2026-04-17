@@ -121,7 +121,7 @@ export default function NotificationsScreen() {
       await NotificationService.scheduleMealReminder(newIndex, hour, minute);
     }
     
-    updateSettings({ mealReminders: currentReminders });
+    void updateSettings({ mealReminders: currentReminders });
     setMealTimePickerVisible(false);
   }, [mealTimePickerHour, mealTimePickerMinute, editingMealIndex, settings.mealReminders, updateSettings, t]);
 
@@ -137,7 +137,7 @@ export default function NotificationsScreen() {
       await NotificationService.cancelMealReminder(index);
     }
     
-    updateSettings({ mealReminders: currentReminders });
+    void updateSettings({ mealReminders: currentReminders });
   }, [settings.mealReminders, updateSettings]);
 
   const handleDeleteMealReminder = useCallback(async (index: number) => {
@@ -146,14 +146,17 @@ export default function NotificationsScreen() {
     const currentReminders = [...(settings.mealReminders || [])];
     currentReminders.splice(index, 1);
     
-    // Reschedule remaining reminders with new indices
-    for (let i = 0; i < currentReminders.length; i++) {
-      if (currentReminders[i].enabled) {
-        await NotificationService.scheduleMealReminder(i, currentReminders[i].hour, currentReminders[i].minute);
-      }
-    }
-    
-    updateSettings({ mealReminders: currentReminders });
+    // Reschedule remaining reminders with new indices in parallel.
+    await Promise.all(
+      currentReminders.map((reminder, i) => {
+        if (!reminder.enabled) {
+          return Promise.resolve();
+        }
+        return NotificationService.scheduleMealReminder(i, reminder.hour, reminder.minute);
+      })
+    );
+
+    void updateSettings({ mealReminders: currentReminders });
   }, [settings.mealReminders, updateSettings]);
 
   // Weight reminder states
@@ -191,7 +194,7 @@ export default function NotificationsScreen() {
         await NotificationService.scheduleWeightReminderMonthly(hour, minute, dayOfMonth);
       }
       
-      updateSettings({ 
+      void updateSettings({ 
         weightReminderEnabled: true,
         weightReminderHour: hour,
         weightReminderMinute: minute,
@@ -204,7 +207,7 @@ export default function NotificationsScreen() {
       Alert.alert(t('common.success'), t('settings.weightReminderEnabled', { time: timeStr, defaultValue: `Rappel de pesée activé à ${timeStr}` }));
     } else {
       await NotificationService.cancelWeightReminder();
-      updateSettings({ weightReminderEnabled: false });
+      void updateSettings({ weightReminderEnabled: false });
     }
   }, [settings, updateSettings, t]);
 
@@ -225,7 +228,7 @@ export default function NotificationsScreen() {
       await NotificationService.scheduleWeightReminderMonthly(hour, minute, weightDayOfMonth);
     }
     
-    updateSettings({ 
+    void updateSettings({ 
       weightReminderHour: hour,
       weightReminderMinute: minute,
       weightReminderFrequency: weightFrequency,
@@ -262,7 +265,7 @@ export default function NotificationsScreen() {
       const hour = settings.streakReminderHour ?? 20;
       const minute = settings.streakReminderMinute ?? 0;
       await NotificationService.scheduleStreakReminder(hour, minute);
-      updateSettings({ 
+      void updateSettings({ 
         streakReminderEnabled: true,
         streakReminderHour: hour,
         streakReminderMinute: minute,
@@ -275,7 +278,7 @@ export default function NotificationsScreen() {
       );
     } else {
       await NotificationService.cancelStreakReminder();
-      updateSettings({ streakReminderEnabled: false });
+      void updateSettings({ streakReminderEnabled: false });
     }
   }, [settings, updateSettings, t]);
 
@@ -285,7 +288,7 @@ export default function NotificationsScreen() {
     
     if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
       await NotificationService.scheduleStreakReminder(hour, minute);
-      updateSettings({ 
+      void updateSettings({ 
         streakReminderHour: hour,
         streakReminderMinute: minute,
       });
@@ -380,7 +383,7 @@ export default function NotificationsScreen() {
           {/* Existing meal reminders */}
           {(settings.mealReminders || []).map((reminder, index) => (
             <Animated.View 
-              key={index} 
+              key={`${reminder.hour}-${reminder.minute}-${index}`} 
               entering={FadeInDown.delay(250 + index * 50).springify()}
               style={styles.mealReminderRow}
             >
@@ -637,7 +640,7 @@ export default function NotificationsScreen() {
                   <View style={styles.dayButtons}>
                     {weekDayLabels.map((day, index) => (
                       <TouchableOpacity
-                        key={index}
+                        key={`${day}-${index}`}
                         style={[
                           styles.dayButton,
                           weightDayOfWeek === index && styles.dayButtonActive

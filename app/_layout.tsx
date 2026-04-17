@@ -25,8 +25,28 @@ const SCREEN_CONFIG = [
     { name: 'settings', label: 'Settings', Icon: Settings },
 ];
 
+type ScreenConfig = (typeof SCREEN_CONFIG)[number];
+type AppRouter = ReturnType<typeof useRouter>;
+
+interface NavButtonProps {
+    screenName: ScreenConfig['name'];
+    isFocused: boolean;
+    router: AppRouter;
+    config: ScreenConfig;
+}
+
+interface NotificationResponseLike {
+    notification?: {
+        request?: {
+            content?: {
+                data?: Record<string, unknown>;
+            };
+        };
+    };
+}
+
 // Composant Bouton avec transition douce
-const NavButton = ({ screenName, isFocused, router, config }: any) => {
+const NavButton = ({ screenName, isFocused, router, config }: NavButtonProps) => {
     const Icon = config.Icon;
 
     // Valeurs d'animation pour l'opacité et l'échelle
@@ -58,7 +78,7 @@ const NavButton = ({ screenName, isFocused, router, config }: any) => {
 
     const onPress = () => {
         if (!isFocused) {
-            router.push(`/${screenName === 'index' ? '' : screenName}`);
+            router.push((screenName === 'index' ? '/' : `/${screenName}`) as never);
         }
     };
 
@@ -151,7 +171,7 @@ export default function Layout() {
     }, [settings.themePreset, settings.customThemeColors]);
 
     useEffect(() => {
-        const subscription = NotificationService.addNotificationResponseListener((response: any) => {
+        const subscription = NotificationService.addNotificationResponseListener((response: NotificationResponseLike) => {
             const data = response?.notification?.request?.content?.data || {};
             const explicitRoute = typeof data?.route === 'string' ? data.route : null;
             const type = typeof data?.type === 'string' ? data.type : null;

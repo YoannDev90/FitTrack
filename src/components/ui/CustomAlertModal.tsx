@@ -146,7 +146,7 @@ export const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
 
                                 return (
                                     <TouchableOpacity
-                                        key={index}
+                                        key={`${button.text}-${index}`}
                                         style={[
                                             styles.button,
                                             isCancel && styles.cancelButton,

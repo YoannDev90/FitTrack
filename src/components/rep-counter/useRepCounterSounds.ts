@@ -16,50 +16,56 @@ export function useRepCounterSounds() {
     const newRecordSound = useAudioPlayer(require('../../../assets/new-record.mp3'));
     const finishedSound = useAudioPlayer(require('../../../assets/finished.mp3'));
 
+    const logSoundError = useCallback((label: string, error: unknown) => {
+        if (__DEV__) {
+            console.warn(`[RepCounterSounds] ${label} failed`, error);
+        }
+    }, []);
+
     const playRepSound = useCallback(() => {
         try {
             repSound.seekTo(0);
             repSound.play();
         } catch (error) {
-            // Ignore sound errors
+            logSoundError('rep', error);
         }
-    }, [repSound]);
+    }, [logSoundError, repSound]);
 
     const playKeepGoingSound = useCallback(() => {
         try {
             keepGoingSound.seekTo(0);
             keepGoingSound.play();
         } catch (error) {
-            // Ignore sound errors
+            logSoundError('keep-going', error);
         }
-    }, [keepGoingSound]);
+    }, [keepGoingSound, logSoundError]);
 
     const playSecondsSound = useCallback(() => {
         try {
             secondsSound.seekTo(0);
             secondsSound.play();
         } catch (error) {
-            // Ignore sound errors
+            logSoundError('seconds', error);
         }
-    }, [secondsSound]);
+    }, [logSoundError, secondsSound]);
 
     const playNewRecordSound = useCallback(() => {
         try {
             newRecordSound.seekTo(0);
             newRecordSound.play();
         } catch (error) {
-            // Ignore sound errors
+            logSoundError('new-record', error);
         }
-    }, [newRecordSound]);
+    }, [logSoundError, newRecordSound]);
 
     const playFinishedSound = useCallback(() => {
         try {
             finishedSound.seekTo(0);
             finishedSound.play();
         } catch (error) {
-            // Ignore sound errors
+            logSoundError('finished', error);
         }
-    }, [finishedSound]);
+    }, [finishedSound, logSoundError]);
 
     return {
         playRepSound,

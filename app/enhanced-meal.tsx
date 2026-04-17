@@ -62,7 +62,7 @@ import {
 } from '../src/services/pollination';
 import { uploadImageToTmpFiles } from '../src/services/imageUpload';
 import { formatDisplayDate } from '../src/utils/date';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import {
     Colors,
@@ -415,7 +415,7 @@ export default function EnhancedMealScreen() {
     }, [selectedImage, additionalDetails, t, checkPollinationConnection, scoreScale, showAlert]);
 
     // Save meal
-    const saveMeal = useCallback(async () => {
+    const saveMeal = useCallback(() => {
         const mealNames: Record<MealTime, string> = {
             breakfast: `☀️ ${t('enhancedMeal.timeOptions.breakfast.label')}`,
             lunch: `🌤️ ${t('enhancedMeal.timeOptions.lunch.label')}`,
@@ -474,7 +474,7 @@ export default function EnhancedMealScreen() {
     }, []);
 
     // Handle date change
-    const onDateChange = useCallback((event: any, date?: Date) => {
+    const onDateChange = useCallback((_event: DateTimePickerEvent, date?: Date) => {
         setShowDatePicker(false);
         if (date) {
             setSelectedDate(date);
@@ -775,7 +775,7 @@ export default function EnhancedMealScreen() {
                                     
                                     {analysis.suggestions.map((suggestion, index) => (
                                         <Animated.View 
-                                            key={index} 
+                                            key={`${suggestion}-${index}`} 
                                             entering={FadeInDown.delay(300 + index * 80).springify()}
                                             style={styles.suggestionItem}
                                         >

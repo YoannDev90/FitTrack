@@ -3,19 +3,26 @@
 // ============================================================================
 
 import * as Device from 'expo-device';
+import type * as ExpoNotifications from 'expo-notifications';
+import type { Notification, NotificationResponse } from 'expo-notifications';
 import { Platform } from 'react-native';
 import i18n from '../../i18n';
 import { BuildConfig } from '../../config';
 
 // Dynamic import helper for expo-notifications to avoid native module errors in FOSS builds
-let _notificationsModule: any | null = null;
+let _notificationsModule: typeof ExpoNotifications | null = null;
+
+function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : `${error ?? ''}`;
+}
+
 async function importNotifications() {
     if (_notificationsModule) return _notificationsModule;
     try {
         _notificationsModule = await import('expo-notifications');
         return _notificationsModule;
-    } catch (error: any) {
-        console.warn('[notifications] expo-notifications import failed:', error?.message || error);
+    } catch (error: unknown) {
+        console.warn('[notifications] expo-notifications import failed:', getErrorMessage(error));
         _notificationsModule = null;
         return null;
     }
@@ -34,8 +41,8 @@ async function importNotifications() {
                     shouldShowList: true,
                 }),
             });
-        } catch (error: any) {
-            console.warn('[notifications] Failed to set notification handler:', error?.message || error);
+        } catch (error: unknown) {
+            console.warn('[notifications] Failed to set notification handler:', getErrorMessage(error));
         }
     }
 })();
@@ -135,12 +142,13 @@ export async function registerForPushNotifications(): Promise<PushTokenResult> {
               console.log('Expo Push Token:', token.data);
             }
             return { success: true, token: token.data };
-        } catch (error: any) {
-            lastError = error;
-            console.warn(`Push token attempt ${attempt}/${maxRetries} failed:`, error.message);
+        } catch (error: unknown) {
+            const errorMessage = getErrorMessage(error);
+            lastError = error instanceof Error ? error : new Error(errorMessage);
+            console.warn(`Push token attempt ${attempt}/${maxRetries} failed:`, errorMessage);
             
             // FIS_AUTH_ERROR - wait and retry
-            if (error.message?.includes('FIS_AUTH_ERROR') && attempt < maxRetries) {
+            if (errorMessage.includes('FIS_AUTH_ERROR') && attempt < maxRetries) {
                 // Wait exponentially longer between retries (1s, 2s, 4s)
                 await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)));
                 continue;
@@ -461,7 +469,7 @@ export async function cancelWeightReminder(): Promise<void> {
  * Écoute les notifications reçues
  */
 export function addNotificationReceivedListener(
-    handler: (notification: any) => void
+    handler: (notification: Notification) => void
 ): { remove: () => void } {
     if (_notificationsModule) {
         return _notificationsModule.addNotificationReceivedListener(handler);
@@ -475,7 +483,7 @@ export function addNotificationReceivedListener(
  * Écoute les notifications tapées (quand l'utilisateur clique)
  */
 export function addNotificationResponseListener(
-    handler: (response: any) => void
+    handler: (response: NotificationResponse) => void
 ): { remove: () => void } {
     if (_notificationsModule) {
         return _notificationsModule.addNotificationResponseReceivedListener(handler);

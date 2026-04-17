@@ -166,7 +166,7 @@ export default function ToolsScreen() {
 
             <View style={styles.exerciseList}>
               {generatedWorkout.exercises.map((exercise, index) => (
-                <View key={index} style={styles.exerciseItem}>
+                <View key={`${exercise.name}-${index}`} style={styles.exerciseItem}>
                   <Text style={styles.exerciseNumber}>{index + 1}</Text>
                   <View style={styles.exerciseInfo}>
                     <Text style={styles.exerciseName}>{exercise.name}</Text>

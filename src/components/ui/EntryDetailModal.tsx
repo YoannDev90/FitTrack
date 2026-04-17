@@ -63,7 +63,7 @@ function HomeWorkoutDetails({ entry }: { entry: HomeWorkoutEntry }) {
           <Text style={styles.detailLabel}>Exercices :</Text>
           <View style={styles.exercisesList}>
             {entry.exercises.split('\n').map((line, i) => (
-              <Text key={i} style={styles.exerciseLine}>• {line}</Text>
+              <Text key={`${line}-${i}`} style={styles.exerciseLine}>• {line}</Text>
             ))}
           </View>
         </>
@@ -176,7 +176,7 @@ function MealDetails({ entry }: { entry: MealEntry }) {
           </View>
 
           {entry.suggestions.map((s, i) => (
-            <View key={i} style={styles.suggestionItem}>
+            <View key={`${s}-${i}`} style={styles.suggestionItem}>
               <View style={styles.suggestionBullet}>
                 <Check size={12} color="#fff" />
               </View>
@@ -200,7 +200,7 @@ function MeasureDetails({ entry }: { entry: MeasureEntry }) {
   return (
     <View style={styles.details}>
       {measures.map((m, i) => (
-        <View key={i} style={styles.measureRow}>
+        <View key={`${m.label}-${i}`} style={styles.measureRow}>
           <Text style={styles.measureLabel}>{m.label}</Text>
           <Text style={styles.measureValue}>{m.value} {m.unit}</Text>
         </View>
@@ -272,7 +272,7 @@ function CustomSportDetails({ entry, sportConfig }: { entry: CustomSportEntry; s
           <Text style={styles.detailLabel}>Exercices :</Text>
           <View style={styles.exercisesList}>
             {entry.exercises.split('\n').map((line, i) => (
-              <Text key={i} style={styles.exerciseLine}>• {line}</Text>
+              <Text key={`${line}-${i}`} style={styles.exerciseLine}>• {line}</Text>
             ))}
           </View>
         </>

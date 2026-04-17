@@ -114,6 +114,7 @@ export function CountingScreen({
     const repsPerMin = elapsedTime > 0
         ? (repCount / (elapsedTime / 60)).toFixed(1)
         : '0';
+    const isPoseExercise = exercise.id !== 'run' && exercise.id !== 'run_ai';
 
     return (
         <Animated.View entering={FadeIn} style={s.container}>
@@ -206,12 +207,12 @@ export function CountingScreen({
             )}
 
             {/* ── Camera preview ── */}
-            {detectionMode === 'camera' && showCameraPreview && (
+            {detectionMode === 'camera' && showCameraPreview && isPoseExercise && (
                 <View style={s.camPreview}>
                     <PoseCameraView
                         facing="front"
                         showDebugOverlay={showDebugOverlay}
-                        exerciseType={exercise.id as any}
+                        exerciseType={exercise.id}
                         currentCount={exercise.isTimeBased ? plankSeconds : repCount}
                         onRepDetected={onCameraRepDetected}
                         onPlankStateChange={onPlankStateChange}
@@ -224,12 +225,12 @@ export function CountingScreen({
             )}
 
             {/* Hidden camera */}
-            {detectionMode === 'camera' && !showCameraPreview && (
+            {detectionMode === 'camera' && !showCameraPreview && isPoseExercise && (
                 <View style={s.hiddenCam}>
                     <PoseCameraView
                         facing="front"
                         showDebugOverlay={false}
-                        exerciseType={exercise.id as any}
+                        exerciseType={exercise.id}
                         currentCount={exercise.isTimeBased ? plankSeconds : repCount}
                         onRepDetected={onCameraRepDetected}
                         onPlankStateChange={onPlankStateChange}
@@ -247,7 +248,7 @@ export function CountingScreen({
                     <Text style={s.debugTitle}>
                         🔍 Planche ({(plankDebugInfo.overallConfidence * 100).toFixed(0)}%)
                     </Text>
-                    {Object.entries(plankDebugInfo.checks).map(([k, v]: any) => (
+                    {Object.entries(plankDebugInfo.checks).map(([k, v]) => (
                         <Text key={k} style={s.debugLine}>{v.message}</Text>
                     ))}
                 </View>

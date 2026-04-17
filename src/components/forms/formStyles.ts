@@ -63,10 +63,10 @@ export const FT = {
     micro: 9, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, display: 32,
 };
 
-export const FW: Record<string, any> = {
+export const FW = {
     light: '300', reg: '400', med: '500',
     semi: '600', bold: '700', xbold: '800', black: '900',
-};
+} as const;
 
 // ─── Styles partagés ─────────────────────────────────────────────────────────
 export const sharedStyles = StyleSheet.create({

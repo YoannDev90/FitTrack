@@ -41,7 +41,7 @@ export interface GamificationLog {
     amount: number;
     reason: string;
     reasonKey?: string;
-    reasonParams?: Record<string, any>;
+    reasonParams?: Record<string, unknown>;
     type: 'xp_gain' | 'xp_loss' | 'level_up' | 'level_down' | 'quest_complete';
     entryId?: string; // Lien vers l'entrée qui a généré cet XP
 }
@@ -70,7 +70,7 @@ export interface GamificationState {
     processEntryUpdated: (oldEntry: Entry, newEntry: Entry) => void;
     
     // Actions internes
-    addXp: (amount: number, reason: string, entryId?: string, reasonKey?: string, reasonParams?: Record<string, any>) => void;
+    addXp: (amount: number, reason: string, entryId?: string, reasonKey?: string, reasonParams?: Record<string, unknown>) => void;
     removeXpForEntry: (entryId: string) => void;
     
     // Quêtes
@@ -206,7 +206,10 @@ export const calculateQuestTotals = (entries: Entry[]): QuestTotals => {
     const thisWeekEntries = entries.filter(e => {
         try {
             return isThisWeek(new Date(e.date), { weekStartsOn: 1 });
-        } catch {
+        } catch (error) {
+            if (__DEV__) {
+                console.warn('[GamificationStore] Failed to parse entry date for quest totals', error);
+            }
             return false;
         }
     });
@@ -352,7 +355,7 @@ export const useGamificationStore = create<GamificationState>()(
                 // GESTION XP
                 // ================================================================
 
-                addXp: (amount: number, reason: string, entryId?: string, reasonKey?: string, reasonParams?: Record<string, any>) => {
+                addXp: (amount: number, reason: string, entryId?: string, reasonKey?: string, reasonParams?: Record<string, unknown>) => {
                     if (amount <= 0) return;
 
                     const { xp, level, history } = get();

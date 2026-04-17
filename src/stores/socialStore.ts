@@ -90,7 +90,7 @@ interface SocialState {
     sendFriendRequest: (userId: string) => Promise<void>;
     respondToRequest: (friendshipId: string, accept: boolean) => Promise<void>;
     removeFriend: (friendshipId: string) => Promise<void>;
-    searchUsers: (query: string) => Promise<any[]>;
+    searchUsers: (query: string) => Promise<SocialSearchResult[]>;
     
     // Actions - Blocked Users
     fetchBlockedUsers: () => Promise<void>;
@@ -111,8 +111,12 @@ interface SocialState {
     registerPushTokenAfterAuth: () => Promise<void>;
 }
 
+type SocialSearchResult = Profile & {
+    friendship_status: 'pending' | 'accepted' | 'rejected' | 'blocked' | null;
+};
+
 function classifySocialError(error: unknown): 'network' | 'server' {
-    const message = `${(error as any)?.message || ''}`.toLowerCase();
+    const message = (error instanceof Error ? error.message : typeof error === 'string' ? error : '').toLowerCase();
     if (
         message.includes('network') ||
         message.includes('fetch') ||
@@ -187,7 +191,10 @@ export const useSocialStore = create<SocialState>()(
                     if (profile) {
                         get().registerPushTokenAfterAuth();
                     }
-                } catch {
+                } catch (error) {
+                    if (__DEV__) {
+                        console.warn('[SocialStore] checkAuth failed', error);
+                    }
                     get().cleanupSubscriptions();
                     set({ isAuthenticated: false, profile: null, isLoading: false, lastAuthCheckAt: now });
                 }
@@ -450,7 +457,7 @@ export const useSocialStore = create<SocialState>()(
 
             searchUsers: async (query) => {
                 if (!get().isAuthenticated) return [];
-                return SocialService.searchUsers(query);
+                return (await SocialService.searchUsers(query)) as SocialSearchResult[];
             },
 
             // ========================================
@@ -541,20 +548,22 @@ export const useSocialStore = create<SocialState>()(
 
                 // Subscribe to encouragements
                 SocialService.subscribeToEncouragements(profile.id, async (encouragement) => {
+                    const sender = (encouragement as Encouragement & { sender?: Profile }).sender;
+                    if (!sender) return;
+
+                    const encouragementWithSender = encouragement as Encouragement & { sender: Profile };
+
                     // Add to unread list
                     set(state => ({
-                        unreadEncouragements: [encouragement as any, ...state.unreadEncouragements],
+                        unreadEncouragements: [encouragementWithSender, ...state.unreadEncouragements],
                     }));
 
                     // Show notification
-                    const sender = (encouragement as any).sender;
-                    if (sender) {
-                        await Notifications.showEncouragementNotification(
-                            sender.display_name || sender.username,
-                            encouragement.message || 'Continue comme ça ! 💪',
-                            encouragement.emoji
-                        );
-                    }
+                    await Notifications.showEncouragementNotification(
+                        sender.display_name || sender.username,
+                        encouragement.message || 'Continue comme ça ! 💪',
+                        encouragement.emoji
+                    );
                 });
 
                 // Subscribe to friend requests
@@ -563,7 +572,7 @@ export const useSocialStore = create<SocialState>()(
                     get().fetchPendingRequests();
 
                     // Show notification
-                    const requester = (friendship as any).requester;
+                    const requester = (friendship as Friendship & { requester?: Profile }).requester;
                     if (requester) {
                         await Notifications.showFriendRequestNotification(
                             requester.display_name || requester.username

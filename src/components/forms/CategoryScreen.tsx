@@ -109,7 +109,7 @@ export function CategoryScreen({ onSelect }: CategoryScreenProps) {
                         activeOpacity={0.78}
                     >
                         <LinearGradient
-                            colors={cat.gradient as any}
+                            colors={cat.gradient}
                             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                             style={[st.categoryCard, { borderColor: cat.border }]}
                         >

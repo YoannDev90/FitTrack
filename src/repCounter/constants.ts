@@ -85,10 +85,10 @@ export const FONT = {
     lg: 17, xl: 20, xxl: 26, xxxl: 34, display: 56,
 };
 
-export const W: Record<string, any> = {
+export const W = {
     light: '300', reg: '400', med: '500',
     semi: '600', bold: '700', xbold: '800', black: '900',
-};
+} as const;
 
 // ─── Exercise Configs ─────────────────────────────────────────────────────────
 import type { ExerciseConfig } from './types';

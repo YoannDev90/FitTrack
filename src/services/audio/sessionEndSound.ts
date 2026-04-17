@@ -3,6 +3,12 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-aud
 let activePlayer: AudioPlayer | null = null;
 let audioModeConfigured = false;
 
+const logSessionEndSoundError = (context: string, error: unknown): void => {
+    if (__DEV__) {
+        console.warn(`[SessionEndSound] ${context}`, error);
+    }
+};
+
 const ensureAudioMode = async (): Promise<void> => {
     if (audioModeConfigured) return;
 
@@ -25,8 +31,8 @@ const releaseActivePlayer = (): void => {
 
     try {
         playerToRelease.remove();
-    } catch {
-        // Ignore release errors to keep playback resilient.
+    } catch (error) {
+        logSessionEndSoundError('Failed to release active player', error);
     }
 };
 
@@ -70,13 +76,14 @@ export const playSessionEndSound = async (): Promise<void> => {
 
             try {
                 player.remove();
-            } catch {
-                // Ignore cleanup errors after playback completion.
+            } catch (error) {
+                logSessionEndSoundError('Failed to remove player after completion', error);
             }
         });
 
         tryStartPlayback(player.isLoaded);
-    } catch {
+    } catch (error) {
+        logSessionEndSoundError('Playback initialization failed', error);
         releaseActivePlayer();
     }
 };

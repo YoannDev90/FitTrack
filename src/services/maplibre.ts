@@ -1,12 +1,15 @@
+import type { ComponentType } from 'react';
 import { BuildConfig } from '../config/buildConfig';
+
+type MapLibreComponent = ComponentType<Record<string, unknown>>;
 
 type MapLibreModule = {
   setAccessToken?: (token: string | null) => void;
-  MapView: any;
-  Camera: any;
-  ShapeSource: any;
-  LineLayer: any;
-  CircleLayer: any;
+  MapView: MapLibreComponent;
+  Camera: MapLibreComponent;
+  ShapeSource: MapLibreComponent;
+  LineLayer: MapLibreComponent;
+  CircleLayer: MapLibreComponent;
 };
 
 let cachedMapLibre: MapLibreModule | null | undefined;
@@ -40,7 +43,10 @@ export function getMapLibreModule(): MapLibreModule | null {
 
     cachedMapLibre = lib;
     return cachedMapLibre;
-  } catch {
+  } catch (error) {
+    if (__DEV__) {
+      console.warn('[MapLibre] Native module unavailable', error);
+    }
     cachedMapLibre = null;
     return cachedMapLibre;
   }

@@ -33,11 +33,11 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
   useEffect(() => {
     const checkConnection = async () => {
       setIsLoading(true);
-      const connected = await isPollinationConnected();
-      setIsConnected(connected);
+      const isCurrentlyConnected = await isPollinationConnected();
+      setIsConnected(isCurrentlyConnected);
       setIsLoading(false); 
     };
-    checkConnection();
+    void checkConnection();
   }, []);
 
   // Toggle Ploppy authorization
@@ -54,9 +54,9 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
       }
       
       // Check if already connected
-      const connected = await isPollinationConnected();
-      if (connected) {
-        updateSettings({ ploppyEnabled: true });
+      const isCurrentlyConnected = await isPollinationConnected();
+      if (isCurrentlyConnected) {
+        void updateSettings({ ploppyEnabled: true });
       } else {
         // Start auth flow
         Alert.alert(
@@ -70,12 +70,14 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
                 try {
                   await startPollinationAuth();
                   // Check again after auth
-                  setTimeout(async () => {
-                    const nowConnected = await isPollinationConnected();
-                    if (nowConnected) {
-                      setIsConnected(true);
-                      updateSettings({ ploppyEnabled: true, pollinationConnected: true });
-                    }
+                  setTimeout(() => {
+                    void (async () => {
+                      const nowConnected = await isPollinationConnected();
+                      if (nowConnected) {
+                        setIsConnected(true);
+                        void updateSettings({ ploppyEnabled: true, pollinationConnected: true });
+                      }
+                    })();
                   }, 2000);
                 } catch (error) {
                   Alert.alert(t('common.error'), t('settings.pollination.errorMessage'));
@@ -86,7 +88,7 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
         );
       }
     } else {
-      updateSettings({ ploppyEnabled: false });
+      void updateSettings({ ploppyEnabled: false });
     }
   }, [t, updateSettings]);
 
@@ -103,7 +105,7 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
           onPress: async () => {
             await removePollinationApiKey();
             setIsConnected(false);
-            updateSettings({ ploppyEnabled: false, pollinationConnected: false });
+            void updateSettings({ ploppyEnabled: false, pollinationConnected: false });
           }
         },
       ]

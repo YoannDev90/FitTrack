@@ -76,7 +76,7 @@ export function useRepCounter() {
     const recentValues = useRef<number[]>([]);
     const peakValue = useRef(0);
     const wasAboveThreshold = useRef(false);
-    const subscriptionRef = useRef<any>(null);
+    const subscriptionRef = useRef<{ remove: () => void } | null>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const plankTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const ellipticalTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -102,8 +102,15 @@ export function useRepCounter() {
     const secondsSound    = useAudioPlayer(require('../../../assets/seconds.mp3'));
     const newRecordSound  = useAudioPlayer(require('../../../assets/new-record.mp3'));
 
-    const playSound = useCallback((player: any) => {
-        try { player.seekTo(0); player.play(); } catch {}
+    const playSound = useCallback((player: typeof repSound) => {
+        try {
+            player.seekTo(0);
+            player.play();
+        } catch (error) {
+            if (__DEV__) {
+                console.warn('[RepCounter] Failed to play sound', error);
+            }
+        }
     }, []);
 
     const playRepSound       = useCallback(() => playSound(repSound), [repSound, playSound]);
@@ -128,9 +135,18 @@ export function useRepCounter() {
 
     // ── Session recovery ───────────────────────────────────────────────────────
     useEffect(() => {
-        getUnfinishedSession().then((session: ActiveSession | null) => {
-            if (session) { setRecoverySession(session); setShowRecoveryModal(true); }
-        });
+        void getUnfinishedSession()
+            .then((session: ActiveSession | null) => {
+                if (session) {
+                    setRecoverySession(session);
+                    setShowRecoveryModal(true);
+                }
+            })
+            .catch((error) => {
+                if (__DEV__) {
+                    console.warn('[RepCounter] Failed to load unfinished session', error);
+                }
+            });
     }, []);
 
     const handleResumeSession = useCallback(() => {
@@ -486,9 +502,10 @@ export function useRepCounter() {
             lastRepEndRef.current = null;
         }
 
+        if (selectedExercise.id === 'run' || selectedExercise.id === 'run_ai') return;
         setIsTracking(true);
         startSessionTracking({
-            exerciseId: selectedExercise.id as any,
+            exerciseId: selectedExercise.id,
             exerciseName: t(`repCounter.exercises.${selectedExercise.id}`),
             exerciseEmoji: selectedExercise.icon,
             detectionMode,
@@ -646,8 +663,8 @@ export function useRepCounter() {
     const handleExerciseSelect = useCallback((exercise: ExerciseConfig) => {
         // Navigational exercises: redirect to separate screens
         if (exercise.isNavigational) {
-            if (exercise.id === 'run') router.push('/run/simple' as any);
-            else if (exercise.id === 'run_ai') router.push('/run/ai' as any);
+            if (exercise.id === 'run') router.push('/run/simple' as never);
+            else if (exercise.id === 'run_ai') router.push('/run/ai' as never);
             return;
         }
 

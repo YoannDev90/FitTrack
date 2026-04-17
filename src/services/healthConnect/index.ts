@@ -153,7 +153,11 @@ export async function requestHealthConnectPermissions(): Promise<boolean> {
     try {
         const hc = await getHealthConnectModule();
         if (!hc) return false;
-        try { await hc.initialize(); } catch (e) { }
+        try {
+            await hc.initialize();
+        } catch (error) {
+            errorLogger.warn('Health Connect init skipped before permission request:', error);
+        }
 
         const granted = await hc.requestPermission([
             { accessType: 'read', recordType: 'ExerciseSession' },
@@ -180,6 +184,16 @@ export interface HealthConnectWeight {
     weightKg: number;
 }
 
+interface HealthConnectWeightRecord {
+    metadata?: {
+        id?: string;
+    };
+    time?: string;
+    weight?: {
+        inKilograms?: number;
+    };
+}
+
 export async function getRecentWeights(daysBack: number = 30): Promise<HealthConnectWeight[]> {
     if (Platform.OS !== 'android') return [];
 
@@ -202,7 +216,7 @@ export async function getRecentWeights(daysBack: number = 30): Promise<HealthCon
 
         healthConnectLogger.debug(`Received ${result.records.length} weight records`);
 
-        return result.records.map((record: any) => ({
+        return result.records.map((record: HealthConnectWeightRecord) => ({
             id: record.metadata?.id || `hc-weight-${new Date(record.time).getTime()}`,
             time: new Date(record.time),
             weightKg: record.weight?.inKilograms || 0,
@@ -221,6 +235,14 @@ export interface HealthConnectBodyFat {
     id: string;
     time: Date;
     percentage: number;
+}
+
+interface HealthConnectBodyFatRecord {
+    metadata?: {
+        id?: string;
+    };
+    time?: string;
+    percentage?: number;
 }
 
 export async function getRecentBodyFat(daysBack: number = 30): Promise<HealthConnectBodyFat[]> {
@@ -245,7 +267,7 @@ export async function getRecentBodyFat(daysBack: number = 30): Promise<HealthCon
 
         healthConnectLogger.debug(`Received ${result.records.length} body fat records`);
 
-        return result.records.map((record: any) => ({
+        return result.records.map((record: HealthConnectBodyFatRecord) => ({
             id: record.metadata?.id || `hc-bodyfat-${new Date(record.time).getTime()}`,
             time: new Date(record.time),
             percentage: record.percentage || 0,

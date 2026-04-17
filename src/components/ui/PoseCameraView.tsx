@@ -11,6 +11,9 @@ import {
     TouchableOpacity,
     Dimensions,
     ActivityIndicator,
+    type LayoutChangeEvent,
+    type StyleProp,
+    type ViewStyle,
 } from 'react-native';
 import {
     Camera,
@@ -91,7 +94,14 @@ const normalizeLandmarksCandidate = (candidate: unknown): PoseLandmarks | null =
 };
 
 const extractPoseLandmarks = (result: PoseDetectionResultBundle | Record<string, unknown>): PoseLandmarks | null => {
-    const payload = result as Record<string, any>;
+    const payload = result as {
+        results?: Array<{
+            landmarks?: unknown;
+            poseLandmarks?: unknown;
+        }>;
+        landmarks?: unknown;
+        poseLandmarks?: unknown;
+    };
     const candidates = [
         payload?.results?.[0]?.landmarks,
         payload?.results?.[0]?.poseLandmarks,
@@ -120,7 +130,7 @@ interface PoseCameraViewProps {
     onCameraReady?: () => void;
     onModelReady?: () => void;
     currentCount?: number;
-    style?: any;
+    style?: StyleProp<ViewStyle>;
     isActive?: boolean;
     debugPlank?: boolean;
 }
@@ -247,8 +257,9 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
                     setPoseStatus('no-pose');
                 }
             }, [onPoseDetected, onRepDetected, onPlankStateChange, onEllipticalStateChange, markModelReady, debugPlank]),
-            onError: useCallback((error: any) => {
-                console.error('[PoseCamera] Detection error:', error.message);
+            onError: useCallback((error: unknown) => {
+                const errorMessage = error instanceof Error ? error.message : `${error ?? ''}`;
+                console.error('[PoseCamera] Detection error:', errorMessage);
                 setPoseStatus('no-pose');
             }, []),
         },
@@ -286,7 +297,7 @@ export const PoseCameraView: React.FC<PoseCameraViewProps> = ({
     }, [onCameraReady, markModelReady]);
 
     // Handle layout change
-    const handleLayout = useCallback((event: any) => {
+    const handleLayout = useCallback((event: LayoutChangeEvent) => {
         const { width, height } = event.nativeEvent.layout;
         setCameraLayout({ width, height });
         poseDetection.cameraViewLayoutChangeHandler(event);

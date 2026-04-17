@@ -46,7 +46,7 @@ export function insertInto<T extends TableName>(
     table: T,
     data: TableInsert<T>
 ) {
-    return client.from(table).insert(data as any);
+    return client.from(table).insert(data);
 }
 
 /**
@@ -57,7 +57,7 @@ export function updateIn<T extends TableName>(
     table: T,
     data: TableUpdate<T>
 ) {
-    return client.from(table).update(data as any);
+    return client.from(table).update(data);
 }
 
 /**
@@ -80,7 +80,7 @@ export function callRpc<
     fn: FnName,
     args: Database['public']['Functions'][FnName]['Args']
 ) {
-    return client.rpc(fn as string, args as any);
+    return client.rpc(fn as string, args);
 }
 
 // Re-export types for convenience

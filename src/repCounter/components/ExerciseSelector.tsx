@@ -318,7 +318,7 @@ export function ExerciseSelector({
         }
 
         if (card.targetRoute) {
-            router.push(card.targetRoute as any);
+            router.push(card.targetRoute as never);
             return;
         }
 

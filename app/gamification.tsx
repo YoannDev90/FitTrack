@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { useGamificationStore } from '../src/stores';
+import type { GamificationLog, Quest } from '../src/stores/gamificationStore';
 import Animated, {
     FadeInDown, FadeIn,
     useAnimatedStyle, useSharedValue,
@@ -32,7 +33,7 @@ const C = ScreenPalettes.warm;
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 44 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, xxxl: 32, full: 999 };
 const T = { nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, xxxl: 34, display: 48 };
-const W: Record<string, any> = { light:'300', reg:'400', med:'500', semi:'600', bold:'700', xbold:'800', black:'900' };
+const W = { light:'300', reg:'400', med:'500', semi:'600', bold:'700', xbold:'800', black:'900' } as const;
 
 // ─── XP Ring ─────────────────────────────────────────────────────────────────
 function XPRing({ animatedProgress, size = 190 }: { animatedProgress: { value: number }; size?: number }) {
@@ -81,7 +82,7 @@ function QuestIcon({ type, completed }: { type: string; completed: boolean }) {
 }
 
 // ─── Quest Card ───────────────────────────────────────────────────────────────
-function QuestCard({ quest, index }: { quest: any; index: number }) {
+function QuestCard({ quest, index }: { quest: Quest; index: number }) {
     const { t } = useTranslation();
     const pct = Math.min((quest.current / quest.target) * 100, 100);
     const done = quest.completed;
@@ -136,7 +137,7 @@ function QuestCard({ quest, index }: { quest: any; index: number }) {
 }
 
 // ─── History Item ─────────────────────────────────────────────────────────────
-function HistoryItem({ item, index, isLast }: { item: any; index: number; isLast: boolean }) {
+function HistoryItem({ item, index, isLast }: { item: GamificationLog; index: number; isLast: boolean }) {
     const { t, i18n } = useTranslation();
     const fmt = (iso: string) => new Date(iso).toLocaleDateString(i18n.language, {
         day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
@@ -246,7 +247,8 @@ export default function GamificationScreen() {
     useFocusEffect(React.useCallback(() => {
         const prevLvl = lastSeenLevel ?? level;
         const prevXp  = lastSeenXp  ?? xp;
-        let t1: any, t2: any;
+        let t1: ReturnType<typeof setTimeout> | undefined;
+        let t2: ReturnType<typeof setTimeout> | undefined;
 
         if (level > prevLvl) {
             setShowLevelUp(true);
@@ -259,7 +261,10 @@ export default function GamificationScreen() {
             xpDisplayed.value = withTiming(xp, { duration: 900 });
             t2 = setTimeout(updateLastSeen, 1000);
         }
-        return () => { clearTimeout(t1); clearTimeout(t2); };
+        return () => {
+            if (t1) clearTimeout(t1);
+            if (t2) clearTimeout(t2);
+        };
     }, [level, xp, lastSeenLevel, lastSeenXp, updateLastSeen]));
 
     useAnimatedReaction(() => lvlDisplayed.value, (v, p) => {

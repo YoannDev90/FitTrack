@@ -123,9 +123,10 @@ export default function AuthScreen() {
                     }}]
                 );
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Auth error:', error);
-            Alert.alert('Erreur', error.message || 'Une erreur est survenue');
+            const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+            Alert.alert('Erreur', errorMessage);
         } finally {
             setIsLoading(false);
         }

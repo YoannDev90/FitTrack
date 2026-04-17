@@ -179,8 +179,8 @@ export default function DataScreen() {
   const handleDirectExport = useCallback(async (filteredExport: {
     exportedAt: string;
     period: { type: string; start: string | null; end: string | null; label: string };
-    entries: { workouts?: any[]; meals?: any[]; measures?: any[] };
-    stats: { totalEntries: number; totalWorkouts: number; totalRuns: number; totalDistance: number; streak: any };
+    entries: { workouts?: unknown[]; meals?: unknown[]; measures?: unknown[] };
+    stats: { totalEntries: number; totalWorkouts: number; totalRuns: number; totalDistance: number; streak: unknown };
   }) => {
     setIsExporting(true);
 

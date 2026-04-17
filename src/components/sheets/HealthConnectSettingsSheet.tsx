@@ -61,12 +61,18 @@ export const HealthConnectSettingsSheet = forwardRef<HealthConnectSettingsSheetR
       // Open Health Connect app settings
       await Linking.openURL('content://com.google.android.apps.healthdata');
     } catch (error) {
+      if (__DEV__) {
+        console.warn('[HealthConnectSettingsSheet] Failed to open content URL', error);
+      }
       // Fallback: try to open the app directly
       try {
         await Linking.openURL('package:com.google.android.apps.healthdata');
-      } catch {
+      } catch (fallbackError) {
+        if (__DEV__) {
+          console.warn('[HealthConnectSettingsSheet] Failed to open package URL, opening app settings', fallbackError);
+        }
         // Last fallback: open app settings
-        Linking.openSettings();
+        await Linking.openSettings();
       }
     }
   }, []);

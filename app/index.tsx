@@ -41,10 +41,10 @@ const C = ScreenPalettes.today;
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28, xxxl: 40 };
 const R = { sm: 10, md: 14, lg: 18, xl: 22, xxl: 26, pill: 999 };
 const T = { micro: 9, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, hero: 34 };
-const W: Record<string, any> = {
+const W = {
     light: '300', reg: '400', med: '500',
     semi: '600', bold: '700', xbold: '800', black: '900',
-};
+} as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -203,7 +203,7 @@ export default function TodayScreen() {
                         <View style={st.segmentRow}>
                             {Array.from({ length: weeklyGoal }).map((_, i) => (
                                 <View
-                                    key={i}
+                                    key={`goal-segment-${i}`}
                                     style={[
                                         st.segment,
                                         { flex: 1 },

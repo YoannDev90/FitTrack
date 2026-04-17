@@ -82,10 +82,18 @@ const T = {
   nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20,
   xxl: 26, xxxl: 34, display: 48,
 };
-const W: Record<string, any> = {
+const W = {
   light: '300', reg: '400', med: '500',
   semi: '600', bold: '700', xbold: '800', black: '900',
+} as const;
+type TranslateFunction = (key: string, options?: Record<string, unknown>) => string;
+type RoutePoint = { longitude: number; latitude: number };
+type RouteLineFeature = {
+  type: 'Feature';
+  properties: Record<string, unknown>;
+  geometry: { type: 'LineString'; coordinates: [number, number][] };
 };
+type RouteFeatureCollection = { type: 'FeatureCollection'; features: RouteLineFeature[] };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getEntryTypeConfig = (type: string, sportConfig?: SportConfig) => {
@@ -106,7 +114,7 @@ const getEntryTypeConfig = (type: string, sportConfig?: SportConfig) => {
   }
 };
 
-const getTypeLabel = (type: string, t: any) => {
+const getTypeLabel = (type: string, t: TranslateFunction) => {
   const labels: Record<string, string> = {
     home: t('entries.workout'),
     run: t('entries.run'),
@@ -144,10 +152,10 @@ function computeSessionStats(entry: Entry, allEntries: Entry[]) {
   // Get numeric metrics for comparison
   const getMetrics = (e: Entry) => {
     const m: Record<string, number> = {};
-    if ('durationMinutes' in e && (e as any).durationMinutes) m.duration = (e as any).durationMinutes;
-    if ('distanceKm' in e && (e as any).distanceKm) m.distance = (e as any).distanceKm;
-    if ('totalReps' in e && (e as any).totalReps) m.reps = (e as any).totalReps;
-    if ('calories' in e && (e as any).calories) m.calories = (e as any).calories;
+    if ('durationMinutes' in e && typeof e.durationMinutes === 'number') m.duration = e.durationMinutes;
+    if ('distanceKm' in e && typeof e.distanceKm === 'number') m.distance = e.distanceKm;
+    if ('totalReps' in e && typeof e.totalReps === 'number') m.reps = e.totalReps;
+    if ('calories' in e && typeof e.calories === 'number') m.calories = e.calories;
     return m;
   };
 
@@ -175,8 +183,13 @@ function computeSessionStats(entry: Entry, allEntries: Entry[]) {
     const bestReps = Math.max(...allSameType.map(e => (e as HomeWorkoutEntry).totalReps || 0));
     isBestSession = ((entry as HomeWorkoutEntry).totalReps || 0) >= bestReps && bestReps > 0;
   } else if (entry.type === 'beatsaber' || entry.type === 'custom') {
-    const bestDuration = Math.max(...allSameType.map(e => (e as any).durationMinutes || 0));
-    isBestSession = ((entry as any).durationMinutes || 0) >= bestDuration && bestDuration > 0;
+    const bestDuration = Math.max(...allSameType.map((item) => (
+      'durationMinutes' in item && typeof item.durationMinutes === 'number' ? item.durationMinutes : 0
+    )));
+    const currentDuration = 'durationMinutes' in entry && typeof entry.durationMinutes === 'number'
+      ? entry.durationMinutes
+      : 0;
+    isBestSession = currentDuration >= bestDuration && bestDuration > 0;
   }
 
   // Progression over last 3
@@ -539,7 +552,10 @@ export default function WorkoutDetailScreen() {
       });
       setAiAnalysis(result);
       await storageHelpers.setString(cacheKey, result);
-    } catch {
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('[WorkoutDetail] AI analysis failed', error);
+      }
       setAiError(true);
     } finally {
       setAiLoading(false);
@@ -552,7 +568,14 @@ export default function WorkoutDetailScreen() {
       setIsConnected(false);
       return;
     }
-    isPollinationConnected().then(setIsConnected);
+    void isPollinationConnected()
+      .then(setIsConnected)
+      .catch((error) => {
+        if (__DEV__) {
+          console.warn('[WorkoutDetail] Pollination connectivity check failed', error);
+        }
+        setIsConnected(false);
+      });
   }, [aiFeaturesEnabled]);
 
   // Fetch AI analysis whenever dependencies change
@@ -618,22 +641,22 @@ export default function WorkoutDetailScreen() {
       case 'run': {
         const e = entry as RunEntry;
         const hasRoute = e.route && e.route.length >= 2;
-        const routeGeoJSON: { type: 'FeatureCollection'; features: any[] } = hasRoute ? {
+        const routeGeoJSON: RouteFeatureCollection = hasRoute ? {
           type: 'FeatureCollection',
           features: [{
             type: 'Feature',
             properties: {},
             geometry: {
               type: 'LineString',
-              coordinates: e.route!.map((c: any) => [c.longitude, c.latitude]),
+              coordinates: e.route!.map((c: RoutePoint) => [c.longitude, c.latitude] as [number, number]),
             },
           }],
         } : { type: 'FeatureCollection', features: [] };
 
         // Calculate bounds for the route
         const routeBounds = hasRoute ? (() => {
-          const lngs = e.route!.map((c: any) => c.longitude);
-          const lats = e.route!.map((c: any) => c.latitude);
+          const lngs = e.route!.map((c: RoutePoint) => c.longitude);
+          const lats = e.route!.map((c: RoutePoint) => c.latitude);
           return {
             ne: [Math.max(...lngs) + 0.002, Math.max(...lats) + 0.002] as [number, number],
             sw: [Math.min(...lngs) - 0.002, Math.min(...lats) - 0.002] as [number, number],
@@ -690,17 +713,17 @@ export default function WorkoutDetailScreen() {
 
             <StatRow icon={<Navigation size={16} color={C.blue} />} label={t('workout.detail.distance')} value={`${e.distanceKm} km`} color={C.blue} />
             <StatRow icon={<Clock size={16} color={C.textSub} />} label={t('workout.detail.duration')} value={`${e.durationMinutes} min`} />
-            {(e as any).avgPaceSecPerKm != null && (
-              <StatRow icon={<Zap size={16} color={C.green} />} label={t('run.avgPace')} value={`${Math.floor((e as any).avgPaceSecPerKm / 60)}:${String(Math.floor((e as any).avgPaceSecPerKm % 60)).padStart(2, '0')}/km`} color={C.green} />
+            {e.avgPaceSecPerKm != null && (
+              <StatRow icon={<Zap size={16} color={C.green} />} label={t('run.avgPace')} value={`${Math.floor(e.avgPaceSecPerKm / 60)}:${String(Math.floor(e.avgPaceSecPerKm % 60)).padStart(2, '0')}/km`} color={C.green} />
             )}
             {e.avgSpeed != null && (
               <StatRow icon={<Zap size={16} color={C.gold} />} label={t('workout.detail.speed')} value={`${e.avgSpeed} km/h`} color={C.gold} />
             )}
-            {(e as any).elevationGainM != null && (e as any).elevationGainM > 0 && (
-              <StatRow icon={<Mountain size={16} color={C.textSub} />} label={t('run.elevation')} value={`+${(e as any).elevationGainM} m`} />
+            {e.elevationGainM != null && e.elevationGainM > 0 && (
+              <StatRow icon={<Mountain size={16} color={C.textSub} />} label={t('run.elevation')} value={`+${e.elevationGainM} m`} />
             )}
-            {(e as any).calories != null && (
-              <StatRow icon={<Flame size={16} color={C.gold} />} label={t('run.calories')} value={`${(e as any).calories} kcal`} color={C.gold} />
+            {e.calories != null && (
+              <StatRow icon={<Flame size={16} color={C.gold} />} label={t('run.calories')} value={`${e.calories} kcal`} color={C.gold} />
             )}
             {e.bpmAvg != null && (
               <StatRow icon={<Activity size={16} color={C.error} />} label={t('workout.detail.bpmAvg')} value={`${e.bpmAvg}`} color={C.error} />
@@ -713,9 +736,9 @@ export default function WorkoutDetailScreen() {
             )}
 
             {/* GPX share button */}
-            {(e as any).gpxFilePath && (
+            {e.gpxFilePath && (
               <TouchableOpacity
-                onPress={() => shareGPXFile((e as any).gpxFilePath)}
+                onPress={() => shareGPXFile(e.gpxFilePath as string)}
                 style={styles.gpxShareBtn}
               >
                 <Share2 size={16} color={C.blue} />
@@ -762,7 +785,7 @@ export default function WorkoutDetailScreen() {
               <Animated.View entering={FadeInDown.delay(250)} style={styles.exercisesCard}>
                 <Text style={styles.exercisesLabel}>{t('workout.detail.suggestions')}</Text>
                 {e.suggestions.map((s, i) => (
-                  <Text key={i} style={styles.exercisesText}>• {s}</Text>
+                  <Text key={`${s}-${i}`} style={styles.exercisesText}>• {s}</Text>
                 ))}
               </Animated.View>
             )}

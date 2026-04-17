@@ -188,7 +188,7 @@ const st = StyleSheet.create({
     },
     exampleCode: {
         fontSize: 12,
-        fontFamily: 'monospace' as any,
+        fontFamily: 'monospace',
         color: FC.textSub,
         lineHeight: 18,
     },

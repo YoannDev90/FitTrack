@@ -10,6 +10,7 @@ import {
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
+import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { ChevronLeft, Check, ChevronDown, Settings, Activity } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -119,12 +120,12 @@ export function AddEntryForm({
     const [showDatePicker, setShowDatePicker]       = useState(false);
     const [showTimePicker, setShowTimePicker]       = useState(false);
 
-    const onDateChange = useCallback((event: any, selected?: Date) => {
+    const onDateChange = useCallback((_event: DateTimePickerEvent, selected?: Date) => {
         setShowDatePicker(Platform.OS === 'ios');
         if (selected) setCustomDate(format(selected, 'yyyy-MM-dd'));
     }, []);
 
-    const onTimeChange = useCallback((event: any, selected?: Date) => {
+    const onTimeChange = useCallback((_event: DateTimePickerEvent, selected?: Date) => {
         setShowTimePicker(Platform.OS === 'ios');
         if (selected) setCustomTime(format(selected, 'HH:mm'));
     }, []);
@@ -169,7 +170,7 @@ export function AddEntryForm({
     // ── Formulaire Measure ──────────────────────────────────────────────────
     const [measureFields, setMeasureFields] = useState(() => {
         if (isEdit && editEntry?.type === 'measure') {
-            const e = editEntry as any;
+            const e = editEntry as MeasureEntry;
             return { weight: e.weight?.toString() || '', bodyFatPercent: e.bodyFatPercent?.toString() || '', waist: e.waist?.toString() || '', arm: e.arm?.toString() || '', hips: e.hips?.toString() || '' };
         }
         return { weight: '', bodyFatPercent: '', waist: '', arm: '', hips: '' };
@@ -202,7 +203,12 @@ export function AddEntryForm({
         try {
             const data = JSON.parse(jsonInput);
             if (data.exercises && Array.isArray(data.exercises)) {
-                setExercises(data.exercises.map((ex: any) => ({ id: nanoid(), name: ex.name || '', reps: String(ex.reps || ''), sets: String(ex.sets || 3) })));
+                setExercises(data.exercises.map((ex: { name?: string; reps?: string | number; sets?: string | number }) => ({
+                    id: nanoid(),
+                    name: ex.name || '',
+                    reps: String(ex.reps || ''),
+                    sets: String(ex.sets || 3),
+                })));
                 if (data.includeAbsBlock !== undefined) setWithAbsBlock(data.includeAbsBlock);
                 setImportModalVisible(false);
                 setJsonInput('');
@@ -210,7 +216,10 @@ export function AddEntryForm({
             } else {
                 Alert.alert(t('addEntry.invalid', 'Format invalide'), t('addEntry.invalidJSON', 'Format JSON inattendu'));
             }
-        } catch {
+        } catch (error) {
+            if (__DEV__) {
+                console.warn('[AddEntryForm] JSON import parsing failed', error);
+            }
             Alert.alert('Erreur', 'JSON invalide');
         }
     }, [jsonInput, exercises.length, t]);
@@ -282,7 +291,11 @@ export function AddEntryForm({
                     const durMin = dur ? Math.round(parseFloat(dur)) : undefined;
                     if (dur && (!durMin || durMin <= 0)) { Alert.alert(t('common.error'), t('addEntry.durationErrorPositive')); return; }
                     const payload = { name: homeName.trim() || undefined, exercises: text, absBlock: withAbsBlock ? 'Bloc abdos inclus' : undefined, totalReps: totalReps > 0 ? totalReps : undefined, durationMinutes: durMin && durMin > 0 ? durMin : undefined };
-                    isEdit && editEntry ? updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date }) : addHomeWorkout(payload, entryDate);
+                    if (isEdit && editEntry) {
+                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                    } else {
+                        addHomeWorkout(payload, entryDate);
+                    }
                     break;
                 }
                 case 'run': {
@@ -291,20 +304,32 @@ export function AddEntryForm({
                     if (isNaN(km) || km <= 0) { Alert.alert('Erreur', 'Distance invalide'); return; }
                     if (isNaN(min) || min <= 0) { Alert.alert(t('common.error'), t('addEntry.durationError')); return; }
                     const payload = { distanceKm: km, durationMinutes: min, avgSpeed: min > 0 ? Math.round((km / (min / 60)) * 10) / 10 : 0, bpmAvg: runFields.bpmAvg ? parseInt(runFields.bpmAvg) : undefined, bpmMax: runFields.bpmMax ? parseInt(runFields.bpmMax) : undefined, cardiacLoad: runFields.cardiacLoad ? parseInt(runFields.cardiacLoad) : undefined };
-                    isEdit && editEntry ? updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date }) : addRun(payload, entryDate);
+                    if (isEdit && editEntry) {
+                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                    } else {
+                        addRun(payload, entryDate);
+                    }
                     break;
                 }
                 case 'beatsaber': {
                     const min = parseFloat(bsFields.duration.replace(',', '.'));
                     if (isNaN(min) || min <= 0) { Alert.alert(t('common.error'), t('addEntry.durationErrorNumber')); return; }
                     const payload = { durationMinutes: Math.max(1, Math.round(min)), cardiacLoad: bsFields.cardiacLoad ? parseInt(bsFields.cardiacLoad) : undefined, bpmAvg: bsFields.bpmAvg ? parseInt(bsFields.bpmAvg) : undefined, bpmMax: bsFields.bpmMax ? parseInt(bsFields.bpmMax) : undefined };
-                    isEdit && editEntry ? updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date }) : addBeatSaber(payload, entryDate);
+                    if (isEdit && editEntry) {
+                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                    } else {
+                        addBeatSaber(payload, entryDate);
+                    }
                     break;
                 }
                 case 'meal': {
                     if (!mealDescription.trim()) { Alert.alert('Erreur', 'Décris ce que tu as mangé'); return; }
                     const payload = { mealName: MEAL_TIME_LABELS[mealTime], description: mealDescription.trim() };
-                    isEdit && editEntry ? updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date }) : addMeal(payload, entryDate);
+                    if (isEdit && editEntry) {
+                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                    } else {
+                        addMeal(payload, entryDate);
+                    }
                     break;
                 }
                 case 'measure': {
@@ -314,7 +339,11 @@ export function AddEntryForm({
                     if (bf && isNaN(parseFloat(bf))) { Alert.alert(t('common.error'), t('addEntry.bodyFatError')); return; }
                     if (!w && !bf && !ws && !ar && !hi) { Alert.alert('Erreur', 'Ajoute au moins une mesure'); return; }
                     const payload = { weight: w ? parseFloat(w) : undefined, bodyFatPercent: bf ? parseFloat(bf) : undefined, waist: ws ? parseFloat(ws) : undefined, arm: ar ? parseFloat(ar) : undefined, hips: hi ? parseFloat(hi) : undefined };
-                    isEdit && editEntry ? updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date }) : addMeasure(payload, entryDate);
+                    if (isEdit && editEntry) {
+                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                    } else {
+                        addMeasure(payload, entryDate);
+                    }
                     break;
                 }
                 case 'custom': {
@@ -323,7 +352,18 @@ export function AddEntryForm({
                     if (!sport) { Alert.alert(t('common.error'), 'Sport introuvable'); return; }
                     const tf = sport.trackingFields;
                     const cf = customFields;
-                    const customData: any = { sportId: selectedSportId, name: cf.name.trim() || undefined };
+                    const customData: {
+                        sportId: string;
+                        name?: string;
+                        durationMinutes?: number;
+                        distanceKm?: number;
+                        bpmAvg?: number;
+                        bpmMax?: number;
+                        cardiacLoad?: number;
+                        calories?: number;
+                        exercises?: string;
+                        totalReps?: number;
+                    } = { sportId: selectedSportId, name: cf.name.trim() || undefined };
                     if (tf.includes('duration') && cf.duration) { const v = Math.round(parseFloat(cf.duration.replace(',', '.'))); if (isNaN(v) || v <= 0) { Alert.alert(t('common.error'), t('addEntry.durationErrorPositive')); return; } customData.durationMinutes = v; }
                     if (tf.includes('distance') && cf.distance) { const v = parseFloat(cf.distance.replace(',', '.')); if (isNaN(v) || v <= 0) { Alert.alert(t('common.error'), 'Distance invalide'); return; } customData.distanceKm = v; }
                     if (tf.includes('bpmAvg') && cf.bpmAvg)     customData.bpmAvg = parseInt(cf.bpmAvg);
@@ -332,9 +372,15 @@ export function AddEntryForm({
                     if (tf.includes('calories') && cf.calories) customData.calories = parseInt(cf.calories);
                     if (tf.includes('exercises') && cf.exercises) customData.exercises = cf.exercises.trim();
                     if (tf.includes('totalReps') && cf.totalReps) customData.totalReps = parseInt(cf.totalReps);
-                    isEdit && editEntry ? updateEntry(editEntry.id, { ...customData, date: entryDate || editEntry.date }) : addCustomSport(customData, entryDate);
+                    if (isEdit && editEntry) {
+                        updateEntry(editEntry.id, { ...customData, date: entryDate || editEntry.date });
+                    } else {
+                        addCustomSport(customData, entryDate);
+                    }
                     break;
                 }
+                default:
+                    return;
             }
 
             // Reset

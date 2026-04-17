@@ -97,7 +97,7 @@ const C = {
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28 };
 const R = { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, full: 999 };
 const T = { nano: 9, xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 26, xxxl: 34, display: 48 };
-const W: Record<string, any> = { reg: '400', med: '500', semi: '600', bold: '700', xbold: '800', black: '900' };
+const W = { reg: '400', med: '500', semi: '600', bold: '700', xbold: '800', black: '900' } as const;
 
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/dark';
 
@@ -185,7 +185,28 @@ function formatDistance(km: number): string {
   return `${km.toFixed(2)} km`;
 }
 
-function buildGeoJSON(coords: LatLng[]): GeoJSON.FeatureCollection {
+type GeoJSONPointGeometry = {
+  type: 'Point';
+  coordinates: [number, number];
+};
+
+type GeoJSONLineStringGeometry = {
+  type: 'LineString';
+  coordinates: [number, number][];
+};
+
+type GeoJSONFeature = {
+  type: 'Feature';
+  properties: Record<string, never>;
+  geometry: GeoJSONPointGeometry | GeoJSONLineStringGeometry;
+};
+
+type GeoJSONFeatureCollection = {
+  type: 'FeatureCollection';
+  features: GeoJSONFeature[];
+};
+
+function buildGeoJSON(coords: LatLng[]): GeoJSONFeatureCollection {
   return {
     type: 'FeatureCollection',
     features: coords.length >= 2 ? [{
@@ -193,13 +214,13 @@ function buildGeoJSON(coords: LatLng[]): GeoJSON.FeatureCollection {
       properties: {},
       geometry: {
         type: 'LineString',
-        coordinates: coords.map(c => [c.longitude, c.latitude]),
+        coordinates: coords.map(c => [c.longitude, c.latitude] as [number, number]),
       },
     }] : [],
   };
 }
 
-function buildPointGeoJSON(coord: LatLng | null): GeoJSON.FeatureCollection {
+function buildPointGeoJSON(coord: LatLng | null): GeoJSONFeatureCollection {
   if (!coord) {
     return { type: 'FeatureCollection', features: [] };
   }
@@ -214,7 +235,7 @@ function buildPointGeoJSON(coord: LatLng | null): GeoJSON.FeatureCollection {
   };
 }
 
-const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+const EMPTY_GEOJSON: GeoJSONFeatureCollection = { type: 'FeatureCollection', features: [] };
 const RING_SIZE = 128;
 
 // ============================================================================
@@ -315,7 +336,7 @@ const SegmentedProgressBar = ({ segments, currentIndex, progressInSegment }: {
           : 0;
 
         return (
-          <View key={i} style={[styles.segProgressSlot, { flex: 1 }]}>
+          <View key={`${seg.type}-${seg.label}-${i}`} style={[styles.segProgressSlot, { flex: 1 }]}>
             <View style={[styles.segProgressBg, i === 0 && { borderTopLeftRadius: 3, borderBottomLeftRadius: 3 }, i === total - 1 && { borderTopRightRadius: 3, borderBottomRightRadius: 3 }]}>
               <View style={[styles.segProgressFill, {
                 width: `${fill * 100}%`,
@@ -462,8 +483,8 @@ export function RunTracker({ mode }: RunTrackerProps) {
             animationDuration: 800,
           });
         }
-      } catch {
-        // Non-blocking — will get position when starting
+      } catch (error) {
+        serviceLogger.warn('[RunTracker] Initial position lookup failed', error);
       }
     })();
     return () => { cancelled = true; };
@@ -629,14 +650,14 @@ export function RunTracker({ mode }: RunTrackerProps) {
     if (sendingRef.current) return;
 
     sendingRef.current = true;
-    useSafetyStore.getState().markAlertSending(type);
+    void useSafetyStore.getState().markAlertSending(type);
 
     const currentSafety = useSafetyStore.getState();
     const contacts = contactsOverride ?? currentSafety.contacts;
 
     try {
       if (!contacts.length) {
-        useSafetyStore.getState().markAlertSent({
+        void useSafetyStore.getState().markAlertSent({
           type,
           success: [],
           failed: [],
@@ -645,7 +666,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
       }
 
       if (!currentSafety.lastKnownPosition) {
-        useSafetyStore.getState().markAlertSent({
+        void useSafetyStore.getState().markAlertSent({
           type,
           success: [],
           failed: contacts,
@@ -662,7 +683,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
       };
 
       const result = await sendSafetyAlert(contacts, payload);
-      useSafetyStore.getState().markAlertSent({
+      void useSafetyStore.getState().markAlertSent({
         type,
         success: result.success,
         failed: result.failed,
@@ -673,7 +694,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
       }
     } catch (error) {
       serviceLogger.warn('[RunTracker] Automatic safety alert failed', error);
-      useSafetyStore.getState().markAlertSent({
+      void useSafetyStore.getState().markAlertSent({
         type,
         success: [],
         failed: contacts,
@@ -761,10 +782,12 @@ export function RunTracker({ mode }: RunTrackerProps) {
       store.start();
       startTimeRef.current = Date.now();
       await startTracking(handlePosition);
-    } catch (err: any) {
-      if (err?.message === 'PERMISSION_DENIED') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === 'PERMISSION_DENIED') {
         setPermissionDenied(true);
+        return;
       }
+      serviceLogger.warn('[RunTracker] Failed to start tracking', error);
     }
   }, [handlePosition]);
 
@@ -832,7 +855,8 @@ export function RunTracker({ mode }: RunTrackerProps) {
               setPermissionDenied(false);
               try {
                 await requestLocationPermission();
-              } catch {
+              } catch (error) {
+                serviceLogger.warn('[RunTracker] Permission retry failed', error);
                 setPermissionDenied(true);
               }
             }}
@@ -848,7 +872,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
   }
 
   // Derived metrics
-  const runSettings = (settings as any).runSettings;
+  const runSettings = (settings as { runSettings?: { displayedMetrics?: string[] } }).runSettings;
   const safetyDefaults = settings.safety ?? getDefaultSafetySettings();
 
   useEffect(() => {
@@ -906,7 +930,7 @@ export function RunTracker({ mode }: RunTrackerProps) {
   const segmentTopOffset = shouldShowFossMapNotice ? 222 : 148;
 
   // Initial position marker (shown before run starts)
-  const initialMarkerGeoJSON: GeoJSON.FeatureCollection = (!lastCoord && initialPos) ? {
+  const initialMarkerGeoJSON: GeoJSONFeatureCollection = (!lastCoord && initialPos) ? {
     type: 'FeatureCollection',
     features: [{
       type: 'Feature',

@@ -20,7 +20,7 @@ import { GlassCard } from './GlassCard';
 import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../constants';
-import type { Entry, StreakInfo } from '../../types';
+import type { Entry, RunEntry, StreakInfo } from '../../types';
 
 type ExportPeriod = 'today' | 'yesterday' | 'week' | 'last_week' | 'all';
 type ExportCategory = 'workouts' | 'meals' | 'measures';
@@ -144,7 +144,7 @@ export function ExportModal({ visible, onClose, entries, streak, exporting = fal
     const meals = filteredEntries.filter(e => e.type === 'meal');
     const measures = filteredEntries.filter(e => e.type === 'measure');
 
-    const runs = workouts.filter(w => w.type === 'run') as any[];
+    const runs = workouts.filter((w): w is RunEntry => w.type === 'run');
     const totalDistance = runs.reduce((sum, r) => sum + (r.distanceKm || 0), 0);
 
     return {

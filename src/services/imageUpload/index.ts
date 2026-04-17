@@ -92,13 +92,14 @@ export const uploadImageToTmpFiles = async (imageUri: string): Promise<UploadRes
 
       const fileName = file.name || 'image.jpg';
       const mimeType = getMimeType(normalizedUri);
-
-      const formData = new FormData();
-      formData.append('file', {
+      const formDataFile = {
         uri: normalizedUri,
         name: fileName,
         type: mimeType,
-      } as any);
+      } as unknown as Blob;
+
+      const formData = new FormData();
+      formData.append('file', formDataFile);
 
       if (__DEV__) {
         console.log('[ImageUpload] Uploading file:', fileName, 'MIME:', mimeType, 'Size:', file.size);
@@ -179,8 +180,10 @@ export const uploadBase64Image = async (base64Data: string, fileName: string = '
     // Nettoyer le fichier temporaire
     try {
       tempFile.delete();
-    } catch {
-      // Ignorer les erreurs de nettoyage
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('[ImageUpload] Failed to delete temporary base64 file', error);
+      }
     }
     
     return result;

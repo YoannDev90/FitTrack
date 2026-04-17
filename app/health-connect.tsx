@@ -67,12 +67,16 @@ interface ImportableWorkout extends HealthConnectWorkout {
     selected: boolean;
 }
 
+type LucideIconProps = { size: number; color: string; strokeWidth?: number };
+type LucideIconComponent = React.ComponentType<LucideIconProps>;
+
 // ============================================================================
 // HELPER: Get Lucide icon component by name
 // ============================================================================
 
 function getLucideIcon(iconName: string): React.ComponentType<{ size: number; color: string; strokeWidth?: number }> {
-    const IconComponent = (LucideIcons as any)[iconName];
+    const iconRegistry = LucideIcons as unknown as Record<string, LucideIconComponent>;
+    const IconComponent = iconRegistry[iconName];
     return IconComponent || LucideIcons.Activity;
 }
 
@@ -613,11 +617,12 @@ export default function HealthConnectScreen() {
                         // Handle custom sport
                         if (workout.customSportId) {
                             const sportConfig = sportsConfig.find(s => s.id === workout.customSportId);
+                            const trackingFields = new Set(sportConfig?.trackingFields ?? []);
                             addCustomSport({
                                 sportId: workout.customSportId,
                                 name: workout.title || workout.exerciseTypeName,
                                 durationMinutes: workout.durationMinutes,
-                                distanceKm: sportConfig?.trackingFields.includes('distance') && workout.distance
+                                distanceKm: trackingFields.has('distance') && workout.distance
                                     ? Math.round((workout.distance / 1000) * 100) / 100
                                     : undefined,
                                 healthConnectId: workout.id,
@@ -625,6 +630,8 @@ export default function HealthConnectScreen() {
                             workoutsAdded++;
                             totalDuration += workout.durationMinutes;
                         }
+                        break;
+                    default:
                         break;
                 }
             }

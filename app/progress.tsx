@@ -33,7 +33,7 @@ import { getMonthName } from '../src/utils/date';
 import { generateTextAnalysis } from '../src/services/pollination/textAnalysis';
 import { isPollinationConnected } from '../src/services/pollination';
 import i18n from '../src/i18n';
-import type { MeasureEntry, HomeWorkoutEntry, RunEntry, Entry } from '../src/types';
+import type { Badge, MeasureEntry, HomeWorkoutEntry, RunEntry, Entry } from '../src/types';
 import { Colors, ScreenPalettes } from '../src/constants';
 
 const { width: SW } = Dimensions.get('window');
@@ -48,10 +48,10 @@ const T = {
     nano: 9, micro: 10, xs: 11, sm: 13, md: 15, lg: 17, xl: 20,
     xxl: 26, xxxl: 34, display: 48,
 };
-const W: Record<string, any> = {
+const W = {
     light: '300', reg: '400', med: '500',
     semi: '600', bold: '700', xbold: '800', black: '900',
-};
+} as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const EyebrowLabel = ({ text, color = C.textMuted }: { text: string; color?: string }) => (
@@ -181,7 +181,7 @@ function StreakCover({ current, best }: { current: number; best: number }) {
                                 <LinearGradient
                                     colors={[C.amber, C.ember]}
                                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                                    style={[sc.pctFill, { width: `${pct * 100}%` as any }]}
+                                    style={[sc.pctFill, { width: `${pct * 100}%` as `${number}%` }]}
                                 />
                             </View>
                             <Text style={sc.pctLabel}>
@@ -279,7 +279,7 @@ function StatsSection({ workouts, distance, duration, goal }: {
             {/* 3 small stacked */}
             <View style={sts.smallCol}>
                 {small.map((s, i) => (
-                    <Animated.View key={i} entering={FadeInRight.delay(160 + i * 50).springify()}
+                    <Animated.View key={`${s.unit}-${i}`} entering={FadeInRight.delay(160 + i * 50).springify()}
                         style={[sts.smallCard, { borderColor: s.border }]}>
                         <View style={[sts.smallIcon, { backgroundColor: s.bg }]}>{s.icon}</View>
                         <View style={sts.smallText}>
@@ -352,7 +352,7 @@ function MonthCalendar({ daysInMonth, startDayOfWeek, activeDays, monthName }: {
             {/* Day headers */}
             <View style={cal.weekRow}>
                 {days.map((d, i) => (
-                    <Text key={i} style={cal.dayLabel}>{d}</Text>
+                    <Text key={`${d}-${i}`} style={cal.dayLabel}>{d}</Text>
                 ))}
             </View>
 
@@ -514,7 +514,7 @@ function WorkoutBarChart({ data, maxValue }: { data: { label: string; value: num
                         : 'url(#barInactive)';
 
                     return (
-                        <G key={i}>
+                        <G key={`${item.label}-${i}`}>
                             {/* Bar body */}
                             <Rect
                                 x={x} y={y}
@@ -603,7 +603,7 @@ function WeightSparkline({ data }: { data: MeasureEntry[] }) {
                 <Path d={lineD} stroke="url(#wl)" strokeWidth={2.5}
                     fill="none" strokeLinecap="round" strokeLinejoin="round" />
                 {[pts[0], pts[pts.length - 1]].map((p, i) => (
-                    <G key={i}>
+                    <G key={`weight-point-${i}`}>
                         <Circle cx={p.x} cy={p.y} r={6} fill={C.blue} opacity={0.15} />
                         <Circle cx={p.x} cy={p.y} r={3.5} fill={C.blue} />
                         <Circle cx={p.x} cy={p.y} r={1.5} fill={C.bg} />
@@ -626,7 +626,7 @@ function WeightSparkline({ data }: { data: MeasureEntry[] }) {
                     },
                     { label: t('weight.measures', 'Mesures'), val: `${data.length}`, color: C.text },
                 ].map((item, i) => (
-                    <React.Fragment key={i}>
+                    <React.Fragment key={item.label}>
                         {i > 0 && <View style={wsp.footerSep} />}
                         <View style={wsp.footerItem}>
                             <Text style={wsp.footerLabel}>{item.label}</Text>
@@ -743,7 +743,7 @@ const prc = StyleSheet.create({
 });
 
 // ─── BADGE DETAIL MODAL ───────────────────────────────────────────────────────
-function BadgeModal({ badge, onClose }: { badge: any | null; onClose: () => void }) {
+function BadgeModal({ badge, onClose }: { badge: Badge | null; onClose: () => void }) {
     const { t } = useTranslation();
     if (!badge) return null;
 
@@ -768,7 +768,7 @@ function BadgeModal({ badge, onClose }: { badge: any | null; onClose: () => void
                         </TouchableOpacity>
 
                         {/* Emoji */}
-                        <Text style={bmo.emoji}>{badge.emoji || '🏅'}</Text>
+                        <Text style={bmo.emoji}>{badge.icon || '🏅'}</Text>
 
                         {/* Status pill */}
                         <View style={[
@@ -869,11 +869,11 @@ const bmo = StyleSheet.create({
 
 // ─── BADGES GRID ──────────────────────────────────────────────────────────────
 function BadgesGrid({ badges, badgeProgress }: {
-    badges: any[];
+    badges: Badge[];
     badgeProgress: Record<string, { current: number; target: number; label: string }>;
 }) {
     const { t } = useTranslation();
-    const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
+    const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
 
     const unlocked = badges.filter(b => b.unlockedAt);
     const locked   = badges.filter(b => !b.unlockedAt);
@@ -893,7 +893,7 @@ function BadgesGrid({ badges, badgeProgress }: {
                     <View style={bdg.pctTrack}>
                         <LinearGradient colors={[C.gold, C.amber]}
                             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                            style={[bdg.pctFill, { width: `${pct}%` as any }]} />
+                            style={[bdg.pctFill, { width: `${pct}%` as `${number}%` }]} />
                     </View>
                     <Text style={bdg.pctText}>{pct}%</Text>
                 </View>
@@ -923,7 +923,7 @@ function BadgesGrid({ badges, badgeProgress }: {
                                         colors={[Colors.overlayGold14, C.surface]}
                                         style={bdg.tile}
                                     >
-                                        <Text style={bdg.tileEmoji}>{badge.emoji || '🏅'}</Text>
+                                        <Text style={bdg.tileEmoji}>{badge.icon || '🏅'}</Text>
                                         <Text style={bdg.tileName}>{t(badge.name, { defaultValue: badge.id })}</Text>
                                         <Text style={bdg.tileDate}>
                                             {badge.unlockedAt
@@ -973,7 +973,7 @@ function BadgesGrid({ badges, badgeProgress }: {
                                     </View>
                                     {progress && (
                                         <View style={bdg.lockedBar}>
-                                            <View style={[bdg.lockedBarFill, { width: `${progPct}%` as any }]} />
+                                            <View style={[bdg.lockedBarFill, { width: `${progPct}%` as `${number}%` }]} />
                                         </View>
                                     )}
                                 </TouchableOpacity>
@@ -1073,7 +1073,7 @@ function getWeekStats(entries: Entry[]) {
     const totalWorkouts = sportEntries.length;
     const totalDistance = runEntries.reduce((s, e) => s + (e.distanceKm || 0), 0);
     const totalDuration = sportEntries.reduce((s, e) => {
-        if ('durationMinutes' in e && (e as any).durationMinutes) return s + (e as any).durationMinutes;
+        if ('durationMinutes' in e && typeof e.durationMinutes === 'number') return s + e.durationMinutes;
         return s;
     }, 0);
     const totalReps = weekEntries
@@ -1146,7 +1146,10 @@ function PloppyWeeklySummary({ entries, settings }: {
             });
             setAnalysis(result);
             await storageHelpers.setString(cacheKey, result);
-        } catch {
+        } catch (error) {
+            if (__DEV__) {
+                console.warn('[Progress] Weekly AI summary failed', error);
+            }
             setError(true);
         } finally {
             setLoading(false);
@@ -1158,7 +1161,14 @@ function PloppyWeeklySummary({ entries, settings }: {
             setConnected(false);
             return;
         }
-        isPollinationConnected().then(setConnected);
+        void isPollinationConnected()
+            .then(setConnected)
+            .catch((error) => {
+                if (__DEV__) {
+                    console.warn('[Progress] Pollination connectivity check failed', error);
+                }
+                setConnected(false);
+            });
     }, [settings.aiFeaturesEnabled]);
 
     useEffect(() => {

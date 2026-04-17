@@ -17,7 +17,15 @@ export function shouldTriggerCoaching(
   lastCoachingDistanceKm: number,
   lastCoachingTimestamp: number,
 ): boolean {
-  const runSettings = (settings as any).runSettings;
+  const runSettings = (settings as {
+    runSettings?: {
+      coachingEnabled?: boolean;
+      coachingMode?: 'distance' | 'time';
+      coachingIntervalKm?: number;
+      coachingIntervalMinutes?: number;
+      pollinationsModel?: string;
+    };
+  }).runSettings;
   if (!runSettings?.coachingEnabled) return false;
 
   const mode = runSettings.coachingMode ?? 'distance';
@@ -130,14 +138,21 @@ export async function executeCoaching(
         .map(m => m.content),
     };
 
-    const model = (settings as any).runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai';
+    const runSettings = (settings as {
+      runSettings?: {
+        pollinationsModel?: string;
+      };
+    }).runSettings;
+    const model = runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai';
     const message = await generateCoachingMessage(context, model, language);
 
     store.setLastCoachMessage(message);
     store.appendAiMessage({ role: 'assistant', content: message, timestamp: Date.now() });
     store.updateCoachingCheckpoint(store.distanceKm, Date.now());
-  } catch {
-    // Silent failure - don't crash the tracking
+  } catch (error) {
+    if (__DEV__) {
+      console.warn('[RunCoach] Coaching generation failed', error);
+    }
   } finally {
     store.setIsLoadingCoach(false);
   }

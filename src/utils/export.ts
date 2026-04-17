@@ -2,7 +2,7 @@
 // EXPORT JSON HEBDOMADAIRE - Spix App
 // ============================================================================
 
-import type { Entry, WeeklyExport, StreakInfo, HomeWorkoutEntry, RunEntry, BeatSaberEntry, MealEntry, MeasureEntry, BadgeId, SportConfig } from '../types';
+import type { Entry, WeeklyExport, StreakInfo, HomeWorkoutEntry, RunEntry, BeatSaberEntry, MealEntry, MeasureEntry, BadgeId, SportConfig, UserSettings } from '../types';
 import type { GamificationLog, Quest } from '../stores/gamificationStore';
 import { getWeekExportRange, getCurrentWeekStart, getCurrentWeekEnd } from './date';
 import { format } from 'date-fns';
@@ -49,7 +49,7 @@ export interface FullBackup {
 export function generateFullBackup(
     appState: {
         entries: Entry[];
-        settings: any;
+        settings: Partial<UserSettings>;
         unlockedBadges: BadgeId[];
         sportsConfig?: SportConfig[];
     },

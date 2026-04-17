@@ -92,7 +92,7 @@ export default function SafetySettingsScreen() {
       method,
     };
 
-    updateSafetySettings({ contacts: [...contacts, newContact] });
+    void updateSafetySettings({ contacts: [...contacts, newContact] });
 
     if (Platform.OS === 'android' && newContact.method === 'sms') {
       try {
@@ -115,7 +115,7 @@ export default function SafetySettingsScreen() {
   };
 
   const handleDeleteContact = (id: string) => {
-    updateSafetySettings({
+    void updateSafetySettings({
       contacts: contacts.filter((contact) => contact.id !== id),
     });
     setSelectedDelete(null);

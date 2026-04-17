@@ -118,7 +118,7 @@ export default function OnboardingScreen() {
 
   const handleComplete = useCallback(async () => {
     // Update settings with all choices
-    updateSettings({
+    void updateSettings({
       onboardingCompleted: true,
       fitnessGoal: selectedGoal || undefined,
       fitnessLevel: selectedLevel || undefined,
@@ -128,20 +128,23 @@ export default function OnboardingScreen() {
         gamification: !wantsGamification,
       },
     });
-    updateWeeklyGoal(weeklyGoal);
+    void updateWeeklyGoal(weeklyGoal);
     
     // Enable/disable social features
     try {
       await setSocialEnabled(wantsSocial);
-    } catch {
+    } catch (error) {
       // Continue onboarding completion even if social preference sync fails remotely.
+      if (__DEV__) {
+        console.warn('[Onboarding] Failed to sync social preference', error);
+      }
     }
     
     router.replace('/');
   }, [selectedGoal, selectedLevel, weeklyGoal, wantsSocial, wantsGamification, updateSettings, updateWeeklyGoal, setSocialEnabled, router]);
 
   const handleSkip = useCallback(() => {
-    updateSettings({ onboardingCompleted: true });
+    void updateSettings({ onboardingCompleted: true });
     router.replace('/');
   }, [updateSettings, router]);
 

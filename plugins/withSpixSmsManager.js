@@ -1,6 +1,7 @@
 const { withDangerousMod, withMainApplication } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
+const fsp = fs.promises;
 
 function getAndroidPackage(config) {
   return config.android?.package;
@@ -125,13 +126,13 @@ function withSpixSmsManagerFiles(config) {
         packagePath
       );
 
-      fs.mkdirSync(javaDir, { recursive: true });
+      await fsp.mkdir(javaDir, { recursive: true });
 
       const moduleFilePath = path.join(javaDir, 'SpixSmsSenderModule.kt');
       const packageFilePath = path.join(javaDir, 'SpixSmsSenderPackage.kt');
 
-      fs.writeFileSync(moduleFilePath, createModuleSource(androidPackage));
-      fs.writeFileSync(packageFilePath, createPackageSource(androidPackage));
+      await fsp.writeFile(moduleFilePath, createModuleSource(androidPackage));
+      await fsp.writeFile(packageFilePath, createPackageSource(androidPackage));
 
       return config;
     },

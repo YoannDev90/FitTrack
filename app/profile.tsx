@@ -76,8 +76,9 @@ export default function ProfileScreen() {
             });
             Alert.alert('Succès', 'Profil mis à jour !');
             setHasChanges(false);
-        } catch (error: any) {
-            Alert.alert('Erreur', error.message || 'Impossible de sauvegarder');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Impossible de sauvegarder';
+            Alert.alert('Erreur', errorMessage);
         } finally {
             setIsSaving(false);
         }
@@ -95,7 +96,7 @@ export default function ProfileScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         await signOut();
-                        router.replace('/social' as any);
+                        router.replace('/social' as never);
                     }
                 },
             ]

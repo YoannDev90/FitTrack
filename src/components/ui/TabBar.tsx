@@ -98,7 +98,7 @@ export const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) =>
     // Only show tab bar if not hidden by screen options
     const focusedRoute = state.routes[state.index];
     const focusedDescriptor = descriptors[focusedRoute.key];
-    const tabBarStyle = StyleSheet.flatten(focusedDescriptor.options.tabBarStyle) as any;
+    const tabBarStyle = StyleSheet.flatten(focusedDescriptor.options.tabBarStyle ?? {});
     const isTabBarVisible = tabBarStyle?.display !== 'none';
 
     if (!isTabBarVisible) return null;

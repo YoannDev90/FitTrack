@@ -41,7 +41,7 @@ export default function PollinationCallbackScreen() {
                 
                 if (apiKey) {
                     await savePollinationApiKey(apiKey);
-                    updateSettings({ pollinationConnected: true });
+                    void updateSettings({ pollinationConnected: true });
                     setStatus('success');
                     
                     // Rediriger vers Labs après 2 secondes
@@ -66,7 +66,7 @@ export default function PollinationCallbackScreen() {
             }
         };
 
-        processCallback();
+        void processCallback();
     }, [params.token, updateSettings]);
 
     return (
