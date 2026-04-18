@@ -2,7 +2,7 @@
   "expo": {
     "name": "Spix",
     "slug": "fittrack-app",
-    "version": "11.5.0",
+    "version": "11.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,7 @@
           "location"
         ]
       },
-      "buildNumber": "11.5.0"
+      "buildNumber": "11.6.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -55,7 +55,7 @@
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
       ],
-      "versionCode": 110500,
+      "versionCode": 110600,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
