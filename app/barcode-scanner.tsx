@@ -270,6 +270,7 @@ export default function BarcodeScannerScreen() {
                       {scannedProduct.imageFrontUrl && (
                         <Image 
                           source={{ uri: scannedProduct.imageFrontUrl }} 
+                          accessibilityLabel={scannedProduct.name || t('barcodeScanner.product', { defaultValue: 'Product image' })}
                           style={styles.productPreviewImage}
                         />
                       )}
@@ -346,6 +347,7 @@ export default function BarcodeScannerScreen() {
                 {scannedProduct.imageFrontUrl && (
                   <Image 
                     source={{ uri: scannedProduct.imageFrontUrl }} 
+                    accessibilityLabel={scannedProduct.name || t('barcodeScanner.product', { defaultValue: 'Product image' })}
                     style={styles.productDetailsImage}
                   />
                 )}

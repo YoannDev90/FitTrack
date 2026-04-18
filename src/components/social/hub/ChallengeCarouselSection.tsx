@@ -60,17 +60,43 @@ export function ChallengeCarouselSection({
                     const isDraw = isFinished && item.winner?.is_tie;
                     const winnerName = item.winner ? (item.winner.display_name || item.winner.username) : null;
 
-                    const cardGradientColors: [string, string] = isFinished
-                        ? (iWon || isDraw
-                            ? [Colors.overlayGold12, Colors.overlaySuccess08]
-                            : ['rgba(30,16,16,0.9)', Colors.overlayError09])
-                        : [Colors.overlayViolet18, Colors.overlayBlack25];
+                    let cardGradientColors: [string, string];
+                    if (!isFinished) {
+                        cardGradientColors = [Colors.overlayViolet18, Colors.overlayBlack25];
+                    } else if (iWon || isDraw) {
+                        cardGradientColors = [Colors.overlayGold12, Colors.overlaySuccess08];
+                    } else {
+                        cardGradientColors = ['rgba(30,16,16,0.9)', Colors.overlayError09];
+                    }
 
-                    const borderColor = isFinished
-                        ? (iWon || isDraw ? Colors.overlayGold20 : Colors.overlayError20)
-                        : Colors.overlayViolet14;
+                    let borderColor: string = Colors.overlayViolet14;
+                    if (isFinished) {
+                        borderColor = iWon || isDraw ? Colors.overlayGold20 : Colors.overlayError20;
+                    }
 
-                    const progressColor = iWon ? Colors.gold : (iLost ? Colors.muted2 : Colors.cta2);
+                    let progressColor: string = Colors.cta2;
+                    if (iWon) {
+                        progressColor = Colors.gold;
+                    } else if (iLost) {
+                        progressColor = Colors.muted2;
+                    }
+
+                    const getResultLabel = () => {
+                        if (!item.winner) {
+                            return strings.finishReasonLabel(item.finish_reason);
+                        }
+
+                        if (item.winner.is_tie) {
+                            return strings.drawLabel(item.winner.tied_with_count);
+                        }
+
+                        const winnerLabel = strings.winnerLabel(winnerName || '');
+                        if (iWon) {
+                            return `🏆 ${winnerLabel}`;
+                        }
+
+                        return winnerLabel;
+                    };
 
                     return (
                         <LinearGradient
@@ -157,14 +183,7 @@ export function ChallengeCarouselSection({
                                             iWon && styles.resultBannerTextWin,
                                             iLost && styles.resultBannerTextLoss,
                                         ]}>
-                                            {item.winner
-                                                ? (item.winner.is_tie
-                                                    ? strings.drawLabel(item.winner.tied_with_count)
-                                                    : (iWon
-                                                        ? `🏆 ${strings.winnerLabel(winnerName || '')}`
-                                                        : `${strings.winnerLabel(winnerName || '')}`)
-                                                )
-                                                : strings.finishReasonLabel(item.finish_reason)}
+                                            {getResultLabel()}
                                         </Text>
                                     </View>
                                     {myRank != null && (

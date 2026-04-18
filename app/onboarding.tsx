@@ -106,6 +106,14 @@ export default function OnboardingScreen() {
   const { updateSettings, updateWeeklyGoal } = useAppStore();
   const { setSocialEnabled } = useSocialStore();
 
+  const commitSettings = useCallback(async (patch: Parameters<typeof updateSettings>[0]) => {
+    await Promise.resolve(updateSettings(patch));
+  }, [updateSettings]);
+
+  const commitWeeklyGoal = useCallback(async (goal: number) => {
+    await Promise.resolve(updateWeeklyGoal(goal));
+  }, [updateWeeklyGoal]);
+
   // Steps: 0:Welcome, 1:Goal, 2:Level, 3:Frequency, 4:Social, 5:Gamification, 6:Ready
   const [currentStep, setCurrentStep] = useState(0);
   
@@ -118,7 +126,7 @@ export default function OnboardingScreen() {
 
   const handleComplete = useCallback(async () => {
     // Update settings with all choices
-    void updateSettings({
+    await commitSettings({
       onboardingCompleted: true,
       fitnessGoal: selectedGoal || undefined,
       fitnessLevel: selectedLevel || undefined,
@@ -128,7 +136,7 @@ export default function OnboardingScreen() {
         gamification: !wantsGamification,
       },
     });
-    void updateWeeklyGoal(weeklyGoal);
+    await commitWeeklyGoal(weeklyGoal);
     
     // Enable/disable social features
     try {
@@ -141,12 +149,12 @@ export default function OnboardingScreen() {
     }
     
     router.replace('/');
-  }, [selectedGoal, selectedLevel, weeklyGoal, wantsSocial, wantsGamification, updateSettings, updateWeeklyGoal, setSocialEnabled, router]);
+  }, [selectedGoal, selectedLevel, weeklyGoal, wantsSocial, wantsGamification, commitSettings, commitWeeklyGoal, setSocialEnabled, router]);
 
-  const handleSkip = useCallback(() => {
-    void updateSettings({ onboardingCompleted: true });
+  const handleSkip = useCallback(async () => {
+    await commitSettings({ onboardingCompleted: true });
     router.replace('/');
-  }, [updateSettings, router]);
+  }, [commitSettings, router]);
 
   const nextStep = () => setCurrentStep(p => p + 1);
   const prevStep = () => setCurrentStep(p => Math.max(0, p - 1));
@@ -218,6 +226,7 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => (
   <View style={styles.fullScreen}>
     <Image 
       source={require('../assets/onboarding.jpg')}
+      accessibilityLabel="Onboarding background"
       style={StyleSheet.absoluteFillObject}
       resizeMode="cover"
     />

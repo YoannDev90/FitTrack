@@ -27,6 +27,10 @@ export default function PollinationCallbackScreen() {
     const params = useLocalSearchParams<{ token?: string }>();
     const [status, setStatus] = useState<Status>('processing');
 
+    const commitSettings = async (patch: Parameters<typeof updateSettings>[0]) => {
+        await Promise.resolve(updateSettings(patch));
+    };
+
     useEffect(() => {
         const processCallback = async () => {
             try {
@@ -41,7 +45,7 @@ export default function PollinationCallbackScreen() {
                 
                 if (apiKey) {
                     await savePollinationApiKey(apiKey);
-                    void updateSettings({ pollinationConnected: true });
+                    await commitSettings({ pollinationConnected: true });
                     setStatus('success');
                     
                     // Rediriger vers Labs après 2 secondes

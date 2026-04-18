@@ -46,12 +46,16 @@ export default function LabsScreen() {
   const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
   const [pollinationStatus, setPollinationStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
+  const commitSettings = useCallback(async (patch: Parameters<typeof updateSettings>[0]) => {
+    await Promise.resolve(updateSettings(patch));
+  }, [updateSettings]);
+
   // Check Pollination connection status
   const checkPollinationStatus = useCallback(async () => {
     const connected = await isPollinationConnected();
     setPollinationStatus(connected ? 'connected' : 'disconnected');
-    void updateSettings({ pollinationConnected: connected });
-  }, [updateSettings]);
+    await commitSettings({ pollinationConnected: connected });
+  }, [commitSettings]);
 
   useEffect(() => {
     void checkPollinationStatus();
@@ -70,7 +74,7 @@ export default function LabsScreen() {
         if (apiKey) {
           await savePollinationApiKey(apiKey);
           setPollinationStatus('connected');
-          void updateSettings({ pollinationConnected: true });
+          await commitSettings({ pollinationConnected: true });
           
           Alert.alert(
             t('settings.pollination.successTitle'),
@@ -104,7 +108,7 @@ export default function LabsScreen() {
     return () => {
       subscription.remove();
     };
-  }, [t, updateSettings]);
+  }, [t, commitSettings]);
 
   // Connect to Pollination
   const handleConnectPollination = useCallback(() => {
@@ -140,12 +144,12 @@ export default function LabsScreen() {
           onPress: async () => {
             await removePollinationApiKey();
             setPollinationStatus('disconnected');
-            void updateSettings({ pollinationConnected: false });
+            await commitSettings({ pollinationConnected: false });
           }
         },
       ]
     );
-  }, [t, updateSettings]);
+  }, [t, commitSettings]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -192,7 +196,9 @@ export default function LabsScreen() {
               <View>
                 <Switch
                   value={!(settings.hiddenTabs?.tools ?? true)}
-                  onValueChange={(value) => updateSettings({ hiddenTabs: { ...(settings.hiddenTabs ?? {}), tools: !value } })}
+                  onValueChange={(value) => {
+                    void commitSettings({ hiddenTabs: { ...(settings.hiddenTabs ?? {}), tools: !value } });
+                  }}
                   trackColor={{ false: Colors.card, true: Colors.teal }}
                   thumbColor={Colors.white}
                 />

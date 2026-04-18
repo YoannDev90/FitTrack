@@ -92,7 +92,7 @@ export default function SafetySettingsScreen() {
       method,
     };
 
-    void updateSafetySettings({ contacts: [...contacts, newContact] });
+    await Promise.resolve(updateSafetySettings({ contacts: [...contacts, newContact] }));
 
     if (Platform.OS === 'android' && newContact.method === 'sms') {
       try {
@@ -114,10 +114,10 @@ export default function SafetySettingsScreen() {
     setShowAddModal(false);
   };
 
-  const handleDeleteContact = (id: string) => {
-    void updateSafetySettings({
+  const handleDeleteContact = async (id: string) => {
+    await Promise.resolve(updateSafetySettings({
       contacts: contacts.filter((contact) => contact.id !== id),
-    });
+    }));
     setSelectedDelete(null);
   };
 

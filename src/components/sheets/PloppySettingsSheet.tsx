@@ -25,6 +25,10 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
   const { t } = useTranslation();
   const { settings, updateSettings } = useAppStore();
   const sheetRef = React.useRef<TrueSheet>(null);
+
+  const commitSettings = useCallback(async (patch: Parameters<typeof updateSettings>[0]) => {
+    await Promise.resolve(updateSettings(patch));
+  }, [updateSettings]);
   
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,8 +37,8 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
   useEffect(() => {
     const checkConnection = async () => {
       setIsLoading(true);
-      const isCurrentlyConnected = await isPollinationConnected();
-      setIsConnected(isCurrentlyConnected);
+      const currentlyConnected = await isPollinationConnected();
+      setIsConnected(currentlyConnected);
       setIsLoading(false); 
     };
     void checkConnection();
@@ -54,9 +58,9 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
       }
       
       // Check if already connected
-      const isCurrentlyConnected = await isPollinationConnected();
-      if (isCurrentlyConnected) {
-        void updateSettings({ ploppyEnabled: true });
+      const alreadyConnected = await isPollinationConnected();
+      if (alreadyConnected) {
+        await commitSettings({ ploppyEnabled: true });
       } else {
         // Start auth flow
         Alert.alert(
@@ -75,7 +79,7 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
                       const nowConnected = await isPollinationConnected();
                       if (nowConnected) {
                         setIsConnected(true);
-                        void updateSettings({ ploppyEnabled: true, pollinationConnected: true });
+                        await commitSettings({ ploppyEnabled: true, pollinationConnected: true });
                       }
                     })();
                   }, 2000);
@@ -88,9 +92,9 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
         );
       }
     } else {
-      void updateSettings({ ploppyEnabled: false });
+      await commitSettings({ ploppyEnabled: false });
     }
-  }, [t, updateSettings]);
+  }, [t, commitSettings]);
 
   // Disconnect from Pollination
   const handleDisconnect = useCallback(async () => {
@@ -105,12 +109,12 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
           onPress: async () => {
             await removePollinationApiKey();
             setIsConnected(false);
-            void updateSettings({ ploppyEnabled: false, pollinationConnected: false });
+            await commitSettings({ ploppyEnabled: false, pollinationConnected: false });
           }
         },
       ]
     );
-  }, [t, updateSettings]);
+  }, [t, commitSettings]);
 
   React.useImperativeHandle(ref, () => ({
     present: () => sheetRef.current?.present(),

@@ -292,7 +292,7 @@ export function AddEntryForm({
                     if (dur && (!durMin || durMin <= 0)) { Alert.alert(t('common.error'), t('addEntry.durationErrorPositive')); return; }
                     const payload = { name: homeName.trim() || undefined, exercises: text, absBlock: withAbsBlock ? 'Bloc abdos inclus' : undefined, totalReps: totalReps > 0 ? totalReps : undefined, durationMinutes: durMin && durMin > 0 ? durMin : undefined };
                     if (isEdit && editEntry) {
-                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                        void updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
                     } else {
                         addHomeWorkout(payload, entryDate);
                     }
@@ -305,7 +305,7 @@ export function AddEntryForm({
                     if (isNaN(min) || min <= 0) { Alert.alert(t('common.error'), t('addEntry.durationError')); return; }
                     const payload = { distanceKm: km, durationMinutes: min, avgSpeed: min > 0 ? Math.round((km / (min / 60)) * 10) / 10 : 0, bpmAvg: runFields.bpmAvg ? parseInt(runFields.bpmAvg) : undefined, bpmMax: runFields.bpmMax ? parseInt(runFields.bpmMax) : undefined, cardiacLoad: runFields.cardiacLoad ? parseInt(runFields.cardiacLoad) : undefined };
                     if (isEdit && editEntry) {
-                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                        void updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
                     } else {
                         addRun(payload, entryDate);
                     }
@@ -316,7 +316,7 @@ export function AddEntryForm({
                     if (isNaN(min) || min <= 0) { Alert.alert(t('common.error'), t('addEntry.durationErrorNumber')); return; }
                     const payload = { durationMinutes: Math.max(1, Math.round(min)), cardiacLoad: bsFields.cardiacLoad ? parseInt(bsFields.cardiacLoad) : undefined, bpmAvg: bsFields.bpmAvg ? parseInt(bsFields.bpmAvg) : undefined, bpmMax: bsFields.bpmMax ? parseInt(bsFields.bpmMax) : undefined };
                     if (isEdit && editEntry) {
-                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                        void updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
                     } else {
                         addBeatSaber(payload, entryDate);
                     }
@@ -326,7 +326,7 @@ export function AddEntryForm({
                     if (!mealDescription.trim()) { Alert.alert('Erreur', 'Décris ce que tu as mangé'); return; }
                     const payload = { mealName: MEAL_TIME_LABELS[mealTime], description: mealDescription.trim() };
                     if (isEdit && editEntry) {
-                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                        void updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
                     } else {
                         addMeal(payload, entryDate);
                     }
@@ -340,7 +340,7 @@ export function AddEntryForm({
                     if (!w && !bf && !ws && !ar && !hi) { Alert.alert('Erreur', 'Ajoute au moins une mesure'); return; }
                     const payload = { weight: w ? parseFloat(w) : undefined, bodyFatPercent: bf ? parseFloat(bf) : undefined, waist: ws ? parseFloat(ws) : undefined, arm: ar ? parseFloat(ar) : undefined, hips: hi ? parseFloat(hi) : undefined };
                     if (isEdit && editEntry) {
-                        updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
+                        void updateEntry(editEntry.id, { ...payload, date: entryDate || editEntry.date });
                     } else {
                         addMeasure(payload, entryDate);
                     }
@@ -373,7 +373,7 @@ export function AddEntryForm({
                     if (tf.includes('exercises') && cf.exercises) customData.exercises = cf.exercises.trim();
                     if (tf.includes('totalReps') && cf.totalReps) customData.totalReps = parseInt(cf.totalReps);
                     if (isEdit && editEntry) {
-                        updateEntry(editEntry.id, { ...customData, date: entryDate || editEntry.date });
+                        void updateEntry(editEntry.id, { ...customData, date: entryDate || editEntry.date });
                     } else {
                         addCustomSport(customData, entryDate);
                     }

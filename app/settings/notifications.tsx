@@ -6,7 +6,6 @@ import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   ScrollView,
   TouchableOpacity,
   Alert,
@@ -22,8 +21,9 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Bell, Clock, UtensilsCrossed, Plus, X, Scale } from 'lucide-react-native';
 import { GlassCard } from '../../src/components/ui';
 import { useAppStore } from '../../src/stores';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
+import { Colors } from '../../src/constants';
 import * as NotificationService from '../../src/services/notifications';
+import { styles } from './_notifications.styles';
 
 // Setting Item Component
 function SettingItem({
@@ -67,6 +67,10 @@ function SettingItem({
 export default function NotificationsScreen() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useAppStore();
+
+  const commitSettings = useCallback(async (patch: Parameters<typeof updateSettings>[0]) => {
+    await Promise.resolve(updateSettings(patch));
+  }, [updateSettings]);
 
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [timePickerHour, setTimePickerHour] = useState(String(settings.streakReminderHour ?? 20));
@@ -121,9 +125,9 @@ export default function NotificationsScreen() {
       await NotificationService.scheduleMealReminder(newIndex, hour, minute);
     }
     
-    void updateSettings({ mealReminders: currentReminders });
+    await commitSettings({ mealReminders: currentReminders });
     setMealTimePickerVisible(false);
-  }, [mealTimePickerHour, mealTimePickerMinute, editingMealIndex, settings.mealReminders, updateSettings, t]);
+  }, [mealTimePickerHour, mealTimePickerMinute, editingMealIndex, settings.mealReminders, commitSettings, t]);
 
   const handleToggleMealReminder = useCallback(async (index: number, enabled: boolean) => {
     const currentReminders = [...(settings.mealReminders || [])];
@@ -137,8 +141,8 @@ export default function NotificationsScreen() {
       await NotificationService.cancelMealReminder(index);
     }
     
-    void updateSettings({ mealReminders: currentReminders });
-  }, [settings.mealReminders, updateSettings]);
+    await commitSettings({ mealReminders: currentReminders });
+  }, [settings.mealReminders, commitSettings]);
 
   const handleDeleteMealReminder = useCallback(async (index: number) => {
     await NotificationService.cancelMealReminder(index);
@@ -156,8 +160,8 @@ export default function NotificationsScreen() {
       })
     );
 
-    void updateSettings({ mealReminders: currentReminders });
-  }, [settings.mealReminders, updateSettings]);
+    await commitSettings({ mealReminders: currentReminders });
+  }, [settings.mealReminders, commitSettings]);
 
   // Weight reminder states
   const [weightTimePickerVisible, setWeightTimePickerVisible] = useState(false);
@@ -194,7 +198,7 @@ export default function NotificationsScreen() {
         await NotificationService.scheduleWeightReminderMonthly(hour, minute, dayOfMonth);
       }
       
-      void updateSettings({ 
+      await commitSettings({ 
         weightReminderEnabled: true,
         weightReminderHour: hour,
         weightReminderMinute: minute,
@@ -207,9 +211,9 @@ export default function NotificationsScreen() {
       Alert.alert(t('common.success'), t('settings.weightReminderEnabled', { time: timeStr, defaultValue: `Rappel de pesée activé à ${timeStr}` }));
     } else {
       await NotificationService.cancelWeightReminder();
-      void updateSettings({ weightReminderEnabled: false });
+      await commitSettings({ weightReminderEnabled: false });
     }
-  }, [settings, updateSettings, t]);
+  }, [settings, commitSettings, t]);
 
   const handleSaveWeightReminder = useCallback(async () => {
     const hour = parseInt(weightTimePickerHour, 10);
@@ -228,7 +232,7 @@ export default function NotificationsScreen() {
       await NotificationService.scheduleWeightReminderMonthly(hour, minute, weightDayOfMonth);
     }
     
-    void updateSettings({ 
+    await commitSettings({ 
       weightReminderHour: hour,
       weightReminderMinute: minute,
       weightReminderFrequency: weightFrequency,
@@ -240,7 +244,7 @@ export default function NotificationsScreen() {
     
     const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
     Alert.alert(t('common.success'), t('settings.reminderSet', { time: timeStr }));
-  }, [weightTimePickerHour, weightTimePickerMinute, weightFrequency, weightDayOfWeek, weightDayOfMonth, updateSettings, t]);
+  }, [weightTimePickerHour, weightTimePickerMinute, weightFrequency, weightDayOfWeek, weightDayOfMonth, commitSettings, t]);
 
   const getWeightReminderDescription = useCallback(() => {
     if (!settings.weightReminderEnabled) return t('settings.socialDisabled');
@@ -265,7 +269,7 @@ export default function NotificationsScreen() {
       const hour = settings.streakReminderHour ?? 20;
       const minute = settings.streakReminderMinute ?? 0;
       await NotificationService.scheduleStreakReminder(hour, minute);
-      void updateSettings({ 
+      await commitSettings({ 
         streakReminderEnabled: true,
         streakReminderHour: hour,
         streakReminderMinute: minute,
@@ -278,9 +282,9 @@ export default function NotificationsScreen() {
       );
     } else {
       await NotificationService.cancelStreakReminder();
-      void updateSettings({ streakReminderEnabled: false });
+      await commitSettings({ streakReminderEnabled: false });
     }
-  }, [settings, updateSettings, t]);
+  }, [settings, commitSettings, t]);
 
   const handleSaveTime = useCallback(async () => {
     const hour = parseInt(timePickerHour, 10);
@@ -288,7 +292,7 @@ export default function NotificationsScreen() {
     
     if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
       await NotificationService.scheduleStreakReminder(hour, minute);
-      void updateSettings({ 
+      await commitSettings({ 
         streakReminderHour: hour,
         streakReminderMinute: minute,
       });
@@ -300,7 +304,7 @@ export default function NotificationsScreen() {
     } else {
       Alert.alert(t('common.error'), t('settings.reminderInvalid'));
     }
-  }, [timePickerHour, timePickerMinute, updateSettings, t]);
+  }, [timePickerHour, timePickerMinute, commitSettings, t]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -734,317 +738,3 @@ export default function NotificationsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-  },
-  topGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 280,
-    zIndex: 0,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: Spacing.lg,
-    paddingBottom: 100,
-    zIndex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-    gap: Spacing.md,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: Colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.stroke,
-  },
-  headerTitleWrap: {
-    flex: 1,
-  },
-  eyebrow: {
-    fontSize: FontSize.xs,
-    color: Colors.muted,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  screenTitle: {
-    fontSize: 26,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-  },
-  headerIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: Colors.overlaySky30,
-    backgroundColor: Colors.overlaySky12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Settings Card
-  settingsCard: {
-    marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderWidth: 1,
-    borderColor: Colors.overlayWhite10,
-    backgroundColor: Colors.overlayPanel82,
-  },
-
-  // Setting Item
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.sm,
-    gap: Spacing.md,
-  },
-  settingIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  settingInfo: {
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.text,
-  },
-  settingSubtitle: {
-    fontSize: FontSize.xs,
-    color: Colors.muted,
-    marginTop: 2,
-  },
-
-  // Time Picker Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: Colors.overlayBlack70,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.lg,
-  },
-  timePickerModal: {
-    backgroundColor: Colors.cardSolid,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
-    width: '100%',
-    maxWidth: 320,
-    borderWidth: 1,
-    borderColor: Colors.stroke,
-  },
-  timePickerTitle: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  timePickerSubtitle: {
-    fontSize: FontSize.sm,
-    color: Colors.muted,
-    textAlign: 'center',
-    marginBottom: Spacing.lg,
-  },
-  timePickerInputs: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xl,
-  },
-  timePickerInput: {
-    backgroundColor: Colors.overlay,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-    textAlign: 'center',
-    width: 80,
-    borderWidth: 1,
-    borderColor: Colors.stroke,
-  },
-  timePickerSeparator: {
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-  },
-  timePickerButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  timePickerCancelButton: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.overlay,
-    alignItems: 'center',
-  },
-  timePickerCancelText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.medium,
-    color: Colors.muted,
-  },
-  timePickerConfirmButton: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.cta,
-    alignItems: 'center',
-  },
-  timePickerConfirmText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-  },
-  sectionTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.md,
-  },
-  mealReminderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.stroke,
-  },
-  mealReminderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  mealReminderTime: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
-    color: Colors.text,
-  },
-  mealReminderActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  deleteMealButton: {
-    padding: Spacing.xs,
-  },
-  addMealButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  addMealButtonText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.medium,
-    color: Colors.cta,
-  },
-  // Weight reminder styles
-  frequencySelector: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  frequencyButton: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.overlay,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.stroke,
-  },
-  frequencyButtonActive: {
-    backgroundColor: Colors.overlayViolet20,
-    borderColor: Colors.violet,
-  },
-  frequencyButtonText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    color: Colors.muted,
-  },
-  frequencyButtonTextActive: {
-    color: Colors.violet,
-    fontWeight: FontWeight.bold,
-  },
-  daySelector: {
-    marginBottom: Spacing.lg,
-  },
-  daySelectorLabel: {
-    fontSize: FontSize.sm,
-    color: Colors.muted,
-    marginBottom: Spacing.sm,
-    textAlign: 'center',
-  },
-  dayScrollView: {
-    maxHeight: 50,
-  },
-  dayButtons: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  dayButton: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.overlay,
-    borderWidth: 1,
-    borderColor: Colors.stroke,
-  },
-  dayButtonActive: {
-    backgroundColor: Colors.overlayViolet20,
-    borderColor: Colors.violet,
-  },
-  dayButtonText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    color: Colors.muted,
-  },
-  dayButtonTextActive: {
-    color: Colors.violet,
-    fontWeight: FontWeight.bold,
-  },
-  dayOfMonthInput: {
-    alignItems: 'center',
-  },
-  dayOfMonthTextInput: {
-    backgroundColor: Colors.overlay,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-    textAlign: 'center',
-    width: 80,
-    borderWidth: 1,
-    borderColor: Colors.stroke,
-  },
-});
