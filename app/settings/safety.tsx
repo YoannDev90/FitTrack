@@ -1,2 +1,518 @@
-export { default } from '../../src/screens/settings/safety';
-export * from '../../src/screens/settings/safety';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  TextInput,
+  Switch,
+  Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Linking from 'expo-linking';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { ArrowLeft, Plus, Trash2, MessageSquareText, MessageCircleMore, Shield } from 'lucide-react-native';
+import { nanoid } from 'nanoid/non-secure';
+import { GlassCard, CustomAlertModal } from '../../src/components/ui';
+import { useAppStore } from '../../src/stores';
+import type { SafetyContact } from '../../src/types';
+import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
+import {
+  PHONE_NUMBER_REGEX,
+  WHATSAPP_CAPABILITY_TEST_URL,
+  SAFETY_INTERVAL_OPTIONS,
+  SAFETY_AUTO_ALERT_OPTIONS,
+} from '../../src/constants/safety';
+import { formatSafetyDelay, formatSafetyInterval, getDefaultSafetySettings } from '../../src/utils/safety';
+import { isAndroidSmsPermissionGranted } from '../../src/services/safetyAlert';
+import { serviceLogger } from '../../src/utils/logger';
+
+const MAX_CONTACTS = 5;
+
+export default function SafetySettingsScreen() {
+  const { t } = useTranslation();
+  const { settings, updateSettings } = useAppStore();
+  const safetySettings = settings.safety ?? getDefaultSafetySettings();
+  const contacts = safetySettings.contacts;
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [method, setMethod] = useState<'sms' | 'whatsapp'>('sms');
+  const [selectedDelete, setSelectedDelete] = useState<SafetyContact | null>(null);
+  const [whatsAppAvailable, setWhatsAppAvailable] = useState(false);
+  const [customIntervalText, setCustomIntervalText] = useState('');
+  const [isCustomInterval, setIsCustomInterval] = useState(false);
+  const [customIntervalError, setCustomIntervalError] = useState<string | null>(null);
+  const [showSmsPermissionWarning, setShowSmsPermissionWarning] = useState(false);
+
+  useEffect(() => {
+    const checkWhatsApp = async () => {
+      const canOpen = await Linking.canOpenURL(WHATSAPP_CAPABILITY_TEST_URL);
+      setWhatsAppAvailable(canOpen);
+    };
+    checkWhatsApp();
+  }, []);
+
+  useEffect(() => {
+    if ((SAFETY_INTERVAL_OPTIONS as readonly number[]).includes(safetySettings.defaultIntervalMinutes)) {
+      setIsCustomInterval(false);
+      setCustomIntervalText('');
+      setCustomIntervalError(null);
+    } else {
+      setIsCustomInterval(true);
+      setCustomIntervalText(String(safetySettings.defaultIntervalMinutes));
+      setCustomIntervalError(null);
+    }
+  }, [safetySettings.defaultIntervalMinutes]);
+
+  const canAdd = useMemo(() => name.trim().length > 0 && PHONE_NUMBER_REGEX.test(phone), [name, phone]);
+
+  const updateSafetySettings = (partial: Partial<typeof safetySettings>) => {
+    updateSettings({
+      safety: {
+        ...safetySettings,
+        ...partial,
+      },
+    });
+  };
+
+  const handleSaveContact = async () => {
+    if (!canAdd) return;
+    if (contacts.length >= MAX_CONTACTS) return;
+
+    const newContact: SafetyContact = {
+      id: nanoid(),
+      name: name.trim(),
+      phone: phone.trim(),
+      method,
+    };
+
+    void updateSafetySettings({ contacts: [...contacts, newContact] });
+
+    if (Platform.OS === 'android' && newContact.method === 'sms') {
+      try {
+        const smsPermissionGranted = await isAndroidSmsPermissionGranted();
+        if (smsPermissionGranted) {
+          serviceLogger.info('SMS GRANTED');
+        } else {
+          setShowSmsPermissionWarning(true);
+        }
+      } catch (error) {
+        serviceLogger.warn('[SafetySettings] SMS permission check failed', error);
+        setShowSmsPermissionWarning(true);
+      }
+    }
+
+    setName('');
+    setPhone('');
+    setMethod('sms');
+    setShowAddModal(false);
+  };
+
+  const handleDeleteContact = (id: string) => {
+    void updateSafetySettings({
+      contacts: contacts.filter((contact) => contact.id !== id),
+    });
+    setSelectedDelete(null);
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Animated.View entering={FadeIn.delay(50)} style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowLeft size={22} color={Colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.screenTitle}>{t('settings.safety.title')}</Text>
+          <View style={styles.headerSpacer} />
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(80).springify()}>
+          <GlassCard style={styles.card}>
+            <View style={styles.rowBetween}>
+              <Text style={styles.cardTitle}>{t('settings.safety.contacts')}</Text>
+              <TouchableOpacity
+                style={[styles.addButton, contacts.length >= MAX_CONTACTS && styles.addButtonDisabled]}
+                onPress={() => setShowAddModal(true)}
+                disabled={contacts.length >= MAX_CONTACTS}
+              >
+                <Plus size={14} color={Colors.bg} />
+                <Text style={styles.addButtonText}>{t('settings.safety.addContact')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {contacts.length >= MAX_CONTACTS && (
+              <Text style={styles.maxContactsText}>{t('settings.safety.maxContacts')}</Text>
+            )}
+
+            {contacts.length === 0 ? (
+              <Text style={styles.emptyText}>{t('safety.config.noContacts')}</Text>
+            ) : (
+              contacts.map((contact) => (
+                <View key={contact.id} style={styles.contactRow}>
+                  {contact.method === 'whatsapp'
+                    ? <MessageCircleMore size={16} color={Colors.success} />
+                    : <MessageSquareText size={16} color={Colors.cta} />}
+                  <View style={styles.contactInfo}>
+                    <Text style={styles.contactName}>{contact.name}</Text>
+                    <Text style={styles.contactMeta}>
+                      {contact.phone} • {contact.method === 'whatsapp'
+                        ? t('settings.safety.methodWhatsApp')
+                        : t('settings.safety.methodSMS')}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setSelectedDelete(contact)} style={styles.deleteBtn}>
+                    <Trash2 size={16} color={Colors.error} />
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+          </GlassCard>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(120).springify()}>
+          <GlassCard style={styles.card}>
+            <Text style={styles.cardTitle}>{t('settings.safety.defaultInterval')}</Text>
+            <View style={styles.chipsWrap}>
+              {SAFETY_INTERVAL_OPTIONS.map((interval) => (
+                <TouchableOpacity
+                  key={interval}
+                  style={[
+                    styles.chip,
+                    !isCustomInterval && safetySettings.defaultIntervalMinutes === interval && styles.chipActive,
+                  ]}
+                  onPress={() => {
+                    setIsCustomInterval(false);
+                    setCustomIntervalText('');
+                    setCustomIntervalError(null);
+                    updateSafetySettings({ defaultIntervalMinutes: interval });
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      !isCustomInterval && safetySettings.defaultIntervalMinutes === interval && styles.chipTextActive,
+                    ]}
+                  >
+                    {formatSafetyInterval(interval, t('common.minShort'), t('common.hour'))}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              <TouchableOpacity
+                key="custom"
+                style={[styles.chip, isCustomInterval && styles.chipActive]}
+                onPress={() => {
+                  setIsCustomInterval(true);
+                  setCustomIntervalText(String(safetySettings.defaultIntervalMinutes));
+                  setCustomIntervalError(null);
+                }}
+              >
+                <Text style={[styles.chipText, isCustomInterval && styles.chipTextActive]}>
+                  {t('safety.config.custom')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {isCustomInterval && (
+              <View style={styles.customIntervalRow}>
+                <TextInput
+                  style={[styles.input, customIntervalError && styles.inputError]}
+                  placeholder={t('safety.config.customPlaceholder')}
+                  placeholderTextColor={Colors.muted2}
+                  keyboardType="numeric"
+                  value={customIntervalText}
+                  onChangeText={(value) => {
+                    setCustomIntervalText(value);
+                    const parsed = Number(value);
+                    if (!value || Number.isNaN(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
+                      setCustomIntervalError(t('safety.config.customError'));
+                      return;
+                    }
+                    setCustomIntervalError(null);
+                    updateSafetySettings({ defaultIntervalMinutes: parsed });
+                  }}
+                  onBlur={() => {
+                    const parsed = Number(customIntervalText);
+                    if (customIntervalText && !Number.isNaN(parsed) && parsed > 0 && Number.isInteger(parsed)) {
+                      updateSafetySettings({ defaultIntervalMinutes: parsed });
+                    }
+                  }}
+                  returnKeyType="done"
+                />
+                {customIntervalError ? (
+                  <Text style={styles.errorText}>{customIntervalError}</Text>
+                ) : (
+                  <Text style={styles.customHintText}>{t('safety.config.customHint')}</Text>
+                )}
+              </View>
+            )}
+          </GlassCard>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(160).springify()}>
+          <GlassCard style={styles.card}>
+            <Text style={styles.cardTitle}>{t('settings.safety.defaultAutoAlert')}</Text>
+            <View style={styles.chipsWrap}>
+              {SAFETY_AUTO_ALERT_OPTIONS.map((delaySeconds) => (
+                <TouchableOpacity
+                  key={delaySeconds}
+                  style={[
+                    styles.chip,
+                    safetySettings.defaultAutoAlertDelaySeconds === delaySeconds && styles.chipActive,
+                  ]}
+                  onPress={() => updateSafetySettings({ defaultAutoAlertDelaySeconds: delaySeconds })}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      safetySettings.defaultAutoAlertDelaySeconds === delaySeconds && styles.chipTextActive,
+                    ]}
+                  >
+                    {formatSafetyDelay(delaySeconds, t('common.minShort'))}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </GlassCard>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(180).springify()}>
+          <GlassCard style={styles.card}>
+            <View style={styles.rowBetween}>
+              <View style={styles.toggleInfoWrap}>
+                <Text style={styles.cardTitle}>{t('settings.safety.fallDetection')}</Text>
+                <Text style={styles.toggleDescription}>{t('settings.safety.fallDetectionDesc')}</Text>
+              </View>
+              <Switch
+                value={Boolean(safetySettings.fallDetectionEnabled)}
+                onValueChange={(value) => updateSafetySettings({ fallDetectionEnabled: value })}
+                trackColor={{ true: Colors.success, false: Colors.cardSolid }}
+                thumbColor={Colors.white}
+              />
+            </View>
+            <Text style={styles.warningNote}>{t('settings.safety.fallDetectionWarning')}</Text>
+            {Platform.OS === 'ios' && (
+              <Text style={styles.iosNote}>{t('settings.safety.iosNote')}</Text>
+            )}
+          </GlassCard>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(200).springify()}>
+          <GlassCard style={[styles.card, styles.disclaimerCard]}>
+            <View style={styles.disclaimerHeader}>
+              <Shield size={16} color={Colors.warning} />
+              <Text style={styles.disclaimerTitle}>{t('settings.safety.title')}</Text>
+            </View>
+            <Text style={styles.disclaimerText}>{t('settings.safety.disclaimer')}</Text>
+          </GlassCard>
+        </Animated.View>
+      </ScrollView>
+
+      <Modal visible={showAddModal} transparent animationType="fade" onRequestClose={() => setShowAddModal(false)}>
+        <View style={styles.modalOverlay}>
+          <GlassCard style={styles.modalCard} variant="solid">
+            <Text style={styles.modalTitle}>{t('settings.safety.addContact')}</Text>
+
+            <Text style={styles.fieldLabel}>{t('settings.safety.editContact')}</Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder={t('settings.safety.editContact')}
+              placeholderTextColor={Colors.muted2}
+              style={styles.input}
+            />
+
+            <Text style={styles.fieldLabel}>{t('settings.safety.contacts')}</Text>
+            <TextInput
+              value={phone}
+              onChangeText={setPhone}
+              placeholder={t('settings.safety.phonePlaceholder')}
+              placeholderTextColor={Colors.muted2}
+              keyboardType="phone-pad"
+              style={styles.input}
+            />
+
+            <View style={styles.methodRow}>
+              <Text style={styles.fieldLabel}>{t('settings.safety.methodSMS')}</Text>
+              <Switch
+                value={method === 'whatsapp'}
+                onValueChange={(value) => setMethod(value ? 'whatsapp' : 'sms')}
+                disabled={!whatsAppAvailable}
+                trackColor={{ true: Colors.success, false: Colors.cardSolid }}
+                thumbColor={Colors.white}
+              />
+              <Text style={styles.fieldLabel}>{t('settings.safety.methodWhatsApp')}</Text>
+            </View>
+            {!whatsAppAvailable && (
+              <Text style={styles.unavailableText}>{t('settings.safety.whatsappUnavailable')}</Text>
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.secondaryAction} onPress={() => setShowAddModal(false)}>
+                <Text style={styles.secondaryActionText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.primaryAction, !canAdd && styles.primaryActionDisabled]}
+                onPress={handleSaveContact}
+                disabled={!canAdd}
+              >
+                <Text style={styles.primaryActionText}>{t('common.save')}</Text>
+              </TouchableOpacity>
+            </View>
+          </GlassCard>
+        </View>
+      </Modal>
+
+      <CustomAlertModal
+        visible={selectedDelete !== null}
+        type="warning"
+        title={t('settings.safety.deleteContact')}
+        message={t('settings.safety.deleteConfirm', { name: selectedDelete?.name ?? '' })}
+        onClose={() => setSelectedDelete(null)}
+        buttons={[
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('common.delete'),
+            style: 'destructive',
+            onPress: () => {
+              if (selectedDelete) handleDeleteContact(selectedDelete.id);
+            },
+          },
+        ]}
+      />
+
+      <CustomAlertModal
+        visible={showSmsPermissionWarning}
+        type="warning"
+        title={t('safety.permission.smsTitle')}
+        message={t('safety.permission.smsManual')}
+        onClose={() => setShowSmsPermissionWarning(false)}
+        buttons={[{ text: t('common.ok') }]}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.bg },
+  scrollView: { flex: 1 },
+  content: { padding: Spacing.lg, paddingBottom: 100, gap: Spacing.md },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, gap: Spacing.md },
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  screenTitle: { flex: 1, color: Colors.text, fontSize: FontSize.xxl, fontWeight: FontWeight.bold },
+  headerSpacer: { width: 42 },
+  card: { padding: Spacing.md },
+  cardTitle: { color: Colors.text, fontSize: FontSize.lg, fontWeight: FontWeight.semibold, marginBottom: Spacing.sm },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    backgroundColor: Colors.success,
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  addButtonDisabled: { opacity: 0.45 },
+  addButtonText: { color: Colors.bg, fontSize: FontSize.sm, fontWeight: FontWeight.bold },
+  maxContactsText: { color: Colors.warning, fontSize: FontSize.xs, marginBottom: Spacing.sm },
+  emptyText: { color: Colors.muted, fontSize: FontSize.sm },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.stroke,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  contactInfo: { flex: 1 },
+  contactName: { color: Colors.text, fontSize: FontSize.md, fontWeight: FontWeight.semibold },
+  contactMeta: { color: Colors.muted, fontSize: FontSize.xs, marginTop: 2 },
+  deleteBtn: { padding: Spacing.xs },
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  toggleInfoWrap: { flex: 1, paddingRight: Spacing.md },
+  toggleDescription: { color: Colors.muted, fontSize: FontSize.sm, lineHeight: 18 },
+  warningNote: { color: Colors.warning, fontSize: FontSize.xs, marginTop: Spacing.sm, lineHeight: 16 },
+  iosNote: { color: Colors.textSecondary, fontSize: FontSize.xs, marginTop: Spacing.sm, lineHeight: 16 },
+  chip: {
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.stroke,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.overlay,
+  },
+  chipActive: { borderColor: Colors.teal, backgroundColor: Colors.tealLight },
+  chipText: { color: Colors.textSecondary, fontSize: FontSize.sm },
+  chipTextActive: { color: Colors.text, fontWeight: FontWeight.bold },
+  customIntervalRow: {
+    marginTop: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  inputError: { borderColor: Colors.error },
+  customHintText: { color: Colors.muted, fontSize: FontSize.xs },
+  errorText: { color: Colors.error, fontSize: FontSize.xs, marginTop: 4 },
+  disclaimerCard: {
+    borderColor: Colors.overlayWarningDeep45,
+    backgroundColor: Colors.overlayWarningDeep12,
+  },
+  disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.xs },
+  disclaimerTitle: { color: Colors.warning, fontSize: FontSize.md, fontWeight: FontWeight.semibold },
+  disclaimerText: { color: Colors.text, fontSize: FontSize.sm, lineHeight: 18 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: Colors.overlayBlack70,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  modalCard: { padding: Spacing.lg },
+  modalTitle: { color: Colors.text, fontSize: FontSize.xl, fontWeight: FontWeight.bold, marginBottom: Spacing.md },
+  fieldLabel: { color: Colors.textSecondary, fontSize: FontSize.sm, marginBottom: Spacing.xs, marginTop: Spacing.sm },
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.stroke,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    color: Colors.text,
+    backgroundColor: Colors.overlay,
+  },
+  methodRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.sm },
+  unavailableText: { color: Colors.warning, fontSize: FontSize.xs, marginTop: Spacing.xs },
+  modalActions: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.lg },
+  secondaryAction: {
+    flex: 1,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.stroke,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+  },
+  secondaryActionText: { color: Colors.text, fontSize: FontSize.md, fontWeight: FontWeight.semibold },
+  primaryAction: {
+    flex: 1,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.cta,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+  },
+  primaryActionDisabled: { opacity: 0.45 },
+  primaryActionText: { color: Colors.bg, fontSize: FontSize.md, fontWeight: FontWeight.bold },
+});
