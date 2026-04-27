@@ -625,6 +625,9 @@ EOF
 
 cat >> android/app/build.gradle <<'EOF'
 
+// ABI suffixes F-Droid — doit être au niveau projet, PAS dans android {}
+project.ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86': 3, 'x86_64': 4]
+
 android {
     splits {
         abi {
@@ -635,16 +638,12 @@ android {
         }
     }
 
-    // ABI versionCode suffixes (convention F-Droid)
-    // armeabi-v7a → +1, arm64-v8a → +2, x86 → +3, x86_64 → +4
-    ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86': 3, 'x86_64': 4]
-
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
             def abiFilter = output.getFilter(com.android.build.OutputFile.ABI)
             if (abiFilter != null) {
                 def abiSuffix = project.ext.abiCodes.get(abiFilter, 0)
-                output.versionCodeOverride = variant.versionCode * 10 + abiSuffix
+                output.versionCodeOverride = variant.versionCode + abiSuffix
             }
         }
     }
