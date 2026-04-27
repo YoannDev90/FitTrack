@@ -631,7 +631,21 @@ android {
             enable true
             reset()
             include "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
-            universalApk true
+            universalApk false
+        }
+    }
+
+    // ABI versionCode suffixes (convention F-Droid)
+    // armeabi-v7a → +1, arm64-v8a → +2, x86 → +3, x86_64 → +4
+    ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86': 3, 'x86_64': 4]
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def abiFilter = output.getFilter(com.android.build.OutputFile.ABI)
+            if (abiFilter != null) {
+                def abiSuffix = project.ext.abiCodes.get(abiFilter, 0)
+                output.versionCodeOverride = variant.versionCode * 10 + abiSuffix
+            }
         }
     }
 
@@ -639,14 +653,12 @@ android {
         includeInApk = false
         includeInBundle = false
     }
-    
+
     packagingOptions {
-        // FIX: Prevent duplicate libc++_shared.so
         pickFirst 'lib/x86/libc++_shared.so'
         pickFirst 'lib/x86_64/libc++_shared.so'
         pickFirst 'lib/armeabi-v7a/libc++_shared.so'
         pickFirst 'lib/arm64-v8a/libc++_shared.so'
-        
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
@@ -655,15 +667,6 @@ android {
         exclude 'META-INF/NOTICE.txt'
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/ASL2.0'
-    }
-
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            def fileName = output.outputFileName
-            if (fileName != null && fileName.contains("universal")) {
-                output.outputFileName = "app-${variant.name}.apk"
-            }
-        }
     }
 }
 
