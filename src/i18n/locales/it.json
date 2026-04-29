@@ -281,7 +281,7 @@
       "disabled": "Il riepilogo IA è disabilitato",
       "enableInSettings": "Abilitalo in Impostazioni > IA – Ploppy",
       "noData": "Non ci sono abbastanza dati per generare un riepilogo",
-      "connectRequired": "Connettiti a Pollination in Impostazioni > Labs per usare l'IA",
+      "connectRequired": "Connettiti a Pollinations in Impostazioni > Labs per usare l'IA",
       "regenerate": "Rigenera"
     },
     "workoutsPerMonth": "Allenamenti al mese",
@@ -1031,13 +1031,13 @@
     "disableDeveloperModeDesc": "Nascondi queste opzioni avanzate",
     "developer": {
       "sections": {
-        "pollination": "IA Pollination",
+        "pollinations": "IA Pollinations",
         "interface": "Interfaccia",
         "gamification": "Gamification",
         "safety": "Sicurezza",
         "developerMode": "Modalità sviluppatore"
       },
-      "pollination": {
+      "pollinations": {
         "title": "Saldo Pollen",
         "connected": "Connesso",
         "disconnected": "Non connesso",
@@ -1098,12 +1098,12 @@
         "neutral": "Neutrale",
         "warm": "Caloroso"
       },
-      "pollinationsInfo": "Questa app utilizza Pollinations.ai per alimentare le sue funzioni intelligenti. Pollinations è un servizio IA open-source che ci permette di offrire queste funzioni senza costi aggiuntivi.",
+      "pollinationssInfo": "Questa app utilizza Pollinationss.ai per alimentare le sue funzioni intelligenti. Pollinationss è un servizio IA open-source che ci permette di offrire queste funzioni senza costi aggiuntivi.",
       "privacyTitle": "Dati condivisi con l'IA",
-      "privacyText": "Quando le funzioni IA sono abilitate, i seguenti dati potrebbero essere inviati a Pollinations.ai:\n• Dati personali: età, peso, altezza (se forniti)\n• Cronologia sport: numero di sessioni, distanze, durate, ritmi\n• Dati della sessione corrente: distanza, durata, ritmo, dislivello\n• Dati nutrizionali: riepiloghi dei pasti (se attivi)\n• Livello di fitness dal tuo profilo",
+      "privacyText": "Quando le funzioni IA sono abilitate, i seguenti dati potrebbero essere inviati a Pollinationss.ai:\n• Dati personali: età, peso, altezza (se forniti)\n• Cronologia sport: numero di sessioni, distanze, durate, ritmi\n• Dati della sessione corrente: distanza, durata, ritmo, dislivello\n• Dati nutrizionali: riepiloghi dei pasti (se attivi)\n• Livello di fitness dal tuo profilo",
       "seePrivacyPolicy": "Vedi l'informativa sulla privacy completa",
       "consentTitle": "Condivisione Dati IA",
-      "consentMessage": "Abilitando le funzioni IA, accetti che alcuni dati (profilo, cronologia sport, dati della sessione) possano essere inviati a Pollinations.ai per generare consigli personalizzati. Nessun dato viene conservato in modo permanente.",
+      "consentMessage": "Abilitando le funzioni IA, accetti che alcuni dati (profilo, cronologia sport, dati della sessione) possano essere inviati a Pollinationss.ai per generare consigli personalizzati. Nessun dato viene conservato in modo permanente.",
       "acceptConsent": "Accetto",
       "declineConsent": "No grazie",
       "movedToAiTab": "Le impostazioni dell'IA sono state spostate in Impostazioni > IA",
@@ -1134,24 +1134,24 @@
       "disabledChip": "Disattivato",
       "statusBadge": "PAUSE"
     },
-    "pollination": {
+    "pollinations": {
       "sectionTitle": "ANALISI IA",
-      "title": "IA Pollination",
+      "title": "IA Pollinations",
       "connected": "Connesso",
       "notConnected": "Non connesso",
       "connect": "Connetti",
       "disconnect": "Disconnetti",
-      "disconnectTitle": "Disconnettersi da Pollination?",
+      "disconnectTitle": "Disconnettersi da Pollinations?",
       "disconnectMessage": "Non potrai più utilizzare le funzioni di analisi dei pasti con l'IA.",
       "warningTitle": "⚠️ Funzionalità Beta",
-      "warningMessage": "Questa funzione utilizza l'API di Pollination.ai per analizzare le foto dei tuoi pasti. Connettendoti, accetti che le immagini dei tuoi pasti vengano elaborate dai servizi Pollination. Questa funzione è sperimentale e potrebbe raccogliere dati di utilizzo.",
+      "warningMessage": "Questa funzione utilizza l'API di Pollinations.ai per analizzare le foto dei tuoi pasti. Connettendoti, accetti che le immagini dei tuoi pasti vengano elaborate dai servizi Pollinations. Questa funzione è sperimentale e potrebbe raccogliere dati di utilizzo.",
       "continue": "Connetti comunque",
-      "betaWarning": "Funzione beta - Pollination potrebbe raccogliere dati per migliorare il servizio",
+      "betaWarning": "Funzione beta - Pollinations potrebbe raccogliere dati per migliorare il servizio",
       "successTitle": "Connesso!",
       "successMessage": "Ora puoi utilizzare l'analisi dei pasti IA con Ploppy.",
       "errorMessage": "Connessione fallita. Per favore riprova."
     },
-    "pollinationCallback": {
+    "pollinationsCallback": {
       "processing": "Connessione in corso...",
       "processingMessage": "Attendi mentre colleghiamo il tuo account.",
       "success": "Connesso!",
@@ -1185,7 +1185,7 @@
         "privacyTitle": "🔐 Privacy",
         "privacyNote": "Le tue foto vengono analizzate e poi eliminate. Nessun dato viene conservato.",
         "privacy1": "🔒 Le tue foto non vengono mai salvate",
-        "privacy2": "📱 Elaborazione sicura tramite Pollination.ai",
+        "privacy2": "📱 Elaborazione sicura tramite Pollinations.ai",
         "privacy3": "✨ Gratuito e senza pubblicità",
         "accept": "Abilita Ploppy",
         "decline": "Più tardi",
@@ -1195,7 +1195,7 @@
         "title": "Impostazioni Ploppy",
         "enable": "Abilita Ploppy",
         "enableDesc": "Analisi IA dei tuoi pasti",
-        "connected": "Connesso a Pollination",
+        "connected": "Connesso a Pollinations",
         "notConnected": "Non connesso",
         "connect": "Connetti",
         "disconnect": "Disconnetti",
@@ -1465,7 +1465,7 @@
         "expoPush": "Notifiche Push di Expo"
       },
       "unavailable": {
-        "ploppy": "Ploppy (Analisi pasti IA) - richiede Pollination.ai",
+        "ploppy": "Ploppy (Analisi pasti IA) - richiede Pollinations.ai",
         "social": "Modalità social (classifica, amici) - richiede Supabase",
         "push": "Notifiche push remote"
       },
@@ -1553,21 +1553,21 @@
       "opposition": "Opposizione: Disattivare le funzioni social",
       "highlight": "💡 Per eliminare i tuoi dati online, disabilita le funzioni social in Impostazioni → Social."
     },
-    "pollination": {
+    "pollinations": {
       "title": "Analisi Pasti IA (Beta)",
-      "description": "Spix può opzionalmente analizzare le foto dei tuoi pasti usando l'API di Pollination.ai. Questa funzione è a scelta (opt-in) e richiede una connessione esplicita.",
+      "description": "Spix può opzionalmente analizzare le foto dei tuoi pasti usando l'API di Pollinations.ai. Questa funzione è a scelta (opt-in) e richiede una connessione esplicita.",
       "dataTitle": "Dati elaborati:",
       "data": {
         "images": "Foto dei pasti (caricate temporaneamente per l'analisi)",
         "temporary": "Le immagini vengono caricate su tmpfiles.org ed eliminate automaticamente dopo 1 ora",
-        "apiKey": "Chiave API Pollination (memorizzata localmente, mai inviata ai nostri server)"
+        "apiKey": "Chiave API Pollinations (memorizzata localmente, mai inviata ai nostri server)"
       },
-      "warning": "⚠️ Questa è una funzione beta. Utilizzandola, accetti che Pollination.ai possa elaborare le immagini dei tuoi pasti per fornire un'analisi nutrizionale. Pollination potrebbe raccogliere dati di utilizzo anonimizzati per il miglioramento del servizio.",
-      "optOut": "Puoi disconnetterti da Pollination in qualsiasi momento in Impostazioni → IA per smettere di usare questa funzione."
+      "warning": "⚠️ Questa è una funzione beta. Utilizzandola, accetti che Pollinations.ai possa elaborare le immagini dei tuoi pasti per fornire un'analisi nutrizionale. Pollinations potrebbe raccogliere dati di utilizzo anonimizzati per il miglioramento del servizio.",
+      "optOut": "Puoi disconnetterti da Pollinations in qualsiasi momento in Impostazioni → IA per smettere di usare questa funzione."
     },
     "aiCoaching": {
       "title": "Coach di Corsa IA (Beta)",
-      "description": "Spix può generare piani di corsa personalizzati tramite Pollination IA. Questa funzione è a scelta (opt-in) e richiede una connessione esplicita.",
+      "description": "Spix può generare piani di corsa personalizzati tramite Pollinations IA. Questa funzione è a scelta (opt-in) e richiede una connessione esplicita.",
       "dataTitle": "Dati inviati all'IA:",
       "data": {
         "profile": "Dati del profilo: peso, età, altezza, livello di fitness (se forniti)",
@@ -1642,7 +1642,7 @@
       "description": "Alcune funzioni richiedono un'attivazione esplicita:",
       "ploppy": {
         "title": "Ploppy (Analisi IA)",
-        "account": "Richiede un account Pollination",
+        "account": "Richiede un account Pollinations",
         "photos": "Le tue foto vengono inviate per l'analisi",
         "disable": "Può essere disabilitato in qualsiasi momento"
       },
@@ -1656,7 +1656,7 @@
       },
       "aiCoaching": {
         "title": "Coach di Corsa IA (Beta)",
-        "plan": "I piani di corsa sono generati da Pollination.ai",
+        "plan": "I piani di corsa sono generati da Pollinations.ai",
         "data": "Dati sportivi trasmessi per la personalizzazione",
         "sanitized": "Input dell'utente filtrati, risposte IA convalidate",
         "disable": "Può essere disabilitato in qualsiasi momento in Impostazioni → IA"
@@ -1686,7 +1686,7 @@
         "injury": "Infortuni durante l'esercizio",
         "accuracy": "Accuratezza dei dati nutrizionali IA",
         "dataLoss": "Perdita di dati locali",
-        "thirdParty": "Servizi di terze parti (Pollination, Supabase)"
+        "thirdParty": "Servizi di terze parti (Pollinations, Supabase)"
       }
     },
     "jurisdiction": {
@@ -1976,7 +1976,7 @@
       "enableInSettings": "Abilitala in Impostazioni > IA – Ploppy",
       "bestSession": "🏆 Questa è la tua migliore sessione di sempre per questa attività!",
       "improvement": "Rispetto all'ultima volta",
-      "connectRequired": "Connettiti a Pollination in Impostazioni > IA – Ploppy per usare l'IA",
+      "connectRequired": "Connettiti a Pollinations in Impostazioni > IA – Ploppy per usare l'IA",
       "regenerate": "Rigenera"
     }
   },
@@ -2078,7 +2078,7 @@
     "noImage": "Nessuna immagine",
     "selectImageFirst": "Seleziona prima un'immagine",
     "notConnected": "Non connesso",
-    "connectPollinationFirst": "Devi connetterti a Pollination in Impostazioni > IA – Ploppy per usare questa funzionalità.",
+    "connectPollinationsFirst": "Devi connetterti a Pollinations in Impostazioni > IA – Ploppy per usare questa funzionalità.",
     "analysisError": "Errore di analisi",
     "analysisErrorMessage": "Impossibile analizzare l'immagine. Riprova.",
     "noDescription": "Nessuna descrizione",
@@ -2129,7 +2129,7 @@
     },
     "connectRequired": {
       "title": "Connessione Richiesta",
-      "message": "Per utilizzare Ploppy, devi connetterti a Pollination.ai.",
+      "message": "Per utilizzare Ploppy, devi connetterti a Pollinations.ai.",
       "connect": "Connetti"
     },
     "disconnect": {
@@ -2142,7 +2142,7 @@
       "subtitle": "Assistente Nutrizionale IA",
       "enableTitle": "Abilita Ploppy",
       "enableDesc": "Analizza i tuoi pasti tramite foto",
-      "connected": "Connesso a Pollination",
+      "connected": "Connesso a Pollinations",
       "notConnected": "Non connesso",
       "disconnect": "Disconnetti",
       "info": "Ploppy analizza le foto dei tuoi pasti per darti un punteggio nutrizionale e consigli personalizzati. Le foto vengono eliminate dopo 1 ora.",
@@ -2188,7 +2188,7 @@
     "ai": {
       "inputTitle": "Coach IA",
       "inputPlaceholder": "Descrivi il tuo obiettivo...",
-      "notConnected": "Connettiti a Pollination in Impostazioni > IA per usare il coaching IA.",
+      "notConnected": "Connettiti a Pollinations in Impostazioni > IA per usare il coaching IA.",
       "generating": "Ploppy sta pensando...",
       "planReady": "Piano pronto!",
       "goButton": "Andiamo!",
@@ -2230,22 +2230,13 @@
         ]
       },
       "longRun": {
-        "quarter": [
-          "25%! Ottima partenza 👏",
-          "Primo quarto completato!"
-        ],
-        "half": [
-          "Metà strada! Mantieni il ritmo 💪",
-          "Il 50% è in tasca!"
-        ],
+        "quarter": ["25%! Ottima partenza 👏", "Primo quarto completato!"],
+        "half": ["Metà strada! Mantieni il ritmo 💪", "Il 50% è in tasca!"],
         "threeQuarters": [
           "75%! Ci siamo quasi 🎯",
           "Manca solo l'ultimo quarto!"
         ],
-        "almostDone": [
-          "Quasi finito! Dai tutto 🔥",
-          "Ancora pochi metri!"
-        ]
+        "almostDone": ["Quasi finito! Dai tutto 🔥", "Ancora pochi metri!"]
       },
       "tooSlow": [
         "Cerca di aumentare il ritmo! ⚡",

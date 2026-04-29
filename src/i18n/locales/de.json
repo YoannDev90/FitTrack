@@ -281,7 +281,7 @@
       "disabled": "Die KI-Zusammenfassung ist deaktiviert",
       "enableInSettings": "Aktiviere sie unter Einstellungen > KI – Ploppy",
       "noData": "Nicht genug Daten für eine Zusammenfassung",
-      "connectRequired": "Verbinde dich unter Einstellungen > Labs mit Pollination, um KI-Funktionen zu nutzen",
+      "connectRequired": "Verbinde dich unter Einstellungen > Labs mit Pollinations, um KI-Funktionen zu nutzen",
       "regenerate": "Neu generieren"
     },
     "workoutsPerMonth": "Workouts pro Monat",
@@ -1031,13 +1031,13 @@
     "disableDeveloperModeDesc": "Diese erweiterten Optionen verbergen",
     "developer": {
       "sections": {
-        "pollination": "Pollination KI",
+        "pollinations": "Pollinations KI",
         "interface": "Oberfläche",
         "gamification": "Gamification",
         "safety": "Sicherheit",
         "developerMode": "Entwicklermodus"
       },
-      "pollination": {
+      "pollinations": {
         "title": "Pollen-Guthaben",
         "connected": "Verbunden",
         "disconnected": "Nicht verbunden",
@@ -1098,12 +1098,12 @@
         "neutral": "Neutral",
         "warm": "Herzlich"
       },
-      "pollinationsInfo": "Diese App nutzt Pollinations.ai, um ihre smarten Features anzutreiben. Pollinations ist ein Open-Source-KI-Dienst, der es uns ermöglicht, diese Funktionen ohne Zusatzkosten anzubieten.",
+      "pollinationssInfo": "Diese App nutzt Pollinationss.ai, um ihre smarten Features anzutreiben. Pollinationss ist ein Open-Source-KI-Dienst, der es uns ermöglicht, diese Funktionen ohne Zusatzkosten anzubieten.",
       "privacyTitle": "Mit der KI geteilte Daten",
-      "privacyText": "Wenn KI-Funktionen aktiviert sind, können folgende Daten an Pollinations.ai gesendet werden:\n• Persönliche Daten: Alter, Gewicht, Größe (falls angegeben)\n• Sport-Verlauf: Anzahl der Einheiten, Distanzen, Dauer, Tempo\n• Aktuelle Einheiten-Daten: Distanz, Dauer, Tempo, Höhenmeter\n• Ernährungsdaten: Mahlzeiten-Zusammenfassungen (falls aktiv)\n• Fitness-Level aus deinem Profil",
+      "privacyText": "Wenn KI-Funktionen aktiviert sind, können folgende Daten an Pollinationss.ai gesendet werden:\n• Persönliche Daten: Alter, Gewicht, Größe (falls angegeben)\n• Sport-Verlauf: Anzahl der Einheiten, Distanzen, Dauer, Tempo\n• Aktuelle Einheiten-Daten: Distanz, Dauer, Tempo, Höhenmeter\n• Ernährungsdaten: Mahlzeiten-Zusammenfassungen (falls aktiv)\n• Fitness-Level aus deinem Profil",
       "seePrivacyPolicy": "Siehe vollständige Datenschutzrichtlinie",
       "consentTitle": "Teilen von KI-Daten",
-      "consentMessage": "Durch die Aktivierung von KI-Funktionen stimmst du zu, dass bestimmte Daten (Profil, Sport-Verlauf, Einheiten-Daten) an Pollinations.ai gesendet werden können, um personalisierte Ratschläge zu generieren. Es werden keine Daten dauerhaft gespeichert.",
+      "consentMessage": "Durch die Aktivierung von KI-Funktionen stimmst du zu, dass bestimmte Daten (Profil, Sport-Verlauf, Einheiten-Daten) an Pollinationss.ai gesendet werden können, um personalisierte Ratschläge zu generieren. Es werden keine Daten dauerhaft gespeichert.",
       "acceptConsent": "Ich akzeptiere",
       "declineConsent": "Nein, danke",
       "movedToAiTab": "KI-Einstellungen sind jetzt unter Einstellungen > KI",
@@ -1134,24 +1134,24 @@
       "disabledChip": "Deaktiviert",
       "statusBadge": "PAUSE"
     },
-    "pollination": {
+    "pollinations": {
       "sectionTitle": "KI-ANALYSE",
-      "title": "Pollination KI",
+      "title": "Pollinations KI",
       "connected": "Verbunden",
       "notConnected": "Nicht verbunden",
       "connect": "Verbinden",
       "disconnect": "Trennen",
-      "disconnectTitle": "Von Pollination trennen?",
+      "disconnectTitle": "Von Pollinations trennen?",
       "disconnectMessage": "Du wirst die KI-Mahlzeitenanalyse-Funktionen nicht mehr nutzen können.",
       "warningTitle": "⚠️ Beta-Funktion",
-      "warningMessage": "Diese Funktion nutzt die Pollination.ai-API, um Fotos deiner Mahlzeiten zu analysieren. Durch die Verbindung stimmst du zu, dass deine Essensbilder durch Pollination-Dienste verarbeitet werden dürfen. Diese Funktion ist experimentell und kann Nutzungsdaten erheben.",
+      "warningMessage": "Diese Funktion nutzt die Pollinations.ai-API, um Fotos deiner Mahlzeiten zu analysieren. Durch die Verbindung stimmst du zu, dass deine Essensbilder durch Pollinations-Dienste verarbeitet werden dürfen. Diese Funktion ist experimentell und kann Nutzungsdaten erheben.",
       "continue": "Trotzdem verbinden",
-      "betaWarning": "Beta-Funktion - Pollination kann Daten zur Service-Verbesserung erheben",
+      "betaWarning": "Beta-Funktion - Pollinations kann Daten zur Service-Verbesserung erheben",
       "successTitle": "Verbunden!",
       "successMessage": "Du kannst jetzt die KI-Mahlzeitenanalyse mit Ploppy nutzen.",
       "errorMessage": "Verbindung fehlgeschlagen. Bitte versuche es erneut."
     },
-    "pollinationCallback": {
+    "pollinationsCallback": {
       "processing": "Verbindet...",
       "processingMessage": "Bitte warten, während wir dein Konto verbinden.",
       "success": "Verbunden!",
@@ -1185,7 +1185,7 @@
         "privacyTitle": "🔐 Datenschutz",
         "privacyNote": "Deine Fotos werden analysiert und danach gelöscht. Es werden keine Daten behalten.",
         "privacy1": "🔒 Deine Fotos werden niemals gespeichert",
-        "privacy2": "📱 Sichere Verarbeitung via Pollination.ai",
+        "privacy2": "📱 Sichere Verarbeitung via Pollinations.ai",
         "privacy3": "✨ Kostenlos und ohne Werbung",
         "accept": "Ploppy aktivieren",
         "decline": "Später",
@@ -1195,7 +1195,7 @@
         "title": "Ploppy-Einstellungen",
         "enable": "Ploppy aktivieren",
         "enableDesc": "KI-Analyse deiner Mahlzeiten",
-        "connected": "Mit Pollination verbunden",
+        "connected": "Mit Pollinations verbunden",
         "notConnected": "Nicht verbunden",
         "connect": "Verbinden",
         "disconnect": "Trennen",
@@ -1465,7 +1465,7 @@
         "expoPush": "Expo Push-Benachrichtigungen"
       },
       "unavailable": {
-        "ploppy": "Ploppy (KI-Mahlzeitenanalyse) - erfordert Pollination.ai",
+        "ploppy": "Ploppy (KI-Mahlzeitenanalyse) - erfordert Pollinations.ai",
         "social": "Social-Modus (Bestenliste, Freunde) - erfordert Supabase",
         "push": "Remote-Push-Benachrichtigungen"
       },
@@ -1553,21 +1553,21 @@
       "opposition": "Widerspruch: Social-Funktionen deaktivieren",
       "highlight": "💡 Um deine Online-Daten zu löschen, deaktiviere die Social-Funktionen unter Einstellungen → Social."
     },
-    "pollination": {
+    "pollinations": {
       "title": "KI-Mahlzeitenanalyse (Beta)",
-      "description": "Spix kann Fotos deiner Mahlzeiten optional über die Pollination.ai API analysieren. Diese Funktion ist Opt-in und erfordert eine explizite Verbindung.",
+      "description": "Spix kann Fotos deiner Mahlzeiten optional über die Pollinations.ai API analysieren. Diese Funktion ist Opt-in und erfordert eine explizite Verbindung.",
       "dataTitle": "Verarbeitete Daten:",
       "data": {
         "images": "Fotos von Mahlzeiten (werden vorübergehend zur Analyse hochgeladen)",
         "temporary": "Bilder werden auf tmpfiles.org hochgeladen und nach 1 Stunde automatisch gelöscht",
-        "apiKey": "Pollination API-Schlüssel (wird lokal gespeichert, nie an unsere Server gesendet)"
+        "apiKey": "Pollinations API-Schlüssel (wird lokal gespeichert, nie an unsere Server gesendet)"
       },
-      "warning": "⚠️ Dies ist eine Beta-Funktion. Durch die Nutzung stimmst du zu, dass Pollination.ai deine Mahlzeiten-Bilder verarbeiten darf, um eine Ernährungsanalyse zu liefern. Pollination sammelt möglicherweise anonymisierte Nutzungsdaten zur Service-Verbesserung.",
-      "optOut": "Du kannst die Verbindung zu Pollination jederzeit unter Einstellungen → KI trennen, um diese Funktion nicht mehr zu nutzen."
+      "warning": "⚠️ Dies ist eine Beta-Funktion. Durch die Nutzung stimmst du zu, dass Pollinations.ai deine Mahlzeiten-Bilder verarbeiten darf, um eine Ernährungsanalyse zu liefern. Pollinations sammelt möglicherweise anonymisierte Nutzungsdaten zur Service-Verbesserung.",
+      "optOut": "Du kannst die Verbindung zu Pollinations jederzeit unter Einstellungen → KI trennen, um diese Funktion nicht mehr zu nutzen."
     },
     "aiCoaching": {
       "title": "KI-Lauf-Coach (Beta)",
-      "description": "Spix kann über Pollination KI personalisierte Laufpläne erstellen. Diese Funktion ist Opt-in und erfordert eine explizite Verbindung.",
+      "description": "Spix kann über Pollinations KI personalisierte Laufpläne erstellen. Diese Funktion ist Opt-in und erfordert eine explizite Verbindung.",
       "dataTitle": "An die KI gesendete Daten:",
       "data": {
         "profile": "Profildaten: Gewicht, Alter, Größe, Fitness-Level (falls angegeben)",
@@ -1642,7 +1642,7 @@
       "description": "Einige Funktionen erfordern eine explizite Aktivierung:",
       "ploppy": {
         "title": "Ploppy (KI-Analyse)",
-        "account": "Erfordert ein Pollination-Konto",
+        "account": "Erfordert ein Pollinations-Konto",
         "photos": "Deine Fotos werden zur Analyse versendet",
         "disable": "Kann jederzeit deaktiviert werden"
       },
@@ -1656,7 +1656,7 @@
       },
       "aiCoaching": {
         "title": "KI-Lauf-Coach (Beta)",
-        "plan": "Laufpläne werden von Pollination.ai generiert",
+        "plan": "Laufpläne werden von Pollinations.ai generiert",
         "data": "Sportdaten zur Personalisierung übertragen",
         "sanitized": "Nutzereingaben werden gefiltert, KI-Antworten validiert",
         "disable": "Kann jederzeit unter Einstellungen → KI deaktiviert werden"
@@ -1686,7 +1686,7 @@
         "injury": "Verletzungen während des Trainings",
         "accuracy": "Richtigkeit von KI-Ernährungsdaten",
         "dataLoss": "Verlust von lokalen Daten",
-        "thirdParty": "Dienste von Drittanbietern (Pollination, Supabase)"
+        "thirdParty": "Dienste von Drittanbietern (Pollinations, Supabase)"
       }
     },
     "jurisdiction": {
@@ -1976,7 +1976,7 @@
       "enableInSettings": "Aktiviere sie unter Einstellungen > KI – Ploppy",
       "bestSession": "🏆 Das ist deine beste Einheit aller Zeiten in dieser Disziplin!",
       "improvement": "Im Vergleich zum letzten Mal",
-      "connectRequired": "Verbinde dich unter Einstellungen > KI – Ploppy mit Pollination, um die KI-Funktionen zu nutzen",
+      "connectRequired": "Verbinde dich unter Einstellungen > KI – Ploppy mit Pollinations, um die KI-Funktionen zu nutzen",
       "regenerate": "Neu generieren"
     }
   },
@@ -2078,7 +2078,7 @@
     "noImage": "Kein Bild",
     "selectImageFirst": "Bitte wähle zuerst ein Bild aus",
     "notConnected": "Nicht verbunden",
-    "connectPollinationFirst": "Du musst dich in Einstellungen > KI – Ploppy mit Pollination verbinden, um diese Funktion zu nutzen.",
+    "connectPollinationsFirst": "Du musst dich in Einstellungen > KI – Ploppy mit Pollinations verbinden, um diese Funktion zu nutzen.",
     "analysisError": "Analysefehler",
     "analysisErrorMessage": "Das Bild konnte nicht analysiert werden. Bitte versuche es erneut.",
     "noDescription": "Keine Beschreibung",
@@ -2129,7 +2129,7 @@
     },
     "connectRequired": {
       "title": "Verbindung erforderlich",
-      "message": "Um Ploppy zu nutzen, musst du dich mit Pollination.ai verbinden.",
+      "message": "Um Ploppy zu nutzen, musst du dich mit Pollinations.ai verbinden.",
       "connect": "Verbinden"
     },
     "disconnect": {
@@ -2142,7 +2142,7 @@
       "subtitle": "KI-Ernährungsassistent",
       "enableTitle": "Ploppy aktivieren",
       "enableDesc": "Analysiere deine Mahlzeiten per Foto",
-      "connected": "Mit Pollination verbunden",
+      "connected": "Mit Pollinations verbunden",
       "notConnected": "Nicht verbunden",
       "disconnect": "Trennen",
       "info": "Ploppy analysiert Fotos deiner Mahlzeiten, um dir einen Nährwert-Score und personalisierte Tipps zu geben. Fotos werden nach 1 Stunde gelöscht.",
@@ -2188,7 +2188,7 @@
     "ai": {
       "inputTitle": "KI-Coach",
       "inputPlaceholder": "Beschreibe dein Ziel...",
-      "notConnected": "Verbinde dich in Einstellungen > KI mit Pollination, um das KI-Coaching zu nutzen.",
+      "notConnected": "Verbinde dich in Einstellungen > KI mit Pollinations, um das KI-Coaching zu nutzen.",
       "generating": "Ploppy denkt nach...",
       "planReady": "Plan bereit!",
       "goButton": "Los geht's!",
@@ -2230,18 +2230,9 @@
         ]
       },
       "longRun": {
-        "quarter": [
-          "25%! Toller Start 👏",
-          "Das erste Viertel ist im Kasten!"
-        ],
-        "half": [
-          "Halbzeit! Halt das Tempo 💪",
-          "50% geschafft!"
-        ],
-        "threeQuarters": [
-          "75%! Fast da 🎯",
-          "Nur noch das letzte Viertel!"
-        ],
+        "quarter": ["25%! Toller Start 👏", "Das erste Viertel ist im Kasten!"],
+        "half": ["Halbzeit! Halt das Tempo 💪", "50% geschafft!"],
+        "threeQuarters": ["75%! Fast da 🎯", "Nur noch das letzte Viertel!"],
         "almostDone": [
           "Fast geschafft! Gib alles 🔥",
           "Nur noch ein paar Meter!"

@@ -20,6 +20,7 @@
     "@legendapp/list": "^2.0.19",
     "@lodev09/react-native-true-sheet": "^3.10.0",
     "@maplibre/maplibre-react-native": "^10.4.2",
+    "@pollinations_ai/sdk": "^4.3.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.6.0",
     "@react-navigation/bottom-tabs": "^7.15.9",

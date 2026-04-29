@@ -49,7 +49,7 @@ export default function AISettingsScreen() {
       (settings.aiProgressEnabled ?? false) ||
       (settings.aiWorkoutEnabled ?? false) ||
       (settings.ploppyEnabled ?? false) ||
-      (settings.pollinationConnected ?? false) ||
+      (settings.pollinationsConnected ?? false) ||
       (settings.sharePersonalWithAI ?? false) ||
       !(settings.ploppyOnboardingShown ?? true);
 
@@ -62,7 +62,7 @@ export default function AISettingsScreen() {
       aiProgressEnabled: false,
       aiWorkoutEnabled: false,
       ploppyEnabled: false,
-      pollinationConnected: false,
+      pollinationsConnected: false,
       sharePersonalWithAI: false,
       ploppyOnboardingShown: true,
     });
@@ -71,7 +71,7 @@ export default function AISettingsScreen() {
     settings.aiProgressEnabled,
     settings.aiWorkoutEnabled,
     settings.ploppyEnabled,
-    settings.pollinationConnected,
+    settings.pollinationsConnected,
     settings.sharePersonalWithAI,
     settings.ploppyOnboardingShown,
     updateSettings,

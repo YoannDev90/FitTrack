@@ -11,7 +11,7 @@ import { Sparkles, Shield, Clock, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppStore } from '../../stores';
 import { BuildConfig } from '../../config/buildConfig';
-import { startPollinationAuth } from '../../services/pollination';
+import { startPollinationsAuth } from '../../services/pollinations';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../constants';
 
 interface PloppyOnboardingModalProps {
@@ -34,9 +34,9 @@ export function PloppyOnboardingModal({ visible, onAccept, onDecline }: PloppyOn
       return;
     }
     
-    // Start Pollination auth
+    // Start Pollinations auth
     try {
-      await startPollinationAuth();
+      await startPollinationsAuth();
       updateSettings({ ploppyEnabled: true });
     } catch (error) {
       // User can retry later

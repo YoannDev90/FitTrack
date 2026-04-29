@@ -1,6 +1,6 @@
 // ============================================================================
 // POLLINATION CALLBACK - Route pour gérer le deep link OAuth
-// spix://pollination-callback?token=xxx
+// spix://pollinations-callback?token=xxx
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
@@ -16,12 +16,12 @@ import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../src/cons
 import { useAppStore } from '../src/stores';
 import { 
     extractApiKeyFromUrl, 
-    savePollinationApiKey 
-} from '../src/services/pollination';
+    savePollinationsApiKey 
+} from '../src/services/pollinations';
 
 type Status = 'processing' | 'success' | 'error';
 
-export default function PollinationCallbackScreen() {
+export default function PollinationsCallbackScreen() {
     const { t } = useTranslation();
     const { updateSettings } = useAppStore();
     const params = useLocalSearchParams<{ token?: string }>();
@@ -39,13 +39,13 @@ export default function PollinationCallbackScreen() {
                 
                 // Si pas de token dans les params, essayer d'extraire de l'URL
                 if (!apiKey) {
-                    const fullUrl = `spix://pollination-callback${params.token ? `?token=${params.token}` : ''}`;
+                    const fullUrl = `spix://pollinations-callback${params.token ? `?token=${params.token}` : ''}`;
                     apiKey = extractApiKeyFromUrl(fullUrl) ?? undefined;
                 }
                 
                 if (apiKey) {
-                    await savePollinationApiKey(apiKey);
-                    await commitSettings({ pollinationConnected: true });
+                    await savePollinationsApiKey(apiKey);
+                    await commitSettings({ pollinationsConnected: true });
                     setStatus('success');
                     
                     // Rediriger vers Labs après 2 secondes
@@ -61,7 +61,7 @@ export default function PollinationCallbackScreen() {
                     }, 2000);
                 }
             } catch (error) {
-                console.error('[PollinationCallback] Error:', error);
+                console.error('[PollinationsCallback] Error:', error);
                 setStatus('error');
                 
                 setTimeout(() => {
@@ -83,8 +83,8 @@ export default function PollinationCallbackScreen() {
                         <View style={styles.iconContainer}>
                             <ActivityIndicator size="large" color={Colors.violetStrong} />
                         </View>
-                        <Text style={styles.title}>{t('settings.pollinationCallback.processing')}</Text>
-                        <Text style={styles.message}>{t('settings.pollinationCallback.processingMessage')}</Text>
+                        <Text style={styles.title}>{t('settings.pollinationsCallback.processing')}</Text>
+                        <Text style={styles.message}>{t('settings.pollinationsCallback.processingMessage')}</Text>
                     </Animated.View>
                 )}
                 
@@ -96,12 +96,12 @@ export default function PollinationCallbackScreen() {
                         >
                             <CheckCircle size={48} color={Colors.successStrong} />
                         </LinearGradient>
-                        <Text style={styles.title}>{t('settings.pollinationCallback.success')}</Text>
-                        <Text style={styles.message}>{t('settings.pollinationCallback.successMessage')}</Text>
+                        <Text style={styles.title}>{t('settings.pollinationsCallback.success')}</Text>
+                        <Text style={styles.message}>{t('settings.pollinationsCallback.successMessage')}</Text>
                         
                         <View style={styles.mascotContainer}>
                             <Sparkles size={20} color={Colors.violetStrong} />
-                            <Text style={styles.mascotText}>{t('settings.pollinationCallback.plopReady')}</Text>
+                            <Text style={styles.mascotText}>{t('settings.pollinationsCallback.plopReady')}</Text>
                         </View>
                     </Animated.View>
                 )}
@@ -114,8 +114,8 @@ export default function PollinationCallbackScreen() {
                         >
                             <XCircle size={48} color={Colors.errorStrong} />
                         </LinearGradient>
-                        <Text style={styles.title}>{t('settings.pollinationCallback.error')}</Text>
-                        <Text style={styles.message}>{t('settings.pollinationCallback.errorMessage')}</Text>
+                        <Text style={styles.title}>{t('settings.pollinationsCallback.error')}</Text>
+                        <Text style={styles.message}>{t('settings.pollinationsCallback.errorMessage')}</Text>
                     </Animated.View>
                 )}
             </View>

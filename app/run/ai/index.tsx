@@ -42,8 +42,8 @@ import {
 } from 'lucide-react-native';
 import { useRunStore, type RunPlan, type RunSegment } from '../../../src/stores/runStore';
 import { useAppStore } from '../../../src/stores';
-import { generateTextAnalysis } from '../../../src/services/pollination/textAnalysis';
-import { isPollinationConnected } from '../../../src/services/pollination';
+import { generateTextAnalysis } from '../../../src/services/pollinations/textAnalysis';
+import { isPollinationsConnected } from '../../../src/services/pollinations';
 import { RunTracker } from '../../../src/components/run/RunTracker';
 import { RunSummary } from '../../../src/components/run/RunSummary';
 import { Colors, ScreenPalettes } from '../../../src/constants';
@@ -110,8 +110,8 @@ export default function AiRunConfigScreen() {
     };
   }, [entries, settings]);
 
-  const runSettings = settings as { runSettings?: { pollinationsModel?: string } };
-  const aiModel = runSettings.runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai';
+  const runSettings = settings as { runSettings?: { pollinationssModel?: string } };
+  const aiModel = runSettings.runSettings?.pollinationssModel ?? settings.aiModel ?? 'openai';
   const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
 
   if (!aiFeaturesEnabled) {
@@ -184,7 +184,7 @@ export default function AiRunConfigScreen() {
   // ─── STEP 1: Send free text → get QCM questions ──────────────────────────
   const handleSendFreeText = useCallback(async () => {
     if (!freeText.trim()) return;
-    const connected = await isPollinationConnected();
+    const connected = await isPollinationsConnected();
     if (!connected) return;
 
     setLoading(true);

@@ -40,8 +40,8 @@ import {
   calculateAvgPace,
 } from '../../services/runTracker';
 import { generateGPX, saveGPXFile } from '../../services/gpxExport';
-import { generateTextAnalysis } from '../../services/pollination/textAnalysis';
-import { isPollinationConnected } from '../../services/pollination';
+import { generateTextAnalysis } from '../../services/pollinations/textAnalysis';
+import { isPollinationsConnected } from '../../services/pollinations';
 import i18n from '../../i18n';
 import type { RunEntry } from '../../types';
 
@@ -123,7 +123,7 @@ export function RunSummary() {
   const store = useRunStore();
   const { entries, settings, addRun } = useAppStore();
   const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
-  const runSettings = settings as { runSettings?: { coachingEnabled?: boolean; pollinationsModel?: string } };
+  const runSettings = settings as { runSettings?: { coachingEnabled?: boolean; pollinationssModel?: string } };
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [discardModalVisible, setDiscardModalVisible] = useState(false);
@@ -173,7 +173,7 @@ export function RunSummary() {
     let cancelled = false;
 
     (async () => {
-      const connected = await isPollinationConnected();
+      const connected = await isPollinationsConnected();
       if (!connected || cancelled) return;
       setAiLoading(true);
       try {
@@ -189,7 +189,7 @@ export function RunSummary() {
 ${summary.vsTarget ? `- Objectif : ${summary.vsTarget.achieved ? 'atteint ✅' : 'non atteint ⚠️'}` : ''}
 ${summary.isDistancePR ? '- 🏆 Nouveau record de distance !' : ''}
 Donne un bilan motivant et personnalisé.`,
-          model: runSettings.runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai',
+          model: runSettings.runSettings?.pollinationssModel ?? settings.aiModel ?? 'openai',
         });
         if (!cancelled) setAiSummary(result);
       } catch (error) {

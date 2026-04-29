@@ -32,58 +32,58 @@ import {
 import { GlassCard } from '../../src/components/ui';
 import { useAppStore } from '../../src/stores';
 import { 
-  isPollinationConnected, 
-  startPollinationAuth,
+  isPollinationsConnected, 
+  startPollinationsAuth,
   extractApiKeyFromUrl,
-  savePollinationApiKey,
-  removePollinationApiKey,
-} from '../../src/services/pollination';
+  savePollinationsApiKey,
+  removePollinationsApiKey,
+} from '../../src/services/pollinations';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../src/constants';
 
 export default function LabsScreen() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useAppStore();
   const aiFeaturesEnabled = settings.aiFeaturesEnabled ?? false;
-  const [pollinationStatus, setPollinationStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [pollinationsStatus, setPollinationsStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
   const commitSettings = useCallback(async (patch: Parameters<typeof updateSettings>[0]) => {
     await Promise.resolve(updateSettings(patch));
   }, [updateSettings]);
 
-  // Check Pollination connection status
-  const checkPollinationStatus = useCallback(async () => {
-    const connected = await isPollinationConnected();
-    setPollinationStatus(connected ? 'connected' : 'disconnected');
-    await commitSettings({ pollinationConnected: connected });
+  // Check Pollinations connection status
+  const checkPollinationsStatus = useCallback(async () => {
+    const connected = await isPollinationsConnected();
+    setPollinationsStatus(connected ? 'connected' : 'disconnected');
+    await commitSettings({ pollinationsConnected: connected });
   }, [commitSettings]);
 
   useEffect(() => {
-    void checkPollinationStatus();
-  }, [checkPollinationStatus]);
+    void checkPollinationsStatus();
+  }, [checkPollinationsStatus]);
 
-  // Handle deep link callback from Pollination
+  // Handle deep link callback from Pollinations
   useEffect(() => {
     const handleDeepLink = async (event: { url: string }) => {
       if (__DEV__) {
         console.log('[Labs] Deep link received:', event.url);
       }
       
-      if (event.url.includes('pollination-callback')) {
+      if (event.url.includes('pollinations-callback')) {
         const apiKey = extractApiKeyFromUrl(event.url);
         
         if (apiKey) {
-          await savePollinationApiKey(apiKey);
-          setPollinationStatus('connected');
-          await commitSettings({ pollinationConnected: true });
+          await savePollinationsApiKey(apiKey);
+          setPollinationsStatus('connected');
+          await commitSettings({ pollinationsConnected: true });
           
           Alert.alert(
-            t('settings.pollination.successTitle'),
-            t('settings.pollination.successMessage')
+            t('settings.pollinations.successTitle'),
+            t('settings.pollinations.successMessage')
           );
         } else {
           Alert.alert(
             t('common.error'),
-            t('settings.pollination.errorMessage')
+            t('settings.pollinations.errorMessage')
           );
         }
       }
@@ -110,20 +110,20 @@ export default function LabsScreen() {
     };
   }, [t, commitSettings]);
 
-  // Connect to Pollination
-  const handleConnectPollination = useCallback(() => {
+  // Connect to Pollinations
+  const handleConnectPollinations = useCallback(() => {
     Alert.alert(
-      t('settings.pollination.warningTitle'),
-      t('settings.pollination.warningMessage'),
+      t('settings.pollinations.warningTitle'),
+      t('settings.pollinations.warningMessage'),
       [
         { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: t('settings.pollination.continue'), 
+          text: t('settings.pollinations.continue'), 
           onPress: async () => {
             try {
-              await startPollinationAuth();
+              await startPollinationsAuth();
             } catch (error) {
-              Alert.alert(t('common.error'), t('settings.pollination.errorMessage'));
+              Alert.alert(t('common.error'), t('settings.pollinations.errorMessage'));
             }
           }
         },
@@ -131,20 +131,20 @@ export default function LabsScreen() {
     );
   }, [t]);
 
-  // Disconnect from Pollination
-  const handleDisconnectPollination = useCallback(() => {
+  // Disconnect from Pollinations
+  const handleDisconnectPollinations = useCallback(() => {
     Alert.alert(
-      t('settings.pollination.disconnectTitle'),
-      t('settings.pollination.disconnectMessage'),
+      t('settings.pollinations.disconnectTitle'),
+      t('settings.pollinations.disconnectMessage'),
       [
         { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: t('settings.pollination.disconnect'),
+          text: t('settings.pollinations.disconnect'),
           style: 'destructive',
           onPress: async () => {
-            await removePollinationApiKey();
-            setPollinationStatus('disconnected');
-            await commitSettings({ pollinationConnected: false });
+            await removePollinationsApiKey();
+            setPollinationsStatus('disconnected');
+            await commitSettings({ pollinationsConnected: false });
           }
         },
       ]
@@ -207,8 +207,8 @@ export default function LabsScreen() {
           </Animated.View>
         </GlassCard>
 
-        {/* Pollination AI Section */}
-        <Text style={styles.sectionTitle}>{t('settings.pollination.sectionTitle')}</Text>
+        {/* Pollinations AI Section */}
+        <Text style={styles.sectionTitle}>{t('settings.pollinations.sectionTitle')}</Text>
         
         <GlassCard style={styles.settingsCard}>
           <Animated.View entering={FadeInDown.delay(120).springify()}>
@@ -216,31 +216,31 @@ export default function LabsScreen() {
             <View style={styles.settingItem}>
               <View style={[
                 styles.settingIconContainer, 
-                { backgroundColor: pollinationStatus === 'connected' 
+                { backgroundColor: pollinationsStatus === 'connected' 
                   ? Colors.overlayConnected15
                   : Colors.overlayViolet15
                 }
               ]}> 
                 <Sparkles 
                   size={20} 
-                  color={pollinationStatus === 'connected' ? Colors.successStrong : Colors.violetStrong} 
+                  color={pollinationsStatus === 'connected' ? Colors.successStrong : Colors.violetStrong} 
                 />
               </View>
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>{t('settings.pollination.title')}</Text>
+                <Text style={styles.settingTitle}>{t('settings.pollinations.title')}</Text>
                 <View style={styles.statusRow}>
-                  {pollinationStatus === 'connected' ? (
+                  {pollinationsStatus === 'connected' ? (
                     <>
                       <CheckCircle size={14} color={Colors.successStrong} />
                       <Text style={[styles.statusText, { color: Colors.successStrong }]}> 
-                        {t('settings.pollination.connected')}
+                        {t('settings.pollinations.connected')}
                       </Text>
                     </>
                   ) : (
                     <>
                       <XCircle size={14} color={Colors.muted} />
                       <Text style={styles.statusText}>
-                        {t('settings.pollination.notConnected')}
+                        {t('settings.pollinations.notConnected')}
                       </Text>
                     </>
                   )}
@@ -249,26 +249,26 @@ export default function LabsScreen() {
               <TouchableOpacity
                 style={[
                   styles.connectButton,
-                  pollinationStatus === 'connected' && styles.disconnectButton,
+                  pollinationsStatus === 'connected' && styles.disconnectButton,
                   !aiFeaturesEnabled && styles.connectButtonDisabled,
                 ]}
-                onPress={pollinationStatus === 'connected' 
-                  ? handleDisconnectPollination 
-                  : handleConnectPollination
+                onPress={pollinationsStatus === 'connected' 
+                  ? handleDisconnectPollinations 
+                  : handleConnectPollinations
                 }
                 disabled={!aiFeaturesEnabled}
               >
                 {!aiFeaturesEnabled ? (
                   <Text style={styles.connectButtonText}>Indisponible</Text>
-                ) : pollinationStatus === 'connected' ? (
+                ) : pollinationsStatus === 'connected' ? (
                   <Text style={styles.disconnectButtonText}>
-                    {t('settings.pollination.disconnect')}
+                    {t('settings.pollinations.disconnect')}
                   </Text>
                 ) : (
                   <>
                     <ExternalLink size={14} color={Colors.white} />
                     <Text style={styles.connectButtonText}>
-                      {t('settings.pollination.connect')}
+                      {t('settings.pollinations.connect')}
                     </Text>
                   </>
                 )}
@@ -280,7 +280,7 @@ export default function LabsScreen() {
               <AlertTriangle size={16} color={Colors.warning} />
               <Text style={styles.warningText}>
                 {aiFeaturesEnabled
-                  ? t('settings.pollination.betaWarning')
+                  ? t('settings.pollinations.betaWarning')
                   : 'Fonctionnalites IA en pause pour le moment (budget etudiant).'}
               </Text>
             </View>

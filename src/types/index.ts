@@ -3,10 +3,16 @@
 // ============================================================================
 
 // Types de base
-export type WorkoutType = 'home' | 'run' | 'beatsaber';
-export type EntryType = 'home' | 'run' | 'meal' | 'measure' | 'beatsaber' | 'custom';
-export type FocusArea = 'upper' | 'abs' | 'legs' | 'full';
-export type Intensity = 'easy' | 'medium' | 'hard';
+export type WorkoutType = "home" | "run" | "beatsaber";
+export type EntryType =
+  | "home"
+  | "run"
+  | "meal"
+  | "measure"
+  | "beatsaber"
+  | "custom";
+export type FocusArea = "upper" | "abs" | "legs" | "full";
+export type Intensity = "easy" | "medium" | "hard";
 export type Duration = 10 | 20 | 30;
 
 // ============================================================================
@@ -14,26 +20,26 @@ export type Duration = 10 | 20 | 30;
 // ============================================================================
 
 /** Champs disponibles pour un sport personnalisé */
-export type SportTrackingField = 
-  | 'duration'      // Durée en minutes
-  | 'distance'      // Distance en km
-  | 'bpmAvg'        // BPM moyen
-  | 'bpmMax'        // BPM max
-  | 'cardiacLoad'   // Charge cardiaque
-  | 'calories'      // Calories brûlées
-  | 'exercises'     // Texte libre exercices
-  | 'totalReps';    // Nombre total de répétitions
+export type SportTrackingField =
+  | "duration" // Durée en minutes
+  | "distance" // Distance en km
+  | "bpmAvg" // BPM moyen
+  | "bpmMax" // BPM max
+  | "cardiacLoad" // Charge cardiaque
+  | "calories" // Calories brûlées
+  | "exercises" // Texte libre exercices
+  | "totalReps"; // Nombre total de répétitions
 
 /** Configuration d'un sport (par défaut ou personnalisé) */
 export interface SportConfig {
-  id: string;                    // ID unique (ex: 'home', 'run', 'custom_xyz')
-  name: string;                  // Nom affiché
-  emoji: string;                 // Emoji pour la bottom sheet
-  icon: string;                  // Nom d'icône Lucide pour l'historique
-  color: string;                 // Couleur hex pour l'historique (ex: '#60A5FA')
+  id: string; // ID unique (ex: 'home', 'run', 'custom_xyz')
+  name: string; // Nom affiché
+  emoji: string; // Emoji pour la bottom sheet
+  icon: string; // Nom d'icône Lucide pour l'historique
+  color: string; // Couleur hex pour l'historique (ex: '#60A5FA')
   trackingFields: SportTrackingField[]; // Champs à tracker
-  isDefault: boolean;            // true si sport par défaut (ne peut pas être supprimé)
-  isHidden: boolean;             // true si masqué par l'utilisateur
+  isDefault: boolean; // true si sport par défaut (ne peut pas être supprimé)
+  isHidden: boolean; // true si masqué par l'utilisateur
 }
 
 // ============================================================================
@@ -64,7 +70,7 @@ export interface RepTimelineData {
 
 // Séance à la maison
 export interface HomeWorkoutEntry extends BaseEntry {
-  type: 'home';
+  type: "home";
   name?: string;
   trackedExerciseId?: string;
   exercises: string; // Texte libre: "Pompes: 3x10\nSquats: 3x20"
@@ -76,7 +82,7 @@ export interface HomeWorkoutEntry extends BaseEntry {
 
 // Course
 export interface RunEntry extends BaseEntry {
-  type: 'run';
+  type: "run";
   distanceKm: number;
   durationMinutes: number;
   avgSpeed?: number; // Calculé automatiquement
@@ -84,7 +90,12 @@ export interface RunEntry extends BaseEntry {
   bpmMax?: number;
   cardiacLoad?: number; // Charge cardiaque optionnelle
   // GPS tracking fields
-  route?: Array<{ latitude: number; longitude: number; altitude?: number; timestamp: number }>;
+  route?: Array<{
+    latitude: number;
+    longitude: number;
+    altitude?: number;
+    timestamp: number;
+  }>;
   gpxFilePath?: string;
   avgPaceSecPerKm?: number;
   elevationGainM?: number;
@@ -102,7 +113,7 @@ export interface RunEntry extends BaseEntry {
 
 // Beat Saber
 export interface BeatSaberEntry extends BaseEntry {
-  type: 'beatsaber';
+  type: "beatsaber";
   durationMinutes: number;
   cardiacLoad?: number; // Charge cardiaque optionnelle
   bpmAvg?: number;
@@ -111,7 +122,7 @@ export interface BeatSaberEntry extends BaseEntry {
 
 // Repas
 export interface MealEntry extends BaseEntry {
-  type: 'meal';
+  type: "meal";
   mealName: string;
   description: string; // Texte libre
   score?: number; // 0-100 - évaluation IA
@@ -120,7 +131,7 @@ export interface MealEntry extends BaseEntry {
 
 // Mensurations
 export interface MeasureEntry extends BaseEntry {
-  type: 'measure';
+  type: "measure";
   weight?: number; // kg
   bodyFatPercent?: number; // % masse grasse
   waist?: number; // cm - tour de taille
@@ -130,9 +141,9 @@ export interface MeasureEntry extends BaseEntry {
 
 // Sport personnalisé (type générique)
 export interface CustomSportEntry extends BaseEntry {
-  type: 'custom';
-  sportId: string;               // ID du sport personnalisé
-  name?: string;                 // Nom de la séance
+  type: "custom";
+  sportId: string; // ID du sport personnalisé
+  name?: string; // Nom de la séance
   durationMinutes?: number;
   distanceKm?: number;
   bpmAvg?: number;
@@ -143,23 +154,33 @@ export interface CustomSportEntry extends BaseEntry {
   totalReps?: number;
 }
 
-export type Entry = HomeWorkoutEntry | RunEntry | BeatSaberEntry | MealEntry | MeasureEntry | CustomSportEntry;
-export type SportEntry = HomeWorkoutEntry | RunEntry | BeatSaberEntry | CustomSportEntry;
+export type Entry =
+  | HomeWorkoutEntry
+  | RunEntry
+  | BeatSaberEntry
+  | MealEntry
+  | MeasureEntry
+  | CustomSportEntry;
+export type SportEntry =
+  | HomeWorkoutEntry
+  | RunEntry
+  | BeatSaberEntry
+  | CustomSportEntry;
 
 // ============================================================================
 // GAMIFICATION
 // ============================================================================
 
-export type BadgeId = 
-  | 'first_workout'
-  | 'streak_7'
-  | 'streak_30'
-  | 'workouts_10'
-  | 'workouts_50'
-  | 'workouts_100'
-  | 'runner_10km'
-  | 'runner_50km'
-  | 'consistent_month';
+export type BadgeId =
+  | "first_workout"
+  | "streak_7"
+  | "streak_30"
+  | "workouts_10"
+  | "workouts_50"
+  | "workouts_100"
+  | "runner_10km"
+  | "runner_50km"
+  | "consistent_month";
 
 export interface Badge {
   id: BadgeId;
@@ -200,21 +221,31 @@ export interface GeneratedWorkout {
 // ============================================================================
 
 // Health Connect sync modes
-export type HealthConnectSyncMode = 'manual' | 'notify' | 'auto';
+export type HealthConnectSyncMode = "manual" | "notify" | "auto";
 
 // Weight reminder frequency
-export type WeightReminderFrequency = 'daily' | 'weekly' | 'monthly';
-export type ThemePreset = 'default' | 'ocean' | 'sunset' | 'forest' | 'midnight' | 'custom';
+export type WeightReminderFrequency = "daily" | "weekly" | "monthly";
+export type ThemePreset =
+  | "default"
+  | "ocean"
+  | "sunset"
+  | "forest"
+  | "midnight"
+  | "custom";
 
 // Onboarding responses
-export type FitnessGoal = 'loseWeight' | 'buildMuscle' | 'improveCardio' | 'stayHealthy';
-export type FitnessLevel = 'beginner' | 'intermediate' | 'advanced';
+export type FitnessGoal =
+  | "loseWeight"
+  | "buildMuscle"
+  | "improveCardio"
+  | "stayHealthy";
+export type FitnessLevel = "beginner" | "intermediate" | "advanced";
 
 export interface SafetyContact {
   id: string;
   name: string;
   phone: string; // International format (e.g. +33612345678)
-  method: 'sms' | 'whatsapp';
+  method: "sms" | "whatsapp";
 }
 
 export interface SafetySettings {
@@ -243,8 +274,8 @@ export interface ThemeCustomColors {
 export interface UserSettings {
   weeklyGoal: number; // Nombre de séances sport par semaine (défaut: 4)
   units: {
-    weight: 'kg' | 'lbs';
-    distance: 'km' | 'miles';
+    weight: "kg" | "lbs";
+    distance: "km" | "miles";
   };
   hiddenTabs: {
     tools: boolean;
@@ -293,8 +324,8 @@ export interface UserSettings {
   skipSensorSelection?: boolean;
   // Labs: Enhanced meal page with AI analysis
   enhancedMealEnabled?: boolean;
-  // Labs: Pollination API connected
-  pollinationConnected?: boolean;
+  // Labs: Pollinations API connected
+  pollinationsConnected?: boolean;
   // Labs: Ploppy authorization for meal analysis (separate from connection)
   ploppyEnabled?: boolean;
   // Labs: Ploppy onboarding shown
@@ -308,12 +339,12 @@ export interface UserSettings {
   aiFeaturesEnabled?: boolean; // Global master flag for all AI features
   aiProgressEnabled?: boolean; // Show AI weekly summary in Progress
   aiWorkoutEnabled?: boolean; // Show AI analysis in workout detail
-  aiModel?: string; // Pollinations model name (default: 'openai')
-  aiTone?: 'technical' | 'neutral' | 'warm'; // Style of Ploppy's responses
+  aiModel?: string; // Pollinationss model name (default: 'openai')
+  aiTone?: "technical" | "neutral" | "warm"; // Style of Ploppy's responses
   sharePersonalWithAI?: boolean; // Share personal info with Ploppy for personalized sessions
 
   // Personal information (optional, may be shared with analysis services)
-  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  gender?: "male" | "female" | "other" | "prefer_not_to_say";
   heightCm?: number; // Height in centimeters
   bodyWeightKg?: number; // Personal body weight (separate from measure entries)
   age?: number; // Age in years

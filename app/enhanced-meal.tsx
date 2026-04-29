@@ -55,10 +55,10 @@ import { CustomAlertModal } from '../src/components/ui';
 import type { AlertButton } from '../src/components/ui';
 import { useAppStore } from '../src/stores';
 import { 
-    isPollinationConnected, 
+    isPollinationsConnected, 
     analyzeMealImage,
     type MealAnalysis,
-} from '../src/services/pollination';
+} from '../src/services/pollinations';
 import { uploadImageToTmpFiles } from '../src/services/imageUpload';
 import { formatDisplayDate } from '../src/utils/date';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -268,19 +268,19 @@ export default function EnhancedMealScreen() {
         setAlertState(prev => ({ ...prev, visible: false }));
     }, []);
 
-    // Check if Pollination is connected
-    const checkPollinationConnection = useCallback(async () => {
+    // Check if Pollinations is connected
+    const checkPollinationsConnection = useCallback(async () => {
         if (!aiFeaturesEnabled) {
             return false;
         }
-        const connected = await isPollinationConnected();
+        const connected = await isPollinationsConnected();
         return connected;
     }, [aiFeaturesEnabled]);
 
     // Initial check
     React.useEffect(() => {
-        checkPollinationConnection();
-    }, [checkPollinationConnection]);
+        checkPollinationsConnection();
+    }, [checkPollinationsConnection]);
 
     // Change funny phrase periodically during upload/analysis
     React.useEffect(() => {
@@ -357,11 +357,11 @@ export default function EnhancedMealScreen() {
             return;
         }
         
-        const connected = await checkPollinationConnection();
+        const connected = await checkPollinationsConnection();
         if (!connected) {
             showAlert(
                 t('enhancedMeal.notConnected'),
-                t('enhancedMeal.connectPollinationFirst'),
+                t('enhancedMeal.connectPollinationsFirst'),
                 'warning',
                 [
                     { text: t('common.cancel'), style: 'cancel' },
@@ -412,7 +412,7 @@ export default function EnhancedMealScreen() {
             setIsUploading(false);
             setIsAnalyzing(false);
         }
-    }, [selectedImage, additionalDetails, t, checkPollinationConnection, scoreScale, showAlert]);
+    }, [selectedImage, additionalDetails, t, checkPollinationsConnection, scoreScale, showAlert]);
 
     // Save meal
     const saveMeal = useCallback(() => {

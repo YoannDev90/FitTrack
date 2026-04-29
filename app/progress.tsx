@@ -30,8 +30,8 @@ import { useAppStore } from '../src/stores';
 import { getBadgesWithState } from '../src/utils/badges';
 import { useTranslation } from 'react-i18next';
 import { getMonthName } from '../src/utils/date';
-import { generateTextAnalysis } from '../src/services/pollination/textAnalysis';
-import { isPollinationConnected } from '../src/services/pollination';
+import { generateTextAnalysis } from '../src/services/pollinations/textAnalysis';
+import { isPollinationsConnected } from '../src/services/pollinations';
 import i18n from '../src/i18n';
 import type { MeasureEntry, HomeWorkoutEntry, RunEntry, Entry } from '../src/types';
 import { Colors } from '../src/constants';
@@ -545,11 +545,11 @@ function PloppyWeeklySummary({ entries, settings }: {
             setConnected(false);
             return;
         }
-        void isPollinationConnected()
+        void isPollinationsConnected()
             .then(setConnected)
             .catch((error) => {
                 if (__DEV__) {
-                    console.warn('[Progress] Pollination connectivity check failed', error);
+                    console.warn('[Progress] Pollinations connectivity check failed', error);
                 }
                 setConnected(false);
             });

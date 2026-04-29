@@ -243,20 +243,20 @@ export default function PrivacyPolicyScreen() {
         </PolicySection>
 
         <PolicySection
-          title={t('privacyPolicy.pollination.title')}
+          title={t('privacyPolicy.pollinations.title')}
           icon={<Sparkles size={20} color={Colors.violetStrong} />}
           iconColor={Colors.violetStrong}
           delay={600}
         >
-          <Text style={styles.paragraph}>{t('privacyPolicy.pollination.description')}</Text>
+          <Text style={styles.paragraph}>{t('privacyPolicy.pollinations.description')}</Text>
 
-          <Text style={styles.subheading}>{t('privacyPolicy.pollination.dataTitle')}</Text>
-          <BulletPoint>{t('privacyPolicy.pollination.data.images')}</BulletPoint>
-          <BulletPoint>{t('privacyPolicy.pollination.data.temporary')}</BulletPoint>
-          <BulletPoint>{t('privacyPolicy.pollination.data.apiKey')}</BulletPoint>
+          <Text style={styles.subheading}>{t('privacyPolicy.pollinations.dataTitle')}</Text>
+          <BulletPoint>{t('privacyPolicy.pollinations.data.images')}</BulletPoint>
+          <BulletPoint>{t('privacyPolicy.pollinations.data.temporary')}</BulletPoint>
+          <BulletPoint>{t('privacyPolicy.pollinations.data.apiKey')}</BulletPoint>
 
-          <Text style={[styles.paragraph, styles.warning]}>{t('privacyPolicy.pollination.warning')}</Text>
-          <Text style={styles.paragraph}>{t('privacyPolicy.pollination.optOut')}</Text>
+          <Text style={[styles.paragraph, styles.warning]}>{t('privacyPolicy.pollinations.warning')}</Text>
+          <Text style={styles.paragraph}>{t('privacyPolicy.pollinations.optOut')}</Text>
         </PolicySection>
 
         <PolicySection

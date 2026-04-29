@@ -9,10 +9,10 @@ import { useTranslation } from 'react-i18next';
 import { Settings, Sparkles, ExternalLink, Trash2, Info, AlertTriangle } from 'lucide-react-native';
 import { useAppStore } from '../../stores';
 import { 
-  isPollinationConnected, 
-  startPollinationAuth,  
-  removePollinationApiKey,
-} from '../../services/pollination';
+  isPollinationsConnected, 
+  startPollinationsAuth,  
+  removePollinationsApiKey,
+} from '../../services/pollinations';
 import { BuildConfig } from '../../config/buildConfig';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '../../constants';
 
@@ -37,7 +37,7 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
   useEffect(() => {
     const checkConnection = async () => {
       setIsLoading(true);
-      const currentlyConnected = await isPollinationConnected();
+      const currentlyConnected = await isPollinationsConnected();
       setIsConnected(currentlyConnected);
       setIsLoading(false); 
     };
@@ -58,7 +58,7 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
       }
       
       // Check if already connected
-      const alreadyConnected = await isPollinationConnected();
+      const alreadyConnected = await isPollinationsConnected();
       if (alreadyConnected) {
         await commitSettings({ ploppyEnabled: true });
       } else {
@@ -72,19 +72,19 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
               text: t('ploppy.connectRequired.connect'),
               onPress: async () => {
                 try {
-                  await startPollinationAuth();
+                  await startPollinationsAuth();
                   // Check again after auth
                   setTimeout(() => {
                     void (async () => {
-                      const nowConnected = await isPollinationConnected();
+                      const nowConnected = await isPollinationsConnected();
                       if (nowConnected) {
                         setIsConnected(true);
-                        await commitSettings({ ploppyEnabled: true, pollinationConnected: true });
+                        await commitSettings({ ploppyEnabled: true, pollinationsConnected: true });
                       }
                     })();
                   }, 2000);
                 } catch (error) {
-                  Alert.alert(t('common.error'), t('settings.pollination.errorMessage'));
+                  Alert.alert(t('common.error'), t('settings.pollinations.errorMessage'));
                 }
               }
             },
@@ -96,7 +96,7 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
     }
   }, [t, commitSettings]);
 
-  // Disconnect from Pollination
+  // Disconnect from Pollinations
   const handleDisconnect = useCallback(async () => {
     Alert.alert(
       t('ploppy.disconnect.title'),
@@ -107,9 +107,9 @@ export const PloppySettingsSheet = forwardRef<PloppySettingsSheetRef>((_, ref) =
           text: t('ploppy.disconnect.confirm'),
           style: 'destructive',
           onPress: async () => {
-            await removePollinationApiKey();
+            await removePollinationsApiKey();
             setIsConnected(false);
-            await commitSettings({ ploppyEnabled: false, pollinationConnected: false });
+            await commitSettings({ ploppyEnabled: false, pollinationsConnected: false });
           }
         },
       ]

@@ -46,8 +46,8 @@ import { storageHelpers } from '../../src/storage/mmkv';
 import { useAppStore, useSettings, useSportsConfig } from '../../src/stores';
 import { useGamificationStore } from '../../src/stores';
 import { formatDisplayDate, getRelativeTime, isInCurrentWeek } from '../../src/utils/date';
-import { generateTextAnalysis } from '../../src/services/pollination/textAnalysis';
-import { isPollinationConnected } from '../../src/services/pollination';
+import { generateTextAnalysis } from '../../src/services/pollinations/textAnalysis';
+import { isPollinationsConnected } from '../../src/services/pollinations';
 import i18n from '../../src/i18n';
 import { Colors, ScreenPalettes } from '../../src/constants';
 import { styles } from './_workout-detail.styles';
@@ -381,11 +381,11 @@ export default function WorkoutDetailScreen() {
       setIsConnected(false);
       return;
     }
-    void isPollinationConnected()
+    void isPollinationsConnected()
       .then(setIsConnected)
       .catch((error) => {
         if (__DEV__) {
-          console.warn('[WorkoutDetail] Pollination connectivity check failed', error);
+          console.warn('[WorkoutDetail] Pollinations connectivity check failed', error);
         }
         setIsConnected(false);
       });
