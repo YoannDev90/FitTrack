@@ -46,11 +46,11 @@ export function Button({
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={['#e3a090', '#d79686']}
+          colors={[Colors.cta2, Colors.cta]}
           style={styles.ctaGradient}
         >
           {loading ? (
-            <ActivityIndicator color="#1b0f0c" />
+            <ActivityIndicator color={Colors.cozyWarmDarkText} />
           ) : (
             <>
               {icon && <Text style={styles.ctaIcon}>{icon}</Text>}

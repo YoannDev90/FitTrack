@@ -11,6 +11,19 @@ export type EntryType =
   | "measure"
   | "beatsaber"
   | "custom";
+
+/** Format YYYY-MM-DD strict */
+export type DateString = string;
+/** Format ISO strict */
+export type ISOString = string;
+
+// Objets d'action pour le store (évite les listes de paramètres interminables)
+export interface AddEntryOptions {
+  customDate?: DateString;
+  customCreatedAt?: ISOString;
+  healthConnectId?: string;
+}
+
 export type FocusArea = "upper" | "abs" | "legs" | "full";
 export type Intensity = "easy" | "medium" | "hard";
 export type Duration = 10 | 20 | 30;

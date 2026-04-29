@@ -39,7 +39,7 @@ export const ProgressRing = React.memo(function ProgressRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="rgba(255, 255, 255, 0.22)"
+          stroke={Colors.strokeLight}
           strokeWidth={strokeWidth}
           fill="transparent"
         />
@@ -80,9 +80,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+    backgroundColor: Colors.overlayBlack30,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
+    borderColor: Colors.stroke,
     justifyContent: 'center',
     alignItems: 'center',
   },
