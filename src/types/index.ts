@@ -339,7 +339,7 @@ export interface UserSettings {
   aiFeaturesEnabled?: boolean; // Global master flag for all AI features
   aiProgressEnabled?: boolean; // Show AI weekly summary in Progress
   aiWorkoutEnabled?: boolean; // Show AI analysis in workout detail
-  aiModel?: string; // Pollinationss model name (default: 'openai')
+  aiModel?: string; // Pollinations model name (default: 'openai')
   aiTone?: "technical" | "neutral" | "warm"; // Style of Ploppy's responses
   sharePersonalWithAI?: boolean; // Share personal info with Ploppy for personalized sessions
 

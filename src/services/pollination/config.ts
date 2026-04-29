@@ -3,8 +3,8 @@
 // ============================================================================
 
 export const POLLINATION_CONFIG = {
-  AUTH_URL: "https://enter.pollinationss.ai/authorize",
-  API_URL: "https://gen.pollinationss.ai/v1/chat/completions",
+  AUTH_URL: "https://enter.pollinations.ai/authorize",
+  API_URL: "https://gen.pollinations.ai/v1/chat/completions",
   STORAGE_KEY: "pollinations_api_key",
   CACHE_TTL: {
     ACCOUNT: 60 * 1000, // 1 minute

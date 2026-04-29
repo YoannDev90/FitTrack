@@ -1,5 +1,5 @@
 // ============================================================================
-// POLLINATION TEXT ANALYSIS SERVICE - Analyse IA textuelle via Pollinationss
+// POLLINATION TEXT ANALYSIS SERVICE - Analyse IA textuelle via Pollinations
 // Utilisé pour le résumé hebdo (Progress) et l'analyse de séance (Workout)
 // ============================================================================
 
@@ -100,7 +100,7 @@ interface TextGenerationOptions {
 }
 
 /**
- * Generate text using Pollinationss text API
+ * Generate text using Pollinations text API
  * Uses the SDK with dynamic model selection and fallback
  */
 export const generateTextAnalysis = async ({

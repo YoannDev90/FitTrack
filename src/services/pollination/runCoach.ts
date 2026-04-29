@@ -1,5 +1,5 @@
 // ============================================================================
-// RUN COACH SERVICE - AI coaching via Pollinationss during runs
+// RUN COACH SERVICE - AI coaching via Pollinations during runs
 // ============================================================================
 
 import { generateTextAnalysis } from "./textAnalysis";
@@ -25,7 +25,7 @@ export function shouldTriggerCoaching(
         coachingMode?: "distance" | "time";
         coachingIntervalKm?: number;
         coachingIntervalMinutes?: number;
-        pollinationssModel?: string;
+        pollinationsModel?: string;
       };
     }
   ).runSettings;
@@ -171,12 +171,12 @@ export async function executeCoaching(
     const runSettings = (
       settings as {
         runSettings?: {
-          pollinationssModel?: string;
+          pollinationsModel?: string;
         };
       }
     ).runSettings;
     const model =
-      runSettings?.pollinationssModel ?? settings.aiModel ?? "openai";
+      runSettings?.pollinationsModel ?? settings.aiModel ?? "openai";
     const message = await generateCoachingMessage(context, model, language);
 
     store.setLastCoachMessage(message);

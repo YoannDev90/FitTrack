@@ -110,8 +110,8 @@ export default function AiRunConfigScreen() {
     };
   }, [entries, settings]);
 
-  const runSettings = settings as { runSettings?: { pollinationssModel?: string } };
-  const aiModel = runSettings.runSettings?.pollinationssModel ?? settings.aiModel ?? 'openai';
+  const runSettings = settings as { runSettings?: { pollinationsModel?: string } };
+  const aiModel = runSettings.runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai';
   const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
 
   if (!aiFeaturesEnabled) {

@@ -168,7 +168,7 @@ export const getPollinationsAccountInfo =
       async () => {
         try {
           const response = await fetchWithRetry(
-            "https://gen.pollinationss.ai/account/balance",
+            "https://gen.pollinations.ai/account/balance",
             {
               method: "GET",
               headers: {
