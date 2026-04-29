@@ -35,6 +35,7 @@ import { isPollinationsConnected } from '../src/services/pollinations';
 import i18n from '../src/i18n';
 import type { MeasureEntry, HomeWorkoutEntry, RunEntry, Entry } from '../src/types';
 import { Colors } from '../src/constants';
+import { useWorkoutStats } from '../src/hooks/useWorkoutStats';
 import { BadgesGrid, PersonalRecords, TopExCard, WeightSparkline, WorkoutBarChart } from './_progressWidgets';
 import { C, PAD, R, S, SW, T, W } from './_progressTokens';
 
@@ -503,7 +504,13 @@ function PloppyWeeklySummary({ entries, settings }: {
         setLoading(true);
         setError(false);
         try {
-            const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
+            const lang = ({
+                fr: 'français',
+                it: 'italiano',
+                de: 'Deutsch',
+                es: 'español',
+                en: 'English'
+            } as Record<string, string>)[i18n.language] ?? 'English';
             const toneDesc = settings.aiTone === 'technical'
                 ? 'Use a precise, technical tone.'
                 : settings.aiTone === 'warm'
@@ -669,21 +676,22 @@ const crd = StyleSheet.create({
 
 // ─── MAIN SCREEN ──────────────────────────────────────────────────────────────
 export default function ProgressScreen() {
-    const { entries, settings, unlockedBadges, getStreak, getMonthlyStats, getSportEntries } = useAppStore();
+    const { entries, unlockedBadges, getStreak, getMonthlyStats } = useAppStore();
+    const { 
+        sportEntries, 
+        totals, 
+        personalRecords, 
+        calendarData, 
+        settings 
+    } = useWorkoutStats();
     const { t } = useTranslation();
 
     const streak       = getStreak();
     const monthlyStats = getMonthlyStats();
-    const sportEntries = getSportEntries();
 
-    const totalWorkouts = sportEntries.length;
-    const totalDistance = sportEntries
-        .filter(e => e.type === 'run')
-        .reduce((s, e) => s + (e.type === 'run' ? e.distanceKm : 0), 0);
-    const totalDuration = sportEntries.reduce((s, e) => {
-        if (e.type === 'run' || e.type === 'beatsaber') return s + e.durationMinutes;
-        return s;
-    }, 0);
+    const totalWorkouts = totals.workouts;
+    const totalDistance = totals.distance;
+    const totalDuration = totals.duration;
 
     const relevantMonths = useMemo(
         () => monthlyStats.filter(s => s.count > 0).slice(-6),
@@ -721,36 +729,6 @@ export default function ProgressScreen() {
         [entries]
     );
 
-    const personalRecords = useMemo(() => {
-        const tracked = [
-            { id: 'pushups',       name: t('repCounter.exercises.pushups', 'Pompes'),       icon: '💪', type: 'reps' as const },
-            { id: 'situps',        name: t('repCounter.exercises.situps', 'Abdos'),          icon: '🔥', type: 'reps' as const },
-            { id: 'squats',        name: t('repCounter.exercises.squats', 'Squats'),         icon: '🦵', type: 'reps' as const },
-            { id: 'jumpingJacks', name: t('repCounter.exercises.jumpingJacks', 'J. Jacks'), icon: '⭐', type: 'reps' as const },
-            { id: 'plank',         name: t('repCounter.exercises.plank', 'Gainage'),         icon: '🧘', type: 'time' as const },
-        ];
-        return tracked.reduce<{ id: string; name: string; icon: string; value: string }[]>((acc, ex) => {
-            const relevant = entries.filter((e): e is HomeWorkoutEntry =>
-                e.type === 'home' && (
-                    e.exercises.toLowerCase().includes(`${ex.id.toLowerCase()}:`) ||
-                    (e.name?.toLowerCase().includes(ex.name.toLowerCase()) ?? false)
-                )
-            );
-            let best = 0;
-            for (const w of relevant) {
-                const v = ex.type === 'time' ? (w.durationMinutes ?? 0) * 60 : (w.totalReps ?? 0);
-                if (v > best) best = v;
-            }
-            if (best > 0) {
-                acc.push({
-                    id: ex.id, name: ex.name, icon: ex.icon,
-                    value: ex.type === 'time' ? `${best}s` : `${best} reps`,
-                });
-            }
-            return acc;
-        }, []);
-    }, [entries, t]);
-
     const topExercise = useMemo(() => {
         const m = new Date().toISOString().slice(0, 7);
         const counts: Record<string, number> = {};
@@ -766,20 +744,6 @@ export default function ProgressScreen() {
         const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
         return sorted.length > 0 ? { name: sorted[0][0], count: sorted[0][1] } : null;
     }, [entries]);
-
-    const calendarData = useMemo(() => {
-        const now = new Date();
-        const y = now.getFullYear(), mo = now.getMonth();
-        const daysInMonth    = new Date(y, mo + 1, 0).getDate();
-        const startDayOfWeek = (new Date(y, mo, 1).getDay() + 6) % 7;
-        const monthStr       = now.toISOString().slice(0, 7);
-        const activeDays     = new Set(
-            sportEntries
-                .filter(e => e.date.startsWith(monthStr))
-                .map(e => parseInt(e.date.slice(8, 10), 10))
-        );
-        return { daysInMonth, startDayOfWeek, activeDays, monthName: getMonthName(monthStr) };
-    }, [sportEntries]);
 
     return (
         <SafeAreaView style={main.container} edges={['top']}>

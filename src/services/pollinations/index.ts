@@ -4,6 +4,7 @@
 
 import * as Linking from "expo-linking";
 import * as SecureStore from "expo-secure-store";
+import i18next from "i18next";
 import { generateText, getTextModels } from "@pollinations_ai/sdk";
 import { fetchWithRetry, getOrSetMemoryCache } from "../network/httpClient";
 import { POLLINATION_CONFIG } from "./config";
@@ -260,17 +261,29 @@ export const extractApiKeyFromUrl = (url: string): string | null => {
 // MEAL ANALYSIS
 // ============================================================================
 
-const SYSTEM_PROMPT = `Act as an expert nutritional assistant named Ploppy. Analyze the provided meal image to help the user maintain a healthy diet.
+export const getSystemPromptForMealAnalysis = (language: string = "en") => {
+  const langName =
+    (
+      {
+        fr: "français",
+        it: "italiano",
+        de: "Deutsch",
+        es: "español",
+        en: "English",
+      } as Record<string, string>
+    )[language] ?? "English";
 
-Your task is to identify the food items in the image, estimate their nutritional value, and provide feedback in French.
+  return `Act as an expert nutritional assistant named Ploppy. Analyze the provided meal image to help the user maintain a healthy diet.
+
+Your task is to identify the food items in the image, estimate their nutritional value, and provide feedback in ${langName}.
 
 You MUST respond ONLY with a clean, valid JSON object following this EXACT structure:
 
 {
   "score": <number 0-100>,
-  "title": "<short 3-5 word title of the meal in French>",
-  "description": "<detailed analysis of the meal components in French, 2-3 sentences>",
-  "suggestions": ["<constructive tip in French>", "<tip in French>", ...]
+  "title": "<short 3-5 word title of the meal in ${langName}>",
+  "description": "<detailed analysis of the meal components in ${langName}, 2-3 sentences>",
+  "suggestions": ["<constructive tip in ${langName}>", "<tip in ${langName}>", ...]
 }
 
 Scoring criteria for nutritional balance:
@@ -280,12 +293,13 @@ Scoring criteria for nutritional balance:
 - 70-85: Very good, well-balanced
 - 85-100: Excellent, exemplary
 
-Guidelines for your French output:
+Guidelines for your ${langName} output:
 - Be encouraging and helpful.
 - Suggest practical changes (e.g., "Add more greens", "Reduce portions of high-starch food").
 - Keep language simple and engaging with emojis.
 
 CRITICAL: Return ONLY the JSON object. No conversational filler, no markdown code blocks.`;
+};
 
 /**
  * Analyse une image de repas via Pollinations/Claude
@@ -326,13 +340,14 @@ export const analyzeMealImage = async (
     async () => {
       // Use the SDK for meal analysis (multi-modal chat)
       const activeModel = await getBestVisionModel();
+      const systemPrompt = getSystemPromptForMealAnalysis(i18next.language);
 
       // Construction du prompt incluant l'URL de l'image pour les modèles vision de Pollinations
       const fullUserPrompt = `${userMessage}\n\nImage : ${imageUrl}`;
 
       const response = await generateText(fullUserPrompt, {
         model: activeModel,
-        systemPrompt: SYSTEM_PROMPT,
+        systemPrompt: systemPrompt,
         seed: -1,
       });
 

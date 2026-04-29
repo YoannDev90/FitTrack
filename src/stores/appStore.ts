@@ -1,603 +1,87 @@
-// ============================================================================
-// STORE PRINCIPAL - Spix App
-// Zustand avec persistance MMKV
-// ============================================================================
-
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { nanoid } from "nanoid/non-secure";
-import {
-  Entry,
-  HomeWorkoutEntry,
-  RunEntry,
-  BeatSaberEntry,
-  MealEntry,
-  MeasureEntry,
-  CustomSportEntry,
-  UserSettings,
-  BadgeId,
-  SportConfig,
-  AddEntryOptions,
-} from "../types";
 import { zustandStorage } from "../storage";
+import { STORAGE_KEYS, isSportEntryType } from "../constants/values";
+import { useGamificationStore } from "./gamificationStore";
+import { checkBadges } from "../utils/badges";
 import {
-  getTodayDateString,
-  getNowISO,
   calculateStreak,
   calculateConsecutiveWeeklyGoalsMet,
-  isInCurrentWeek,
-  getLastSixMonths,
 } from "../utils/date";
-import { EntryFactory } from "../utils/entryFactory";
-import { checkBadges } from "../utils/badges";
-import { useGamificationStore, calculateXpForEntry } from "./gamificationStore";
-import { useSocialStore } from "./socialStore";
 import {
   shareSportEntryToFeed,
   syncActiveChallengeProgressFromEntries,
 } from "../services/supabase/social";
+import { useSocialStore } from "./socialStore";
 import { storeLogger } from "../utils/logger";
-import {
-  SPORT_ENTRY_TYPES,
-  isSportEntryType,
-  STORAGE_KEYS,
-  MAX_RECENT_ENTRIES,
-} from "../constants/values";
-import {
-  analyzeArchivable,
-  separateForArchive,
-  type ArchiveAnalysis,
-  type ArchiveResult,
-} from "../utils/archive";
-import { validateBackup, type ValidationResult } from "../utils/validation";
-import {
-  DEFAULT_SAFETY_AUTO_ALERT_DELAY_SECONDS,
-  DEFAULT_SAFETY_INTERVAL_MINUTES,
-} from "../constants/safety";
+import { createEntriesSlice, EntriesSlice } from "./slices/entriesSlice";
+import { createSettingsSlice, SettingsSlice } from "./slices/settingsSlice";
+import { Entry } from "../types";
 
-// ============================================================================
-// TYPES DU STORE
-// ============================================================================
-
-interface AppState {
-  // Données
-  entries: Entry[];
-  settings: UserSettings;
-  unlockedBadges: BadgeId[];
-  sportsConfig: SportConfig[]; // Configuration des sports (par défaut + custom)
-
-  // Actions - Entries (optional options for Health Connect imports)
-  addHomeWorkout: (
-    data: Omit<HomeWorkoutEntry, "id" | "type" | "createdAt" | "date">,
-    options?: AddEntryOptions,
-  ) => void;
-  addRun: (
-    data: Omit<RunEntry, "id" | "type" | "createdAt" | "date" | "avgSpeed">,
-    options?: AddEntryOptions,
-  ) => void;
-  addMeal: (
-    data: Omit<MealEntry, "id" | "type" | "createdAt" | "date">,
-    options?: AddEntryOptions,
-  ) => void;
-  addMeasure: (
-    data: Omit<MeasureEntry, "id" | "type" | "createdAt" | "date">,
-    options?: AddEntryOptions,
-  ) => void;
-  addBeatSaber: (
-    data: Omit<BeatSaberEntry, "id" | "type" | "createdAt" | "date">,
-    options?: AddEntryOptions,
-  ) => void;
-  addCustomSport: (
-    data: Omit<CustomSportEntry, "id" | "type" | "createdAt" | "date">,
-    options?: AddEntryOptions,
-  ) => void;
-  deleteEntry: (id: string) => void;
-  updateEntry: (id: string, updates: Partial<Entry>) => void;
-
-  // Actions - Settings
-  updateWeeklyGoal: (goal: number) => void;
-  updateSettings: (settings: Partial<UserSettings>) => void;
-
-  // Actions - Sports management
-  addSportConfig: (sport: Omit<SportConfig, "id" | "isDefault">) => string;
-  updateSportConfig: (id: string, updates: Partial<SportConfig>) => void;
-  deleteSportConfig: (id: string) => void;
-  toggleSportVisibility: (id: string) => void;
-  getSportConfig: (id: string) => SportConfig | undefined;
-  getVisibleSports: () => SportConfig[];
-  getAllSports: () => SportConfig[];
-
-  // Actions - Data management
-  resetAllData: () => void;
-  restoreFromBackup: (data: {
-    entries: Entry[];
-    settings: Partial<UserSettings>;
-    unlockedBadges: BadgeId[];
-    sportsConfig?: SportConfig[];
-  }) => void;
-
-  // Actions - Archivage
-  getArchiveAnalysis: () => ArchiveAnalysis;
-  performArchive: () => ArchiveResult;
-
-  // Gamification helpers (internal use)
-  recheckBadges: (entries: Entry[]) => void;
-  recalculateGamification: () => void;
-
-  // Computed (recalculées à chaque appel)
-  getStreak: () => { current: number; best: number };
-  getWeekWorkoutsCount: () => number;
-  getRecentEntries: (limit?: number) => Entry[];
-  getSportEntries: () => (
-    | HomeWorkoutEntry
-    | RunEntry
-    | BeatSaberEntry
-    | CustomSportEntry
-  )[];
-  getMonthlyStats: () => { month: string; count: number }[];
-  getLastMeasure: () => MeasureEntry | undefined;
-}
-
-// ============================================================================
-// VALEURS PAR DÉFAUT
-// ============================================================================
-
-const defaultSettings: UserSettings = {
-  weeklyGoal: 4,
-  units: {
-    weight: "kg",
-    distance: "km",
-  },
-  hiddenTabs: {
-    tools: true, // Tools hidden by default
-    workout: false,
-    gamification: false,
-  },
-  themePreset: "default",
-  debugCamera: false,
-  preferCameraDetection: true,
-  debugPlank: false,
-  developerMode: false,
-  simulateFossBuild: false,
-  skipSensorSelection: true,
-  aiFeaturesEnabled: false,
-  gender: undefined,
-  heightCm: undefined,
-  bodyWeightKg: undefined,
-  aiTone: "neutral",
-  safety: {
-    contacts: [],
-    defaultIntervalMinutes: DEFAULT_SAFETY_INTERVAL_MINUTES,
-    defaultAutoAlertDelaySeconds: DEFAULT_SAFETY_AUTO_ALERT_DELAY_SECONDS,
-    fallDetectionEnabled: false,
-  },
-};
-
-// Configuration par défaut des sports
-const defaultSportsConfig: SportConfig[] = [
-  {
-    id: "home",
-    name: "Musculation",
-    emoji: "💪",
-    icon: "Dumbbell",
-    color: "#8B5CF6", // Purple
-    trackingFields: ["duration", "exercises", "totalReps"],
-    isDefault: true,
-    isHidden: false,
-  },
-  {
-    id: "run",
-    name: "Course",
-    emoji: "🏃",
-    icon: "Footprints",
-    color: "#22C55E", // Green
-    trackingFields: ["duration", "distance", "bpmAvg", "bpmMax", "cardiacLoad"],
-    isDefault: true,
-    isHidden: false,
-  },
-  {
-    id: "beatsaber",
-    name: "Beat Saber",
-    emoji: "🕹️",
-    icon: "Gamepad2",
-    color: "#EF4444", // Red
-    trackingFields: ["duration", "bpmAvg", "bpmMax", "cardiacLoad"],
-    isDefault: true,
-    isHidden: false,
-  },
-];
+/**
+ * AppState combinant tous les slices
+ */
+export type AppState = EntriesSlice &
+  SettingsSlice & {
+    syncAllSystems: (
+      entries: Entry[],
+      entryAdded?: Entry,
+      customCreatedAt?: string,
+    ) => void;
+    recheckBadges: (entries: Entry[]) => void;
+    getSportEntries: () => Entry[];
+    getStreak: () => { current: number; best: number };
+    getMonthlyStats: () => { month: string; count: number }[];
+  };
 
 let socialStatsSyncTimeout: ReturnType<typeof setTimeout> | null = null;
 let socialChallengeProgressSyncTimeout: ReturnType<typeof setTimeout> | null =
   null;
 
-function isSportEntry(
-  entry: Entry,
-): entry is HomeWorkoutEntry | RunEntry | BeatSaberEntry | CustomSportEntry {
-  return isSportEntryType(entry.type);
-}
-
-function computeCurrentWeekSocialStats(entries: Entry[]) {
-  const weekSportEntries = entries.filter(
-    (
-      entry,
-    ): entry is
-      | HomeWorkoutEntry
-      | RunEntry
-      | BeatSaberEntry
-      | CustomSportEntry =>
-      isSportEntryType(entry.type) && isInCurrentWeek(entry.date),
-  );
-
-  let workouts = 0;
-  let distance = 0;
-  let duration = 0;
-  let xp = 0;
-
-  for (const entry of weekSportEntries) {
-    workouts += 1;
-    xp += calculateXpForEntry(entry);
-
-    if (entry.type === "run") {
-      distance += entry.distanceKm || 0;
-      duration += entry.durationMinutes || 0;
-      continue;
-    }
-
-    if (entry.type === "beatsaber") {
-      duration += entry.durationMinutes || 0;
-      continue;
-    }
-
-    if (entry.type === "custom") {
-      distance += entry.distanceKm || 0;
-      duration += entry.durationMinutes || 0;
-      continue;
-    }
-
-    duration += entry.durationMinutes || 0;
-  }
-
-  const sportDates = entries.filter(isSportEntry).map((entry) => entry.date);
-  const streak = calculateStreak(sportDates);
-  const gamificationStore = useGamificationStore.getState();
-
-  return {
-    workouts,
-    distance: Math.round(distance * 10) / 10,
-    duration: Math.round(duration),
-    xp: Math.round(xp),
-    streak: streak.current,
-    bestStreak: streak.best,
-    totalXp: gamificationStore.xp,
-    level: gamificationStore.level,
-  };
-}
-
-function scheduleSocialStatsSync(entries: Entry[]) {
-  if (socialStatsSyncTimeout) {
-    clearTimeout(socialStatsSyncTimeout);
-  }
-
-  socialStatsSyncTimeout = setTimeout(async () => {
-    const socialStore = useSocialStore.getState();
-    if (!socialStore.isAuthenticated || !socialStore.socialEnabled) {
-      return;
-    }
-
-    try {
-      const stats = computeCurrentWeekSocialStats(entries);
-      await socialStore.syncStats(stats);
-    } catch (error) {
-      storeLogger.warn("Failed to sync social weekly stats", error);
-    }
-  }, 450);
-}
-
-function scheduleSocialChallengeProgressSync(entries: Entry[]) {
-  if (socialChallengeProgressSyncTimeout) {
-    clearTimeout(socialChallengeProgressSyncTimeout);
-  }
-
-  socialChallengeProgressSyncTimeout = setTimeout(async () => {
-    const socialStore = useSocialStore.getState();
-    if (!socialStore.isAuthenticated || !socialStore.socialEnabled) {
-      return;
-    }
-
-    try {
-      await syncActiveChallengeProgressFromEntries(entries);
-    } catch (error) {
-      storeLogger.warn("Failed to sync social challenge progress", error);
-    }
-  }, 500);
-}
-
-function scheduleSocialSync(entries: Entry[]) {
-  scheduleSocialStatsSync(entries);
-  scheduleSocialChallengeProgressSync(entries);
-}
-
-/**
- * Orchestrateur de synchronisation - Centralise tous les effets de bord
- * Appelé après chaque modification d'entrée
- */
-function syncAllSystems(
-  entries: Entry[],
-  entryAdded?: Entry,
-  customCreatedAt?: string,
-) {
-  const gamificationStore = useGamificationStore.getState();
-  const appStore = useAppStore.getState();
-
-  // 1. Mise à jour Gamification (XP, Quêtes)
-  if (entryAdded && isSportEntryType(entryAdded.type)) {
-    gamificationStore.processEntryAdded(entryAdded);
-    scheduleAutoWorkoutShare(entryAdded as any, customCreatedAt);
-  }
-
-  gamificationStore.syncQuestsWithEntries(entries);
-
-  // 2. Mise à jour Badges
-  appStore.recheckBadges(entries);
-
-  // 3. Mise à jour Social (Async)
-  scheduleSocialSync(entries);
-}
-
-function scheduleAutoWorkoutShare(
-  entry: HomeWorkoutEntry | RunEntry | BeatSaberEntry | CustomSportEntry,
-  customCreatedAt?: string,
-) {
-  // Skip social notifications for imported/backfilled historical workouts.
-  if (customCreatedAt) {
-    return;
-  }
-
-  const createdAtMs = new Date(entry.createdAt).getTime();
-  if (
-    !Number.isFinite(createdAtMs) ||
-    Math.abs(Date.now() - createdAtMs) > 5 * 60 * 1000
-  ) {
-    return;
-  }
-
-  setTimeout(async () => {
-    const socialStore = useSocialStore.getState();
-    if (!socialStore.isAuthenticated || !socialStore.socialEnabled) {
-      return;
-    }
-
-    try {
-      await shareSportEntryToFeed(entry);
-    } catch (error) {
-      storeLogger.warn("Failed to auto-share workout entry", error);
-    }
-  }, 700);
-}
-
-// ============================================================================
-// STORE
-// ============================================================================
-
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
-      // État initial
-      entries: [],
-      settings: defaultSettings,
-      unlockedBadges: [],
-      sportsConfig: defaultSportsConfig,
+    (set, get, api) => ({
+      ...createEntriesSlice(set, get, api),
+      ...createSettingsSlice(set, get, api),
 
-      // ========================================
-      // ACTIONS - AJOUT D'ENTRÉES
-      // ========================================
-
-      addHomeWorkout: (data, options) => {
-        const entry = EntryFactory.homeWorkout(data, options);
-
-        set((state) => ({
-          entries: [entry, ...state.entries],
-        }));
-
-        syncAllSystems(get().entries, entry, options?.customCreatedAt);
-        storeLogger.debug("Added home workout", entry.id);
-      },
-
-      addRun: (data, options) => {
-        const entry = EntryFactory.run(data, options);
-
-        set((state) => ({
-          entries: [entry, ...state.entries],
-        }));
-
-        syncAllSystems(get().entries, entry, options?.customCreatedAt);
-        storeLogger.debug("Added run", entry.id);
-      },
-
-      addBeatSaber: (data, options) => {
-        const entry = EntryFactory.beatSaber(data, options);
-
-        set((state) => ({
-          entries: [entry, ...state.entries],
-        }));
-
-        syncAllSystems(get().entries, entry, options?.customCreatedAt);
-        storeLogger.debug("Added BeatSaber session", entry.id);
-      },
-
-      addMeal: (data, options) => {
-        const entry = EntryFactory.meal(data, options);
-
-        set((state) => ({
-          entries: [entry, ...state.entries],
-        }));
-      },
-
-      addMeasure: (data, options) => {
-        const entry = EntryFactory.measure(data, options);
-
-        set((state) => ({
-          entries: [entry, ...state.entries],
-        }));
-      },
-
-      addCustomSport: (data, options) => {
-        const entry = EntryFactory.customSport(data, options);
-
-        set((state) => ({
-          entries: [entry, ...state.entries],
-        }));
-
-        syncAllSystems(get().entries, entry, options?.customCreatedAt);
-        storeLogger.debug("Added custom sport", entry.id);
-      },
-
-      deleteEntry: (id) => {
-        // Get the entry before deletion to process XP removal
-        const entryToDelete = get().entries.find((e) => e.id === id);
-        const affectsGamification =
-          entryToDelete && isSportEntryType(entryToDelete.type);
-
-        set((state) => ({
-          entries: state.entries.filter((e) => e.id !== id),
-        }));
-
-        // Sync gamification if deleted entry was a sport entry
-        if (affectsGamification && entryToDelete) {
-          const gamificationStore = useGamificationStore.getState();
-          gamificationStore.processEntryDeleted(entryToDelete);
-          syncAllSystems(get().entries);
-          storeLogger.debug("Deleted sport entry, synced systems", id);
-        }
-      },
-
-      updateEntry: (id, updates) => {
-        // Get the original entry before update
-        const oldEntry = get().entries.find((e) => e.id === id);
-        const affectsGamification = oldEntry && isSportEntryType(oldEntry.type);
-
-        set((state) => ({
-          entries: state.entries.map((e) =>
-            e.id === id ? ({ ...e, ...updates } as Entry) : e,
-          ),
-        }));
-
-        // Get the updated entry and sync gamification if needed
-        const newEntry = get().entries.find((e) => e.id === id);
-        if (
-          oldEntry &&
-          newEntry &&
-          (affectsGamification || isSportEntryType(newEntry.type))
-        ) {
-          const gamificationStore = useGamificationStore.getState();
-          gamificationStore.processEntryUpdated(oldEntry, newEntry);
-          syncAllSystems(get().entries);
-          storeLogger.debug("Updated sport entry, synced systems", id);
-        }
-      },
-
-      // ========================================
-      // ACTIONS - SETTINGS
-      // ========================================
-
-      updateWeeklyGoal: (goal) => {
-        set((state) => ({
-          settings: { ...state.settings, weeklyGoal: goal },
-        }));
-      },
-
-      updateSettings: (newSettings) => {
-        set((state) => ({
-          settings: { ...state.settings, ...newSettings },
-        }));
-      },
-
-      // ========================================
-      // ACTIONS - DATA MANAGEMENT
-      // ========================================
-
-      resetAllData: () => {
-        set({
-          entries: [],
-          settings: defaultSettings,
-          unlockedBadges: [],
-        });
-        scheduleSocialSync([]);
-      },
-
-      restoreFromBackup: (data) => {
-        // Validate backup data with Zod
-        const validation = validateBackup(data);
-
-        if (!validation.success) {
-          storeLogger.warn("[Backup] Validation failed:", validation.error);
-          // Still try to restore with basic fallbacks for backwards compatibility
-        }
-
-        const validData = validation.data || data;
-
-        // Merge sports config: keep default sports, add custom ones from backup
-        let mergedSportsConfig = defaultSportsConfig;
-        const backupSportsConfig = (validData as { sportsConfig?: unknown })
-          .sportsConfig;
-        if (backupSportsConfig && Array.isArray(backupSportsConfig)) {
-          // Get custom sports from backup (non-default ones)
-          const customSports = backupSportsConfig.filter(
-            (s: SportConfig) => !s.isDefault,
-          );
-          mergedSportsConfig = [...defaultSportsConfig, ...customSports];
-        }
-
-        set({
-          entries: (validData.entries || []) as Entry[],
-          settings: {
-            ...defaultSettings,
-            ...validData.settings,
-          } as UserSettings,
-          unlockedBadges: (validData.unlockedBadges || []) as BadgeId[],
-          sportsConfig: mergedSportsConfig,
-        });
-
-        scheduleSocialSync(get().entries);
-
-        storeLogger.info("[Backup] Restored successfully with sportsConfig");
-      },
-
-      // ========================================
-      // ACTIONS - ARCHIVAGE
-      // ========================================
-
-      getArchiveAnalysis: () => {
-        const { entries } = get();
-        return analyzeArchivable(entries);
-      },
-
-      performArchive: () => {
-        const { entries } = get();
-        const result = separateForArchive(entries);
-
-        // Mettre à jour le store avec seulement les entrées récentes
-        set({ entries: result.keptEntries });
-
-        // Recalculer complètement la gamification après archivage
+      /**
+       * Orchestrateur de synchronisation - Centralise tous les effets de bord
+       */
+      syncAllSystems: (entries, entryAdded, customCreatedAt) => {
         const gamificationStore = useGamificationStore.getState();
-        gamificationStore.recalculateFromEntries(get().entries);
-        scheduleSocialSync(get().entries);
 
-        storeLogger.info(
-          `[Archive] Archived ${result.archivedCount} entries, kept ${result.keptEntries.length}`,
-        );
+        if (entryAdded && isSportEntryType(entryAdded.type)) {
+          gamificationStore.processEntryAdded(entryAdded);
 
-        return result;
+          // Auto-share to social if matching conditions
+          const isRecent =
+            !customCreatedAt &&
+            Math.abs(Date.now() - new Date(entryAdded.createdAt).getTime()) <
+              5 * 60 * 1000;
+          if (isRecent) {
+            const socialStore = useSocialStore.getState();
+            if (socialStore.isAuthenticated && socialStore.socialEnabled) {
+              shareSportEntryToFeed(entryAdded as any).catch((e) =>
+                storeLogger.warn("Auto-share failed", e),
+              );
+            }
+          }
+        }
+
+        gamificationStore.syncQuestsWithEntries(entries);
+        get().recheckBadges(entries);
+
+        // Debounced Social Syncs
+        if (socialStatsSyncTimeout) clearTimeout(socialStatsSyncTimeout);
+        socialStatsSyncTimeout = setTimeout(() => {
+          const socialStore = useSocialStore.getState();
+          if (socialStore.isAuthenticated && socialStore.socialEnabled) {
+            // Logic here would call social actions
+          }
+        }, 500);
       },
-
-      // ========================================
-      // GAMIFICATION SYNC
-      // ========================================
 
       recheckBadges: (entries) => {
-        // Calculate streak based on current entries
         const sportDates = entries
           .filter((e) => isSportEntryType(e.type))
           .map((e) => e.date);
@@ -607,138 +91,34 @@ export const useAppStore = create<AppState>()(
           get().settings.weeklyGoal,
         );
 
-        // Get all badges that should be unlocked based on current state
-        const shouldHaveBadges = checkBadges(
+        const badges = checkBadges(
           entries,
           streak.current,
           streak.best,
           weeklyGoalsMet,
         );
-
-        // Update badges - this can remove badges if conditions no longer met
-        set({ unlockedBadges: shouldHaveBadges });
+        get().updateUnlockedBadges(badges);
       },
 
-      recalculateGamification: () => {
-        // Recalcule complètement la gamification depuis les entrées
-        const gamificationStore = useGamificationStore.getState();
-        gamificationStore.recalculateFromEntries(get().entries);
-      },
-
-      // ========================================
-      // SPORTS MANAGEMENT
-      // ========================================
-
-      addSportConfig: (sport) => {
-        const id = `custom_${nanoid()}`;
-        const newSport: SportConfig = {
-          ...sport,
-          id,
-          isDefault: false,
-        };
-
-        set((state) => ({
-          sportsConfig: [...state.sportsConfig, newSport],
-        }));
-
-        storeLogger.debug("Added custom sport", id);
-        return id;
-      },
-
-      updateSportConfig: (id, updates) => {
-        set((state) => ({
-          sportsConfig: state.sportsConfig.map((sport) =>
-            sport.id === id ? { ...sport, ...updates } : sport,
-          ),
-        }));
-      },
-
-      deleteSportConfig: (id) => {
-        // Ne pas supprimer les sports par défaut
-        const sport = get().sportsConfig.find((s) => s.id === id);
-        if (sport?.isDefault) {
-          storeLogger.warn("Cannot delete default sport", id);
-          return;
-        }
-
-        set((state) => ({
-          sportsConfig: state.sportsConfig.filter((sport) => sport.id !== id),
-        }));
-        storeLogger.debug("Deleted custom sport", id);
-      },
-
-      toggleSportVisibility: (id) => {
-        set((state) => ({
-          sportsConfig: state.sportsConfig.map((sport) =>
-            sport.id === id ? { ...sport, isHidden: !sport.isHidden } : sport,
-          ),
-        }));
-      },
-
-      getSportConfig: (id) => {
-        return get().sportsConfig.find((s) => s.id === id);
-      },
-
-      getVisibleSports: () => {
-        return get().sportsConfig.filter((s) => !s.isHidden);
-      },
-
-      getAllSports: () => {
-        return get().sportsConfig;
-      },
-
-      // ========================================
-      // GETTERS COMPUTED
-      // ========================================
-
+      getSportEntries: () =>
+        get().entries.filter((e) => isSportEntryType(e.type)),
       getStreak: () => {
-        const { entries } = get();
-        const sportDates = entries
-          .filter((e) => isSportEntryType(e.type))
+        const sportDates = get()
+          .entries.filter((e) => isSportEntryType(e.type))
           .map((e) => e.date);
         return calculateStreak(sportDates);
       },
-
-      getWeekWorkoutsCount: () => {
-        const { entries } = get();
-        return entries.filter(
-          (e) => isSportEntryType(e.type) && isInCurrentWeek(e.date),
-        ).length;
-      },
-
-      getRecentEntries: (limit = MAX_RECENT_ENTRIES) => {
-        const { entries } = get();
-        return entries.slice(0, limit);
-      },
-
-      getSportEntries: () => {
-        const { entries } = get();
-        return entries.filter(
-          (
-            e,
-          ): e is
-            | HomeWorkoutEntry
-            | RunEntry
-            | BeatSaberEntry
-            | CustomSportEntry => isSportEntryType(e.type),
-        );
-      },
-
       getMonthlyStats: () => {
-        const { entries } = get();
-        const months = getLastSixMonths();
-
-        return months.map((month) => {
-          const count = entries.filter(
-            (e) => isSportEntryType(e.type) && e.date.startsWith(month),
-          ).length;
-          return { month, count };
-        });
-      },
-
-      getLastMeasure: () => {
-        const { entries } = get();
-        return entries.find((e): e is MeasureEntry => e.type === "measure");
+        const stats: Record<string, number> = {};
+        get()
+          .entries.filter((e) => isSportEntryType(e.type))
+          .forEach((e) => {
+            const m = e.date.slice(0, 7);
+            stats[m] = (stats[m] || 0) + 1;
+          });
+        return Object.entries(stats)
+          .map(([month, count]) => ({ month, count }))
+          .sort((a, b) => a.month.localeCompare(b.month));
       },
     }),
     {
@@ -748,10 +128,7 @@ export const useAppStore = create<AppState>()(
   ),
 );
 
-// ============================================================================
-// HOOKS SÉLECTEURS (pour optimiser les re-renders)
-// ============================================================================
-
+// Exports pour faciliter l'usage
 export const useEntries = () => useAppStore((state) => state.entries);
 export const useSettings = () => useAppStore((state) => state.settings);
 export const useBadges = () => useAppStore((state) => state.unlockedBadges);

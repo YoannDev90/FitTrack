@@ -177,7 +177,13 @@ export function RunSummary() {
       if (!connected || cancelled) return;
       setAiLoading(true);
       try {
-        const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
+        const lang = ({
+            fr: 'français',
+            it: 'italiano',
+            de: 'Deutsch',
+            es: 'español',
+            en: 'English'
+        } as Record<string, string>)[i18n.language] ?? 'English';
         const result = await generateTextAnalysis({
           systemPrompt: `Tu es Ploppy, coach de course bienveillant. Fais un bilan court (3-4 phrases) en ${lang}.`,
           userPrompt: `Bilan de course :

@@ -79,10 +79,13 @@ export async function generateCoachingMessage(
 ): Promise<string> {
   const lang =
     (
-      { fr: "français", it: "italiano", de: "Deutsch" } as Record<
-        string,
-        string
-      >
+      {
+        fr: "français",
+        it: "italiano",
+        de: "Deutsch",
+        es: "español",
+        en: "English",
+      } as Record<string, string>
     )[language] ?? "English";
   const targetPaceStr = context.targetDistanceKm
     ? formatPace(context.avgPaceSecPerKm)

@@ -112,7 +112,13 @@ export default function AiRunConfigScreen() {
 
   const runSettings = settings as { runSettings?: { pollinationsModel?: string } };
   const aiModel = runSettings.runSettings?.pollinationsModel ?? settings.aiModel ?? 'openai';
-  const lang = ({ fr: 'français', it: 'italiano', de: 'Deutsch' } as Record<string, string>)[i18n.language] ?? 'English';
+  const lang = ({
+    fr: 'français',
+    it: 'italiano',
+    de: 'Deutsch',
+    es: 'español',
+    en: 'English'
+  } as Record<string, string>)[i18n.language] ?? 'English';
 
   if (!aiFeaturesEnabled) {
     return (
